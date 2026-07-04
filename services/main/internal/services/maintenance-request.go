@@ -5,8 +5,9 @@ import (
 	"encoding/json"
 	"time"
 
+	"fmt"
+
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
-	"github.com/Bendomey/rent-loop/services/main/internal/lib/emailtemplates"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
@@ -113,6 +114,7 @@ type CreateMaintenanceRequestByTenantInput struct {
 type CreateMaintenanceRequestByAdminInput struct {
 	UnitID       string
 	ClientUserID string
+	ClientID     string
 	Title        string
 	Desc         string
 	Priority     string
@@ -214,31 +216,29 @@ func (s *maintenanceRequestService) CreateByTenant(
 		})
 	}
 
-	go func() {
-		if lease.ActivatedById == nil || lease.ActivatedBy == nil || lease.ActivatedBy.User.Email == "" {
-			return
-		}
-		htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render(
-			"maintenance/request-created",
-			emailtemplates.MaintenanceRequestCreatedData{
-				TenantName: lease.Tenant.FirstName,
-				UnitName:   lease.Unit.Name,
-				Title:      mr.Title,
-				Category:   mr.Category,
-				Priority:   mr.Priority,
-			},
-		)
-		if renderErr != nil {
-			log.WithError(renderErr).Error("failed to render maintenance-request-created email template")
-			return
-		}
-		pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
-			Recipient: lease.ActivatedBy.User.Email,
-			Subject:   lib.PM_MAINTENANCE_REQUEST_CREATED_SUBJECT,
-			HtmlBody:  htmlBody,
-			TextBody:  textBody,
-		})
-	}()
+	if lease.ActivatedById != nil && lease.ActivatedBy != nil && lease.ActivatedBy.User.Email != "" {
+		pmEmail := lease.ActivatedBy.User.Email
+		go func() {
+			_, _ = s.notificationService.CreateNotification(context.Background(), CreateNotificationInput{
+				OrganizationID: lease.ActivatedBy.ClientID,
+				RecipientID:    lease.ActivatedBy.ID.String(),
+				RecipientType:  models.NotificationRecipientTypeClientUser,
+				Event:          "MAINTENANCE_REQUEST_CREATED",
+				Title:          "New Maintenance Request",
+				Body:           fmt.Sprintf("%s submitted a maintenance request: %s", lease.Tenant.FirstName, mr.Title),
+				Data: map[string]any{
+					"tenant_name":            lease.Tenant.FirstName,
+					"unit_name":              lease.Unit.Name,
+					"title":                  mr.Title,
+					"category":               mr.Category,
+					"priority":               mr.Priority,
+					"maintenance_request_id": mr.ID.String(),
+				},
+				Channels:       []string{models.NotificationChannelInApp, models.NotificationChannelEmail},
+				RecipientEmail: &pmEmail,
+			})
+		}()
+	}
 
 	return mr, nil
 }
@@ -321,22 +321,20 @@ func (s *maintenanceRequestService) CreateByAdmin(
 				"maintenance_request_id": mr.ID.String(),
 			})
 		} else {
-			tenantAccountID := tenantAccount.ID.String()
-			if err := s.notificationService.SendToTenantAccount(ctx, tenantAccountID, "New maintenance request", "A new maintenance request has been created on your behalf: "+input.Title, map[string]string{
-				"type":                   "MAINTENANCE",
-				"maintenance_request_id": mr.ID.String(),
-				"status":                 "NEW",
-				"lease_id":               *mr.LeaseID,
-			}); err != nil {
-				log.WithError(err).WithField("tenantAccountID", tenantAccountID).
-					Warn("[MaintenanceRequest] push notification failed")
-				raven.CaptureError(err, map[string]string{
-					"function":               "CreateByAdmin",
-					"action":                 "sending push notification",
-					"tenant_id":              *createdByTenantID,
+			_, _ = s.notificationService.CreateNotification(ctx, CreateNotificationInput{
+				OrganizationID: input.ClientID,
+				RecipientID:    tenantAccount.ID.String(),
+				RecipientType:  models.NotificationRecipientTypeTenantAccount,
+				Event:          "MAINTENANCE_REQUEST_CREATED",
+				Title:          "New Maintenance Request",
+				Body:           "A new maintenance request has been created on your behalf: " + input.Title,
+				Data: map[string]any{
 					"maintenance_request_id": mr.ID.String(),
-				})
-			}
+					"status":                 "NEW",
+					"lease_id":               *mr.LeaseID,
+				},
+				Channels: []string{models.NotificationChannelInApp, models.NotificationChannelPush},
+			})
 		}
 	}
 
@@ -638,15 +636,31 @@ func (s *maintenanceRequestService) fireStatusNotifications(
 		return
 	}
 
-	if err := s.notificationService.SendToTenantAccount(ctx, tenantAccountID, title, body, map[string]string{
-		"type":                   "MAINTENANCE",
-		"maintenance_request_id": mr.ID.String(),
-		"status":                 newStatus,
-		"lease_id":               *mr.LeaseID,
-	}); err != nil {
-		log.WithError(err).WithField("tenantAccountID", tenantAccountID).
-			Warn("[MaintenanceRequest] push notification failed")
+	var orgID string
+	var prop models.Property
+	if err := s.appCtx.DB.WithContext(ctx).
+		Select("properties.client_id").
+		Joins("JOIN units ON units.property_id = properties.id AND units.deleted_at IS NULL").
+		Where("units.id = ?", mr.UnitID).
+		First(&prop).Error; err == nil {
+		orgID = prop.ClientID
 	}
+
+	event := "MAINTENANCE_REQUEST_" + newStatus
+	_, _ = s.notificationService.CreateNotification(ctx, CreateNotificationInput{
+		OrganizationID: orgID,
+		RecipientID:    tenantAccountID,
+		RecipientType:  models.NotificationRecipientTypeTenantAccount,
+		Event:          event,
+		Title:          title,
+		Body:           body,
+		Data: map[string]any{
+			"maintenance_request_id": mr.ID.String(),
+			"status":                 newStatus,
+			"lease_id":               *mr.LeaseID,
+		},
+		Channels: []string{models.NotificationChannelInApp, models.NotificationChannelPush},
+	})
 }
 
 // --- Activity logs ---

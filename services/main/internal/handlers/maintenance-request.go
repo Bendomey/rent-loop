@@ -119,6 +119,7 @@ func (h *MaintenanceRequestHandler) Create(w http.ResponseWriter, r *http.Reques
 	mr, err := h.service.CreateByAdmin(r.Context(), services.CreateMaintenanceRequestByAdminInput{
 		UnitID:       body.UnitID,
 		ClientUserID: currentUser.ID,
+		ClientID:     currentUser.ClientID,
 		Title:        body.Title,
 		Desc:         body.Description,
 		Priority:     body.Priority,

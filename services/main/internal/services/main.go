@@ -52,6 +52,7 @@ func NewServices(params INewServicesParams) Services {
 		params.AppCtx,
 		params.Repository.FcmTokenRepository,
 		params.Repository.NotificationRepository,
+		params.RentloopQueue,
 	)
 	accountingService := NewAccountingService(params.AppCtx)
 	invoiceService := NewInvoiceService(
