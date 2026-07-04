@@ -17,8 +17,11 @@ type TenantService interface {
 	GetOrCreateTenant(context context.Context, input CreateTenantInput) (*models.Tenant, error)
 	GetTenantByPhone(context context.Context, phone string) (*models.Tenant, error)
 	GetTenantByID(context context.Context, query repository.GetTenantQuery) (*models.Tenant, error)
-	ListTenantsByProperty(context context.Context, filter repository.ListTenantsFilter) (*[]models.Tenant, error)
-	CountTenantsByProperty(context context.Context, filter repository.ListTenantsFilter) (int64, error)
+	ListTenantsByProperty(
+		context context.Context,
+		filter repository.ListTenantsByPropertyFilter,
+	) (*[]models.Tenant, error)
+	CountTenantsByProperty(context context.Context, filter repository.ListTenantsByPropertyFilter) (int64, error)
 	FindOrCreateLightTenant(ctx context.Context, input FindOrCreateLightTenantInput) (*models.Tenant, error)
 }
 
@@ -233,9 +236,9 @@ func (s *tenantService) GetTenantByID(ctx context.Context, query repository.GetT
 
 func (s *tenantService) ListTenantsByProperty(
 	ctx context.Context,
-	filter repository.ListTenantsFilter,
+	filter repository.ListTenantsByPropertyFilter,
 ) (*[]models.Tenant, error) {
-	tenants, err := s.repo.List(ctx, filter)
+	tenants, err := s.repo.ListTenantsByProperty(ctx, filter)
 	if err != nil {
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
 			Err: err,
@@ -250,9 +253,9 @@ func (s *tenantService) ListTenantsByProperty(
 
 func (s *tenantService) CountTenantsByProperty(
 	ctx context.Context,
-	filter repository.ListTenantsFilter,
+	filter repository.ListTenantsByPropertyFilter,
 ) (int64, error) {
-	count, err := s.repo.Count(ctx, filter)
+	count, err := s.repo.CountTenantsByProperty(ctx, filter)
 	if err != nil {
 		return 0, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
 			Err: err,

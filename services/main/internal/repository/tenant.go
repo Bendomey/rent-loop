@@ -13,8 +13,13 @@ type TenantRepository interface {
 	Update(context context.Context, tenant *models.Tenant, updates map[string]any) error
 	FindOne(context context.Context, query map[string]any) (*models.Tenant, error)
 	GetOneWithPopulate(context context.Context, query GetTenantQuery) (*models.Tenant, error)
+	// for general tenant listing and counting.
 	List(context context.Context, filterQuery ListTenantsFilter) (*[]models.Tenant, error)
 	Count(context context.Context, filterQuery ListTenantsFilter) (int64, error)
+
+	// for property specifically.
+	ListTenantsByProperty(context context.Context, filterQuery ListTenantsByPropertyFilter) (*[]models.Tenant, error)
+	CountTenantsByProperty(context context.Context, filterQuery ListTenantsByPropertyFilter) (int64, error)
 }
 
 type tenantRepository struct {
@@ -69,11 +74,58 @@ func (r *tenantRepository) GetOneWithPopulate(ctx context.Context, query GetTena
 
 type ListTenantsFilter struct {
 	lib.FilterQuery
+}
+
+func (r *tenantRepository) List(ctx context.Context, filterQuery ListTenantsFilter) (*[]models.Tenant, error) {
+	var tenants []models.Tenant
+
+	db := r.DB.WithContext(ctx).Scopes(
+		IDsFilterScope("tenants", filterQuery.IDs),
+		DateRangeScope("tenants", filterQuery.DateRange),
+		SearchScope("tenants", filterQuery.Search),
+		PaginationScope(filterQuery.Page, filterQuery.PageSize),
+		OrderScope("tenants", filterQuery.OrderBy, filterQuery.Order),
+	)
+
+	if filterQuery.Populate != nil {
+		for _, field := range *filterQuery.Populate {
+			db = db.Preload(field)
+		}
+	}
+
+	results := db.Find(&tenants)
+	if results.Error != nil {
+		return nil, results.Error
+	}
+
+	return &tenants, nil
+}
+
+func (r *tenantRepository) Count(ctx context.Context, filterQuery ListTenantsFilter) (int64, error) {
+	var count int64
+
+	result := r.DB.WithContext(ctx).Model(&models.Tenant{}).Scopes(
+		DateRangeScope("tenants", filterQuery.DateRange),
+		SearchScope("tenants", filterQuery.Search),
+	).Count(&count)
+
+	if result.Error != nil {
+		return 0, result.Error
+	}
+
+	return count, nil
+}
+
+type ListTenantsByPropertyFilter struct {
+	lib.FilterQuery
 	PropertyID *string
 	Status     *string // "ACTIVE" | "EXPIRED"
 }
 
-func (r *tenantRepository) List(ctx context.Context, filterQuery ListTenantsFilter) (*[]models.Tenant, error) {
+func (r *tenantRepository) ListTenantsByProperty(
+	ctx context.Context,
+	filterQuery ListTenantsByPropertyFilter,
+) (*[]models.Tenant, error) {
 	var tenants []models.Tenant
 
 	db := r.DB.WithContext(ctx).Scopes(
@@ -99,7 +151,10 @@ func (r *tenantRepository) List(ctx context.Context, filterQuery ListTenantsFilt
 	return &tenants, nil
 }
 
-func (r *tenantRepository) Count(ctx context.Context, filterQuery ListTenantsFilter) (int64, error) {
+func (r *tenantRepository) CountTenantsByProperty(
+	ctx context.Context,
+	filterQuery ListTenantsByPropertyFilter,
+) (int64, error) {
 	var count int64
 
 	result := r.DB.WithContext(ctx).Model(&models.Tenant{}).Scopes(

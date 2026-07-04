@@ -127,7 +127,7 @@ func (h *TenantHandler) ListTenantsByProperty(w http.ResponseWriter, r *http.Req
 
 	propertyID := chi.URLParam(r, "property_id")
 
-	input := repository.ListTenantsFilter{
+	input := repository.ListTenantsByPropertyFilter{
 		FilterQuery: *filterQuery,
 		PropertyID:  &propertyID,
 		Status:      lib.NullOrString(r.URL.Query().Get("status")),
