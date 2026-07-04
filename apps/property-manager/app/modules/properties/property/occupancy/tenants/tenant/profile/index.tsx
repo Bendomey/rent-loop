@@ -14,6 +14,7 @@ import { localizedDayjs } from '~/lib/date'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
+import { useProperty } from '~/providers/property-provider'
 
 // ---------------------------------------------------------------------------
 // Cube query result types
@@ -69,9 +70,14 @@ export function TenantProfileModule({
 	propertyId: string
 }) {
 	const { clientUser } = useClient()
+	const { clientUserProperty } = useProperty()
 	const { data: token } = useGetAnalyticsToken(
 		safeString(clientUser?.client_id),
 	)
+
+	const modes = clientUserProperty?.property?.modes ?? []
+	const isLease = modes.includes('LEASE')
+	const isBooking = modes.includes('BOOKING')
 
 	const tenantFilter = (member: string) => ({
 		member,
@@ -106,6 +112,7 @@ export function TenantProfileModule({
 				propertyFilter('Leases.propertyId'),
 			],
 		},
+		{ enabled: isLease },
 	)
 
 	const bookingsQuery = useCubeQuery<BookingRow>(
@@ -118,6 +125,7 @@ export function TenantProfileModule({
 				propertyFilter('Bookings.propertyId'),
 			],
 		},
+		{ enabled: isBooking },
 	)
 
 	const maintenanceRequestsQuery = useCubeQuery<MaintenanceRequestRow>(
@@ -156,30 +164,35 @@ export function TenantProfileModule({
 				</CardHeader>
 			</Card>
 			<div className="col-span-2 grid grid-cols-2 gap-2 lg:col-span-1 lg:grid-cols-3">
-				<Card className="@container/card col-span-1 shadow-none lg:col-span-1">
-					<CardHeader>
-						<CardDescription>Total Leases</CardDescription>
-						<CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-							{leasesQuery.isPending ? (
-								<Skeleton className="h-8 w-10" />
-							) : (
-								totalLeases.toLocaleString()
-							)}
-						</CardTitle>
-					</CardHeader>
-				</Card>
-				<Card className="@container/card col-span-1 shadow-none lg:col-span-1">
-					<CardHeader>
-						<CardDescription>Total Bookings</CardDescription>
-						<CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-							{bookingsQuery.isPending ? (
-								<Skeleton className="h-8 w-10" />
-							) : (
-								totalBookings.toLocaleString()
-							)}
-						</CardTitle>
-					</CardHeader>
-				</Card>
+				{isLease ? (
+					<Card className="@container/card col-span-1 shadow-none lg:col-span-1">
+						<CardHeader>
+							<CardDescription>Total Leases</CardDescription>
+							<CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+								{leasesQuery.isPending ? (
+									<Skeleton className="h-8 w-10" />
+								) : (
+									totalLeases.toLocaleString()
+								)}
+							</CardTitle>
+						</CardHeader>
+					</Card>
+				) : null}
+				{isBooking ? (
+					<Card className="@container/card col-span-1 shadow-none lg:col-span-1">
+						<CardHeader>
+							<CardDescription>Total Bookings</CardDescription>
+							<CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+								{bookingsQuery.isPending ? (
+									<Skeleton className="h-8 w-10" />
+								) : (
+									totalBookings.toLocaleString()
+								)}
+							</CardTitle>
+						</CardHeader>
+					</Card>
+				) : null}
+
 				<Card className="@container/card col-span-1 shadow-none lg:col-span-1">
 					<CardHeader>
 						<CardDescription>Total Requests</CardDescription>
