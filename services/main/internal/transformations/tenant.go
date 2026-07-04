@@ -40,6 +40,9 @@ type OutputAdminTenant struct {
 	CreatedById *string           `json:"created_by_id,omitempty" example:"72432ce6-5620-4ecf-a862-4bf2140556a"`
 	CreatedBy   *OutputClientUser `json:"created_by,omitempty"`
 
+	RecentLease   *OutputAdminLease   `json:"recent_lease,omitempty"   description:"The tenant's most relevant lease in the requested property (Active lease preferred, else most recent). Absent if the tenant has no lease in the property."`
+	RecentBooking *AdminOutputBooking `json:"recent_booking,omitempty" description:"The tenant's most relevant booking in the requested property (CONFIRMED/CHECKED_IN preferred, else most recent check-in). Absent if the tenant has no booking in the property."`
+
 	CreatedAt time.Time `json:"created_at" example:"2024-06-01T09:00:00Z"`
 	UpdatedAt time.Time `json:"updated_at" example:"2024-06-10T09:00:00Z"`
 }
@@ -77,6 +80,31 @@ func DBAdminTenantToRest(i *models.Tenant) any {
 		"created_at":                        i.CreatedAt,
 		"updated_at":                        i.UpdatedAt,
 	}
+
+	return data
+}
+
+// DBAdminTenantToRestWithRecentActivity nests a tenant's most relevant lease
+// and booking (for one property) onto the standard admin tenant JSON shape.
+func DBAdminTenantToRestWithRecentActivity(t *models.Tenant) any {
+	rest := DBAdminTenantToRest(t)
+	if rest == nil {
+		return nil
+	}
+
+	var recentLease *models.Lease
+	if len(t.Leases) > 0 {
+		recentLease = &t.Leases[0]
+	}
+
+	var recentBooking *models.Booking
+	if len(t.Bookings) > 0 {
+		recentBooking = &t.Bookings[0]
+	}
+
+	data := rest.(map[string]any)
+	data["recent_lease"] = DBAdminLeaseToRest(recentLease)
+	data["recent_booking"] = DBBookingToRest(recentBooking)
 
 	return data
 }

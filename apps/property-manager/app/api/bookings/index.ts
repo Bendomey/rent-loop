@@ -38,6 +38,41 @@ export const useGetPropertyBookings = (
 		enabled: !!clientId && !!propertyId,
 	})
 
+const getTenantBookings = async (
+	clientId: string,
+	propertyId: string,
+	tenantId: string,
+	props: FetchMultipleDataInputParams<FetchBookingFilter>,
+) => {
+	try {
+		const params = getQueryParams<FetchBookingFilter>(props)
+		const response = await fetchClient<
+			ApiResponse<FetchMultipleDataResponse<Booking>>
+		>(
+			`/v1/admin/clients/${clientId}/properties/${propertyId}/tenants/${tenantId}/bookings?${params.toString()}`,
+		)
+		return response.parsedBody.data
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+		if (error instanceof Error) throw error
+	}
+}
+
+export const useGetTenantBookings = (
+	clientId: string,
+	propertyId: string,
+	tenantId: string,
+	query: FetchMultipleDataInputParams<FetchBookingFilter>,
+) =>
+	useQuery({
+		queryKey: [QUERY_KEYS.BOOKINGS, clientId, propertyId, tenantId, query],
+		queryFn: () => getTenantBookings(clientId, propertyId, tenantId, query),
+		enabled: !!clientId && !!propertyId && !!tenantId,
+	})
+
 const getBooking = async (
 	clientId: string,
 	propertyId: string,

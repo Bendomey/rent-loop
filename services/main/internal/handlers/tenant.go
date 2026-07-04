@@ -62,7 +62,7 @@ type GetTenantQuery struct {
 // GetTenantByID godoc
 //
 //	@Summary		Get tenant by ID (Admin)
-//	@Description	Get tenant by ID (Admin)
+//	@Description	Get tenant by ID, scoped to the property (returns 404 if the tenant has no lease/booking in this property). Includes the tenant's most relevant lease (recent_lease) and booking (recent_booking) for this property.
 //	@Tags			Tenants
 //	@Accept			json
 //	@Security		BearerAuth
@@ -77,11 +77,13 @@ type GetTenantQuery struct {
 //	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/tenants/{tenant_id} [get]
 func (h *TenantHandler) GetTenantByID(w http.ResponseWriter, r *http.Request) {
 	tenantID := chi.URLParam(r, "tenant_id")
+	propertyID := chi.URLParam(r, "property_id")
 	populateFields := GetPopulateFields(r)
 
-	tenant, err := h.service.GetTenantByID(r.Context(), repository.GetTenantQuery{
-		ID:       tenantID,
-		Populate: populateFields,
+	tenant, err := h.service.GetTenantByIDForProperty(r.Context(), repository.GetTenantByPropertyQuery{
+		ID:         tenantID,
+		PropertyID: propertyID,
+		Populate:   populateFields,
 	})
 	if err != nil {
 		HandleErrorResponse(w, err)
@@ -89,7 +91,7 @@ func (h *TenantHandler) GetTenantByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformations.DBAdminTenantToRest(tenant),
+		"data": transformations.DBAdminTenantToRestWithRecentActivity(tenant),
 	})
 }
 
@@ -101,7 +103,7 @@ type ListTenantsByPropertyQuery struct {
 // ListTenantsByProperty godoc
 //
 //	@Summary		List tenants by property (Admin)
-//	@Description	List unique tenants for a property with optional status filtering. status=ACTIVE means tenant has at least one active lease; status=EXPIRED means tenant has no active leases but has terminated/completed/cancelled leases.
+//	@Description	List unique tenants for a property with optional status filtering. status=ACTIVE means tenant has at least one active lease; status=EXPIRED means tenant has no active leases but has terminated/completed/cancelled leases. Each tenant includes its most relevant lease (recent_lease) and booking (recent_booking) for this property.
 //	@Tags			Tenants
 //	@Accept			json
 //	@Security		BearerAuth
@@ -147,7 +149,10 @@ func (h *TenantHandler) ListTenantsByProperty(w http.ResponseWriter, r *http.Req
 
 	tenantsTransformed := make([]any, 0)
 	for _, tenant := range *tenants {
-		tenantsTransformed = append(tenantsTransformed, transformations.DBAdminTenantToRest(&tenant))
+		tenantsTransformed = append(
+			tenantsTransformed,
+			transformations.DBAdminTenantToRestWithRecentActivity(&tenant),
+		)
 	}
 
 	json.NewEncoder(w).Encode(lib.ReturnListResponse(filterQuery, tenantsTransformed, tenantsCount))

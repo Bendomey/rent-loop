@@ -4,8 +4,15 @@ import { PropertyTenantsController } from './controller'
 import { useGetPropertyTenants } from '~/api/tenants'
 import { GridElement } from '~/components/Grid'
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
+import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
-import { Card, CardContent, CardFooter, CardTitle } from '~/components/ui/card'
+import {
+	Card,
+	CardContent,
+	CardFooter,
+	CardHeader,
+	CardTitle,
+} from '~/components/ui/card'
 import { Separator } from '~/components/ui/separator'
 import {
 	TypographyH4,
@@ -15,6 +22,7 @@ import {
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { getNameInitials } from '~/lib/misc'
 import { safeString } from '~/lib/strings'
+import { getTenantOccupancyStatus } from '~/lib/tenant.utils'
 import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 
@@ -69,18 +77,22 @@ export function PropertyTenantsModule() {
 
 						return (
 							<Card key={tenant.id} className="shadow-none">
-								{/* <CardHeader className="flex items-start justify-between gap-3">
+								<CardHeader className="flex items-start justify-between gap-3">
 									<CardTitle>
 										<Badge
-											variant={
-												tenant.status === 'ACTIVE' ? 'secondary' : 'default'
-											}
-											className="px-2 py-1 text-xs"
+											variant="outline"
+											className={`px-2 py-1 text-xs ${
+												getTenantOccupancyStatus(tenant) === 'ACTIVE'
+													? 'bg-teal-500 text-white'
+													: 'bg-zinc-400 text-white'
+											}`}
 										>
-											{tenant.status === 'ACTIVE' ? 'Active' : 'Expired'}
+											{getTenantOccupancyStatus(tenant) === 'ACTIVE'
+												? 'Active'
+												: 'Inactive'}
 										</Badge>
 									</CardTitle>
-								</CardHeader> */}
+								</CardHeader>
 
 								<CardContent className="space-y-3">
 									<div className="flex flex-col items-center gap-3">

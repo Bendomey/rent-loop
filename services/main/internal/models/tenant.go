@@ -34,4 +34,7 @@ type Tenant struct {
 	CreatedBy   *ClientUser
 
 	TenantAccount *TenantAccount `gorm:"foreignKey:TenantId"`
+
+	Leases   []Lease   `gorm:"foreignKey:TenantId"`
+	Bookings []Booking `gorm:"foreignKey:TenantID"`
 }

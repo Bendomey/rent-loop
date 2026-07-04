@@ -87,6 +87,12 @@ cube(`MaintenanceRequests`, {
       title: `Unit ID`,
     },
 
+    tenantId: {
+      sql: `created_by_tenant_id`,
+      type: `string`,
+      title: `Tenant ID`,
+    },
+
     createdAt: {
       sql: `created_at`,
       type: `time`,

@@ -3137,6 +3137,10 @@ definitions:
       proof_of_income_url:
         example: https://example.com/income.pdf
         type: string
+      recent_booking:
+        $ref: '#/definitions/transformations.AdminOutputBooking'
+      recent_lease:
+        $ref: '#/definitions/transformations.OutputAdminLease'
       relationship_to_emergency_contact:
         example: sister
         type: string
@@ -12971,6 +12975,8 @@ paths:
       description: List unique tenants for a property with optional status filtering.
         status=ACTIVE means tenant has at least one active lease; status=EXPIRED means
         tenant has no active leases but has terminated/completed/cancelled leases.
+        Each tenant includes its most relevant lease (recent_lease) and booking (recent_booking)
+        for this property.
       parameters:
       - description: Property ID
         in: path
@@ -13069,7 +13075,9 @@ paths:
     get:
       consumes:
       - application/json
-      description: Get tenant by ID (Admin)
+      description: Get tenant by ID, scoped to the property (returns 404 if the tenant
+        has no lease/booking in this property). Includes the tenant's most relevant
+        lease (recent_lease) and booking (recent_booking) for this property.
       parameters:
       - description: Property ID
         in: path
@@ -13114,6 +13122,120 @@ paths:
       summary: Get tenant by ID (Admin)
       tags:
       - Tenants
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/tenants/{tenant_id}/bookings:
+    get:
+      description: List a tenant's booking history for a property. This endpoint is
+        intended for manager use to view a specific tenant's full booking history.
+      parameters:
+      - in: query
+        name: end_date
+        type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      - enum:
+        - PENDING
+        - CONFIRMED
+        - CHECKED_IN
+        - CANCELLED
+        example: PENDING
+        in: query
+        name: status
+        type: string
+      - example: 550e8400-e29b-41d4-a716-446655440000
+        in: query
+        name: unit_id
+        type: string
+      - description: Client ID
+        in: path
+        name: client_id
+        required: true
+        type: string
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Tenant ID
+        in: path
+        name: tenant_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.AdminOutputBooking'
+                    type: array
+                type: object
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List bookings by tenant (Admin)
+      tags:
+      - Booking
   /api/v1/admin/clients/{client_id}/properties/{property_id}/tenants/{tenant_id}/leases:
     get:
       consumes:
