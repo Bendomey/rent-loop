@@ -5,6 +5,7 @@ import (
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/getsentry/raven-go"
+	"github.com/lib/pq"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
@@ -43,6 +44,10 @@ type Lease struct {
 	MoveInDate            time.Time
 	StayDurationFrequency string // hours, days, months
 	StayDuration          int64
+
+	// move out details
+	MoveOutDate   *time.Time     // computed from MoveInDate + StayDuration/StayDurationFrequency; 2099-01-01 sentinel for open-ended leases
+	RemindersSent pq.StringArray `gorm:"type:text[];not null;default:'{}'"` // tracks which move-out reminder thresholds have fired, e.g. ["moveout_30d", "moveout_7d"]
 
 	KeyHandoverDate        *time.Time // when keys were handed over to tenant
 	UtilityTransfersDate   *time.Time // when utilities were transferred to tenant name

@@ -293,13 +293,14 @@ func (s *leaseTerminationService) Complete(ctx context.Context, input CompleteLe
 		})
 	}
 
-	// Check remaining active leases for this unit before reverting status
-	activeCount, countErr := s.leaseRepo.CountActiveByUnitID(txCtx, lease.UnitId)
-	if countErr != nil {
+	// Release the unit inside the same transaction — if this fails, the whole
+	// completion rolls back so the termination isn't left half-applied with a
+	// stale unit status.
+	if releaseErr := releaseUnitIfNoActiveLease(txCtx, s.leaseRepo, s.unitService, &lease.Unit); releaseErr != nil {
 		tx.Rollback()
-		return pkg.InternalServerError(countErr.Error(), &pkg.RentLoopErrorParams{
-			Err:      countErr,
-			Metadata: map[string]string{"function": "Complete", "action": "counting active leases for unit"},
+		return pkg.InternalServerError(releaseErr.Error(), &pkg.RentLoopErrorParams{
+			Err:      releaseErr,
+			Metadata: map[string]string{"function": "Complete", "action": "releasing unit"},
 		})
 	}
 
@@ -308,22 +309,6 @@ func (s *leaseTerminationService) Complete(ctx context.Context, input CompleteLe
 			Err:      commitErr,
 			Metadata: map[string]string{"function": "Complete", "action": "committing transaction"},
 		})
-	}
-
-	// Release unit if no remaining active leases
-	if activeCount == 0 {
-		go func() {
-			if err := s.unitService.SetSystemUnitStatus(context.Background(), UpdateUnitStatusInput{
-				UnitID:     lease.UnitId,
-				PropertyID: lease.Unit.PropertyID,
-				Status:     "Unit.Status.Available",
-			}); err != nil {
-				log.WithError(err).WithFields(log.Fields{
-					"unit_id":        lease.UnitId,
-					"termination_id": input.ID,
-				}).Error("failed to set unit status to Available after lease termination")
-			}
-		}()
 	}
 
 	// Fire-and-forget: email + SMS to tenant

@@ -126,6 +126,37 @@ type LeaseTerminatedData struct {
 	TerminationReason string
 }
 
+// LeaseMoveOutReminderData is shared by every reminder threshold (30/14/7/1
+// days out) — only DaysRemaining and MoveOutDate change between sends.
+type LeaseMoveOutReminderData struct {
+	TenantName    string
+	UnitName      string
+	DaysRemaining int
+	MoveOutDate   string
+}
+
+// LeaseMoveOutReminderManagerData is the manager-facing counterpart, includes
+// the move-out report (CHECK_OUT checklist) existence check.
+type LeaseMoveOutReminderManagerData struct {
+	ManagerName         string
+	TenantName          string
+	UnitName            string
+	DaysRemaining       int
+	MoveOutDate         string
+	MoveOutReportStatus string
+}
+
+type LeaseCompletedData struct {
+	TenantName string
+	UnitName   string
+}
+
+type LeaseCompletedManagerData struct {
+	ManagerName string
+	TenantName  string
+	UnitName    string
+}
+
 // ─── Invoice ──────────────────────────────────────────────────────────────────
 
 type InvoiceCreatedData struct {

@@ -24,6 +24,7 @@ interface Lease {
 	stay_duration_frequency: string
 
 	move_in_date: Date
+	move_out_date: Nullable<Date>
 	property_inspection_date: Nullable<Date>
 	utility_transfers_date: Nullable<Date>
 
