@@ -7,6 +7,7 @@ import {
 import { useState } from 'react'
 import { ChecklistModal } from './checklist-modal'
 import { CreateChecklistDialog } from './create-checklist-dialog'
+import { StartLeaseDialog } from './start-lease-dialog'
 import { useGetLeaseChecklists } from '~/api/lease-checklists'
 import { useHasPropertyPermissions } from '~/components/permissions/use-has-role'
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
@@ -46,24 +47,35 @@ export function ChecklistAlerts({ lease, canEdit, propertyId }: Props) {
 	})
 	const [createType, setCreateType] = useState<LeaseChecklistType | null>(null)
 	const [viewChecklistId, setViewChecklistId] = useState<string | null>(null)
+	const [startLeaseOpen, setStartLeaseOpen] = useState(false)
 
 	if (!isSuccess || canCreateReport === 'UNAUTHORIZED') return null
 
 	const checklists = data?.rows ?? []
 	const viewChecklist = checklists.find((c) => c.id === viewChecklistId) ?? null
 
-	const showCheckIn = shouldShowCheckInAlert(lease, checklists)
-	const showLeaseEnding = shouldShowLeaseEndingAlert(lease)
 	const disputedChecklists = checklists.filter((c) => c.status === 'DISPUTED')
 
-	const draftCheckIn = checklists.find(
-		(c) => c.type === 'CHECK_IN' && c.status === 'DRAFT',
-	)
+	const checkIn = checklists.find((c) => c.type === 'CHECK_IN')
+	const checkInHandled = !!checkIn && isChecklistHandled(checkIn.status)
+	const canOfferCheckInReport = !checkIn || checkIn.status === 'DRAFT'
+	const draftCheckIn = checkIn?.status === 'DRAFT' ? checkIn : undefined
+
 	const checkOut = checklists.find((c) => c.type === 'CHECK_OUT')
 	const checkOutHandled = !!checkOut && isChecklistHandled(checkOut.status)
+	const canOfferCheckOutReport = !checkOut || checkOut.status === 'DRAFT'
 	const draftCheckOut = checkOut?.status === 'DRAFT' ? checkOut : undefined
 
-	if (!showCheckIn && !showLeaseEnding && disputedChecklists.length === 0) {
+	const isPendingLease = lease.status === 'Lease.Status.Pending'
+	const showLeaseStarting =
+		shouldShowCheckInAlert(lease, checklists) || isPendingLease
+	const showLeaseEnding = shouldShowLeaseEndingAlert(lease)
+
+	if (
+		!showLeaseStarting &&
+		!showLeaseEnding &&
+		disputedChecklists.length === 0
+	) {
 		return null
 	}
 
@@ -102,30 +114,65 @@ export function ChecklistAlerts({ lease, canEdit, propertyId }: Props) {
 					)
 				})}
 
-				{showCheckIn && (
+				{showLeaseStarting && (
 					<Alert className="border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-50">
 						<AlertTriangleIcon className="size-4 text-amber-600 dark:text-amber-400" />
 						<AlertTitle className="text-sm font-semibold">
-							Move-In Report not completed
+							Lease Starting Soon
 						</AlertTitle>
-						<AlertDescription className="flex items-center justify-between gap-3">
+						<AlertDescription className="w-full space-y-2">
 							<span className="text-xs">
 								Documenting the property's condition at move-in protects you
-								against future disputes. We recommend doing this within the
-								first payment period.
+								against future disputes, and activating the lease unlocks
+								billing and tenant access.
 							</span>
-							<Button
-								size="sm"
-								variant="outline"
-								className="shrink-0 border-amber-400 bg-transparent text-amber-900 hover:bg-amber-100 dark:border-amber-700 dark:text-amber-100 dark:hover:bg-amber-900"
-								onClick={() =>
-									draftCheckIn
-										? setViewChecklistId(draftCheckIn.id)
-										: setCreateType('CHECK_IN')
-								}
-							>
-								{draftCheckIn ? 'Complete Report' : 'Create Report'}
-							</Button>
+							<div className="w-full space-y-1.5">
+								<div className="flex items-center justify-between gap-3 rounded-md border border-amber-200 bg-amber-100/50 px-3 py-2 dark:border-amber-800 dark:bg-amber-900/30">
+									<div className="flex items-center gap-2">
+										{checkInHandled ? (
+											<CheckCircle2Icon className="size-4 shrink-0 text-teal-600 dark:text-teal-400" />
+										) : (
+											<CircleIcon className="size-4 shrink-0 text-amber-500" />
+										)}
+										<span className="text-xs font-medium">Move-In Report</span>
+									</div>
+									{canOfferCheckInReport && (
+										<Button
+											size="sm"
+											variant="outline"
+											className="shrink-0 border-amber-400 bg-transparent text-amber-900 hover:bg-amber-100 dark:border-amber-700 dark:text-amber-100 dark:hover:bg-amber-900"
+											onClick={() =>
+												draftCheckIn
+													? setViewChecklistId(draftCheckIn.id)
+													: setCreateType('CHECK_IN')
+											}
+										>
+											{draftCheckIn ? 'Complete Report' : 'Create Report'}
+										</Button>
+									)}
+								</div>
+
+								<div className="flex items-center justify-between gap-3 rounded-md border border-amber-200 bg-amber-100/50 px-3 py-2 dark:border-amber-800 dark:bg-amber-900/30">
+									<div className="flex items-center gap-2">
+										{isPendingLease ? (
+											<CircleIcon className="size-4 shrink-0 text-amber-500" />
+										) : (
+											<CheckCircle2Icon className="size-4 shrink-0 text-teal-600 dark:text-teal-400" />
+										)}
+										<span className="text-xs font-medium">Start Lease</span>
+									</div>
+									{isPendingLease && (
+										<Button
+											size="sm"
+											variant="outline"
+											className="shrink-0 border-amber-400 bg-transparent text-amber-900 hover:bg-amber-100 dark:border-amber-700 dark:text-amber-100 dark:hover:bg-amber-900"
+											onClick={() => setStartLeaseOpen(true)}
+										>
+											Start Lease
+										</Button>
+									)}
+								</div>
+							</div>
 						</AlertDescription>
 					</Alert>
 				)}
@@ -151,7 +198,7 @@ export function ChecklistAlerts({ lease, canEdit, propertyId }: Props) {
 										)}
 										<span className="text-xs font-medium">Move-Out Report</span>
 									</div>
-									{!checkOutHandled && (
+									{canOfferCheckOutReport && (
 										<Button
 											size="sm"
 											variant="outline"
@@ -214,6 +261,13 @@ export function ChecklistAlerts({ lease, canEdit, propertyId }: Props) {
 					setOpened={(open) => !open && setViewChecklistId(null)}
 				/>
 			)}
+
+			<StartLeaseDialog
+				lease={lease}
+				propertyId={propertyId}
+				opened={startLeaseOpen}
+				setOpened={setStartLeaseOpen}
+			/>
 		</>
 	)
 }

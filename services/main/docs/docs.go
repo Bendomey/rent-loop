@@ -22131,6 +22131,10 @@ const docTemplate = `{
                     "type": "string",
                     "example": "2024-07-01T00:00:00Z"
                 },
+                "move_out_date": {
+                    "type": "string",
+                    "example": "2025-07-01T00:00:00Z"
+                },
                 "parent_lease_id": {
                     "type": "string",
                     "example": "b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"
@@ -23645,6 +23649,10 @@ const docTemplate = `{
                 "move_in_date": {
                     "type": "string",
                     "example": "2024-07-01T00:00:00Z"
+                },
+                "move_out_date": {
+                    "type": "string",
+                    "example": "2025-07-01T00:00:00Z"
                 },
                 "parent_lease_id": {
                     "type": "string",

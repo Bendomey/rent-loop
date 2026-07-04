@@ -20,6 +20,8 @@ type LeaseRepository interface {
 	CountActiveByUnitID(context context.Context, unitID string) (int64, error)
 	CountActiveByPropertyID(context context.Context, propertyID string) (int64, error)
 	ListDueForBilling(ctx context.Context) (*[]models.Lease, error)
+	ListForMoveOutReminders(ctx context.Context) (*[]models.Lease, error)
+	ListDueForCompletion(ctx context.Context) (*[]models.Lease, error)
 }
 
 type leaseRepository struct {
@@ -240,6 +242,53 @@ func (r *leaseRepository) ListDueForBilling(ctx context.Context) (*[]models.Leas
 		Where("status = ? AND next_billing_date IS NOT NULL AND next_billing_date <= ?", "Lease.Status.Active", time.Now()).
 		Preload("Unit.Property").
 		Preload("Tenant.TenantAccount").
+		Find(&leases)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &leases, nil
+}
+
+// ListForMoveOutReminders returns pending or active leases whose MoveOutDate
+// falls within the next 30 days, so the reminder cron can evaluate which
+// threshold (if any) applies without recomputing lease duration math.
+// Pending leases are included because some managers never explicitly
+// activate a lease before move-out.
+func (r *leaseRepository) ListForMoveOutReminders(ctx context.Context) (*[]models.Lease, error) {
+	var leases []models.Lease
+	now := time.Now()
+	result := r.DB.WithContext(ctx).
+		Where(
+			"status IN (?, ?) AND move_out_date IS NOT NULL AND move_out_date BETWEEN ? AND ?",
+			"Lease.Status.Pending", "Lease.Status.Active", now, now.AddDate(0, 0, 30),
+		).
+		Preload("Unit.Property").
+		Preload("Tenant.TenantAccount").
+		Preload("ActivatedBy.User").
+		Find(&leases)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return &leases, nil
+}
+
+// ListDueForCompletion returns pending or active leases whose MoveOutDate has
+// fully passed (the day after move-out, calendar-day normalized in UTC), i.e.
+// ready to transition to Lease.Status.Completed. Pending leases are included
+// because some managers never explicitly activate a lease before move-out.
+func (r *leaseRepository) ListDueForCompletion(ctx context.Context) (*[]models.Lease, error) {
+	var leases []models.Lease
+	now := time.Now().UTC()
+	startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+	result := r.DB.WithContext(ctx).
+		Where(
+			"status IN (?, ?) AND move_out_date IS NOT NULL AND move_out_date < ?",
+			"Lease.Status.Pending", "Lease.Status.Active", startOfToday,
+		).
+		Preload("Unit.Property").
+		Preload("Tenant.TenantAccount").
+		Preload("ActivatedBy.User").
 		Find(&leases)
 	if result.Error != nil {
 		return nil, result.Error

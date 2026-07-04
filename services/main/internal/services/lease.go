@@ -14,6 +14,7 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
+	"github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
@@ -28,6 +29,8 @@ type LeaseService interface {
 	CancelLease(context context.Context, input CancelLeaseInput) error
 	CountOccupyingByUnitID(context context.Context, unitID string) (int64, error)
 	GenerateLeaseRentInvoice(ctx context.Context, leaseID string) error
+	CompleteLease(ctx context.Context, leaseID string) (*models.Lease, error)
+	ResolveManagerRecipient(ctx context.Context, lease *models.Lease) (*models.ClientUser, error)
 }
 
 type leaseService struct {
@@ -36,6 +39,9 @@ type leaseService struct {
 	invoiceService       InvoiceService
 	notificationService  NotificationService
 	unitDateBlockService UnitDateBlockService
+	unitService          UnitService
+	clientUserRepo       repository.ClientUserRepository
+	userRepo             repository.UserRepository
 }
 
 func NewLeaseService(
@@ -44,6 +50,9 @@ func NewLeaseService(
 	invoiceService InvoiceService,
 	notificationService NotificationService,
 	unitDateBlockService UnitDateBlockService,
+	unitService UnitService,
+	clientUserRepo repository.ClientUserRepository,
+	userRepo repository.UserRepository,
 ) LeaseService {
 	return &leaseService{
 		appCtx:               appCtx,
@@ -51,6 +60,9 @@ func NewLeaseService(
 		invoiceService:       invoiceService,
 		notificationService:  notificationService,
 		unitDateBlockService: unitDateBlockService,
+		clientUserRepo:       clientUserRepo,
+		userRepo:             userRepo,
+		unitService:          unitService,
 	}
 }
 
@@ -111,6 +123,8 @@ func (s *leaseService) CreateLease(ctx context.Context, input CreateLeaseInput) 
 		})
 	}
 
+	moveOutDate := leaseEndDate(input.MoveInDate, input.StayDuration, input.StayDurationFrequency)
+
 	lease := models.Lease{
 		Status:                          input.Status,
 		UnitId:                          input.UnitId,
@@ -123,6 +137,7 @@ func (s *leaseService) CreateLease(ctx context.Context, input CreateLeaseInput) 
 		MoveInDate:                      input.MoveInDate,
 		StayDurationFrequency:           input.StayDurationFrequency,
 		StayDuration:                    input.StayDuration,
+		MoveOutDate:                     &moveOutDate,
 		KeyHandoverDate:                 input.KeyHandoverDate,
 		UtilityTransfersDate:            input.UtilityTransfersDate,
 		PropertyInspectionDate:          input.PropertyInspectionDate,
@@ -219,16 +234,24 @@ func (s *leaseService) UpdateLease(ctx context.Context, input UpdateLeaseInput) 
 		lease.RentFeeCurrency = *input.RentFeeCurrency
 	}
 
-	if input.MoveInDate != nil {
-		lease.MoveInDate = *input.MoveInDate
-	}
+	if input.MoveInDate != nil || input.StayDurationFrequency != nil || input.StayDuration != nil {
+		if input.MoveInDate != nil {
+			lease.MoveInDate = *input.MoveInDate
+		}
 
-	if input.StayDurationFrequency != nil {
-		lease.StayDurationFrequency = *input.StayDurationFrequency
-	}
+		if input.StayDurationFrequency != nil {
+			lease.StayDurationFrequency = *input.StayDurationFrequency
+		}
 
-	if input.StayDuration != nil {
-		lease.StayDuration = *input.StayDuration
+		if input.StayDuration != nil {
+			lease.StayDuration = *input.StayDuration
+		}
+
+		moveOutDate := leaseEndDate(lease.MoveInDate, lease.StayDuration, lease.StayDurationFrequency)
+		lease.MoveOutDate = &moveOutDate
+		// Previously-sent thresholds were computed against the old MoveOutDate
+		// and no longer apply now that it has moved.
+		lease.RemindersSent = pq.StringArray{}
 	}
 
 	if input.LeaseAgreementDocumentUrl != nil {
@@ -429,11 +452,15 @@ func (s *leaseService) ActivateLease(ctx context.Context, input ActivateLeaseInp
 	// Create UnitDateBlock for the lease duration (for availability calendar)
 	go func() {
 		leaseID := lease.ID.String()
-		endDate := leaseEndDate(lease.MoveInDate, lease.StayDuration, lease.StayDurationFrequency)
+		moveOutDate := lease.MoveOutDate
+		if moveOutDate == nil {
+			computed := leaseEndDate(lease.MoveInDate, lease.StayDuration, lease.StayDurationFrequency)
+			moveOutDate = &computed
+		}
 		_, _ = s.unitDateBlockService.CreateSystemBlock(context.Background(), CreateSystemBlockInput{
 			UnitID:    lease.UnitId,
 			StartDate: lease.MoveInDate,
-			EndDate:   endDate,
+			EndDate:   *moveOutDate,
 			BlockType: "LEASE",
 			LeaseID:   &leaseID,
 			Reason:    "Active lease",
@@ -730,6 +757,223 @@ func (s *leaseService) CancelLease(ctx context.Context, input CancelLeaseInput) 
 	)
 
 	return nil
+}
+
+func (s *leaseService) CompleteLease(ctx context.Context, leaseID string) (*models.Lease, error) {
+	lease, getLeaseErr := s.repo.GetOneWithPopulate(ctx, repository.GetLeaseQuery{
+		ID:       leaseID,
+		Populate: &[]string{"Unit.Property", "Tenant.TenantAccount", "ActivatedBy.User"},
+	})
+	if getLeaseErr != nil {
+		if errors.Is(getLeaseErr, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("LeaseNotFound", &pkg.RentLoopErrorParams{
+				Err: getLeaseErr,
+			})
+		}
+		return nil, pkg.InternalServerError(getLeaseErr.Error(), &pkg.RentLoopErrorParams{
+			Err: getLeaseErr,
+			Metadata: map[string]string{
+				"function": "CompleteLease",
+				"action":   "getting lease",
+			},
+		})
+	}
+
+	if lease.Status != "Lease.Status.Active" {
+		return nil, pkg.BadRequestError("LeaseIsNotActive", nil)
+	}
+
+	transaction := s.appCtx.DB.Begin()
+	transCtx := lib.WithTransaction(ctx, transaction)
+
+	now := time.Now()
+	lease.Status = "Lease.Status.Completed"
+	lease.CompletedAt = &now
+	lease.NextBillingDate = nil
+
+	if updateErr := s.repo.Update(transCtx, lease); updateErr != nil {
+		transaction.Rollback()
+		return nil, pkg.InternalServerError(updateErr.Error(), &pkg.RentLoopErrorParams{
+			Err: updateErr,
+			Metadata: map[string]string{
+				"function": "CompleteLease",
+				"action":   "updating lease status",
+			},
+		})
+	}
+
+	// Release the unit inside the same transaction — if this fails, the whole
+	// completion rolls back so the lease stays Active and is retried by the
+	// next cron run, instead of being stuck Completed with a stale unit status.
+	if releaseErr := releaseUnitIfNoActiveLease(transCtx, s.repo, s.unitService, &lease.Unit); releaseErr != nil {
+		transaction.Rollback()
+		return nil, pkg.InternalServerError(releaseErr.Error(), &pkg.RentLoopErrorParams{
+			Err: releaseErr,
+			Metadata: map[string]string{
+				"function": "CompleteLease",
+				"action":   "releasing unit",
+			},
+		})
+	}
+
+	if commitErr := transaction.Commit().Error; commitErr != nil {
+		return nil, pkg.InternalServerError(commitErr.Error(), &pkg.RentLoopErrorParams{
+			Err: commitErr,
+			Metadata: map[string]string{
+				"function": "CompleteLease",
+				"action":   "committing transaction",
+			},
+		})
+	}
+
+	unitName := lease.Unit.Name
+
+	smsMessage := strings.NewReplacer(
+		"{{tenant_name}}", lease.Tenant.FirstName,
+		"{{unit_name}}", unitName,
+	).Replace(lib.LEASE_COMPLETED_SMS_BODY)
+
+	if lease.Tenant.Email != nil {
+		if htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render(
+			"lease/completed",
+			emailtemplates.LeaseCompletedData{TenantName: lease.Tenant.FirstName, UnitName: unitName},
+		); renderErr != nil {
+			log.WithError(renderErr).Error("failed to render lease/completed email template")
+		} else {
+			go pkg.SendEmail(
+				s.appCtx.Config,
+				pkg.SendEmailInput{
+					Recipient: *lease.Tenant.Email,
+					Subject:   lib.LEASE_COMPLETED_SUBJECT,
+					HtmlBody:  htmlBody,
+					TextBody:  textBody,
+				},
+			)
+		}
+	}
+
+	go s.appCtx.Clients.GatekeeperAPI.SendSMS(
+		context.Background(),
+		gatekeeper.SendSMSInput{
+			Recipient: lease.Tenant.Phone,
+			Message:   smsMessage,
+		},
+	)
+
+	if lease.Tenant.TenantAccount != nil {
+		tenantAccountID := lease.Tenant.TenantAccount.ID.String()
+		leaseID := lease.ID.String()
+		go func() {
+			_ = s.notificationService.SendToTenantAccount(
+				context.Background(),
+				tenantAccountID,
+				lib.LEASE_COMPLETED_SUBJECT,
+				smsMessage,
+				map[string]string{"type": "LEASE_COMPLETED", "lease_id": leaseID},
+			)
+		}()
+	}
+
+	manager, managerErr := s.ResolveManagerRecipient(ctx, lease)
+	if managerErr != nil {
+		log.WithError(managerErr).WithField("lease_id", lease.ID.String()).
+			Warn("failed to resolve manager recipient for lease completion")
+		return lease, nil
+	}
+
+	if manager.User.Email != "" {
+		if htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render(
+			"lease/completed-manager",
+			emailtemplates.LeaseCompletedManagerData{
+				ManagerName: manager.User.Name,
+				TenantName:  lease.Tenant.FirstName,
+				UnitName:    unitName,
+			},
+		); renderErr != nil {
+			log.WithError(renderErr).Error("failed to render lease/completed-manager email template")
+		} else {
+			go pkg.SendEmail(
+				s.appCtx.Config,
+				pkg.SendEmailInput{
+					Recipient: manager.User.Email,
+					Subject:   lib.PM_LEASE_COMPLETED_SUBJECT,
+					HtmlBody:  htmlBody,
+					TextBody:  textBody,
+				},
+			)
+		}
+	}
+
+	return lease, nil
+}
+
+// ResolveManagerRecipient returns the ClientUser who should be notified about
+// lease lifecycle events: the manager who activated the lease, or the
+// account owner if that's unavailable (e.g. the lease predates this feature,
+// or the activating user has no email on file).
+func (s *leaseService) ResolveManagerRecipient(ctx context.Context, lease *models.Lease) (*models.ClientUser, error) {
+	if lease.ActivatedBy != nil && lease.ActivatedBy.User.Email != "" {
+		return lease.ActivatedBy, nil
+	}
+
+	owner, err := s.clientUserRepo.GetByQuery(ctx, map[string]any{
+		"client_id": lease.Unit.Property.ClientID,
+		"role":      "OWNER",
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	user, err := s.userRepo.GetByID(ctx, owner.UserID)
+	if err != nil {
+		return nil, err
+	}
+	owner.User = *user
+
+	return owner, nil
+}
+
+// releaseUnitIfNoActiveLease re-evaluates a unit's occupancy status after one
+// of its leases ends. Mirrors the exact counting/threshold logic
+// ApproveTenantApplication uses when a lease is added (internal/services/
+// tenant-application.go), just run in reverse: re-count remaining
+// Pending/Active leases against the unit's MaxOccupantsAllowed and downgrade
+// accordingly — Available if none remain, PartiallyOccupied if some remain
+// but under capacity (covers multi-tenant units losing one of several
+// tenants), or left as-is if still at/over capacity. Shared by CompleteLease
+// and LeaseTerminationService.Complete — the two places a lease ending can
+// change a unit's occupancy — so this rule lives once.
+func releaseUnitIfNoActiveLease(
+	ctx context.Context,
+	leaseRepo repository.LeaseRepository,
+	unitService UnitService,
+	unit *models.Unit,
+) error {
+	remainingCount, err := leaseRepo.CountActiveByUnitID(ctx, unit.ID.String())
+	if err != nil {
+		return err
+	}
+
+	var newStatus string
+	switch {
+	case remainingCount == 0:
+		newStatus = "Unit.Status.Available"
+	case remainingCount < int64(unit.MaxOccupantsAllowed):
+		newStatus = "Unit.Status.PartiallyOccupied"
+	default:
+		// Still at or over capacity from the remaining leases — no change.
+		return nil
+	}
+
+	if unit.Status == newStatus {
+		return nil
+	}
+
+	return unitService.SetSystemUnitStatus(ctx, UpdateUnitStatusInput{
+		UnitID:     unit.ID.String(),
+		PropertyID: unit.PropertyID,
+		Status:     newStatus,
+	})
 }
 
 // leaseEndDate calculates the expected end date from a lease's move-in date, duration, and frequency.

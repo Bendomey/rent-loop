@@ -1,0 +1,8 @@
+{{define "preview"}}A lease on your property has been completed.{{end}}
+{{define "content"}}
+<h1 class="headline" style="margin:0 0 14px;font-family:'DM Serif Display',Georgia,'Times New Roman',serif;font-size:28px;font-weight:400;color:#111110;line-height:1.2;letter-spacing:0.2px;">A lease has been completed.</h1>
+<p style="margin:0 0 20px;font-family:'DM Sans',Arial,sans-serif;font-size:14.5px;color:#444444;line-height:1.7;">Hi {{.Data.ManagerName}},</p>
+<p style="margin:0 0 24px;font-family:'DM Sans',Arial,sans-serif;font-size:14.5px;color:#444444;line-height:1.7;">The lease held by <strong>{{.Data.TenantName}}</strong> for <strong>{{.Data.UnitName}}</strong> has run its full term and is now complete. The unit has been released and is available again, unless another active lease still holds it.</p>
+
+<p style="margin:0;font-family:'DM Sans',Arial,sans-serif;font-size:12.5px;color:#aaaaaa;line-height:1.6;">Log in to Rentloop to review the lease and prepare the unit for its next tenant.</p>
+{{end}}

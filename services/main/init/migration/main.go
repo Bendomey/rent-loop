@@ -119,6 +119,9 @@ func ServiceAutoMigration(db *gorm.DB) error {
 		jobs.AddLeaseAgreementDocument(),
 		jobs.FixLADLeaseIDPartialUniqueIndex(),
 		jobs.AddNotificationTables(),
+		jobs.AddLeaseMoveOutDate(),
+		jobs.AddLeaseRemindersSent(),
+		jobs.BackfillLeaseMoveOutDate(),
 	})
 	if err := m.Migrate(); err != nil {
 		return fmt.Errorf("[Migration.Migrate]: %v", err)

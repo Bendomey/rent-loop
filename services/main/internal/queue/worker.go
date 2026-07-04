@@ -59,6 +59,13 @@ func RegisterWorkers(redisURL string, appCtx pkg.AppContext, repo repository.Rep
 			LeaseInvoicingHandlers(repo.LeaseRepository, svcs.LeaseService),
 			InvoiceReminderHandlers(repo.InvoiceRepository, appCtx, svcs.NotificationService),
 			ForexSyncHandlers(svcs.ExchangeRateService),
+			LeaseLifecycleHandlers(
+				repo.LeaseRepository,
+				repo.LeaseChecklistRepository,
+				svcs.LeaseService,
+				svcs.NotificationService,
+				appCtx,
+			),
 		)
 		if err := queueServer.Run(mux); err != nil {
 			raven.CaptureError(err, nil)
@@ -104,6 +111,26 @@ func RegisterScheduler(redisURL string) {
 	if _, err = scheduler.Register("0 2 * * *", asynq.NewTask(TypeForexSync, nil), asynq.MaxRetry(2)); err != nil {
 		raven.CaptureError(err, nil)
 		log.Fatal("failed to register forex sync schedule:", err)
+	}
+
+	// Daily at 08:00 UTC — business-hours-friendly for tenant/manager visibility.
+	if _, err = scheduler.Register(
+		"0 8 * * *",
+		asynq.NewTask(TypeLeaseMoveOutReminder, nil),
+		asynq.MaxRetry(1),
+	); err != nil {
+		raven.CaptureError(err, nil)
+		log.Fatal("failed to register lease move-out reminder schedule:", err)
+	}
+
+	// Daily at midnight — auto-completes leases whose move-out date has passed.
+	if _, err = scheduler.Register(
+		"0 0 * * *",
+		asynq.NewTask(TypeLeaseCompletion, nil),
+		asynq.MaxRetry(1),
+	); err != nil {
+		raven.CaptureError(err, nil)
+		log.Fatal("failed to register lease completion schedule:", err)
 	}
 
 	go func() {

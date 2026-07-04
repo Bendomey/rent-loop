@@ -12,13 +12,49 @@ function getPeriodDays(frequency: string): number {
 }
 
 /**
- * Returns the estimated lease end date based on move_in_date + stay_duration × frequency.
+ * Mirrors the backend's leaseEndDate() (services/main/internal/services/lease.go)
+ * for the rare case move_out_date isn't available from the API yet (e.g. a
+ * lease predating this field). Falls back to the same open-ended-lease
+ * sentinel the backend uses when duration/frequency can't produce a real date.
+ */
+function computeMoveOutDate(
+	moveInDate: Date | string,
+	stayDuration: number,
+	stayDurationFrequency: string,
+): Date {
+	if (!stayDuration || !stayDurationFrequency) return new Date('2099-01-01')
+
+	const moveIn = new Date(moveInDate)
+
+	switch (stayDurationFrequency.toLowerCase()) {
+		case 'hours':
+		case 'hour':
+			return new Date(moveIn.getTime() + stayDuration * 60 * 60 * 1000)
+		case 'days':
+		case 'day':
+			return new Date(moveIn.getTime() + stayDuration * 86_400_000)
+		case 'months':
+		case 'month': {
+			const result = new Date(moveIn)
+			result.setMonth(result.getMonth() + stayDuration)
+			return result
+		}
+		default:
+			return new Date('2099-01-01')
+	}
+}
+
+/**
+ * Returns the lease's move-out date, preferring the value computed and
+ * persisted by the backend, and falling back to a client-side computation
+ * when it isn't available from the API.
  */
 export function getLeaseEndDate(lease: Lease): Date {
-	const moveIn = new Date(lease.move_in_date)
-	const periodDays = getPeriodDays(lease.stay_duration_frequency)
-	return new Date(
-		moveIn.getTime() + lease.stay_duration * periodDays * 86_400_000,
+	if (lease.move_out_date) return new Date(lease.move_out_date)
+	return computeMoveOutDate(
+		lease.move_in_date,
+		lease.stay_duration,
+		lease.stay_duration_frequency,
 	)
 }
 

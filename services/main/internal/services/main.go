@@ -127,6 +127,9 @@ func NewServices(params INewServicesParams) Services {
 		invoiceService,
 		notificationService,
 		unitDateBlockService,
+		unitService,
+		params.Repository.ClientUserRepository,
+		params.Repository.UserRepository,
 	)
 
 	tenantAccountService := NewTenantAccountService(params.AppCtx, params.Repository.TenantAccountRepository)

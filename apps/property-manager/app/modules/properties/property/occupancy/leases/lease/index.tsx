@@ -294,6 +294,12 @@ export function LeaseDetailModule() {
 														)}
 													/>
 													<DetailRow
+														label="Move-out Date"
+														value={localizedDayjs(lease.move_out_date).format(
+															'LL',
+														)}
+													/>
+													<DetailRow
 														label="Property Inspection"
 														value={
 															lease.property_inspection_date

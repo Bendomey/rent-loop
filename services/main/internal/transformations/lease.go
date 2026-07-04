@@ -22,9 +22,10 @@ type OutputAdminLease struct {
 	PaymentFrequency    *string        `json:"payment_frequency,omitempty" example:"Monthly"`
 	Meta                map[string]any `json:"meta"`
 
-	MoveInDate            time.Time `json:"move_in_date"            example:"2024-07-01T00:00:00Z"`
-	StayDurationFrequency string    `json:"stay_duration_frequency" example:"Months"`
-	StayDuration          int64     `json:"stay_duration"           example:"12"`
+	MoveInDate            time.Time  `json:"move_in_date"            example:"2024-07-01T00:00:00Z"`
+	StayDurationFrequency string     `json:"stay_duration_frequency" example:"Months"`
+	StayDuration          int64      `json:"stay_duration"           example:"12"`
+	MoveOutDate           *time.Time `json:"move_out_date"           example:"2025-07-01T00:00:00Z"`
 
 	KeyHandoverDate        *time.Time `json:"key_handover_date"        example:"2024-07-01T09:00:00Z"`
 	UtilityTransfersDate   *time.Time `json:"utility_transfers_date"   example:"2024-07-02T10:00:00Z"`
@@ -83,6 +84,7 @@ func DBAdminLeaseToRest(i *models.Lease) any {
 		"move_in_date":                       i.MoveInDate,
 		"stay_duration_frequency":            i.StayDurationFrequency,
 		"stay_duration":                      i.StayDuration,
+		"move_out_date":                      i.MoveOutDate,
 		"key_handover_date":                  i.KeyHandoverDate,
 		"utility_transfers_date":             i.UtilityTransfersDate,
 		"property_inspection_date":           i.PropertyInspectionDate,
@@ -124,9 +126,10 @@ type OutputLease struct {
 	PaymentFrequency    *string                 `json:"payment_frequency,omitempty"  example:"Monthly"`
 	Meta                map[string]any          `json:"meta"`
 
-	MoveInDate            time.Time `json:"move_in_date"            example:"2024-07-01T00:00:00Z"`
-	StayDurationFrequency string    `json:"stay_duration_frequency" example:"Months"`
-	StayDuration          int64     `json:"stay_duration"           example:"12"`
+	MoveInDate            time.Time  `json:"move_in_date"            example:"2024-07-01T00:00:00Z"`
+	StayDurationFrequency string     `json:"stay_duration_frequency" example:"Months"`
+	StayDuration          int64      `json:"stay_duration"           example:"12"`
+	MoveOutDate           *time.Time `json:"move_out_date"           example:"2025-07-01T00:00:00Z"`
 
 	KeyHandoverDate        *time.Time `json:"key_handover_date"        example:"2024-07-01T09:00:00Z"`
 	UtilityTransfersDate   *time.Time `json:"utility_transfers_date"   example:"2024-07-02T10:00:00Z"`
@@ -170,6 +173,7 @@ func DBLeaseToRest(i *models.Lease) any {
 		"move_in_date":                       i.MoveInDate,
 		"stay_duration_frequency":            i.StayDurationFrequency,
 		"stay_duration":                      i.StayDuration,
+		"move_out_date":                      i.MoveOutDate,
 		"key_handover_date":                  i.KeyHandoverDate,
 		"utility_transfers_date":             i.UtilityTransfersDate,
 		"property_inspection_date":           i.PropertyInspectionDate,

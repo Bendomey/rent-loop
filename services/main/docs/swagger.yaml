@@ -2836,6 +2836,9 @@ definitions:
       move_in_date:
         example: "2024-07-01T00:00:00Z"
         type: string
+      move_out_date:
+        example: "2025-07-01T00:00:00Z"
+        type: string
       parent_lease_id:
         example: b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456
         type: string
@@ -3939,6 +3942,9 @@ definitions:
         type: object
       move_in_date:
         example: "2024-07-01T00:00:00Z"
+        type: string
+      move_out_date:
+        example: "2025-07-01T00:00:00Z"
         type: string
       parent_lease_id:
         example: b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456
