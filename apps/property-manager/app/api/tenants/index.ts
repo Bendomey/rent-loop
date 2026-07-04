@@ -71,3 +71,35 @@ const getTenantByPhone = async (phone?: string) => {
 }
 export const useGetTenantByPhone = () =>
 	useMutation({ mutationFn: (phone?: string) => getTenantByPhone(phone) })
+
+/**
+ * Update tenant
+ */
+interface UpdateTenantProps {
+	tenant_id: string
+	data: Partial<Tenant>
+}
+
+const updateTenant = async ({ tenant_id, data }: UpdateTenantProps) => {
+	try {
+		const response = await fetchClient<ApiResponse<Tenant>>(
+			`/v1/tenants/${tenant_id}`,
+			{
+				method: 'PATCH',
+				body: JSON.stringify(data),
+			},
+		)
+		return response.parsedBody.data
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+
+export const useUpdateTenant = () => useMutation({ mutationFn: updateTenant })

@@ -18022,6 +18022,87 @@
                 }
             }
         },
+        "/api/v1/tenants/{tenant_id}": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update a tenant's profile details",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tenants"
+                ],
+                "summary": "Update a tenant",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tenant ID",
+                        "name": "tenant_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Tenant details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateTenantRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tenant updated successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputTenant"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when updating a tenant",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Tenant not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid JSON body",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/units/{unit_id}": {
             "get": {
                 "description": "Fetch unit subset",
@@ -21230,6 +21311,109 @@
             "properties": {
                 "lease_agreement_document_status": {
                     "type": "string"
+                }
+            }
+        },
+        "handlers.UpdateTenantRequest": {
+            "type": "object",
+            "properties": {
+                "date_of_birth": {
+                    "type": "string",
+                    "example": "1990-01-01"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
+                },
+                "emergency_contact_name": {
+                    "type": "string",
+                    "example": "Mary Doe"
+                },
+                "emergency_contact_phone": {
+                    "type": "string",
+                    "example": "+1122334455"
+                },
+                "employer": {
+                    "type": "string",
+                    "example": "Tech Ltd."
+                },
+                "first_name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "example": "John"
+                },
+                "gender": {
+                    "type": "string",
+                    "enum": [
+                        "MALE",
+                        "FEMALE"
+                    ],
+                    "example": "MALE"
+                },
+                "id_back_url": {
+                    "type": "string",
+                    "example": "https://example.com/id-back.jpg"
+                },
+                "id_front_url": {
+                    "type": "string",
+                    "example": "https://example.com/id-front.jpg"
+                },
+                "id_number": {
+                    "type": "string",
+                    "example": "ID123456"
+                },
+                "id_type": {
+                    "type": "string",
+                    "enum": [
+                        "GHANA_CARD",
+                        "NATIONAL_ID",
+                        "PASSPORT",
+                        "DRIVER_LICENSE"
+                    ],
+                    "example": "GHANA_CARD"
+                },
+                "last_name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "example": "Doe"
+                },
+                "marital_status": {
+                    "type": "string",
+                    "enum": [
+                        "SINGLE",
+                        "MARRIED",
+                        "DIVORCED",
+                        "WIDOWED"
+                    ],
+                    "example": "SINGLE"
+                },
+                "nationality": {
+                    "type": "string",
+                    "example": "Ghanaian"
+                },
+                "occupation": {
+                    "type": "string",
+                    "example": "Software Engineer"
+                },
+                "occupation_address": {
+                    "type": "string",
+                    "example": "456 Tech Ave, Accra"
+                },
+                "other_names": {
+                    "type": "string",
+                    "example": "Michael"
+                },
+                "profile_photo_url": {
+                    "type": "string",
+                    "example": "https://example.com/photo.jpg"
+                },
+                "proof_of_income_url": {
+                    "type": "string",
+                    "example": "https://example.com/income.pdf"
+                },
+                "relationship_to_emergency_contact": {
+                    "type": "string",
+                    "example": "sister"
                 }
             }
         },

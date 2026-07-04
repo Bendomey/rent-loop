@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
@@ -156,4 +157,92 @@ func (h *TenantHandler) ListTenantsByProperty(w http.ResponseWriter, r *http.Req
 	}
 
 	json.NewEncoder(w).Encode(lib.ReturnListResponse(filterQuery, tenantsTransformed, tenantsCount))
+}
+
+type UpdateTenantRequest struct {
+	FirstName *string `json:"first_name" validate:"omitempty,min=1"             example:"John"`
+	LastName  *string `json:"last_name"  validate:"omitempty,min=1"             example:"Doe"`
+	Gender    *string `json:"gender"     validate:"omitempty,oneof=MALE FEMALE" example:"MALE"`
+
+	OtherNames                     lib.Optional[string]    `json:"other_names"                       swaggertype:"string" example:"Michael"`
+	Email                          lib.Optional[string]    `json:"email"                             swaggertype:"string" example:"john.doe@example.com"`
+	DateOfBirth                    lib.Optional[time.Time] `json:"date_of_birth"                     swaggertype:"string" example:"1990-01-01"`
+	Nationality                    lib.Optional[string]    `json:"nationality"                       swaggertype:"string" example:"Ghanaian"`
+	MaritalStatus                  lib.Optional[string]    `json:"marital_status"                    swaggertype:"string" example:"SINGLE"                           validate:"omitempty,oneof=SINGLE MARRIED DIVORCED WIDOWED"`
+	ProfilePhotoUrl                lib.Optional[string]    `json:"profile_photo_url"                 swaggertype:"string" example:"https://example.com/photo.jpg"    validate:"omitempty,url"`
+	IDType                         lib.Optional[string]    `json:"id_type"                           swaggertype:"string" example:"GHANA_CARD"                       validate:"omitempty,oneof=GHANA_CARD NATIONAL_ID PASSPORT DRIVER_LICENSE"`
+	IDNumber                       lib.Optional[string]    `json:"id_number"                         swaggertype:"string" example:"ID123456"`
+	IDFrontUrl                     lib.Optional[string]    `json:"id_front_url"                      swaggertype:"string" example:"https://example.com/id-front.jpg" validate:"omitempty,url"`
+	IDBackUrl                      lib.Optional[string]    `json:"id_back_url"                       swaggertype:"string" example:"https://example.com/id-back.jpg"  validate:"omitempty,url"`
+	EmergencyContactName           lib.Optional[string]    `json:"emergency_contact_name"            swaggertype:"string" example:"Mary Doe"`
+	EmergencyContactPhone          lib.Optional[string]    `json:"emergency_contact_phone"           swaggertype:"string" example:"+1122334455"`
+	RelationshipToEmergencyContact lib.Optional[string]    `json:"relationship_to_emergency_contact" swaggertype:"string" example:"sister"`
+	Occupation                     lib.Optional[string]    `json:"occupation"                        swaggertype:"string" example:"Software Engineer"`
+	Employer                       lib.Optional[string]    `json:"employer"                          swaggertype:"string" example:"Tech Ltd."`
+	OccupationAddress              lib.Optional[string]    `json:"occupation_address"                swaggertype:"string" example:"456 Tech Ave, Accra"`
+	ProofOfIncomeUrl               lib.Optional[string]    `json:"proof_of_income_url"               swaggertype:"string" example:"https://example.com/income.pdf"   validate:"omitempty,url"`
+}
+
+// UpdateTenant godoc
+//
+//	@Summary		Update a tenant
+//	@Description	Update a tenant's profile details
+//	@Tags			Tenants
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			tenant_id	path		string										true	"Tenant ID"
+//	@Param			body		body		UpdateTenantRequest							true	"Tenant details"
+//	@Success		200			{object}	object{data=transformations.OutputTenant}	"Tenant updated successfully"
+//	@Failure		400			{object}	lib.HTTPError								"Error occurred when updating a tenant"
+//	@Failure		401			{object}	string										"Invalid or absent authentication token"
+//	@Failure		404			{object}	lib.HTTPError								"Tenant not found"
+//	@Failure		422			{object}	lib.HTTPError								"Invalid JSON body"
+//	@Failure		500			{object}	string										"An unexpected error occurred"
+//	@Router			/api/v1/tenants/{tenant_id} [patch]
+func (h *TenantHandler) UpdateTenant(w http.ResponseWriter, r *http.Request) {
+	var body UpdateTenantRequest
+	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+
+	if isPassedValidation := lib.ValidateRequest(h.appCtx.Validator, body, w); !isPassedValidation {
+		return
+	}
+
+	tenantID := chi.URLParam(r, "tenant_id")
+
+	input := services.UpdateTenantInput{
+		FirstName:                      body.FirstName,
+		LastName:                       body.LastName,
+		Gender:                         body.Gender,
+		OtherNames:                     body.OtherNames,
+		Email:                          body.Email,
+		DateOfBirth:                    body.DateOfBirth,
+		Nationality:                    body.Nationality,
+		MaritalStatus:                  body.MaritalStatus,
+		ProfilePhotoUrl:                body.ProfilePhotoUrl,
+		IDType:                         body.IDType,
+		IDNumber:                       body.IDNumber,
+		IDFrontUrl:                     body.IDFrontUrl,
+		IDBackUrl:                      body.IDBackUrl,
+		EmergencyContactName:           body.EmergencyContactName,
+		EmergencyContactPhone:          body.EmergencyContactPhone,
+		RelationshipToEmergencyContact: body.RelationshipToEmergencyContact,
+		Occupation:                     body.Occupation,
+		Employer:                       body.Employer,
+		OccupationAddress:              body.OccupationAddress,
+		ProofOfIncomeUrl:               body.ProofOfIncomeUrl,
+	}
+
+	tenant, updateErr := h.service.UpdateTenant(r.Context(), tenantID, input)
+	if updateErr != nil {
+		HandleErrorResponse(w, updateErr)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBTenantToRest(tenant),
+	})
 }

@@ -51,6 +51,9 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 				r.Post("/reset-password", handlers.UserHandler.ResetPassword)
 			})
 
+			// user-scoped routes (no client_id needed in URL)
+			r.Patch("/v1/tenants/{tenant_id}", handlers.TenantHandler.UpdateTenant)
+
 			// client-scoped routes — require valid client membership
 
 			r.Route("/v1/notifications", func(r chi.Router) {
