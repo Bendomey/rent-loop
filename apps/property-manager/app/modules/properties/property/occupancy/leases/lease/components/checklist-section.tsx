@@ -161,10 +161,9 @@ function ChecklistRow({
 	checklist: LeaseChecklist
 	onView: () => void
 }) {
-	const pendingCount = checklist.items.filter(
-		(i) => i.status === 'PENDING',
-	).length
-	const totalItems = checklist.items.length
+	const items = checklist.items ?? []
+	const pendingCount = items.filter((i) => i.status === 'PENDING').length
+	const totalItems = items.length
 
 	return (
 		<button
