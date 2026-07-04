@@ -143,57 +143,55 @@ export function TenantProfileModule({
 
 	return (
 		<div className="mt-3 space-y-3">
-			<div className="grid grid-cols-2 gap-2 lg:grid-cols-2">
-				<Card className="@container/card col-span-2 shadow-none lg:col-span-1">
+			<Card className="@container/card col-span-2 shadow-none lg:col-span-1">
+				<CardHeader>
+					<CardDescription>Total Payments</CardDescription>
+					<CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+						{paymentsQuery.isPending ? (
+							<Skeleton className="h-8 w-32" />
+						) : (
+							formatAmount(convertPesewasToCedis(totalPayments))
+						)}
+					</CardTitle>
+				</CardHeader>
+			</Card>
+			<div className="col-span-2 grid grid-cols-2 gap-2 lg:col-span-1 lg:grid-cols-3">
+				<Card className="@container/card col-span-1 shadow-none lg:col-span-1">
 					<CardHeader>
-						<CardDescription>Total Payments</CardDescription>
+						<CardDescription>Total Leases</CardDescription>
 						<CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-							{paymentsQuery.isPending ? (
-								<Skeleton className="h-8 w-32" />
+							{leasesQuery.isPending ? (
+								<Skeleton className="h-8 w-10" />
 							) : (
-								formatAmount(convertPesewasToCedis(totalPayments))
+								totalLeases.toLocaleString()
 							)}
 						</CardTitle>
 					</CardHeader>
 				</Card>
-				<div className="col-span-2 grid grid-cols-2 gap-2 lg:col-span-1 lg:grid-cols-2">
-					<Card className="@container/card col-span-1 shadow-none lg:col-span-1">
-						<CardHeader>
-							<CardDescription>Total Leases</CardDescription>
-							<CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-								{leasesQuery.isPending ? (
-									<Skeleton className="h-8 w-10" />
-								) : (
-									totalLeases.toLocaleString()
-								)}
-							</CardTitle>
-						</CardHeader>
-					</Card>
-					<Card className="@container/card col-span-1 shadow-none lg:col-span-1">
-						<CardHeader>
-							<CardDescription>Total Bookings</CardDescription>
-							<CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-								{bookingsQuery.isPending ? (
-									<Skeleton className="h-8 w-10" />
-								) : (
-									totalBookings.toLocaleString()
-								)}
-							</CardTitle>
-						</CardHeader>
-					</Card>
-					<Card className="@container/card col-span-1 shadow-none lg:col-span-1">
-						<CardHeader>
-							<CardDescription>Total Requests</CardDescription>
-							<CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-								{maintenanceRequestsQuery.isPending ? (
-									<Skeleton className="h-8 w-10" />
-								) : (
-									totalMaintenanceRequests.toLocaleString()
-								)}
-							</CardTitle>
-						</CardHeader>
-					</Card>
-				</div>
+				<Card className="@container/card col-span-1 shadow-none lg:col-span-1">
+					<CardHeader>
+						<CardDescription>Total Bookings</CardDescription>
+						<CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+							{bookingsQuery.isPending ? (
+								<Skeleton className="h-8 w-10" />
+							) : (
+								totalBookings.toLocaleString()
+							)}
+						</CardTitle>
+					</CardHeader>
+				</Card>
+				<Card className="@container/card col-span-1 shadow-none lg:col-span-1">
+					<CardHeader>
+						<CardDescription>Total Requests</CardDescription>
+						<CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+							{maintenanceRequestsQuery.isPending ? (
+								<Skeleton className="h-8 w-10" />
+							) : (
+								totalMaintenanceRequests.toLocaleString()
+							)}
+						</CardTitle>
+					</CardHeader>
+				</Card>
 			</div>
 			<Card className="shadow-none">
 				<CardHeader>

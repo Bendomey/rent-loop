@@ -1,104 +1,111 @@
-import { Tag, FileText, MessageSquare, User } from 'lucide-react'
+import { Tag, FileText, MessageSquare, User, History } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
 import { Badge } from '~/components/ui/badge'
+import {
+	Empty,
+	EmptyDescription,
+	EmptyHeader,
+	EmptyMedia,
+	EmptyTitle,
+} from '~/components/ui/empty'
 
-const activityData = [
-	{
-		id: '1',
-		type: 'status_change',
-		user: { name: 'Angelina Gotelli', initials: 'AG' },
-		action: 'has change',
-		target: 'PD-979',
-		status: { text: 'Completed', color: 'green' },
-		timestamp: '06:20 PM',
-		date: 'SUNDAY, 06 MARCH',
-	},
-	{
-		id: '2',
-		type: 'comment',
-		user: {
-			name: 'Max Alexander',
-			initials: 'MA',
-			avatar: '/thoughtful-man.png',
-		},
-		action: 'comment on your',
-		target: 'Post',
-		comment:
-			"Fine, Java MIGHT be a good example of what a programming language should be like. But Java applications are good examples of what applications SHOULDN'T be like.",
-		timestamp: '05:53 PM',
-		date: 'SUNDAY, 06 MARCH',
-	},
-	{
-		id: '3',
-		type: 'tag_added',
-		user: { name: 'Eugene Stewart', initials: 'ES' },
-		action: 'added tags',
-		tags: [
-			{ text: 'Live Issue', color: 'red' },
-			{ text: 'Backend', color: 'blue' },
-		],
-		timestamp: '04:40 PM',
-		date: 'SUNDAY, 06 MARCH',
-	},
-	{
-		id: '4',
-		type: 'file_added',
-		user: { name: 'Shannon Baker', initials: 'SB' },
-		action: 'added',
-		target: 'document.csv',
-		timestamp: '03:18 PM',
-		date: 'SUNDAY, 06 MARCH',
-	},
-	{
-		id: '5',
-		type: 'mention',
-		user: {
-			name: 'Roberta Horton',
-			initials: 'RH',
-			avatar: '/diverse-woman-portrait.png',
-		},
-		action: 'mentioned you in a comment',
-		target: 'Post',
-		comment:
-			'@Carolyn One of the main causes of the fall of the Roman Empire was that-lacking zero-they had no way to indicate successful termination of their C programs.',
-		timestamp: '02:17 PM',
-		date: 'SUNDAY, 06 MARCH',
-	},
-	{
-		id: '6',
-		type: 'assignment',
-		user: { name: 'Lee Wheeler', initials: 'LW' },
-		action: 'assigned ticket',
-		target: 'PD-1092',
-		assignee: 'Alvin Moreno',
-		timestamp: '11:13 AM',
-		date: 'SUNDAY, 06 MARCH',
-	},
-	{
-		id: '7',
-		type: 'comment',
-		user: {
-			name: 'Jessica Wells',
-			initials: 'JW',
-			avatar: '/woman-flowers.jpg',
-		},
-		action: 'comment on your',
-		target: 'Post',
-		comment:
-			"The trouble with programmers is that you can never tell what a programmer is doing until it's too late.",
-		timestamp: '08:49 AM',
-		date: 'SATURDAY, 05 MARCH',
-	},
-	{
-		id: '8',
-		type: 'status_change',
-		user: { name: 'Earl Miles', initials: 'EM', avatar: '/man-beard.jpg' },
-		action: 'has change',
-		target: 'PD-977',
-		status: { text: 'In progress', color: 'blue' },
-		timestamp: '08:30 AM',
-		date: 'SATURDAY, 05 MARCH',
-	},
+const activityData: any[] = [
+	// {
+	// 	id: '1',
+	// 	type: 'status_change',
+	// 	user: { name: 'Angelina Gotelli', initials: 'AG' },
+	// 	action: 'has change',
+	// 	target: 'PD-979',
+	// 	status: { text: 'Completed', color: 'green' },
+	// 	timestamp: '06:20 PM',
+	// 	date: 'SUNDAY, 06 MARCH',
+	// },
+	// {
+	// 	id: '2',
+	// 	type: 'comment',
+	// 	user: {
+	// 		name: 'Max Alexander',
+	// 		initials: 'MA',
+	// 		avatar: '/thoughtful-man.png',
+	// 	},
+	// 	action: 'comment on your',
+	// 	target: 'Post',
+	// 	comment:
+	// 		"Fine, Java MIGHT be a good example of what a programming language should be like. But Java applications are good examples of what applications SHOULDN'T be like.",
+	// 	timestamp: '05:53 PM',
+	// 	date: 'SUNDAY, 06 MARCH',
+	// },
+	// {
+	// 	id: '3',
+	// 	type: 'tag_added',
+	// 	user: { name: 'Eugene Stewart', initials: 'ES' },
+	// 	action: 'added tags',
+	// 	tags: [
+	// 		{ text: 'Live Issue', color: 'red' },
+	// 		{ text: 'Backend', color: 'blue' },
+	// 	],
+	// 	timestamp: '04:40 PM',
+	// 	date: 'SUNDAY, 06 MARCH',
+	// },
+	// {
+	// 	id: '4',
+	// 	type: 'file_added',
+	// 	user: { name: 'Shannon Baker', initials: 'SB' },
+	// 	action: 'added',
+	// 	target: 'document.csv',
+	// 	timestamp: '03:18 PM',
+	// 	date: 'SUNDAY, 06 MARCH',
+	// },
+	// {
+	// 	id: '5',
+	// 	type: 'mention',
+	// 	user: {
+	// 		name: 'Roberta Horton',
+	// 		initials: 'RH',
+	// 		avatar: '/diverse-woman-portrait.png',
+	// 	},
+	// 	action: 'mentioned you in a comment',
+	// 	target: 'Post',
+	// 	comment:
+	// 		'@Carolyn One of the main causes of the fall of the Roman Empire was that-lacking zero-they had no way to indicate successful termination of their C programs.',
+	// 	timestamp: '02:17 PM',
+	// 	date: 'SUNDAY, 06 MARCH',
+	// },
+	// {
+	// 	id: '6',
+	// 	type: 'assignment',
+	// 	user: { name: 'Lee Wheeler', initials: 'LW' },
+	// 	action: 'assigned ticket',
+	// 	target: 'PD-1092',
+	// 	assignee: 'Alvin Moreno',
+	// 	timestamp: '11:13 AM',
+	// 	date: 'SUNDAY, 06 MARCH',
+	// },
+	// {
+	// 	id: '7',
+	// 	type: 'comment',
+	// 	user: {
+	// 		name: 'Jessica Wells',
+	// 		initials: 'JW',
+	// 		avatar: '/woman-flowers.jpg',
+	// 	},
+	// 	action: 'comment on your',
+	// 	target: 'Post',
+	// 	comment:
+	// 		"The trouble with programmers is that you can never tell what a programmer is doing until it's too late.",
+	// 	timestamp: '08:49 AM',
+	// 	date: 'SATURDAY, 05 MARCH',
+	// },
+	// {
+	// 	id: '8',
+	// 	type: 'status_change',
+	// 	user: { name: 'Earl Miles', initials: 'EM', avatar: '/man-beard.jpg' },
+	// 	action: 'has change',
+	// 	target: 'PD-977',
+	// 	status: { text: 'In progress', color: 'blue' },
+	// 	timestamp: '08:30 AM',
+	// 	date: 'SATURDAY, 05 MARCH',
+	// },
 ]
 
 const getStatusColor = (color: string) => {
@@ -145,6 +152,22 @@ const getActivityIcon = (type: string) => {
 
 export default function ActivityFeed() {
 	let currentDate = ''
+
+	if (!activityData.length) {
+		return (
+			<Empty className="h-full">
+				<EmptyHeader>
+					<EmptyMedia variant="icon">
+						<History />
+					</EmptyMedia>
+					<EmptyTitle>No activity yet</EmptyTitle>
+					<EmptyDescription>
+						Actions taken on this tenant will show up here.
+					</EmptyDescription>
+				</EmptyHeader>
+			</Empty>
+		)
+	}
 
 	return (
 		<div className="mx-auto max-w-4xl">
@@ -232,7 +255,7 @@ export default function ActivityFeed() {
 									</div>
 
 									{/* Tags */}
-									{item.tags && (
+									{/* {item.tags && (
 										<div className="mt-2 flex flex-wrap gap-2">
 											{item.tags.map((tag, index) => (
 												<div key={index} className="flex items-center gap-1">
@@ -245,7 +268,7 @@ export default function ActivityFeed() {
 												</div>
 											))}
 										</div>
-									)}
+									)} */}
 
 									{/* Comment */}
 									{item.comment && (

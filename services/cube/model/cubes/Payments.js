@@ -58,12 +58,19 @@ cube(`Payments`, {
       title: `Property ID`,
     },
 
-    // Derived via the parent invoice's lease/booking context
+    // Derived via the parent invoice's lease/booking/tenant-application context.
+    // tenant_applications has no tenant_id of its own (the tenant doesn't exist
+    // yet at application time) — a lease is the only bridge, created once the
+    // application is approved. So application-stage payments (e.g. security
+    // deposit paid before approval) are resolved by looking up the lease that
+    // was later created from that application, mirroring the Go backend's own
+    // invoiceTenantOwnerContextScope OR-based lookup.
     tenantId: {
       sql: `(
         SELECT COALESCE(
           (SELECT l.tenant_id::text FROM leases l WHERE l.id = inv.context_lease_id LIMIT 1),
-          (SELECT b.tenant_id::text FROM bookings b WHERE b.id = inv.context_booking_id LIMIT 1)
+          (SELECT b.tenant_id::text FROM bookings b WHERE b.id = inv.context_booking_id LIMIT 1),
+          (SELECT l.tenant_id::text FROM leases l WHERE l.tenant_application_id = inv.context_tenant_application_id LIMIT 1)
         )
         FROM invoices inv
         WHERE inv.id = ${CUBE}.invoice_id
