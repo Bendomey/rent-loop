@@ -3,7 +3,12 @@ import { TenantProfileContactCard } from './contact'
 import { TenantProfileEmploymentCard } from './employment'
 import { TenantProfileIdentificationCard } from './identification'
 import { useCubeQuery, useGetAnalyticsToken } from '~/api/analytics'
-import { Card, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
+import {
+	Card,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from '~/components/ui/card'
 import { Skeleton } from '~/components/ui/skeleton'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 import { safeString } from '~/lib/strings'

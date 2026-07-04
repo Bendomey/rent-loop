@@ -9,12 +9,7 @@ import { InfoRow } from './info-row'
 import { useUpdateTenant } from '~/api/tenants'
 import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
 import { Button } from '~/components/ui/button'
-import {
-	Card,
-	CardAction,
-	CardContent,
-	CardHeader,
-} from '~/components/ui/card'
+import { Card, CardAction, CardContent, CardHeader } from '~/components/ui/card'
 import {
 	Dialog,
 	DialogContent,
@@ -149,7 +144,7 @@ export function TenantProfileEmploymentCard({ tenant }: { tenant: Tenant }) {
 			</CardContent>
 
 			<Dialog open={isOpen} onOpenChange={handleOpenChange}>
-				<DialogContent>
+				<DialogContent className="flex max-h-[85vh] flex-col overflow-hidden">
 					<DialogHeader>
 						<DialogTitle>Edit Employment</DialogTitle>
 						<DialogDescription>
@@ -157,19 +152,37 @@ export function TenantProfileEmploymentCard({ tenant }: { tenant: Tenant }) {
 						</DialogDescription>
 					</DialogHeader>
 
-					<Form {...rhfMethods}>
-						<form
-							id="tenant-employment-form"
-							className="space-y-4"
-							onSubmit={handleSubmit(onSubmit)}
-						>
-							{!isStudent && (
+					<div className="min-h-0 flex-1 overflow-y-auto px-1">
+						<Form {...rhfMethods}>
+							<form
+								id="tenant-employment-form"
+								className="space-y-4"
+								onSubmit={handleSubmit(onSubmit)}
+							>
+								{!isStudent && (
+									<FormField
+										name="occupation"
+										control={rhfMethods.control}
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel>Occupation</FormLabel>
+												<FormControl>
+													<Input type="text" {...field} />
+												</FormControl>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+								)}
 								<FormField
-									name="occupation"
+									name="employer"
 									control={rhfMethods.control}
 									render={({ field }) => (
 										<FormItem>
-											<FormLabel>Occupation</FormLabel>
+											<FormLabel>
+												{isStudent ? 'Institution/School' : 'Employer'}{' '}
+												<span className="text-red-500">*</span>
+											</FormLabel>
 											<FormControl>
 												<Input type="text" {...field} />
 											</FormControl>
@@ -177,58 +190,42 @@ export function TenantProfileEmploymentCard({ tenant }: { tenant: Tenant }) {
 										</FormItem>
 									)}
 								/>
-							)}
-							<FormField
-								name="employer"
-								control={rhfMethods.control}
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>
-											{isStudent ? 'Institution/School' : 'Employer'}{' '}
-											<span className="text-red-500">*</span>
-										</FormLabel>
-										<FormControl>
-											<Input type="text" {...field} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<FormField
-								name="occupation_address"
-								control={rhfMethods.control}
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>
-											Address <span className="text-red-500">*</span>
-										</FormLabel>
-										<FormControl>
-											<Input type="text" {...field} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<DocumentUpload
-								hint="Optional"
-								documentName={
-									rhfMethods.watch('proof_of_income_url')
-										? `Proof of ${isStudent ? 'Admission' : 'Income'}`
-										: undefined
-								}
-								fileCallback={upload}
-								isUploading={isUploading}
-								dismissCallback={() =>
-									rhfMethods.setValue('proof_of_income_url', null, {
-										shouldDirty: true,
-									})
-								}
-								label={`Proof of ${isStudent ? 'Admission' : 'Income'}`}
-								name="proof_of_income_url"
-								maxByteSize={5242880}
-							/>
-						</form>
-					</Form>
+								<FormField
+									name="occupation_address"
+									control={rhfMethods.control}
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>
+												Address <span className="text-red-500">*</span>
+											</FormLabel>
+											<FormControl>
+												<Input type="text" {...field} />
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+								<DocumentUpload
+									hint="Optional"
+									documentName={
+										rhfMethods.watch('proof_of_income_url')
+											? `Proof of ${isStudent ? 'Admission' : 'Income'}`
+											: undefined
+									}
+									fileCallback={upload}
+									isUploading={isUploading}
+									dismissCallback={() =>
+										rhfMethods.setValue('proof_of_income_url', null, {
+											shouldDirty: true,
+										})
+									}
+									label={`Proof of ${isStudent ? 'Admission' : 'Income'}`}
+									name="proof_of_income_url"
+									maxByteSize={5242880}
+								/>
+							</form>
+						</Form>
+					</div>
 
 					<DialogFooter>
 						<Button

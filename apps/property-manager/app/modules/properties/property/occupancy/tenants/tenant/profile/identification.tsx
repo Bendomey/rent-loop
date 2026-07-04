@@ -9,12 +9,7 @@ import { InfoRow } from './info-row'
 import { useUpdateTenant } from '~/api/tenants'
 import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
 import { Button } from '~/components/ui/button'
-import {
-	Card,
-	CardAction,
-	CardContent,
-	CardHeader,
-} from '~/components/ui/card'
+import { Card, CardAction, CardContent, CardHeader } from '~/components/ui/card'
 import {
 	Dialog,
 	DialogContent,
@@ -195,7 +190,7 @@ export function TenantProfileIdentificationCard({
 			</CardContent>
 
 			<Dialog open={isOpen} onOpenChange={handleOpenChange}>
-				<DialogContent>
+				<DialogContent className="flex max-h-[85vh] flex-col overflow-hidden">
 					<DialogHeader>
 						<DialogTitle>Edit Identification</DialogTitle>
 						<DialogDescription>
@@ -203,95 +198,102 @@ export function TenantProfileIdentificationCard({
 						</DialogDescription>
 					</DialogHeader>
 
-					<Form {...rhfMethods}>
-						<form
-							id="tenant-identification-form"
-							className="space-y-4"
-							onSubmit={handleSubmit(onSubmit)}
-						>
-							<FormField
-								name="id_type"
-								control={rhfMethods.control}
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>
-											ID Type <span className="text-red-500">*</span>
-										</FormLabel>
-										<FormControl>
-											<Select value={field.value} onValueChange={field.onChange}>
-												<SelectTrigger className="w-full">
-													<SelectValue placeholder="Please select" />
-												</SelectTrigger>
-												<SelectContent>
-													{Object.entries(ID_TYPE_LABELS).map(([value, label]) => (
-														<SelectItem key={value} value={value}>
-															{label}
-														</SelectItem>
-													))}
-												</SelectContent>
-											</Select>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<FormField
-								name="id_number"
-								control={rhfMethods.control}
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>
-											ID Number <span className="text-red-500">*</span>
-										</FormLabel>
-										<FormControl>
-											<Input type="text" {...field} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<div className="grid grid-cols-2 gap-4">
-								<ImageUpload
-									hero
-									shape="square"
-									hint="Optional"
-									acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
-									imageSrc={safeString(rhfMethods.watch('id_front_url'))}
-									label="ID Front"
-									name="id_front_url"
-									fileCallback={uploadFront}
-									isUploading={isUploadingFront}
-									dismissCallback={() =>
-										rhfMethods.setValue('id_front_url', null, {
-											shouldDirty: true,
-										})
-									}
-									validation={{
-										maxByteSize: 5242880,
-									}}
+					<div className="min-h-0 flex-1 overflow-y-auto px-1">
+						<Form {...rhfMethods}>
+							<form
+								id="tenant-identification-form"
+								className="space-y-4"
+								onSubmit={handleSubmit(onSubmit)}
+							>
+								<FormField
+									name="id_type"
+									control={rhfMethods.control}
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>
+												ID Type <span className="text-red-500">*</span>
+											</FormLabel>
+											<FormControl>
+												<Select
+													value={field.value}
+													onValueChange={field.onChange}
+												>
+													<SelectTrigger className="w-full">
+														<SelectValue placeholder="Please select" />
+													</SelectTrigger>
+													<SelectContent>
+														{Object.entries(ID_TYPE_LABELS).map(
+															([value, label]) => (
+																<SelectItem key={value} value={value}>
+																	{label}
+																</SelectItem>
+															),
+														)}
+													</SelectContent>
+												</Select>
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
 								/>
-								<ImageUpload
-									hero
-									shape="square"
-									hint="Optional"
-									acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
-									imageSrc={safeString(rhfMethods.watch('id_back_url'))}
-									label="ID Back"
-									name="id_back_url"
-									fileCallback={uploadBack}
-									isUploading={isUploadingBack}
-									dismissCallback={() =>
-										rhfMethods.setValue('id_back_url', null, {
-											shouldDirty: true,
-										})
-									}
-									validation={{
-										maxByteSize: 5242880,
-									}}
+								<FormField
+									name="id_number"
+									control={rhfMethods.control}
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>
+												ID Number <span className="text-red-500">*</span>
+											</FormLabel>
+											<FormControl>
+												<Input type="text" {...field} />
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
 								/>
-							</div>
-						</form>
-					</Form>
+								<div className="grid grid-cols-2 gap-4">
+									<ImageUpload
+										hero
+										shape="square"
+										hint="Optional"
+										acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
+										imageSrc={safeString(rhfMethods.watch('id_front_url'))}
+										label="ID Front"
+										name="id_front_url"
+										fileCallback={uploadFront}
+										isUploading={isUploadingFront}
+										dismissCallback={() =>
+											rhfMethods.setValue('id_front_url', null, {
+												shouldDirty: true,
+											})
+										}
+										validation={{
+											maxByteSize: 5242880,
+										}}
+									/>
+									<ImageUpload
+										hero
+										shape="square"
+										hint="Optional"
+										acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
+										imageSrc={safeString(rhfMethods.watch('id_back_url'))}
+										label="ID Back"
+										name="id_back_url"
+										fileCallback={uploadBack}
+										isUploading={isUploadingBack}
+										dismissCallback={() =>
+											rhfMethods.setValue('id_back_url', null, {
+												shouldDirty: true,
+											})
+										}
+										validation={{
+											maxByteSize: 5242880,
+										}}
+									/>
+								</div>
+							</form>
+						</Form>
+					</div>
 
 					<DialogFooter>
 						<Button

@@ -6,6 +6,7 @@ import {
 	useLocation,
 	useParams,
 } from 'react-router'
+import { TenantEditProfileModal } from './edit-profile-modal'
 import { TenantProfileModule } from './profile'
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
 import { Badge } from '~/components/ui/badge'
@@ -56,6 +57,7 @@ export function TenantModule() {
 								</Badge>
 							)}
 						</CardTitle>
+						{tenant && <TenantEditProfileModal tenant={tenant} />}
 					</CardHeader>
 
 					<CardContent className="space-y-3">

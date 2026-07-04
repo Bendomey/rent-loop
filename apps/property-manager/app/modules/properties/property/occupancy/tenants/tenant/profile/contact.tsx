@@ -10,12 +10,7 @@ import { useUpdateTenant } from '~/api/tenants'
 import { InternationalPhoneInput } from '~/components/international-phone'
 import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
 import { Button } from '~/components/ui/button'
-import {
-	Card,
-	CardAction,
-	CardContent,
-	CardHeader,
-} from '~/components/ui/card'
+import { Card, CardAction, CardContent, CardHeader } from '~/components/ui/card'
 import {
 	Dialog,
 	DialogContent,
@@ -92,9 +87,7 @@ export function TenantProfileContactCard({ tenant }: { tenant: Tenant }) {
 			},
 			{
 				onError: () => {
-					toast.error(
-						'Failed to update emergency contact. Try again later.',
-					)
+					toast.error('Failed to update emergency contact. Try again later.')
 				},
 				onSuccess: () => {
 					toast.success('Emergency contact updated successfully.')
@@ -138,7 +131,7 @@ export function TenantProfileContactCard({ tenant }: { tenant: Tenant }) {
 			</CardContent>
 
 			<Dialog open={isOpen} onOpenChange={handleOpenChange}>
-				<DialogContent>
+				<DialogContent className="flex max-h-[85vh] flex-col overflow-hidden">
 					<DialogHeader>
 						<DialogTitle>Edit Emergency Contact</DialogTitle>
 						<DialogDescription>
@@ -146,63 +139,65 @@ export function TenantProfileContactCard({ tenant }: { tenant: Tenant }) {
 						</DialogDescription>
 					</DialogHeader>
 
-					<Form {...rhfMethods}>
-						<form
-							id="tenant-contact-form"
-							className="space-y-4"
-							onSubmit={handleSubmit(onSubmit)}
-						>
-							<FormField
-								name="emergency_contact_name"
-								control={rhfMethods.control}
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>
-											Full Name <span className="text-red-500">*</span>
-										</FormLabel>
-										<FormControl>
-											<Input type="text" {...field} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<FormField
-								name="relationship_to_emergency_contact"
-								control={rhfMethods.control}
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>
-											Relationship <span className="text-red-500">*</span>
-										</FormLabel>
-										<FormControl>
-											<Input type="text" {...field} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<FormField
-								name="emergency_contact_phone"
-								control={rhfMethods.control}
-								render={({ field, fieldState }) => (
-									<FormItem>
-										<FormLabel>
-											Phone Number <span className="text-red-500">*</span>
-										</FormLabel>
-										<FormControl>
-											<InternationalPhoneInput
-												value={field.value}
-												onChange={field.onChange}
-												error={!!fieldState.error}
-											/>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-						</form>
-					</Form>
+					<div className="min-h-0 flex-1 overflow-y-auto px-1">
+						<Form {...rhfMethods}>
+							<form
+								id="tenant-contact-form"
+								className="space-y-4"
+								onSubmit={handleSubmit(onSubmit)}
+							>
+								<FormField
+									name="emergency_contact_name"
+									control={rhfMethods.control}
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>
+												Full Name <span className="text-red-500">*</span>
+											</FormLabel>
+											<FormControl>
+												<Input type="text" {...field} />
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+								<FormField
+									name="relationship_to_emergency_contact"
+									control={rhfMethods.control}
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>
+												Relationship <span className="text-red-500">*</span>
+											</FormLabel>
+											<FormControl>
+												<Input type="text" {...field} />
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+								<FormField
+									name="emergency_contact_phone"
+									control={rhfMethods.control}
+									render={({ field, fieldState }) => (
+										<FormItem>
+											<FormLabel>
+												Phone Number <span className="text-red-500">*</span>
+											</FormLabel>
+											<FormControl>
+												<InternationalPhoneInput
+													value={field.value}
+													onChange={field.onChange}
+													error={!!fieldState.error}
+												/>
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+							</form>
+						</Form>
+					</div>
 
 					<DialogFooter>
 						<Button

@@ -173,7 +173,7 @@ export function TenantProfileBasicInformationCard({
 			</CardContent>
 
 			<Dialog open={isOpen} onOpenChange={handleOpenChange}>
-				<DialogContent>
+				<DialogContent className="flex max-h-[85vh] flex-col overflow-hidden">
 					<DialogHeader>
 						<DialogTitle>Edit Basic Information</DialogTitle>
 						<DialogDescription>
@@ -181,72 +181,77 @@ export function TenantProfileBasicInformationCard({
 						</DialogDescription>
 					</DialogHeader>
 
-					<Form {...rhfMethods}>
-						<form
-							id="tenant-basic-info-form"
-							className="space-y-4"
-							onSubmit={handleSubmit(onSubmit)}
-						>
-							<FormField
-								name="nationality"
-								control={rhfMethods.control}
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>
-											Nationality <span className="text-red-500">*</span>
-										</FormLabel>
-										<FormControl>
-											<Input type="text" {...field} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<FormField
-								name="marital_status"
-								control={rhfMethods.control}
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>
-											Marital Status <span className="text-red-500">*</span>
-										</FormLabel>
-										<FormControl>
-											<Select value={field.value} onValueChange={field.onChange}>
-												<SelectTrigger className="w-full">
-													<SelectValue placeholder="Please select" />
-												</SelectTrigger>
-												<SelectContent>
-													<SelectItem value="SINGLE">Single</SelectItem>
-													<SelectItem value="MARRIED">Married</SelectItem>
-													<SelectItem value="DIVORCED">Divorced</SelectItem>
-													<SelectItem value="WIDOWED">Widowed</SelectItem>
-												</SelectContent>
-											</Select>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<FormField
-								name="date_of_birth"
-								control={rhfMethods.control}
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>
-											Date of birth <span className="text-red-500">*</span>
-										</FormLabel>
-										<FormControl>
-											<DatePickerInput
-												value={field.value}
-												onChange={field.onChange}
-											/>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-						</form>
-					</Form>
+					<div className="min-h-0 flex-1 overflow-y-auto px-1">
+						<Form {...rhfMethods}>
+							<form
+								id="tenant-basic-info-form"
+								className="space-y-4"
+								onSubmit={handleSubmit(onSubmit)}
+							>
+								<FormField
+									name="nationality"
+									control={rhfMethods.control}
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>
+												Nationality <span className="text-red-500">*</span>
+											</FormLabel>
+											<FormControl>
+												<Input type="text" {...field} />
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+								<FormField
+									name="marital_status"
+									control={rhfMethods.control}
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>
+												Marital Status <span className="text-red-500">*</span>
+											</FormLabel>
+											<FormControl>
+												<Select
+													value={field.value}
+													onValueChange={field.onChange}
+												>
+													<SelectTrigger className="w-full">
+														<SelectValue placeholder="Please select" />
+													</SelectTrigger>
+													<SelectContent>
+														<SelectItem value="SINGLE">Single</SelectItem>
+														<SelectItem value="MARRIED">Married</SelectItem>
+														<SelectItem value="DIVORCED">Divorced</SelectItem>
+														<SelectItem value="WIDOWED">Widowed</SelectItem>
+													</SelectContent>
+												</Select>
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+								<FormField
+									name="date_of_birth"
+									control={rhfMethods.control}
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>
+												Date of birth <span className="text-red-500">*</span>
+											</FormLabel>
+											<FormControl>
+												<DatePickerInput
+													value={field.value}
+													onChange={field.onChange}
+												/>
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+							</form>
+						</Form>
+					</div>
 
 					<DialogFooter>
 						<Button
