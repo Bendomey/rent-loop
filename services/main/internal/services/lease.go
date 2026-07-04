@@ -348,7 +348,7 @@ type ActivateLeaseInput struct {
 func (s *leaseService) ActivateLease(ctx context.Context, input ActivateLeaseInput) error {
 	lease, getLeaseErr := s.repo.GetOneWithPopulate(
 		ctx,
-		repository.GetLeaseQuery{ID: input.LeaseID, Populate: &[]string{"Unit", "Tenant"}},
+		repository.GetLeaseQuery{ID: input.LeaseID, Populate: &[]string{"Unit.Property", "Tenant.TenantAccount"}},
 	)
 	if getLeaseErr != nil {
 		if errors.Is(getLeaseErr, gorm.ErrRecordNotFound) {
@@ -442,39 +442,30 @@ func (s *leaseService) ActivateLease(ctx context.Context, input ActivateLeaseInp
 
 	startDate := lease.MoveInDate.Format("January 2, 2006")
 
-	smsMessage := strings.NewReplacer(
-		"{{tenant_name}}", lease.Tenant.FirstName,
-		"{{unit_name}}", lease.Unit.Name,
-		"{{move_in_date}}", startDate,
-	).Replace(lib.LEASE_ACTIVATED_SMS_BODY)
-
-	if lease.Tenant.Email != nil {
-		if htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render("lease/activated", emailtemplates.LeaseActivatedData{
-			TenantName: lease.Tenant.FirstName,
-			UnitName:   lease.Unit.Name,
-			MoveInDate: startDate,
-		}); renderErr != nil {
-			log.WithError(renderErr).Error("failed to render lease/activated email template")
-		} else {
-			go pkg.SendEmail(
-				s.appCtx.Config,
-				pkg.SendEmailInput{
-					Recipient: *lease.Tenant.Email,
-					Subject:   lib.LEASE_ACTIVATED_SUBJECT,
-					HtmlBody:  htmlBody,
-					TextBody:  textBody,
-				},
-			)
-		}
+	recipientID := lease.TenantId
+	channels := []string{models.NotificationChannelEmail, models.NotificationChannelSMS}
+	if lease.Tenant.TenantAccount != nil {
+		recipientID = lease.Tenant.TenantAccount.ID.String()
+		channels = append(channels, models.NotificationChannelInApp, models.NotificationChannelPush)
 	}
-
-	go s.appCtx.Clients.GatekeeperAPI.SendSMS(
-		context.Background(),
-		gatekeeper.SendSMSInput{
-			Recipient: lease.Tenant.Phone,
-			Message:   smsMessage,
-		},
-	)
+	go func() {
+		_, _ = s.notificationService.CreateNotification(context.Background(), CreateNotificationInput{
+			OrganizationID: lease.Unit.Property.ClientID,
+			RecipientID:    recipientID,
+			RecipientType:  models.NotificationRecipientTypeTenantAccount,
+			Event:          "LEASE_ACTIVATED",
+			Title:          "Your lease is now active",
+			Body:           fmt.Sprintf("Your lease for %s starts on %s.", lease.Unit.Name, startDate),
+			Data: map[string]any{
+				"tenant_name":  lease.Tenant.FirstName,
+				"unit_name":    lease.Unit.Name,
+				"move_in_date": startDate,
+			},
+			Channels:       channels,
+			RecipientEmail: lease.Tenant.Email,
+			RecipientPhone: &lease.Tenant.Phone,
+		})
+	}()
 
 	return nil
 }
@@ -628,17 +619,23 @@ func (s *leaseService) GenerateLeaseRentInvoice(ctx context.Context, leaseID str
 		tenantAccountID := lease.Tenant.TenantAccount.ID.String()
 		invoiceID := invoice.ID.String()
 		go func() {
-			_ = s.notificationService.SendToTenantAccount(
-				context.Background(),
-				tenantAccountID,
-				"Rent Invoice Ready",
-				fmt.Sprintf("Your rent invoice %s for %s is ready for payment.", invoiceCode, unitName),
-				map[string]string{
-					"type":         "INVOICE",
+			_, _ = s.notificationService.CreateNotification(context.Background(), CreateNotificationInput{
+				OrganizationID: lease.Unit.Property.ClientID,
+				RecipientID:    tenantAccountID,
+				RecipientType:  models.NotificationRecipientTypeTenantAccount,
+				Event:          "INVOICE_CREATED",
+				Title:          "Rent Invoice Ready",
+				Body:           fmt.Sprintf("Your rent invoice %s for %s is ready for payment.", invoiceCode, unitName),
+				Data: map[string]any{
+					"tenant_name":  tenantName,
 					"invoice_id":   invoiceID,
 					"invoice_code": invoiceCode,
+					"unit_name":    unitName,
+					"currency":     currency,
+					"amount":       amount,
 				},
-			)
+				Channels: []string{models.NotificationChannelInApp, models.NotificationChannelPush},
+			})
 		}()
 	}
 
@@ -654,7 +651,7 @@ type CancelLeaseInput struct {
 func (s *leaseService) CancelLease(ctx context.Context, input CancelLeaseInput) error {
 	lease, getLeaseErr := s.repo.GetOneWithPopulate(
 		ctx,
-		repository.GetLeaseQuery{ID: input.LeaseID, Populate: &[]string{"Unit", "Tenant"}},
+		repository.GetLeaseQuery{ID: input.LeaseID, Populate: &[]string{"Unit.Property", "Tenant.TenantAccount"}},
 	)
 	if getLeaseErr != nil {
 		if errors.Is(getLeaseErr, gorm.ErrRecordNotFound) {
@@ -695,39 +692,30 @@ func (s *leaseService) CancelLease(ctx context.Context, input CancelLeaseInput) 
 		})
 	}
 
-	smsMessage := strings.NewReplacer(
-		"{{tenant_name}}", lease.Tenant.FirstName,
-		"{{unit_name}}", lease.Unit.Name,
-		"{{cancellation_reason}}", input.CancellationReason,
-	).Replace(lib.LEASE_CANCELLED_SMS_BODY)
-
-	if lease.Tenant.Email != nil {
-		if htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render("lease/cancelled", emailtemplates.LeaseCancelledData{
-			TenantName:         lease.Tenant.FirstName,
-			UnitName:           lease.Unit.Name,
-			CancellationReason: input.CancellationReason,
-		}); renderErr != nil {
-			log.WithError(renderErr).Error("failed to render lease/cancelled email template")
-		} else {
-			go pkg.SendEmail(
-				s.appCtx.Config,
-				pkg.SendEmailInput{
-					Recipient: *lease.Tenant.Email,
-					Subject:   lib.LEASE_CANCELLED_SUBJECT,
-					HtmlBody:  htmlBody,
-					TextBody:  textBody,
-				},
-			)
-		}
+	cancelRecipientID := lease.TenantId
+	cancelChannels := []string{models.NotificationChannelEmail, models.NotificationChannelSMS}
+	if lease.Tenant.TenantAccount != nil {
+		cancelRecipientID = lease.Tenant.TenantAccount.ID.String()
+		cancelChannels = append(cancelChannels, models.NotificationChannelInApp, models.NotificationChannelPush)
 	}
-
-	go s.appCtx.Clients.GatekeeperAPI.SendSMS(
-		context.Background(),
-		gatekeeper.SendSMSInput{
-			Recipient: lease.Tenant.Phone,
-			Message:   smsMessage,
-		},
-	)
+	go func() {
+		_, _ = s.notificationService.CreateNotification(context.Background(), CreateNotificationInput{
+			OrganizationID: lease.Unit.Property.ClientID,
+			RecipientID:    cancelRecipientID,
+			RecipientType:  models.NotificationRecipientTypeTenantAccount,
+			Event:          "LEASE_CANCELLED",
+			Title:          "Lease Cancelled",
+			Body:           fmt.Sprintf("Your lease for %s has been cancelled.", lease.Unit.Name),
+			Data: map[string]any{
+				"tenant_name":         lease.Tenant.FirstName,
+				"unit_name":           lease.Unit.Name,
+				"cancellation_reason": input.CancellationReason,
+			},
+			Channels:       cancelChannels,
+			RecipientEmail: lease.Tenant.Email,
+			RecipientPhone: &lease.Tenant.Phone,
+		})
+	}()
 
 	return nil
 }

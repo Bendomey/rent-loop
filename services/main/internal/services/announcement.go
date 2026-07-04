@@ -3,12 +3,9 @@ package services
 import (
 	"context"
 	"errors"
-	"strings"
 	"time"
 
-	"github.com/Bendomey/rent-loop/services/main/internal/clients/gatekeeper"
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
-	"github.com/Bendomey/rent-loop/services/main/internal/lib/emailtemplates"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
@@ -383,81 +380,41 @@ func (s *announcementService) fanOutNotifications(ctx context.Context, a *models
 		body = body[:200] + "..."
 	}
 
-	data := map[string]string{
-		"type":            "ANNOUNCEMENT",
-		"announcement_id": a.ID.String(),
-		"priority":        a.Priority,
-	}
-
-	announcementEmailData := emailtemplates.AnnouncementData{
-		AnnouncementType:    a.Type,
-		AnnouncementTitle:   a.Title,
-		AnnouncementContent: a.Content,
-	}
-	htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render("announcement/notification", announcementEmailData)
-	if renderErr != nil {
-		log.WithError(renderErr).Error("failed to render announcement/notification email template")
-	}
-
-	var emailRecipients []pkg.BulkEmailRecipient
-	var smsRecipients []string
-
-	smsMsg := strings.NewReplacer(
-		"{{announcement_title}}", a.Title,
-		"{{announcement_content}}", a.Content,
-	).Replace(lib.ANNOUNCEMENT_SMS_BODY)
-
 	for _, account := range *accounts {
-		accountID := account.ID.String()
 		tenant := tenantsByID[account.TenantId]
 
-		// All priorities → push notification
-		go func(id string) {
-			if sendErr := s.notificationService.SendToTenantAccount(ctx, id, title, body, data); sendErr != nil {
-				log.WithError(sendErr).WithField("tenantAccountID", id).
-					Warn("[Announcement] push notification failed")
-			}
-		}(accountID)
+		channels := []string{models.NotificationChannelInApp, models.NotificationChannelPush}
+		var recipientEmail *string
+		var recipientPhone *string
 
-		if tenant == nil {
-			continue
+		if tenant != nil {
+			if a.Priority == "URGENT" && tenant.Email != nil {
+				channels = append(channels, models.NotificationChannelEmail)
+				recipientEmail = tenant.Email
+			}
+			if a.Priority == "IMPORTANT" || a.Priority == "URGENT" {
+				channels = append(channels, models.NotificationChannelSMS)
+				recipientPhone = &tenant.Phone
+			}
 		}
 
-		// URGENT → collect for bulk email
-		if a.Priority == "URGENT" && tenant.Email != nil {
-			emailRecipients = append(emailRecipients, pkg.BulkEmailRecipient{
-				To:       *tenant.Email,
-				Subject:  lib.ANNOUNCEMENT_EMAIL_SUBJECT,
-				HtmlBody: htmlBody,
-				TextBody: textBody,
+		go func(id string, ch []string, email *string, phone *string) {
+			_, _ = s.notificationService.CreateNotification(ctx, CreateNotificationInput{
+				OrganizationID: a.ClientID,
+				RecipientID:    id,
+				RecipientType:  models.NotificationRecipientTypeTenantAccount,
+				Event:          "ANNOUNCEMENT_PUBLISHED",
+				Title:          title,
+				Body:           body,
+				Data: map[string]any{
+					"announcement_id": a.ID.String(),
+					"priority":        a.Priority,
+				},
+				Channels:       ch,
+				RecipientEmail: email,
+				RecipientPhone: phone,
 			})
-		}
-
-		// IMPORTANT / URGENT → collect for bulk SMS
-		if a.Priority == "IMPORTANT" || a.Priority == "URGENT" {
-			smsRecipients = append(smsRecipients, tenant.Phone)
-		}
-	}
-
-	if renderErr == nil && len(emailRecipients) > 0 {
-		go func() {
-			if sendErr := pkg.SendBulkEmail(ctx, s.appCtx.Config, emailRecipients); sendErr != nil {
-				log.WithError(sendErr).WithField("announcementID", a.ID.String()).
-					Warn("[Announcement] bulk email send failed")
-			}
-		}()
-	}
-
-	if len(smsRecipients) > 0 {
-		go func() {
-			if sendErr := s.appCtx.Clients.GatekeeperAPI.SendBulkSMS(ctx, gatekeeper.SendBulkSMSInput{
-				Recipients: smsRecipients,
-				Message:    smsMsg,
-			}); sendErr != nil {
-				log.WithError(sendErr).WithField("announcementID", a.ID.String()).
-					Warn("[Announcement] bulk SMS send failed")
-			}
-		}()
+		}(account.ID.String(), channels, recipientEmail, recipientPhone)
 	}
 }
 

@@ -4,20 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/clients/accounting"
-	"github.com/Bendomey/rent-loop/services/main/internal/clients/gatekeeper"
 	"github.com/Bendomey/rent-loop/services/main/internal/config"
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
-	"github.com/Bendomey/rent-loop/services/main/internal/lib/emailtemplates"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 	"github.com/lib/pq"
 	gonanoid "github.com/matoous/go-nanoid"
-	log "github.com/sirupsen/logrus"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
@@ -272,54 +268,29 @@ func (s *invoiceService) CreateInvoice(ctx context.Context, input CreateInvoiceI
 			if err != nil {
 				return
 			}
-			_ = s.notificationService.SendToTenantAccount(
-				ctx,
-				account.ID.String(),
-				"New Invoice",
-				fmt.Sprintf("Invoice %s is ready for payment.", invoiceCode),
-				map[string]string{
-					"type":         "INVOICE",
+			orgID := ""
+			if invoice.ClientID != nil {
+				orgID = *invoice.ClientID
+			}
+			_, _ = s.notificationService.CreateNotification(ctx, CreateNotificationInput{
+				OrganizationID: orgID,
+				RecipientID:    account.ID.String(),
+				RecipientType:  models.NotificationRecipientTypeTenantAccount,
+				Event:          "INVOICE_CREATED",
+				Title:          "New Invoice",
+				Body:           fmt.Sprintf("Invoice %s is ready for payment.", invoiceCode),
+				Data: map[string]any{
+					"tenant_name":  tenant.FirstName,
 					"invoice_id":   invoiceID,
 					"invoice_code": invoiceCode,
+					"currency":     invoiceCurrency,
+					"amount":       invoiceAmount,
 					"context_type": contextType,
 				},
-			)
-			smsR := strings.NewReplacer(
-				"{{tenant_name}}", tenant.FirstName,
-				"{{invoice_code}}", invoiceCode,
-				"{{currency}}", invoiceCurrency,
-				"{{amount}}", invoiceAmount,
-			)
-			if tenant.Email != nil {
-				if htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render(
-					"invoice/created",
-					emailtemplates.InvoiceCreatedData{
-						TenantName:  tenant.FirstName,
-						InvoiceCode: invoiceCode,
-						Currency:    invoiceCurrency,
-						Amount:      invoiceAmount,
-					},
-				); renderErr != nil {
-					log.WithError(renderErr).Error("failed to render invoice/created email template")
-				} else {
-					go pkg.SendEmail(
-						s.appCtx.Config,
-						pkg.SendEmailInput{
-							Recipient: *tenant.Email,
-							Subject:   lib.INVOICE_CREATED_SUBJECT,
-							HtmlBody:  htmlBody,
-							TextBody:  textBody,
-						},
-					)
-				}
-			}
-			go s.appCtx.Clients.GatekeeperAPI.SendSMS(
-				ctx,
-				gatekeeper.SendSMSInput{
-					Recipient: tenant.Phone,
-					Message:   smsR.Replace(lib.INVOICE_CREATED_SMS_BODY),
-				},
-			)
+				Channels:       []string{models.NotificationChannelInApp, models.NotificationChannelEmail, models.NotificationChannelSMS, models.NotificationChannelPush},
+				RecipientEmail: tenant.Email,
+				RecipientPhone: &tenant.Phone,
+			})
 		}()
 	}
 
@@ -711,46 +682,26 @@ func (s *invoiceService) VoidInvoice(ctx context.Context, input VoidInvoiceInput
 			if err != nil {
 				return
 			}
-			_ = s.notificationService.SendToTenantAccount(
-				ctx,
-				account.ID.String(),
-				"Invoice Voided",
-				fmt.Sprintf("Invoice %s has been voided and is no longer payable.", invoiceCode),
-				map[string]string{
-					"type":         "INVOICE_VOIDED",
+			orgID := ""
+			if invoice.ClientID != nil {
+				orgID = *invoice.ClientID
+			}
+			_, _ = s.notificationService.CreateNotification(ctx, CreateNotificationInput{
+				OrganizationID: orgID,
+				RecipientID:    account.ID.String(),
+				RecipientType:  models.NotificationRecipientTypeTenantAccount,
+				Event:          "INVOICE_VOIDED",
+				Title:          "Invoice Voided",
+				Body:           fmt.Sprintf("Invoice %s has been voided and is no longer payable.", invoiceCode),
+				Data: map[string]any{
+					"tenant_name":  tenant.FirstName,
 					"invoice_id":   invoice.ID.String(),
 					"invoice_code": invoiceCode,
 				},
-			)
-			smsR := strings.NewReplacer(
-				"{{tenant_name}}", tenant.FirstName,
-				"{{invoice_code}}", invoiceCode,
-			)
-			if tenant.Email != nil {
-				if htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render("invoice/voided", emailtemplates.InvoiceVoidedData{
-					TenantName:  tenant.FirstName,
-					InvoiceCode: invoiceCode,
-				}); renderErr != nil {
-					log.WithError(renderErr).Error("failed to render invoice/voided email template")
-				} else {
-					go pkg.SendEmail(
-						s.appCtx.Config,
-						pkg.SendEmailInput{
-							Recipient: *tenant.Email,
-							Subject:   lib.INVOICE_VOIDED_SUBJECT,
-							HtmlBody:  htmlBody,
-							TextBody:  textBody,
-						},
-					)
-				}
-			}
-			go s.appCtx.Clients.GatekeeperAPI.SendSMS(
-				ctx,
-				gatekeeper.SendSMSInput{
-					Recipient: tenant.Phone,
-					Message:   smsR.Replace(lib.INVOICE_VOIDED_SMS_BODY),
-				},
-			)
+				Channels:       []string{models.NotificationChannelInApp, models.NotificationChannelEmail, models.NotificationChannelSMS, models.NotificationChannelPush},
+				RecipientEmail: tenant.Email,
+				RecipientPhone: &tenant.Phone,
+			})
 		}()
 	}
 

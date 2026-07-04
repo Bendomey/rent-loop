@@ -7,12 +7,10 @@ import (
 	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
-	"github.com/Bendomey/rent-loop/services/main/internal/lib/emailtemplates"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 	"github.com/lib/pq"
-	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -391,7 +389,7 @@ func (s *leaseChecklistService) SubmitLeaseChecklist(
 	go func() {
 		lease, leaseErr := s.leaseRepo.GetOneWithPopulate(context.Background(), repository.GetLeaseQuery{
 			ID:       leaseID,
-			Populate: &[]string{"Tenant"},
+			Populate: &[]string{"Unit.Property", "Tenant"},
 		})
 		if leaseErr != nil {
 			return
@@ -404,21 +402,23 @@ func (s *leaseChecklistService) SubmitLeaseChecklist(
 			return
 		}
 
-		_ = s.notificationService.SendToTenantAccount(
-			context.Background(),
-			tenantAccount.ID.String(),
-			"Report submitted for review",
-			fmt.Sprintf(
+		_, _ = s.notificationService.CreateNotification(context.Background(), CreateNotificationInput{
+			OrganizationID: lease.Unit.Property.ClientID,
+			RecipientID:    tenantAccount.ID.String(),
+			RecipientType:  models.NotificationRecipientTypeTenantAccount,
+			Event:          "LEASE_CHECKLIST_SUBMITTED",
+			Title:          "Report submitted for review",
+			Body: fmt.Sprintf(
 				"Your landlord has submitted a %s report for your review. Please review and respond.",
 				lib.LeaseChecklistTypeLabel(checklist.Type),
 			),
-			map[string]string{
-				"type":           "CHECKLIST_SUBMITTED",
+			Data: map[string]any{
 				"checklist_id":   checklistID,
 				"lease_id":       leaseID,
 				"checklist_type": checklist.Type,
 			},
-		)
+			Channels: []string{models.NotificationChannelInApp, models.NotificationChannelPush},
+		})
 	}()
 
 	return checklist, nil
@@ -532,24 +532,25 @@ func (s *leaseChecklistService) AcknowledgeLeaseChecklist(
 		if leaseErr != nil {
 			return
 		}
-		htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render(
-			"payment/checklist-acknowledged",
-			emailtemplates.ChecklistAcknowledgedData{
-				TenantName:    lease.Tenant.FirstName,
-				UnitName:      lease.Unit.Name,
-				ChecklistType: checklist.Type,
-				Action:        input.Action,
+		pmEmail := checklist.CreatedBy.User.Email
+		_, _ = s.notificationService.CreateNotification(context.Background(), CreateNotificationInput{
+			OrganizationID: checklist.CreatedBy.ClientID,
+			RecipientID:    checklist.CreatedBy.ID.String(),
+			RecipientType:  models.NotificationRecipientTypeClientUser,
+			Event:          "LEASE_CHECKLIST_ACKNOWLEDGED",
+			Title:          "Checklist Response Received",
+			Body: fmt.Sprintf(
+				"%s has responded to the %s checklist for %s.",
+				lease.Tenant.FirstName, checklist.Type, lease.Unit.Name,
+			),
+			Data: map[string]any{
+				"tenant_name":    lease.Tenant.FirstName,
+				"unit_name":      lease.Unit.Name,
+				"checklist_type": checklist.Type,
+				"action":         input.Action,
 			},
-		)
-		if renderErr != nil {
-			log.WithError(renderErr).Error("failed to render checklist-acknowledged email template")
-			return
-		}
-		pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
-			Recipient: checklist.CreatedBy.User.Email,
-			Subject:   lib.PM_CHECKLIST_ACKNOWLEDGED_SUBJECT,
-			HtmlBody:  htmlBody,
-			TextBody:  textBody,
+			Channels:       []string{models.NotificationChannelInApp, models.NotificationChannelEmail},
+			RecipientEmail: &pmEmail,
 		})
 	}()
 

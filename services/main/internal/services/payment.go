@@ -9,13 +9,10 @@ import (
 	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/clients/accounting"
-	"github.com/Bendomey/rent-loop/services/main/internal/clients/gatekeeper"
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
-	"github.com/Bendomey/rent-loop/services/main/internal/lib/emailtemplates"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
-	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -282,25 +279,23 @@ func (s *paymentService) CreateOfflinePayment(
 				lease.ActivatedBy.User.Email == "" {
 				return
 			}
-			htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render(
-				"payment/offline-submitted",
-				emailtemplates.OfflinePaymentSubmittedData{
-					TenantName:  lease.Tenant.FirstName,
-					UnitName:    lease.Unit.Name,
-					InvoiceCode: invoice.Code,
-					Amount:      lib.FormatAmount(lib.PesewasToCedis(invoice.TotalAmount)),
-					Currency:    invoice.Currency,
+			pmEmail := lease.ActivatedBy.User.Email
+			_, _ = s.notificationService.CreateNotification(bgCtx, CreateNotificationInput{
+				OrganizationID: lib.SafeString(&lease.ActivatedBy.ClientID),
+				RecipientID:    lease.ActivatedBy.ID.String(),
+				RecipientType:  models.NotificationRecipientTypeClientUser,
+				Event:          "PAYMENT_OFFLINE_SUBMITTED",
+				Title:          "Offline Payment Submitted",
+				Body:           fmt.Sprintf("%s submitted an offline payment for invoice %s.", lease.Tenant.FirstName, invoice.Code),
+				Data: map[string]any{
+					"tenant_name":  lease.Tenant.FirstName,
+					"unit_name":    lease.Unit.Name,
+					"invoice_code": invoice.Code,
+					"currency":     invoice.Currency,
+					"amount":       lib.FormatAmount(lib.PesewasToCedis(invoice.TotalAmount)),
 				},
-			)
-			if renderErr != nil {
-				logrus.WithError(renderErr).Error("failed to render payment/offline-submitted email template")
-				return
-			}
-			pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
-				Recipient: lease.ActivatedBy.User.Email,
-				Subject:   lib.PM_OFFLINE_PAYMENT_SUBMITTED_SUBJECT,
-				HtmlBody:  htmlBody,
-				TextBody:  textBody,
+				Channels:       []string{models.NotificationChannelInApp, models.NotificationChannelEmail},
+				RecipientEmail: &pmEmail,
 			})
 		} else if invoice.ContextTenantApplicationID != nil && s.tenantApplicationService != nil {
 			ta, taErr := s.tenantApplicationService.GetOneTenantApplication(bgCtx, repository.GetTenantApplicationQuery{
@@ -311,22 +306,23 @@ func (s *paymentService) CreateOfflinePayment(
 				return
 			}
 			tenantName := strings.Join(strings.Fields(lib.SafeString(ta.FirstName)+" "+lib.SafeString(ta.LastName)), " ")
-			htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render("payment/offline-submitted", emailtemplates.OfflinePaymentSubmittedData{
-				TenantName:  tenantName,
-				UnitName:    "",
-				InvoiceCode: invoice.Code,
-				Amount:      lib.FormatAmount(lib.PesewasToCedis(invoice.TotalAmount)),
-				Currency:    invoice.Currency,
-			})
-			if renderErr != nil {
-				logrus.WithError(renderErr).Error("failed to render payment/offline-submitted email template")
-				return
-			}
-			pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
-				Recipient: ta.CreatedBy.User.Email,
-				Subject:   lib.PM_OFFLINE_PAYMENT_SUBMITTED_SUBJECT,
-				HtmlBody:  htmlBody,
-				TextBody:  textBody,
+			pmEmail := ta.CreatedBy.User.Email
+			_, _ = s.notificationService.CreateNotification(bgCtx, CreateNotificationInput{
+				OrganizationID: lib.SafeString(&ta.CreatedBy.ClientID),
+				RecipientID:    ta.CreatedBy.ID.String(),
+				RecipientType:  models.NotificationRecipientTypeClientUser,
+				Event:          "PAYMENT_OFFLINE_SUBMITTED",
+				Title:          "Offline Payment Submitted",
+				Body:           fmt.Sprintf("%s submitted an offline payment for invoice %s.", tenantName, invoice.Code),
+				Data: map[string]any{
+					"tenant_name":  tenantName,
+					"unit_name":    "",
+					"invoice_code": invoice.Code,
+					"currency":     invoice.Currency,
+					"amount":       lib.FormatAmount(lib.PesewasToCedis(invoice.TotalAmount)),
+				},
+				Channels:       []string{models.NotificationChannelInApp, models.NotificationChannelEmail},
+				RecipientEmail: &pmEmail,
 			})
 		}
 	}()
@@ -604,75 +600,40 @@ func (s *paymentService) VerifyOfflinePayment(
 		if payment.Invoice.ContextLease != nil {
 			unitName = payment.Invoice.ContextLease.Unit.Name
 		}
-		smsR := strings.NewReplacer(
-			"{{tenant_name}}", tenant.FirstName,
-			"{{invoice_code}}", payment.Invoice.Code,
-			"{{unit_name}}", unitName,
-			"{{currency}}", payment.Invoice.Currency,
-			"{{amount}}", lib.FormatAmount(lib.PesewasToCedis(int64(payment.Invoice.TotalAmount))),
-		)
-		smsMessage := smsR.Replace(lib.INVOICE_PAID_SMS_BODY)
+		invoiceID := payment.Invoice.ID.String()
+		amount := lib.FormatAmount(lib.PesewasToCedis(int64(payment.Invoice.TotalAmount)))
 
-		htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render("invoice/paid", emailtemplates.InvoicePaidData{
-			TenantName:  tenant.FirstName,
-			InvoiceCode: payment.Invoice.Code,
-			UnitName:    unitName,
-			Currency:    payment.Invoice.Currency,
-			Amount:      lib.FormatAmount(lib.PesewasToCedis(int64(payment.Invoice.TotalAmount))),
-		})
-		if renderErr != nil {
-			logrus.WithError(renderErr).Error("failed to render invoice/paid email template")
-		} else if tenant.Email != nil {
-			go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
-				Recipient: *tenant.Email,
-				Subject:   lib.INVOICE_PAID_SUBJECT,
-				HtmlBody:  htmlBody,
-				TextBody:  textBody,
-			})
-		}
-
-		go func() {
-			if err := s.appCtx.Clients.GatekeeperAPI.SendSMS(context.Background(), gatekeeper.SendSMSInput{
-				Recipient: tenant.Phone,
-				Message:   smsMessage,
-			}); err != nil {
-				logrus.Errorf(
-					"failed to send invoice paid SMS for invoice %s to tenant %s: %v",
-					payment.Invoice.Code,
-					tenant.ID.String(),
-					err,
-				)
-			}
-		}()
-
+		recipientID := tenant.ID.String()
+		channels := []string{models.NotificationChannelEmail, models.NotificationChannelSMS}
 		if tenant.TenantAccount != nil {
-			tenantAccountID := tenant.TenantAccount.ID.String()
-			invoiceID := payment.Invoice.ID.String()
-			templatedMessage := textBody
-			if renderErr != nil {
-				templatedMessage = smsMessage
-			}
-			go func() {
-				if err := s.notificationService.SendToTenantAccount(
-					context.Background(),
-					tenantAccountID,
-					lib.INVOICE_PAID_SUBJECT,
-					templatedMessage,
-					map[string]string{
-						"type":         "INVOICE_PAID",
-						"invoice_id":   invoiceID,
-						"invoice_code": payment.Invoice.Code,
-					},
-				); err != nil {
-					logrus.Errorf(
-						"failed to send tenant account notification for invoice %s to tenant account %s: %v",
-						payment.Invoice.Code,
-						tenantAccountID,
-						err,
-					)
-				}
-			}()
+			recipientID = tenant.TenantAccount.ID.String()
+			channels = append(channels, models.NotificationChannelInApp, models.NotificationChannelPush)
 		}
+		orgID := ""
+		if payment.Invoice.ClientID != nil {
+			orgID = *payment.Invoice.ClientID
+		}
+		go func() {
+			_, _ = s.notificationService.CreateNotification(context.Background(), CreateNotificationInput{
+				OrganizationID: orgID,
+				RecipientID:    recipientID,
+				RecipientType:  models.NotificationRecipientTypeTenantAccount,
+				Event:          "INVOICE_PAID",
+				Title:          "Invoice Paid",
+				Body:           fmt.Sprintf("Your invoice %s has been marked as paid.", payment.Invoice.Code),
+				Data: map[string]any{
+					"tenant_name":  tenant.FirstName,
+					"invoice_id":   invoiceID,
+					"invoice_code": payment.Invoice.Code,
+					"unit_name":    unitName,
+					"currency":     payment.Invoice.Currency,
+					"amount":       amount,
+				},
+				Channels:       channels,
+				RecipientEmail: tenant.Email,
+				RecipientPhone: &tenant.Phone,
+			})
+		}()
 	}
 
 	return payment, nil

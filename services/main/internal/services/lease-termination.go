@@ -3,12 +3,10 @@ package services
 import (
 	"context"
 	"errors"
-	"strings"
+	"fmt"
 	"time"
 
-	"github.com/Bendomey/rent-loop/services/main/internal/clients/gatekeeper"
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
-	"github.com/Bendomey/rent-loop/services/main/internal/lib/emailtemplates"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
@@ -246,7 +244,7 @@ func (s *leaseTerminationService) Complete(ctx context.Context, input CompleteLe
 
 	lease, leaseErr := s.leaseRepo.GetOneWithPopulate(
 		ctx,
-		repository.GetLeaseQuery{ID: input.LeaseID, Populate: &[]string{"Unit", "Tenant"}},
+		repository.GetLeaseQuery{ID: input.LeaseID, Populate: &[]string{"Unit.Property", "Tenant.TenantAccount"}},
 	)
 	if leaseErr != nil {
 		if errors.Is(leaseErr, gorm.ErrRecordNotFound) {
@@ -326,44 +324,31 @@ func (s *leaseTerminationService) Complete(ctx context.Context, input CompleteLe
 		}()
 	}
 
-	// Fire-and-forget: email + SMS to tenant
-	tenantName := lease.Tenant.FirstName
-	unitName := lease.Unit.Name
-	reason := termination.Reason
-
-	smsMessage := strings.NewReplacer(
-		"{{tenant_name}}", tenantName,
-		"{{unit_name}}", unitName,
-		"{{termination_reason}}", reason,
-	).Replace(lib.LEASE_TERMINATED_SMS_BODY)
-
-	if lease.Tenant.Email != nil {
-		if htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render(
-			"lease/terminated",
-			emailtemplates.LeaseTerminatedData{
-				TenantName:        tenantName,
-				UnitName:          unitName,
-				TerminationReason: reason,
-			},
-		); renderErr != nil {
-			log.WithError(renderErr).Error("failed to render lease/terminated email template")
-		} else {
-			go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
-				Recipient: *lease.Tenant.Email,
-				Subject:   lib.LEASE_TERMINATED_SUBJECT,
-				HtmlBody:  htmlBody,
-				TextBody:  textBody,
-			})
-		}
+	// Fire-and-forget: notify tenant of termination.
+	termRecipientID := lease.TenantId
+	termChannels := []string{models.NotificationChannelEmail, models.NotificationChannelSMS}
+	if lease.Tenant.TenantAccount != nil {
+		termRecipientID = lease.Tenant.TenantAccount.ID.String()
+		termChannels = append(termChannels, models.NotificationChannelInApp, models.NotificationChannelPush)
 	}
-
-	go s.appCtx.Clients.GatekeeperAPI.SendSMS(
-		context.Background(),
-		gatekeeper.SendSMSInput{
-			Recipient: lease.Tenant.Phone,
-			Message:   smsMessage,
-		},
-	)
+	go func() {
+		_, _ = s.notificationService.CreateNotification(context.Background(), CreateNotificationInput{
+			OrganizationID: lease.Unit.Property.ClientID,
+			RecipientID:    termRecipientID,
+			RecipientType:  models.NotificationRecipientTypeTenantAccount,
+			Event:          "LEASE_TERMINATED",
+			Title:          "Lease Terminated",
+			Body:           fmt.Sprintf("Your lease for %s has been terminated.", lease.Unit.Name),
+			Data: map[string]any{
+				"tenant_name":        lease.Tenant.FirstName,
+				"unit_name":          lease.Unit.Name,
+				"termination_reason": termination.Reason,
+			},
+			Channels:       termChannels,
+			RecipientEmail: lease.Tenant.Email,
+			RecipientPhone: &lease.Tenant.Phone,
+		})
+	}()
 
 	return nil
 }
