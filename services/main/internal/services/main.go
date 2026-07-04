@@ -69,11 +69,17 @@ func NewServices(params INewServicesParams) Services {
 	userService := NewUserService(params.AppCtx, params.Repository.UserRepository)
 	clientService := NewClientService(params.AppCtx, params.Repository.ClientRepository)
 
+	clientUserPropertyService := NewClientUserPropertyService(
+		params.AppCtx,
+		params.Repository.ClientUserPropertyRepository,
+	)
+
 	clientUserService := NewClientUserService(
 		params.AppCtx,
 		params.Repository.ClientUserRepository,
 		params.Repository.ClientRepository,
 		params.Repository.UserRepository,
+		clientUserPropertyService,
 	)
 
 	clientApplicationService := NewClientApplicationService(ClientApplicationServiceDeps{
@@ -83,11 +89,6 @@ func NewServices(params INewServicesParams) Services {
 		ClientUserService: clientUserService,
 		UserService:       userService,
 	})
-
-	clientUserPropertyService := NewClientUserPropertyService(
-		params.AppCtx,
-		params.Repository.ClientUserPropertyRepository,
-	)
 
 	propertyBlockService := NewPropertyBlockService(params.AppCtx, params.Repository.PropertyBlockRepository)
 

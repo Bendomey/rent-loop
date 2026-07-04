@@ -34,14 +34,16 @@ type ClientUserService interface {
 	) (*models.ClientUser, error)
 	ActivateClientUser(ctx context.Context, input ClientUserSearchInput) (*models.ClientUser, error)
 	DeactivateClientUser(ctx context.Context, input DeactivateClientUserInput) (*models.ClientUser, error)
+	DeleteClientUser(ctx context.Context, input DeleteClientUserInput) error
 	InsertClientUser(ctx context.Context, clientUser *models.ClientUser) error
 }
 
 type clientUserService struct {
-	appCtx     pkg.AppContext
-	repo       repository.ClientUserRepository
-	clientRepo repository.ClientRepository
-	userRepo   repository.UserRepository
+	appCtx                    pkg.AppContext
+	repo                      repository.ClientUserRepository
+	clientRepo                repository.ClientRepository
+	userRepo                  repository.UserRepository
+	clientUserPropertyService ClientUserPropertyService
 }
 
 func NewClientUserService(
@@ -49,8 +51,9 @@ func NewClientUserService(
 	repo repository.ClientUserRepository,
 	clientRepo repository.ClientRepository,
 	userRepo repository.UserRepository,
+	clientUserPropertyService ClientUserPropertyService,
 ) ClientUserService {
-	return &clientUserService{appCtx, repo, clientRepo, userRepo}
+	return &clientUserService{appCtx, repo, clientRepo, userRepo, clientUserPropertyService}
 }
 
 func (s *clientUserService) InsertClientUser(ctx context.Context, clientUser *models.ClientUser) error {
@@ -506,4 +509,83 @@ func (s *clientUserService) DeactivateClientUser(
 	)
 
 	return clientUserToBeDeactivated, nil
+}
+
+type DeleteClientUserInput struct {
+	ClientUserID     string
+	ClientID         string
+	DeleteProperties bool
+}
+
+func (s *clientUserService) DeleteClientUser(
+	ctx context.Context,
+	input DeleteClientUserInput,
+) error {
+	clientUser, getClientUserErr := s.repo.GetByQuery(
+		ctx,
+		map[string]any{"id": input.ClientUserID, "client_id": input.ClientID},
+	)
+	if getClientUserErr != nil {
+		if errors.Is(getClientUserErr, gorm.ErrRecordNotFound) {
+			return pkg.NotFoundError("ClientUserNotFound", &pkg.RentLoopErrorParams{
+				Err: getClientUserErr,
+			})
+		}
+
+		return pkg.InternalServerError(getClientUserErr.Error(), &pkg.RentLoopErrorParams{
+			Err: getClientUserErr,
+			Metadata: map[string]string{
+				"function": "DeleteClientUser",
+				"action":   "fetching client user by ID",
+			},
+		})
+	}
+
+	propertiesCount, countErr := s.clientUserPropertyService.CountClientUserProperties(
+		ctx,
+		repository.ListClientUserPropertiesFilter{ClientUserID: &input.ClientUserID},
+	)
+	if countErr != nil {
+		return countErr
+	}
+
+	if propertiesCount > 0 && !input.DeleteProperties {
+		return pkg.BadRequestError("ClientUserHasLinkedProperties", nil)
+	}
+
+	tx := s.appCtx.DB.Begin()
+	transCtx := lib.WithTransaction(ctx, tx)
+
+	if propertiesCount > 0 {
+		unlinkErr := s.clientUserPropertyService.UnlinkAllByClientUserID(transCtx, input.ClientUserID)
+		if unlinkErr != nil {
+			tx.Rollback()
+			return unlinkErr
+		}
+	}
+
+	deleteClientUserErr := s.repo.Delete(transCtx, clientUser)
+	if deleteClientUserErr != nil {
+		tx.Rollback()
+
+		if deleteClientUserErr.Error() == "CannotDeleteSuperUserForClient" {
+			return pkg.BadRequestError("CannotDeleteSuperUserForClient", nil)
+		}
+
+		return pkg.InternalServerError(deleteClientUserErr.Error(), &pkg.RentLoopErrorParams{
+			Err: deleteClientUserErr,
+			Metadata: map[string]string{
+				"function": "DeleteClientUser",
+				"action":   "deleting client user",
+			},
+		})
+	}
+
+	commitErr := tx.Commit().Error
+	if commitErr != nil {
+		tx.Rollback()
+		return commitErr
+	}
+
+	return nil
 }

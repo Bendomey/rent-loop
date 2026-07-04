@@ -1,4 +1,12 @@
-import { Building2, HardHat, Home, LogOut, Network, User } from 'lucide-react'
+import {
+	Building2,
+	HardHat,
+	Home,
+	LogOut,
+	Network,
+	SearchX,
+	User,
+} from 'lucide-react'
 import { data, Form, redirect, useLoaderData } from 'react-router'
 import type { Route } from './+types/_auth.select-client'
 import { userContext } from '~/lib/actions/auth.context.server'
@@ -115,58 +123,74 @@ export default function SelectClientPage() {
 			{/* Main */}
 			<main className="flex flex-1 items-center justify-center px-6 py-12">
 				<div className="w-full max-w-sm space-y-6">
-					<div className="space-y-1">
-						<h1 className="text-2xl font-semibold tracking-tight">
-							Select workspace
-						</h1>
-						<p className="text-muted-foreground text-sm">
-							Choose which workspace you want to continue with.
-						</p>
-					</div>
-					<Form method="post" className="space-y-3">
-						{clientUsers.map((cu: ClientUser) => {
-							const isInactive = cu.status !== 'ClientUser.Status.Active'
-							return (
-								<button
-									key={cu.client_id}
-									type="submit"
-									name="client_id"
-									value={cu.client_id}
-									disabled={isInactive}
-									className="bg-card hover:bg-accent disabled:hover:bg-card flex w-full items-center gap-3 rounded-lg border p-4 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60"
-								>
-									<div className="bg-muted text-muted-foreground flex size-10 shrink-0 items-center justify-center rounded-md">
-										{getClientIcon(cu.client)}
-									</div>
-									<div className="min-w-0 flex-1">
-										<div className="flex items-center gap-2">
-											<p className="truncate font-medium">
-												{cu.client?.name ?? cu.client_id}
-											</p>
-											<span className="bg-muted text-muted-foreground shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium tracking-wide uppercase">
-												{cu.role}
-											</span>
-											{isInactive && (
-												<span className="shrink-0 rounded bg-rose-100 px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-rose-600 uppercase dark:bg-rose-900/30 dark:text-rose-400">
-													Inactive
-												</span>
-											)}
-										</div>
-										{isInactive ? (
-											<p className="text-xs text-rose-500 dark:text-rose-400">
-												Contact your admin to reactivate this workspace
-											</p>
-										) : (
-											<p className="text-muted-foreground text-xs">
-												{getClientSubTypeLabel(cu.client) ??
-													cu.role.toLowerCase()}
-											</p>
-										)}
-									</div>
-								</button>
-							)
-						})}
-					</Form>
+					{clientUsers.length === 0 ? (
+						<div className="flex flex-col items-center gap-3 rounded-lg border border-dashed py-10 text-center">
+							<div className="bg-muted text-muted-foreground flex size-10 shrink-0 items-center justify-center rounded-md">
+								<SearchX className="size-5" />
+							</div>
+							<div className="space-y-1">
+								<p className="font-medium">No workspaces found</p>
+								<p className="text-muted-foreground text-sm">
+									You don&apos;t belong to any workspace yet.
+								</p>
+							</div>
+						</div>
+					) : (
+						<>
+							<div className="space-y-1">
+								<h1 className="text-2xl font-semibold tracking-tight">
+									Select workspace
+								</h1>
+								<p className="text-muted-foreground text-sm">
+									Choose which workspace you want to continue with.
+								</p>
+							</div>
+							<Form method="post" className="space-y-3">
+								{clientUsers.map((cu: ClientUser) => {
+									const isInactive = cu.status !== 'ClientUser.Status.Active'
+									return (
+										<button
+											key={cu.client_id}
+											type="submit"
+											name="client_id"
+											value={cu.client_id}
+											disabled={isInactive}
+											className="bg-card hover:bg-accent disabled:hover:bg-card flex w-full items-center gap-3 rounded-lg border p-4 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+										>
+											<div className="bg-muted text-muted-foreground flex size-10 shrink-0 items-center justify-center rounded-md">
+												{getClientIcon(cu.client)}
+											</div>
+											<div className="min-w-0 flex-1">
+												<div className="flex items-center gap-2">
+													<p className="truncate font-medium">
+														{cu.client?.name ?? cu.client_id}
+													</p>
+													<span className="bg-muted text-muted-foreground shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium tracking-wide uppercase">
+														{cu.role}
+													</span>
+													{isInactive && (
+														<span className="shrink-0 rounded bg-rose-100 px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-rose-600 uppercase dark:bg-rose-900/30 dark:text-rose-400">
+															Inactive
+														</span>
+													)}
+												</div>
+												{isInactive ? (
+													<p className="text-xs text-rose-500 dark:text-rose-400">
+														Contact your admin to reactivate this workspace
+													</p>
+												) : (
+													<p className="text-muted-foreground text-xs">
+														{getClientSubTypeLabel(cu.client) ??
+															cu.role.toLowerCase()}
+													</p>
+												)}
+											</div>
+										</button>
+									)
+								})}
+							</Form>
+						</>
+					)}
 				</div>
 			</main>
 

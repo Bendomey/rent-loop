@@ -1,6 +1,7 @@
 import {
 	FileText,
 	Globe,
+	LifeBuoy,
 	UserCircle,
 	Users,
 	Wallet,
@@ -29,6 +30,11 @@ const workspaceMenus: { title: string; url: string; icon: LucideIcon }[] = [
 	{ title: 'Payment Accounts', url: '/payment-accounts', icon: Wallet },
 	{ title: 'Billing', url: '/billing', icon: Globe },
 	{ title: 'Documents', url: '/documents', icon: FileText },
+	{
+		title: 'Customer Support Access',
+		url: '/customer-support-access',
+		icon: LifeBuoy,
+	},
 ]
 
 const allMenus = [...generalMenus, ...workspaceMenus]

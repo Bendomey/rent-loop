@@ -40,45 +40,6 @@ export const useGetClientUsers = (
 		enabled: !!clientId,
 	})
 
-/**
- *  Create client user (Member)
- */
-
-export interface CreateClientUserInput {
-	name: string
-	phone: string
-	email: string
-	role: ClientUser['role']
-}
-
-export const createClientUser = async (
-	clientId: string,
-	props: CreateClientUserInput,
-	apiConfig?: ApiConfigForServerConfig,
-) => {
-	try {
-		const response = await fetchServer<ApiResponse<ClientUser>>(
-			`${apiConfig?.baseUrl}/v1/admin/clients/${clientId}/client-users`,
-			{
-				method: 'POST',
-				body: JSON.stringify(props),
-				...(apiConfig ? apiConfig : {}),
-			},
-		)
-
-		return response.parsedBody.data
-	} catch (error: unknown) {
-		if (error instanceof Response) {
-			const response = await error.json()
-			throw new Error(response.errors?.message || 'Unknown error')
-		}
-
-		if (error instanceof Error) {
-			throw error
-		}
-	}
-}
-
 interface deactivateClientUserProps {
 	clientId: string
 	id: string
@@ -149,6 +110,44 @@ const activateClientUser = async ({
 
 export const useActivateClientUser = () =>
 	useMutation({ mutationFn: activateClientUser })
+
+interface deleteClientUserProps {
+	clientId: string
+	id: string
+	deleteProperties?: boolean
+}
+
+/**
+ * delete client user
+ */
+const deleteClientUser = async ({
+	clientId,
+	id,
+	deleteProperties,
+}: deleteClientUserProps) => {
+	try {
+		const params = new URLSearchParams()
+		if (deleteProperties) {
+			params.set('delete_properties', deleteProperties.toString())
+		}
+
+		await fetchClient<boolean>(
+			`/v1/admin/clients/${clientId}/client-users/${id}?${params.toString()}`,
+			{ method: 'DELETE' },
+		)
+	} catch (error) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+export const useDeleteClientUser = () =>
+	useMutation({ mutationFn: deleteClientUser })
 
 /**
  * GET client user by ID (server-side)

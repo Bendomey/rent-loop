@@ -13,6 +13,7 @@ type ClientUserRepository interface {
 	GetByID(context context.Context, id string) (*models.ClientUser, error)
 	GetByQuery(context context.Context, query map[string]any) (*models.ClientUser, error)
 	Update(context context.Context, clientUser *models.ClientUser) error
+	Delete(context context.Context, clientUser *models.ClientUser) error
 	List(context context.Context, filterQuery ListClientUsersFilter) (*[]models.ClientUser, error)
 	Count(context context.Context, filterQuery ListClientUsersFilter) (int64, error)
 	GetByIDWithPopulate(
@@ -62,6 +63,12 @@ func (r *clientUserRepository) Update(ctx context.Context, clientUser *models.Cl
 	return r.DB.WithContext(ctx).Save(clientUser).Error
 }
 
+func (r *clientUserRepository) Delete(ctx context.Context, clientUser *models.ClientUser) error {
+	db := lib.ResolveDB(ctx, r.DB)
+
+	return db.WithContext(ctx).Delete(clientUser).Error
+}
+
 type GetClientUserWithPopulateQuery struct {
 	ID       string
 	ClientID string
@@ -96,6 +103,8 @@ type ListClientUsersFilter struct {
 	Role            *string
 	Status          *string
 	NotInPropertyID *string
+	UserEmail       *string
+	UserPhone       *string
 }
 
 func (r *clientUserRepository) List(
@@ -110,6 +119,7 @@ func (r *clientUserRepository) List(
 		roleFilterScope(filterQuery.Role),
 		statusFilterScope(filterQuery.Status),
 		notInPropertyScope(filterQuery.NotInPropertyID),
+		userFilterScope(filterQuery.UserEmail, filterQuery.UserPhone),
 		DateRangeScope("client_users", filterQuery.DateRange),
 		SearchScope("client_users", filterQuery.Search),
 
@@ -145,6 +155,7 @@ func (r *clientUserRepository) Count(
 			roleFilterScope(filterQuery.Role),
 			statusFilterScope(filterQuery.Status),
 			notInPropertyScope(filterQuery.NotInPropertyID),
+			userFilterScope(filterQuery.UserEmail, filterQuery.UserPhone),
 			DateRangeScope("client_users", filterQuery.DateRange),
 			SearchScope("client_users", filterQuery.Search),
 		).Count(&count)
@@ -173,6 +184,26 @@ func statusFilterScope(status *string) func(db *gorm.DB) *gorm.DB {
 		}
 
 		return db.Where("client_users.status = ?", status)
+	}
+}
+
+func userFilterScope(email *string, phone *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if email == nil && phone == nil {
+			return db
+		}
+
+		db = db.Joins("JOIN users ON users.id = client_users.user_id AND users.deleted_at IS NULL")
+
+		if email != nil {
+			db = db.Where("users.email = ?", *email)
+		}
+
+		if phone != nil {
+			db = db.Where("users.phone_number = ?", *phone)
+		}
+
+		return db
 	}
 }
 

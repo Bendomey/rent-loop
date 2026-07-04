@@ -68,3 +68,9 @@ export const TAWK_HIDDEN_PATHS = [
 	'/forgot-your-password',
 	'/reset-your-password',
 ]
+
+export const CUSTOMER_SUPPORT_ACCOUNT = {
+	NAME: 'Rentloop Support',
+	EMAIL: 'support@rentloopapp.com',
+	PHONE: '+233201080802',
+} as const
