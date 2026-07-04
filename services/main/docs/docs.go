@@ -12368,8 +12368,16 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "204": {
-                        "description": "lease application approved successfully"
+                    "200": {
+                        "description": "lease application approved successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputAdminLease"
+                                }
+                            }
+                        }
                     },
                     "400": {
                         "description": "Error occurred when approving a lease application",

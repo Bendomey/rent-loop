@@ -38,7 +38,7 @@ const STEP_DESCRIPTIONS: Record<ApprovalStep, string> = {
 
 interface UseApprovalPipelineProps {
 	application: TenantApplication
-	onSuccess: () => void
+	onSuccess: (lease?: Lease) => void
 	propertyId: string
 }
 
@@ -195,7 +195,7 @@ export function useApprovalPipeline({
 
 			// Step 4: Approve
 			beginStep('APPROVE')
-			await approveApplication({
+			const lease = await approveApplication({
 				client_id: safeString(clientUser?.client_id),
 				property_id: propertyId,
 				id: application.id,
@@ -210,7 +210,7 @@ export function useApprovalPipeline({
 			void revalidator.revalidate()
 
 			setTimeout(() => {
-				onSuccess()
+				onSuccess(lease)
 			}, 2000)
 		} catch (error) {
 			if (progressIntervalRef.current) {

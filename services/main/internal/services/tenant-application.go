@@ -43,7 +43,7 @@ type TenantApplicationService interface {
 		invoiceID string,
 	) (*models.Invoice, error)
 	GenerateInvoice(context context.Context, input GenerateInvoiceInput) (*models.Invoice, error)
-	ApproveTenantApplication(context context.Context, input ApproveTenantApplicationInput) error
+	ApproveTenantApplication(context context.Context, input ApproveTenantApplicationInput) (*models.Lease, error)
 	BulkCreateTenantApplications(
 		ctx context.Context,
 		input BulkCreateTenantApplicationsInput,
@@ -951,18 +951,18 @@ type ApproveTenantApplicationInput struct {
 func (s *tenantApplicationService) ApproveTenantApplication(
 	ctx context.Context,
 	input ApproveTenantApplicationInput,
-) error {
+) (*models.Lease, error) {
 	// fetch lease application
 	tenantApplication, getTenantApplicationErr := s.repo.GetOneWithQuery(ctx, repository.GetTenantApplicationQuery{
 		TenantApplicationID: input.TenantApplicationID,
 	})
 	if getTenantApplicationErr != nil {
 		if errors.Is(getTenantApplicationErr, gorm.ErrRecordNotFound) {
-			return pkg.NotFoundError("TenantApplicationNotFound", &pkg.RentLoopErrorParams{
+			return nil, pkg.NotFoundError("TenantApplicationNotFound", &pkg.RentLoopErrorParams{
 				Err: getTenantApplicationErr,
 			})
 		}
-		return pkg.InternalServerError(getTenantApplicationErr.Error(), &pkg.RentLoopErrorParams{
+		return nil, pkg.InternalServerError(getTenantApplicationErr.Error(), &pkg.RentLoopErrorParams{
 			Err: getTenantApplicationErr,
 			Metadata: map[string]string{
 				"function": "ApproveTenantApplication",
@@ -972,69 +972,69 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 	}
 
 	if tenantApplication.Status == "TenantApplication.Status.Cancelled" {
-		return pkg.BadRequestError("TenantApplicationAlreadyCancelled", nil)
+		return nil, pkg.BadRequestError("TenantApplicationAlreadyCancelled", nil)
 	}
 
 	if tenantApplication.Status == "TenantApplication.Status.Completed" {
-		return pkg.BadRequestError("TenantApplicationAlreadyCompleted", nil)
+		return nil, pkg.BadRequestError("TenantApplicationAlreadyCompleted", nil)
 	}
 
 	// validate fields required for lease creation are all set
 	if tenantApplication.DesiredUnitId == nil {
-		return pkg.BadRequestError("ApplicationMissingUnit", nil)
+		return nil, pkg.BadRequestError("ApplicationMissingUnit", nil)
 	}
 	if tenantApplication.FirstName == nil || *tenantApplication.FirstName == "" {
-		return pkg.BadRequestError("ApplicationMissingPersonalInfo", nil)
+		return nil, pkg.BadRequestError("ApplicationMissingPersonalInfo", nil)
 	}
 	if tenantApplication.LastName == nil || *tenantApplication.LastName == "" {
-		return pkg.BadRequestError("ApplicationMissingPersonalInfo", nil)
+		return nil, pkg.BadRequestError("ApplicationMissingPersonalInfo", nil)
 	}
 	if tenantApplication.Gender == nil || *tenantApplication.Gender == "" {
-		return pkg.BadRequestError("ApplicationMissingPersonalInfo", nil)
+		return nil, pkg.BadRequestError("ApplicationMissingPersonalInfo", nil)
 	}
 	if tenantApplication.DateOfBirth == nil {
-		return pkg.BadRequestError("ApplicationMissingPersonalInfo", nil)
+		return nil, pkg.BadRequestError("ApplicationMissingPersonalInfo", nil)
 	}
 	if tenantApplication.Nationality == nil || *tenantApplication.Nationality == "" {
-		return pkg.BadRequestError("ApplicationMissingPersonalInfo", nil)
+		return nil, pkg.BadRequestError("ApplicationMissingPersonalInfo", nil)
 	}
 	if tenantApplication.MaritalStatus == nil || *tenantApplication.MaritalStatus == "" {
-		return pkg.BadRequestError("ApplicationMissingPersonalInfo", nil)
+		return nil, pkg.BadRequestError("ApplicationMissingPersonalInfo", nil)
 	}
 	if tenantApplication.IDNumber == nil || *tenantApplication.IDNumber == "" {
-		return pkg.BadRequestError("ApplicationMissingPersonalInfo", nil)
+		return nil, pkg.BadRequestError("ApplicationMissingPersonalInfo", nil)
 	}
 	if tenantApplication.CurrentAddress == nil || *tenantApplication.CurrentAddress == "" {
-		return pkg.BadRequestError("ApplicationMissingPersonalInfo", nil)
+		return nil, pkg.BadRequestError("ApplicationMissingPersonalInfo", nil)
 	}
 	if tenantApplication.EmergencyContactName == nil || *tenantApplication.EmergencyContactName == "" {
-		return pkg.BadRequestError("ApplicationMissingPersonalInfo", nil)
+		return nil, pkg.BadRequestError("ApplicationMissingPersonalInfo", nil)
 	}
 	if tenantApplication.EmergencyContactPhone == nil || *tenantApplication.EmergencyContactPhone == "" {
-		return pkg.BadRequestError("ApplicationMissingPersonalInfo", nil)
+		return nil, pkg.BadRequestError("ApplicationMissingPersonalInfo", nil)
 	}
 	if tenantApplication.RentFee == nil {
-		return pkg.BadRequestError("ApplicationMissingRentDetails", nil)
+		return nil, pkg.BadRequestError("ApplicationMissingRentDetails", nil)
 	}
 	if tenantApplication.RentFeeCurrency == nil || *tenantApplication.RentFeeCurrency == "" {
-		return pkg.BadRequestError("ApplicationMissingRentDetails", nil)
+		return nil, pkg.BadRequestError("ApplicationMissingRentDetails", nil)
 	}
 	if tenantApplication.DesiredMoveInDate == nil {
-		return pkg.BadRequestError("ApplicationMissingMoveInDate", nil)
+		return nil, pkg.BadRequestError("ApplicationMissingMoveInDate", nil)
 	}
 	if tenantApplication.StayDurationFrequency == nil {
-		return pkg.BadRequestError("ApplicationMissingStayDurationFrequency", nil)
+		return nil, pkg.BadRequestError("ApplicationMissingStayDurationFrequency", nil)
 	}
 	if tenantApplication.StayDuration == nil {
-		return pkg.BadRequestError("ApplicationMissingStayDuration", nil)
+		return nil, pkg.BadRequestError("ApplicationMissingStayDuration", nil)
 	}
 	unit, getUnitErr := s.unitService.GetUnitByID(ctx, *tenantApplication.DesiredUnitId)
 	if getUnitErr != nil {
-		return getUnitErr
+		return nil, getUnitErr
 	}
 
 	if unit.Status != "Unit.Status.Available" && unit.Status != "Unit.Status.PartiallyOccupied" {
-		return pkg.BadRequestError("UnitNoLongerAvailable", nil)
+		return nil, pkg.BadRequestError("UnitNoLongerAvailable", nil)
 	}
 
 	_, getInvoiceErr := s.invoiceService.GetByQuery(ctx, repository.GetInvoiceQuery{
@@ -1047,7 +1047,7 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 
 	if getInvoiceErr != nil {
 		if errors.Is(getInvoiceErr, gorm.ErrRecordNotFound) {
-			return pkg.BadRequestError("TenantApplicationInvoiceNotPaid", nil)
+			return nil, pkg.BadRequestError("TenantApplicationInvoiceNotPaid", nil)
 		}
 	}
 
@@ -1062,7 +1062,7 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 	updateTenantApplicationErr := s.repo.Update(transCtx, *tenantApplication)
 	if updateTenantApplicationErr != nil {
 		transaction.Rollback()
-		return pkg.InternalServerError(updateTenantApplicationErr.Error(), &pkg.RentLoopErrorParams{
+		return nil, pkg.InternalServerError(updateTenantApplicationErr.Error(), &pkg.RentLoopErrorParams{
 			Err: updateTenantApplicationErr,
 			Metadata: map[string]string{
 				"function": "ApproveTenantApplication",
@@ -1099,7 +1099,7 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 	tenant, createTenantErr := s.tenantService.GetOrCreateTenant(transCtx, tenantInput)
 	if createTenantErr != nil {
 		transaction.Rollback()
-		return createTenantErr
+		return nil, createTenantErr
 	}
 
 	// create lease
@@ -1124,10 +1124,10 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 		StayDuration:              *tenantApplication.StayDuration,
 		LeaseAgreementDocumentUrl: tenantApplication.LeaseAgreementDocumentUrl, // *string, nil if not set
 	}
-	_, createLeaseErr := s.leaseService.CreateLease(transCtx, leaseInput)
+	lease, createLeaseErr := s.leaseService.CreateLease(transCtx, leaseInput)
 	if createLeaseErr != nil {
 		transaction.Rollback()
-		return createLeaseErr
+		return nil, createLeaseErr
 	}
 
 	// create tenant account
@@ -1141,12 +1141,13 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 	)
 	if createTenantAccountErr != nil {
 		transaction.Rollback()
-		return createTenantAccountErr
+		return nil, createTenantAccountErr
 	}
 
 	occupyingLeases, err := s.leaseService.CountOccupyingByUnitID(transCtx, unit.ID.String())
 	if err != nil {
-		return err
+		transaction.Rollback()
+		return nil, err
 	}
 
 	var newUnitStatus string
@@ -1164,13 +1165,13 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 		})
 		if updateUnitErr != nil {
 			transaction.Rollback()
-			return updateUnitErr
+			return nil, updateUnitErr
 		}
 	}
 
 	if commitErr := transaction.Commit().Error; commitErr != nil {
 		transaction.Rollback()
-		return pkg.InternalServerError(commitErr.Error(), &pkg.RentLoopErrorParams{
+		return nil, pkg.InternalServerError(commitErr.Error(), &pkg.RentLoopErrorParams{
 			Err: commitErr,
 			Metadata: map[string]string{
 				"function": "ApproveTenantApplication",
@@ -1223,7 +1224,7 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 		},
 	)
 
-	return nil
+	return lease, nil
 }
 
 func (s *tenantApplicationService) GetInvoiceForTenantApplication(

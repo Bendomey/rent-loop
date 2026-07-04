@@ -269,12 +269,13 @@ const approveTenantApplication = async ({
 	id: string
 }) => {
 	try {
-		await fetchClient<boolean>(
+		const response = await fetchClient<ApiResponse<Lease>>(
 			`/v1/admin/clients/${client_id}/properties/${property_id}/tenant-applications/${id}/approve`,
 			{
 				method: 'PATCH',
 			},
 		)
+		return response.parsedBody.data
 	} catch (error) {
 		if (error instanceof Error) {
 			throw error

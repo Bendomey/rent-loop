@@ -12731,8 +12731,13 @@ paths:
       produces:
       - application/json
       responses:
-        "204":
+        "200":
           description: lease application approved successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputAdminLease'
+            type: object
         "400":
           description: Error occurred when approving a lease application
           schema:

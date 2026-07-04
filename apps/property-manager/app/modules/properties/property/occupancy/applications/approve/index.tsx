@@ -73,9 +73,9 @@ function ApprovalModalContent({
 		useApprovalPipeline({
 			application: data,
 			propertyId,
-			onSuccess: () => {
-				toast.success(`${name}'s application was approved successfully.`)
-				void navigate(`/properties/${propertyId}/occupancy/leases`)
+			onSuccess: (lease?: Lease) => {
+				toast.success(`${name}'s lease has been created successfully.`)
+				void navigate(`/properties/${propertyId}/occupancy/leases/${lease?.id}`)
 			},
 		})
 

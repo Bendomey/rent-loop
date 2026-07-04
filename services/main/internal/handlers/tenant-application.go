@@ -852,16 +852,16 @@ func (h *TenantApplicationHandler) CancelTenantApplication(w http.ResponseWriter
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
-//	@Param			property_id				path	string	true	"Property ID"
-//	@Param			tenant_application_id	path	string	true	"lease application ID"
-//	@Success		204						"lease application approved successfully"
-//	@Failure		400						{object}	lib.HTTPError	"Error occurred when approving a lease application"
-//	@Failure		401						{object}	string			"Invalid or absent authentication token"
-//	@Failure		403						{object}	lib.HTTPError	"lease application not approved"
-//	@Failure		404						{object}	lib.HTTPError	"lease application not found"
-//	@Failure		409						{object}	lib.HTTPError	"lease application already approved"
-//	@Failure		422						{object}	lib.HTTPError	"Validation error"
-//	@Failure		500						{object}	string			"An unexpected error occurred"
+//	@Param			property_id				path		string											true	"Property ID"
+//	@Param			tenant_application_id	path		string											true	"lease application ID"
+//	@Success		200						{object}	object{data=transformations.OutputAdminLease}	"lease application approved successfully"
+//	@Failure		400						{object}	lib.HTTPError									"Error occurred when approving a lease application"
+//	@Failure		401						{object}	string											"Invalid or absent authentication token"
+//	@Failure		403						{object}	lib.HTTPError									"lease application not approved"
+//	@Failure		404						{object}	lib.HTTPError									"lease application not found"
+//	@Failure		409						{object}	lib.HTTPError									"lease application already approved"
+//	@Failure		422						{object}	lib.HTTPError									"Validation error"
+//	@Failure		500						{object}	string											"An unexpected error occurred"
 //	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id}/approve [patch]
 func (h *TenantApplicationHandler) ApproveTenantApplication(w http.ResponseWriter, r *http.Request) {
 	currentClientUser, currentClientUserOk := lib.ClientUserFromContext(r.Context())
@@ -872,7 +872,7 @@ func (h *TenantApplicationHandler) ApproveTenantApplication(w http.ResponseWrite
 
 	tenantApplicationID := chi.URLParam(r, "tenant_application_id")
 
-	approveTenantApplicationErr := h.service.ApproveTenantApplication(
+	lease, approveTenantApplicationErr := h.service.ApproveTenantApplication(
 		r.Context(),
 		services.ApproveTenantApplicationInput{
 			ClientUserID:        currentClientUser.ID,
@@ -884,7 +884,9 @@ func (h *TenantApplicationHandler) ApproveTenantApplication(w http.ResponseWrite
 		return
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBAdminLeaseToRest(lease),
+	})
 }
 
 type GenerateInvoiceRequest struct {
