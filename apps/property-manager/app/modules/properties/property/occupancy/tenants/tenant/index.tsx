@@ -20,6 +20,7 @@ import { Separator } from '~/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
 import { TypographyMuted, TypographyP } from '~/components/ui/typography'
 import { getNameInitials } from '~/lib/misc'
+import { safeString } from '~/lib/strings'
 import { getTenantOccupancyStatus } from '~/lib/tenant.utils'
 import type { loader } from '~/routes/_auth.properties.$propertyId.occupancy.tenants.$tenantId'
 
@@ -141,7 +142,12 @@ export function TenantModule() {
 					</div>
 					<TabsContent value={pathname}>
 						{pathname === baseUrl ? (
-							tenant && <TenantProfileModule tenant={tenant} />
+							tenant && (
+								<TenantProfileModule
+									tenant={tenant}
+									propertyId={safeString(clientUserProperty?.property?.id)}
+								/>
+							)
 						) : (
 							<Outlet />
 						)}

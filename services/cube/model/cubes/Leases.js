@@ -45,6 +45,12 @@ cube(`Leases`, {
       title: `Property ID`,
     },
 
+    tenantId: {
+      sql: `tenant_id`,
+      type: `string`,
+      title: `Tenant ID`,
+    },
+
     status: {
       sql: `status`,
       type: `string`,
