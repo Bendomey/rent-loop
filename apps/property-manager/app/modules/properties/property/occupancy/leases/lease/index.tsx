@@ -257,334 +257,341 @@ export function LeaseDetailModule() {
 
 					{/* Main Content */}
 					<div className="col-span-12 lg:col-span-8">
-						<Tabs defaultValue="details">
-							<TabsList id="lease-tabs">
-								<TabsTrigger value="details">Lease Details</TabsTrigger>
-								<TabsTrigger value="tenant">Tenant Profile</TabsTrigger>
-								<TabsTrigger value="documents">Documents</TabsTrigger>
-								<TabsTrigger value="expenses">Expenses</TabsTrigger>
-							</TabsList>
+						<div className="overflow-x-auto pb-1">
+							<Tabs defaultValue="details">
+								<TabsList id="lease-tabs">
+									<TabsTrigger value="details">Lease Details</TabsTrigger>
+									<TabsTrigger value="tenant">Tenant Profile</TabsTrigger>
+									<TabsTrigger value="documents">Documents</TabsTrigger>
+									<TabsTrigger value="expenses">Expenses</TabsTrigger>
+								</TabsList>
 
-							{/* Details Tab */}
-							<TabsContent value="details" className="mt-4 space-y-4">
-								{/* Lease Terms + Financial Terms */}
-								<Card className="shadow-none">
-									<CardContent className="space-y-6">
-										{/* Lease Terms */}
-										<div className="space-y-3">
-											<SectionHeading>Lease Terms</SectionHeading>
-											<div className="grid grid-cols-2 gap-4">
-												<DetailRow
-													label="Payment Frequency"
-													value={
-														getPaymentFrequencyLabel(
-															lease.payment_frequency ?? '',
-														) || '—'
-													}
-												/>
-												<DetailRow
-													label="Duration"
-													value={`${lease.stay_duration} ${getPaymentFrequencyPeriodLabel(lease.stay_duration_frequency, lease.stay_duration)}`}
-												/>
-												<DetailRow
-													label="Move-in Date"
-													value={localizedDayjs(lease.move_in_date).format(
-														'LL',
-													)}
-												/>
-												<DetailRow
-													label="Property Inspection"
-													value={
-														lease.property_inspection_date
-															? localizedDayjs(
-																	lease.property_inspection_date,
-																).format('LL')
-															: '—'
-													}
-												/>
-												<DetailRow
-													label="Utility Transfers"
-													value={
-														lease.utility_transfers_date
-															? localizedDayjs(
-																	lease.utility_transfers_date,
-																).format('LL')
-															: '—'
-													}
-												/>
-												<DetailRow
-													label="Activated At"
-													value={
-														lease.activated_at
-															? localizedDayjs(lease.activated_at).format('LL')
-															: '—'
-													}
-												/>
-												{lease.cancelled_at && (
-													<DetailRow
-														label="Cancelled At"
-														value={localizedDayjs(lease.cancelled_at).format(
-															'LL',
-														)}
-													/>
-												)}
-												{lease.terminated_at && (
-													<DetailRow
-														label="Terminated At"
-														value={localizedDayjs(lease.terminated_at).format(
-															'LL',
-														)}
-													/>
-												)}
-												{lease.completed_at && (
-													<DetailRow
-														label="Completed At"
-														value={localizedDayjs(lease.completed_at).format(
-															'LL',
-														)}
-													/>
-												)}
-											</div>
-										</div>
-
-										{/* Financial Terms */}
-										{application && (
+								{/* Details Tab */}
+								<TabsContent value="details" className="mt-4 space-y-4">
+									{/* Lease Terms + Financial Terms */}
+									<Card className="shadow-none">
+										<CardContent className="space-y-6">
+											{/* Lease Terms */}
 											<div className="space-y-3">
-												<SectionHeading>Financial Terms</SectionHeading>
+												<SectionHeading>Lease Terms</SectionHeading>
 												<div className="grid grid-cols-2 gap-4">
 													<DetailRow
-														label="Rent Fee"
-														value={formatAmount(
-															convertPesewasToCedis(application.rent_fee),
-															application.rent_fee_currency,
+														label="Payment Frequency"
+														value={
+															getPaymentFrequencyLabel(
+																lease.payment_frequency ?? '',
+															) || '—'
+														}
+													/>
+													<DetailRow
+														label="Duration"
+														value={`${lease.stay_duration} ${getPaymentFrequencyPeriodLabel(lease.stay_duration_frequency, lease.stay_duration)}`}
+													/>
+													<DetailRow
+														label="Move-in Date"
+														value={localizedDayjs(lease.move_in_date).format(
+															'LL',
 														)}
 													/>
-													{application.initial_deposit_fee != null && (
+													<DetailRow
+														label="Property Inspection"
+														value={
+															lease.property_inspection_date
+																? localizedDayjs(
+																		lease.property_inspection_date,
+																	).format('LL')
+																: '—'
+														}
+													/>
+													<DetailRow
+														label="Utility Transfers"
+														value={
+															lease.utility_transfers_date
+																? localizedDayjs(
+																		lease.utility_transfers_date,
+																	).format('LL')
+																: '—'
+														}
+													/>
+													<DetailRow
+														label="Activated At"
+														value={
+															lease.activated_at
+																? localizedDayjs(lease.activated_at).format(
+																		'LL',
+																	)
+																: '—'
+														}
+													/>
+													{lease.cancelled_at && (
 														<DetailRow
-															label="Initial Deposit"
+															label="Cancelled At"
+															value={localizedDayjs(lease.cancelled_at).format(
+																'LL',
+															)}
+														/>
+													)}
+													{lease.terminated_at && (
+														<DetailRow
+															label="Terminated At"
+															value={localizedDayjs(lease.terminated_at).format(
+																'LL',
+															)}
+														/>
+													)}
+													{lease.completed_at && (
+														<DetailRow
+															label="Completed At"
+															value={localizedDayjs(lease.completed_at).format(
+																'LL',
+															)}
+														/>
+													)}
+												</div>
+											</div>
+
+											{/* Financial Terms */}
+											{application && (
+												<div className="space-y-3">
+													<SectionHeading>Financial Terms</SectionHeading>
+													<div className="grid grid-cols-2 gap-4">
+														<DetailRow
+															label="Rent Fee"
 															value={formatAmount(
-																convertPesewasToCedis(
-																	application.initial_deposit_fee,
-																),
+																convertPesewasToCedis(application.rent_fee),
 																application.rent_fee_currency,
 															)}
 														/>
-													)}
-													{application.payment_frequency && (
-														<DetailRow
-															label="Payment Frequency"
-															value={getPaymentFrequencyLabel(
-																application.payment_frequency,
-															)}
-														/>
-													)}
-													<DetailRow
-														label="Security Deposit"
-														value={
-															application.security_deposit_fee
-																? formatAmount(
-																		convertPesewasToCedis(
-																			application.security_deposit_fee,
-																		),
-																		application.rent_fee_currency,
-																	)
-																: '-'
-														}
-													/>
-													{application.application_payment_invoice && (
-														<div className="flex flex-col gap-0.5">
-															<TypographyMuted className="text-xs">
-																Invoice
-															</TypographyMuted>
-															<Link
-																to={`/properties/${propertyId}/financials/invoices/${application.application_payment_invoice.id}`}
-																className="flex items-center gap-1 text-sm text-blue-600 hover:underline"
-															>
-																<FileText className="size-3.5" />
-																{application.application_payment_invoice.code}
-															</Link>
-														</div>
-													)}
-												</div>
-											</div>
-										)}
-									</CardContent>
-								</Card>
-
-								{/* Inspection Reports — separate card */}
-								<Card id="lease-checklist" className="shadow-none">
-									<CardContent>
-										<ChecklistSection
-											leaseId={lease.id}
-											canEdit={canEditChecklist}
-											propertyId={propertyId}
-										/>
-									</CardContent>
-								</Card>
-							</TabsContent>
-
-							{/* Tenant Profile Tab */}
-							<TabsContent value="tenant" className="mt-4">
-								<Card className="shadow-none">
-									<CardContent className="space-y-6">
-										{tenant ? (
-											<>
-												{/* Personal Info */}
-												<div className="space-y-3">
-													<SectionHeading>Personal Information</SectionHeading>
-													<div className="grid grid-cols-2 gap-4">
-														<DetailRow
-															label="Full Name"
-															value={`${tenant.first_name}${tenant.other_names ? ` ${tenant.other_names}` : ''} ${tenant.last_name}`}
-														/>
-														<DetailRow label="Email" value={tenant.email} />
-														<DetailRow label="Phone" value={tenant.phone} />
-														<DetailRow
-															label="Gender"
-															value={toFirstUpperCase(tenant.gender)}
-														/>
-														<DetailRow
-															label="Date of Birth"
-															value={localizedDayjs(
-																tenant.date_of_birth,
-															).format('LL')}
-														/>
-														<DetailRow
-															label="Nationality"
-															value={
-																tenant.nationality
-																	? toFirstUpperCase(tenant.nationality)
-																	: '-'
-															}
-														/>
-														<DetailRow
-															label="Marital Status"
-															value={
-																tenant.marital_status
-																	? toFirstUpperCase(tenant.marital_status)
-																	: '-'
-															}
-														/>
-														<DetailRow
-															label="Current Address"
-															value={tenant.current_address}
-														/>
-													</div>
-												</div>
-
-												{/* ID Information */}
-												<div className="space-y-3">
-													<SectionHeading>Identification</SectionHeading>
-													<div className="grid grid-cols-2 gap-4">
-														<DetailRow
-															label="ID Type"
-															value={tenant.id_type?.replace(/_/g, ' ') ?? '—'}
-														/>
-														<DetailRow
-															label="ID Number"
-															value={tenant.id_number}
-														/>
-														{tenant.id_front_url && (
-															<div className="flex flex-col gap-0.5">
-																<TypographyMuted className="text-xs">
-																	ID Front
-																</TypographyMuted>
-																<a
-																	href={tenant.id_front_url}
-																	target="_blank"
-																	rel="noopener noreferrer"
-																	className="flex items-center gap-1 text-sm text-blue-600 hover:underline"
-																>
-																	<ExternalLink className="size-3.5" />
-																	View
-																</a>
-															</div>
+														{application.initial_deposit_fee != null && (
+															<DetailRow
+																label="Initial Deposit"
+																value={formatAmount(
+																	convertPesewasToCedis(
+																		application.initial_deposit_fee,
+																	),
+																	application.rent_fee_currency,
+																)}
+															/>
 														)}
-														{tenant.id_back_url && (
-															<div className="flex flex-col gap-0.5">
-																<TypographyMuted className="text-xs">
-																	ID Back
-																</TypographyMuted>
-																<a
-																	href={tenant.id_back_url}
-																	target="_blank"
-																	rel="noopener noreferrer"
-																	className="flex items-center gap-1 text-sm text-blue-600 hover:underline"
-																>
-																	<ExternalLink className="size-3.5" />
-																	View
-																</a>
-															</div>
+														{application.payment_frequency && (
+															<DetailRow
+																label="Payment Frequency"
+																value={getPaymentFrequencyLabel(
+																	application.payment_frequency,
+																)}
+															/>
 														)}
-													</div>
-												</div>
-
-												{/* Employment */}
-												<div className="space-y-3">
-													<SectionHeading>Employment</SectionHeading>
-													<div className="grid grid-cols-2 gap-4">
 														<DetailRow
-															label="Employer Type"
-															value={toFirstUpperCase(tenant.employer_type)}
-														/>
-														<DetailRow
-															label="Employer"
-															value={tenant.employer}
-														/>
-														<DetailRow
-															label="Occupation"
-															value={tenant.occupation}
-														/>
-														<DetailRow
-															label="Occupation Address"
-															value={tenant.occupation_address}
-														/>
-														{tenant.proof_of_income_url && (
-															<div className="flex flex-col gap-0.5">
-																<TypographyMuted className="text-xs">
-																	Proof of Income
-																</TypographyMuted>
-																<a
-																	href={tenant.proof_of_income_url}
-																	target="_blank"
-																	rel="noopener noreferrer"
-																	className="flex items-center gap-1 text-sm text-blue-600 hover:underline"
-																>
-																	<ExternalLink className="size-3.5" />
-																	View
-																</a>
-															</div>
-														)}
-													</div>
-												</div>
-
-												{/* Emergency Contact */}
-												<div className="space-y-3">
-													<SectionHeading>Emergency Contact</SectionHeading>
-													<div className="grid grid-cols-2 gap-4">
-														<DetailRow
-															label="Name"
-															value={tenant.emergency_contact_name}
-														/>
-														<DetailRow
-															label="Phone"
-															value={tenant.emergency_contact_phone}
-														/>
-														<DetailRow
-															label="Relationship"
+															label="Security Deposit"
 															value={
-																tenant.relationship_to_emergency_contact
-																	? toFirstUpperCase(
-																			tenant.relationship_to_emergency_contact,
+																application.security_deposit_fee
+																	? formatAmount(
+																			convertPesewasToCedis(
+																				application.security_deposit_fee,
+																			),
+																			application.rent_fee_currency,
 																		)
 																	: '-'
 															}
 														/>
+														{application.application_payment_invoice && (
+															<div className="flex flex-col gap-0.5">
+																<TypographyMuted className="text-xs">
+																	Invoice
+																</TypographyMuted>
+																<Link
+																	to={`/properties/${propertyId}/financials/invoices/${application.application_payment_invoice.id}`}
+																	className="flex items-center gap-1 text-sm text-blue-600 hover:underline"
+																>
+																	<FileText className="size-3.5" />
+																	{application.application_payment_invoice.code}
+																</Link>
+															</div>
+														)}
 													</div>
 												</div>
+											)}
+										</CardContent>
+									</Card>
 
-												{/* Previous Tenancy */}
-												{/* {(tenant.previous_landlord_name ||
+									{/* Inspection Reports — separate card */}
+									<Card id="lease-checklist" className="shadow-none">
+										<CardContent>
+											<ChecklistSection
+												leaseId={lease.id}
+												canEdit={canEditChecklist}
+												propertyId={propertyId}
+											/>
+										</CardContent>
+									</Card>
+								</TabsContent>
+
+								{/* Tenant Profile Tab */}
+								<TabsContent value="tenant" className="mt-4">
+									<Card className="shadow-none">
+										<CardContent className="space-y-6">
+											{tenant ? (
+												<>
+													{/* Personal Info */}
+													<div className="space-y-3">
+														<SectionHeading>
+															Personal Information
+														</SectionHeading>
+														<div className="grid grid-cols-2 gap-4">
+															<DetailRow
+																label="Full Name"
+																value={`${tenant.first_name}${tenant.other_names ? ` ${tenant.other_names}` : ''} ${tenant.last_name}`}
+															/>
+															<DetailRow label="Email" value={tenant.email} />
+															<DetailRow label="Phone" value={tenant.phone} />
+															<DetailRow
+																label="Gender"
+																value={toFirstUpperCase(tenant.gender)}
+															/>
+															<DetailRow
+																label="Date of Birth"
+																value={localizedDayjs(
+																	tenant.date_of_birth,
+																).format('LL')}
+															/>
+															<DetailRow
+																label="Nationality"
+																value={
+																	tenant.nationality
+																		? toFirstUpperCase(tenant.nationality)
+																		: '-'
+																}
+															/>
+															<DetailRow
+																label="Marital Status"
+																value={
+																	tenant.marital_status
+																		? toFirstUpperCase(tenant.marital_status)
+																		: '-'
+																}
+															/>
+															<DetailRow
+																label="Current Address"
+																value={tenant.current_address}
+															/>
+														</div>
+													</div>
+
+													{/* ID Information */}
+													<div className="space-y-3">
+														<SectionHeading>Identification</SectionHeading>
+														<div className="grid grid-cols-2 gap-4">
+															<DetailRow
+																label="ID Type"
+																value={
+																	tenant.id_type?.replace(/_/g, ' ') ?? '—'
+																}
+															/>
+															<DetailRow
+																label="ID Number"
+																value={tenant.id_number}
+															/>
+															{tenant.id_front_url && (
+																<div className="flex flex-col gap-0.5">
+																	<TypographyMuted className="text-xs">
+																		ID Front
+																	</TypographyMuted>
+																	<a
+																		href={tenant.id_front_url}
+																		target="_blank"
+																		rel="noopener noreferrer"
+																		className="flex items-center gap-1 text-sm text-blue-600 hover:underline"
+																	>
+																		<ExternalLink className="size-3.5" />
+																		View
+																	</a>
+																</div>
+															)}
+															{tenant.id_back_url && (
+																<div className="flex flex-col gap-0.5">
+																	<TypographyMuted className="text-xs">
+																		ID Back
+																	</TypographyMuted>
+																	<a
+																		href={tenant.id_back_url}
+																		target="_blank"
+																		rel="noopener noreferrer"
+																		className="flex items-center gap-1 text-sm text-blue-600 hover:underline"
+																	>
+																		<ExternalLink className="size-3.5" />
+																		View
+																	</a>
+																</div>
+															)}
+														</div>
+													</div>
+
+													{/* Employment */}
+													<div className="space-y-3">
+														<SectionHeading>Employment</SectionHeading>
+														<div className="grid grid-cols-2 gap-4">
+															<DetailRow
+																label="Employer Type"
+																value={toFirstUpperCase(tenant.employer_type)}
+															/>
+															<DetailRow
+																label="Employer"
+																value={tenant.employer}
+															/>
+															<DetailRow
+																label="Occupation"
+																value={tenant.occupation}
+															/>
+															<DetailRow
+																label="Occupation Address"
+																value={tenant.occupation_address}
+															/>
+															{tenant.proof_of_income_url && (
+																<div className="flex flex-col gap-0.5">
+																	<TypographyMuted className="text-xs">
+																		Proof of Income
+																	</TypographyMuted>
+																	<a
+																		href={tenant.proof_of_income_url}
+																		target="_blank"
+																		rel="noopener noreferrer"
+																		className="flex items-center gap-1 text-sm text-blue-600 hover:underline"
+																	>
+																		<ExternalLink className="size-3.5" />
+																		View
+																	</a>
+																</div>
+															)}
+														</div>
+													</div>
+
+													{/* Emergency Contact */}
+													<div className="space-y-3">
+														<SectionHeading>Emergency Contact</SectionHeading>
+														<div className="grid grid-cols-2 gap-4">
+															<DetailRow
+																label="Name"
+																value={tenant.emergency_contact_name}
+															/>
+															<DetailRow
+																label="Phone"
+																value={tenant.emergency_contact_phone}
+															/>
+															<DetailRow
+																label="Relationship"
+																value={
+																	tenant.relationship_to_emergency_contact
+																		? toFirstUpperCase(
+																				tenant.relationship_to_emergency_contact,
+																			)
+																		: '-'
+																}
+															/>
+														</div>
+													</div>
+
+													{/* Previous Tenancy */}
+													{/* {(tenant.previous_landlord_name ||
 													tenant.previous_landlord_phone ||
 													tenant.previous_tenancy_period) && (
 													<div className="space-y-3">
@@ -605,97 +612,98 @@ export function LeaseDetailModule() {
 														</div>
 													</div>
 												)} */}
-											</>
-										) : (
-											<p className="text-muted-foreground text-sm">
-												Tenant information not available.
-											</p>
-										)}
-									</CardContent>
-								</Card>
-							</TabsContent>
-
-							{/* Documents Tab */}
-							<TabsContent value="documents" className="mt-4">
-								<Card className="shadow-none">
-									<CardContent className="space-y-6">
-										{/* Lease Agreement */}
-										<div className="space-y-3">
-											<SectionHeading>Lease Agreement</SectionHeading>
-											{lease.lease_agreement_document_url ? (
-												<div className="space-y-2 text-sm">
-													<a
-														href={lease.lease_agreement_document_url}
-														target="_blank"
-														rel="noopener noreferrer"
-														className="flex items-center gap-1 text-blue-600 hover:underline"
-													>
-														<ExternalLink className="size-3.5" />
-														View Document
-													</a>
-												</div>
+												</>
 											) : (
-												<LeaseAgreementDocumentSetup
-													leaseId={lease.id}
-													propertyId={propertyId}
-													lease={lease}
-													tenant={tenant}
-													documentTemplates={documentTemplates}
-													isManager={canEditChecklist}
-												/>
+												<p className="text-muted-foreground text-sm">
+													Tenant information not available.
+												</p>
 											)}
-										</div>
+										</CardContent>
+									</Card>
+								</TabsContent>
 
-										{/* Termination Agreement */}
-										{lease.termination_agreement_document_url && (
+								{/* Documents Tab */}
+								<TabsContent value="documents" className="mt-4">
+									<Card className="shadow-none">
+										<CardContent className="space-y-6">
+											{/* Lease Agreement */}
 											<div className="space-y-3">
-												<SectionHeading>Termination Agreement</SectionHeading>
-												<div className="space-y-2 text-sm">
-													<a
-														href={lease.termination_agreement_document_url}
-														target="_blank"
-														rel="noopener noreferrer"
-														className="flex items-center gap-1 text-blue-600 hover:underline"
-													>
-														<ExternalLink className="size-3.5" />
-														View Document
-													</a>
-													<div className="text-muted-foreground space-y-1 text-xs">
-														<p>
-															PM signed:{' '}
-															{lease.termination_agreement_document_property_manager_signed_at
-																? localizedDayjs(
-																		lease.termination_agreement_document_property_manager_signed_at,
-																	).format('LL')
-																: 'Not yet signed'}
-														</p>
-														<p>
-															Tenant signed:{' '}
-															{lease.termination_agreement_document_tenant_signed_at
-																? localizedDayjs(
-																		lease.termination_agreement_document_tenant_signed_at,
-																	).format('LL')
-																: 'Not yet signed'}
-														</p>
+												<SectionHeading>Lease Agreement</SectionHeading>
+												{lease.lease_agreement_document_url ? (
+													<div className="space-y-2 text-sm">
+														<a
+															href={lease.lease_agreement_document_url}
+															target="_blank"
+															rel="noopener noreferrer"
+															className="flex items-center gap-1 text-blue-600 hover:underline"
+														>
+															<ExternalLink className="size-3.5" />
+															View Document
+														</a>
+													</div>
+												) : (
+													<LeaseAgreementDocumentSetup
+														leaseId={lease.id}
+														propertyId={propertyId}
+														lease={lease}
+														tenant={tenant}
+														documentTemplates={documentTemplates}
+														isManager={canEditChecklist}
+													/>
+												)}
+											</div>
+
+											{/* Termination Agreement */}
+											{lease.termination_agreement_document_url && (
+												<div className="space-y-3">
+													<SectionHeading>Termination Agreement</SectionHeading>
+													<div className="space-y-2 text-sm">
+														<a
+															href={lease.termination_agreement_document_url}
+															target="_blank"
+															rel="noopener noreferrer"
+															className="flex items-center gap-1 text-blue-600 hover:underline"
+														>
+															<ExternalLink className="size-3.5" />
+															View Document
+														</a>
+														<div className="text-muted-foreground space-y-1 text-xs">
+															<p>
+																PM signed:{' '}
+																{lease.termination_agreement_document_property_manager_signed_at
+																	? localizedDayjs(
+																			lease.termination_agreement_document_property_manager_signed_at,
+																		).format('LL')
+																	: 'Not yet signed'}
+															</p>
+															<p>
+																Tenant signed:{' '}
+																{lease.termination_agreement_document_tenant_signed_at
+																	? localizedDayjs(
+																			lease.termination_agreement_document_tenant_signed_at,
+																		).format('LL')
+																	: 'Not yet signed'}
+															</p>
+														</div>
 													</div>
 												</div>
-											</div>
-										)}
-									</CardContent>
-								</Card>
-							</TabsContent>
-							{/* Expenses Tab */}
-							<TabsContent value="expenses" className="mt-4">
-								<Card className="shadow-none">
-									<CardContent className="pt-4">
-										<LeaseExpensesTab
-											leaseId={lease.id}
-											propertyId={propertyId}
-										/>
-									</CardContent>
-								</Card>
-							</TabsContent>
-						</Tabs>
+											)}
+										</CardContent>
+									</Card>
+								</TabsContent>
+								{/* Expenses Tab */}
+								<TabsContent value="expenses" className="mt-4">
+									<Card className="shadow-none">
+										<CardContent className="pt-4">
+											<LeaseExpensesTab
+												leaseId={lease.id}
+												propertyId={propertyId}
+											/>
+										</CardContent>
+									</Card>
+								</TabsContent>
+							</Tabs>
+						</div>
 					</div>
 				</div>
 			</div>

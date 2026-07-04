@@ -24,15 +24,17 @@ export function getLeaseEndDate(lease: Lease): Date {
 
 /**
  * Whether the check-in reminder banner should be shown.
- * Shows when: no submitted/acknowledged CHECK_IN exists AND we're within the first
- * 2 payment periods from move_in_date.
+ * Shows when: no CHECK_IN exists, or one exists but is still in DRAFT (not yet
+ * submitted) AND we're within the first 2 payment periods from move_in_date.
+ * A SUBMITTED/ACKNOWLEDGED checklist means it's already handled; DISPUTED gets
+ * its own dedicated alert.
  */
 export function shouldShowCheckInAlert(
 	lease: Lease,
 	checklists: LeaseChecklist[],
 ): boolean {
-	const hasCheckIn = checklists.some((c) => c.type === 'CHECK_IN')
-	if (hasCheckIn) return false
+	const checkIn = checklists.find((c) => c.type === 'CHECK_IN')
+	if (checkIn && checkIn.status !== 'DRAFT') return false
 
 	const frequency = lease.payment_frequency ?? lease.stay_duration_frequency
 	const periodDays = getPeriodDays(frequency)
@@ -44,35 +46,32 @@ export function shouldShowCheckInAlert(
 }
 
 /**
- * Whether the check-out reminder banner should be shown.
- * Shows when:
- * - CHECK_IN exists in SUBMITTED or ACKNOWLEDGED state
- * - No submitted/acknowledged CHECK_OUT exists
- * - We're within 1 payment period of the lease end date
+ * Whether a checklist's move-in/move-out report has been handed off to the
+ * tenant (submitted or acknowledged), as opposed to still sitting in DRAFT.
  */
-export function shouldShowCheckOutAlert(
-	lease: Lease,
-	checklists: LeaseChecklist[],
-): boolean {
-	const checkIn = checklists.find((c) => c.type === 'CHECK_IN')
-	if (
-		!checkIn ||
-		(checkIn.status !== 'SUBMITTED' && checkIn.status !== 'ACKNOWLEDGED')
-	) {
-		return false
-	}
+export function isChecklistHandled(status: LeaseChecklistStatus): boolean {
+	return status === 'SUBMITTED' || status === 'ACKNOWLEDGED'
+}
 
-	const hasCheckOut = checklists.some((c) => c.type === 'CHECK_OUT')
-	if (hasCheckOut) return false
+/**
+ * Whether the "lease ending soon" banner should be shown. This banner combines
+ * the move-out report reminder with the upcoming renew-lease decision — the
+ * renew decision is purely time-based, so it does not depend on any checklist
+ * having been created or completed.
+ * Shows when:
+ * - The lease is still Active
+ * - We're within 1 payment period of the lease end date (or past it — the lease
+ *   hasn't been renewed yet, so it still needs attention)
+ */
+export function shouldShowLeaseEndingAlert(lease: Lease): boolean {
+	if (lease.status !== 'Lease.Status.Active') return false
 
 	const frequency = lease.payment_frequency ?? lease.stay_duration_frequency
 	const periodDays = getPeriodDays(frequency)
 	const endDate = getLeaseEndDate(lease)
-	const now = new Date()
-	const msUntilEnd = endDate.getTime() - now.getTime()
-	const daysUntilEnd = msUntilEnd / 86_400_000
+	const daysUntilEnd = (endDate.getTime() - new Date().getTime()) / 86_400_000
 
-	return daysUntilEnd >= 0 && daysUntilEnd <= periodDays
+	return daysUntilEnd <= periodDays
 }
 
 export function getChecklistStatusLabel(status: LeaseChecklistStatus): string {
