@@ -6350,6 +6350,14 @@ paths:
         in: query
         name: status
         type: string
+      - example: client-user@example.com
+        in: query
+        name: user_email
+        type: string
+      - example: "+233281234569"
+        in: query
+        name: user_phone
+        type: string
       produces:
       - application/json
       responses:
@@ -6428,6 +6436,55 @@ paths:
       tags:
       - ClientUsers
   /api/v1/admin/clients/{client_id}/client-users/{client_user_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete client user (Admin). By default, fails if the client user
+        has properties linked to it — pass delete_properties=true to unlink and delete
+        them as part of this request.
+      parameters:
+      - description: Client ID
+        in: path
+        name: client_id
+        required: true
+        type: string
+      - description: Client user ID
+        in: path
+        name: client_user_id
+        required: true
+        type: string
+      - description: Also unlink and delete all properties attached to this client
+          user
+        in: query
+        name: delete_properties
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Client user deleted successfully
+        "400":
+          description: Client user still has linked properties, or cannot delete the
+            workspace owner
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Client user not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Delete client user (Admin)
+      tags:
+      - ClientUsers
     get:
       consumes:
       - application/json

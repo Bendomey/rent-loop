@@ -23,7 +23,7 @@ import {
 	DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
-import { PAGINATION_DEFAULTS } from '~/lib/constants'
+import { CUSTOMER_SUPPORT_ACCOUNT, PAGINATION_DEFAULTS } from '~/lib/constants'
 import { safeString } from '~/lib/strings'
 import { useAuth } from '~/providers/auth-provider'
 import { useClient } from '~/providers/client-provider'
@@ -57,6 +57,13 @@ export function MembersModule() {
 	)
 
 	const isLoading = isPending || isRefetching
+
+	// The RentLoop Support account is managed from its own dedicated
+	// "Customer Support Access" settings screen, not from here.
+	const rows = (data?.rows ?? []).filter(
+		(row) => row.user?.email !== CUSTOMER_SUPPORT_ACCOUNT.EMAIL,
+	)
+	const hiddenRowCount = (data?.rows?.length ?? 0) - rows.length
 
 	const columns: ColumnDef<ClientUser>[] = useMemo(() => {
 		return [
@@ -200,8 +207,8 @@ export function MembersModule() {
 					refetch={refetch}
 					error={error ? 'Failed to load members.' : undefined}
 					dataResponse={{
-						rows: data?.rows ?? [],
-						total: data?.meta?.total ?? 0,
+						rows,
+						total: (data?.meta?.total ?? 0) - hiddenRowCount,
 						page,
 						page_size: per,
 						order: data?.meta?.order ?? 'desc',

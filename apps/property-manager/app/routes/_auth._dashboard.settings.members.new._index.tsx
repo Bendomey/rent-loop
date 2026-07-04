@@ -1,7 +1,7 @@
 import { redirect } from 'react-router'
 import type { Route } from './+types/_auth._dashboard.settings.members.new._index'
 import { linkClientUserPropertyForServer } from '~/api/client-user-properties/server'
-import { createClientUser } from '~/api/client-users'
+import { createClientUser } from '~/api/client-users/server'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
 import { environmentVariables } from '~/lib/actions/env.server'
 import { replaceNullUndefinedWithUndefined } from '~/lib/actions/utils.server'

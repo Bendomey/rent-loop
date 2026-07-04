@@ -2204,6 +2204,18 @@
                         "example": "ClientUser.Status.Active",
                         "name": "status",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "client-user@example.com",
+                        "name": "user_email",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "+233281234569",
+                        "name": "user_phone",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -2445,6 +2457,75 @@
                                     "$ref": "#/definitions/transformations.OutputClientUser"
                                 }
                             }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Client user not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete client user (Admin). By default, fails if the client user has properties linked to it — pass delete_properties=true to unlink and delete them as part of this request.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientUsers"
+                ],
+                "summary": "Delete client user (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Client user ID",
+                        "name": "client_user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Also unlink and delete all properties attached to this client user",
+                        "name": "delete_properties",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Client user deleted successfully"
+                    },
+                    "400": {
+                        "description": "Client user still has linked properties, or cannot delete the workspace owner",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
                         }
                     },
                     "401": {

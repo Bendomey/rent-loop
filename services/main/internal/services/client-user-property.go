@@ -26,6 +26,7 @@ type ClientUserPropertyService interface {
 	) (int64, error)
 	LinkClientUserToProperties(context context.Context, input LinkClientUserToPropertiesInput) error
 	UnlinkByClientUserID(context context.Context, input repository.UnlinkClientUserFromPropertyQuery) error
+	UnlinkAllByClientUserID(context context.Context, clientUserID string) error
 	LinkPropertyToClientUsers(context context.Context, input LinkPropertyToClientUsersInput) error
 	UnlinkPropertyFromClientUsers(context context.Context, input repository.UnlinkPropertyFromClientUsersQuery) error
 	FetchClientUserPropertyWithPopulate(
@@ -198,6 +199,24 @@ func (s *clientUserPropertyService) UnlinkByClientUserID(
 			Metadata: map[string]string{
 				"function": "UnlinkByClientUserID",
 				"action":   "deleting client user property links",
+			},
+		})
+	}
+
+	return nil
+}
+
+func (s *clientUserPropertyService) UnlinkAllByClientUserID(
+	ctx context.Context,
+	clientUserID string,
+) error {
+	unlinkErr := s.repo.DeleteAllByClientUserID(ctx, clientUserID)
+	if unlinkErr != nil {
+		return pkg.InternalServerError(unlinkErr.Error(), &pkg.RentLoopErrorParams{
+			Err: unlinkErr,
+			Metadata: map[string]string{
+				"function": "UnlinkAllByClientUserID",
+				"action":   "deleting all client user property links",
 			},
 		})
 	}
