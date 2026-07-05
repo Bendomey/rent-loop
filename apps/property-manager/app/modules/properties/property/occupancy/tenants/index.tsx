@@ -130,15 +130,21 @@ export function PropertyTenantsModule() {
 										<div className="flex items-center gap-2 text-sm">
 											<Phone size={14} className="text-zinc-500" />
 											<TypographyP className="!mt-0">
-												{tenant.phone}
+												{tenant.phone ?? 'No phone provided'}
 											</TypographyP>
 										</div>
 
 										<div className="flex items-center gap-2 text-sm">
 											<Mail size={14} className="text-zinc-500" />
-											<TypographyP className="!mt-0 max-w-full truncate">
-												{tenant.email}
-											</TypographyP>
+											{!tenant.email ? (
+												<TypographyP className="!mt-0 max-w-full truncate">
+													{tenant.email}
+												</TypographyP>
+											) : (
+												<TypographyMuted className="!mt-0 max-w-full truncate text-xs">
+													Not provided
+												</TypographyMuted>
+											)}
 										</div>
 									</div>
 								</CardContent>

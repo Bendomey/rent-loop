@@ -22,7 +22,6 @@ import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import {
 	Card,
-	CardAction,
 	CardContent,
 	CardFooter,
 	CardHeader,
@@ -103,7 +102,7 @@ export function PropertyAssetUnitsModule() {
 						key={data.id}
 						className="gap-2 overflow-hidden pt-0 pb-3 shadow-none"
 					>
-						<div className="relative h-44 w-full overflow-hidden">
+						<div className="relative h-40 w-full overflow-hidden">
 							{data.images?.[0] ? (
 								<Image
 									className="h-full w-full object-cover"
@@ -115,39 +114,19 @@ export function PropertyAssetUnitsModule() {
 									<ImageIcon className="text-muted-foreground size-10" />
 								</div>
 							)}
-							{(data.max_occupants_allowed ?? 0) > 1 && (
-								<Tooltip>
-									<TooltipTrigger asChild>
-										<Badge
-											variant="outline"
-											className="absolute top-2 right-2 gap-1 border-none bg-sky-500 text-white shadow-sm"
-										>
-											<Users className="size-3" />
-											Shared Unit
-										</Badge>
-									</TooltipTrigger>
-									<TooltipContent>
-										Up to {data.max_occupants_allowed} tenants
-									</TooltipContent>
-								</Tooltip>
-							)}
-						</div>
-
-						<CardHeader className="flex items-center justify-between">
-							<CardTitle className="truncate">{data.name}</CardTitle>
-							<CardAction>
+							<div className="absolute top-2 right-2 flex items-center gap-1">
 								<Badge
 									variant="outline"
 									className={
 										data.status === 'Unit.Status.Available'
-											? 'bg-teal-500 text-white'
+											? 'border-none bg-teal-500 text-white shadow-sm'
 											: data.status === 'Unit.Status.Maintenance'
-												? 'bg-yellow-500 text-white'
+												? 'border-none bg-yellow-500 text-white shadow-sm'
 												: data.status === 'Unit.Status.Occupied'
-													? 'bg-rose-500 text-white'
+													? 'border-none bg-rose-500 text-white shadow-sm'
 													: data.status === 'Unit.Status.PartiallyOccupied'
-														? 'bg-orange-500 text-white'
-														: 'bg-zinc-400 text-white'
+														? 'border-none bg-orange-500 text-white shadow-sm'
+														: 'border-none bg-zinc-400 text-white shadow-sm'
 									}
 								>
 									{data.status === 'Unit.Status.Available'
@@ -160,10 +139,30 @@ export function PropertyAssetUnitsModule() {
 													? 'Partially Occupied'
 													: 'Draft'}
 								</Badge>
-							</CardAction>
+								{(data.max_occupants_allowed ?? 0) > 1 && (
+									<Tooltip>
+										<TooltipTrigger asChild>
+											<Badge
+												variant="outline"
+												className="gap-1 border-none bg-sky-500 text-white shadow-sm"
+											>
+												<Users className="size-3" />
+												Shared Unit
+											</Badge>
+										</TooltipTrigger>
+										<TooltipContent>
+											Up to {data.max_occupants_allowed} tenants
+										</TooltipContent>
+									</Tooltip>
+								)}
+							</div>
+						</div>
+
+						<CardHeader className="px-4">
+							<CardTitle className="">{data.name}</CardTitle>
 						</CardHeader>
 
-						<CardContent className="space-y-2 pb-2">
+						<CardContent className="space-y-2 px-4 pb-2">
 							<div className="flex items-center gap-2">
 								<CircleCheck className="text-zinc-500" size={16} />
 								<TypographyMuted>{`Updated ${dayjs(data.updated_at).format('MMM D, YYYY')}`}</TypographyMuted>
