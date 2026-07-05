@@ -21,6 +21,7 @@ const SUGGESTED_FEATURES = [
 		features: [
 			{ key: 'Bedrooms', defaultValue: '1' },
 			{ key: 'Bathrooms', defaultValue: '1' },
+			{ key: 'Max Occupants', defaultValue: '1' },
 			{ key: 'Square Footage', defaultValue: '' },
 			{ key: 'Floor Level', defaultValue: '1' },
 			{ key: 'Living Room', defaultValue: 'Yes' },
