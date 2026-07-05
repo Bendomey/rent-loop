@@ -21,7 +21,7 @@ const SUGGESTED_FEATURES = [
 		features: [
 			{ key: 'Bedrooms', defaultValue: '1' },
 			{ key: 'Bathrooms', defaultValue: '1' },
-			{ key: 'Max Occupants', defaultValue: '1' },
+			{ key: 'Max Occupants', defaultValue: '1', type: 'number' as const },
 			{ key: 'Square Footage', defaultValue: '' },
 			{ key: 'Floor Level', defaultValue: '1' },
 			{ key: 'Living Room', defaultValue: 'Yes' },
@@ -311,6 +311,12 @@ export function FeatureInput() {
 													</span>
 													{isSelected && (
 														<Input
+															type={
+																'type' in suggestion &&
+																suggestion.type === 'number'
+																	? 'number'
+																	: 'text'
+															}
 															value={selectedSuggestions[suggestion.key]}
 															onChange={(e) =>
 																setSelectedSuggestions((prev) => ({

@@ -18,7 +18,7 @@ interface PropertyUnit {
 		| 'QUARTERLY'
 		| 'BIANNUALLY'
 		| 'ANNUALLY'
-	max_occupants_allowed: Nullable<number>
+	max_occupants_allowed: number
 	type: 'APARTMENT' | 'HOUSE' | 'STUDIO' | 'OFFICE' | 'RETAIL'
 	status:
 		| 'Unit.Status.Draft'
@@ -26,7 +26,7 @@ interface PropertyUnit {
 		| 'Unit.Status.Occupied'
 		| 'Unit.Status.PartiallyOccupied'
 		| 'Unit.Status.Maintenance'
-	slug: Nullable<string>
+	slug: string
 	created_at: Date
 	updated_at: Date
 }

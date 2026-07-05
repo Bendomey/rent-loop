@@ -118,14 +118,17 @@ export function PropertyAssetUnitDetailsModule() {
 								{unit.area != null ? `${unit.area} sq m` : '---'}
 							</TypographyP>
 						</div>
-						<div>
-							<TypographyMuted className="text-xs">
-								Max Occupants
-							</TypographyMuted>
-							<TypographyP className="!mt-0 text-sm">
-								{unit.max_occupants_allowed ?? '---'}
-							</TypographyP>
-						</div>
+						{unit.max_occupants_allowed > 1 ? (
+							<div>
+								<TypographyMuted className="text-xs">
+									Max Tenants
+								</TypographyMuted>
+								<TypographyP className="!mt-0 text-sm">
+									{unit.max_occupants_allowed ?? '---'}
+								</TypographyP>
+							</div>
+						) : null}
+
 						<div>
 							<TypographyMuted className="text-xs">
 								Payment Frequency
