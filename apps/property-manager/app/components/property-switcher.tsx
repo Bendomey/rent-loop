@@ -1,4 +1,4 @@
-import { ChevronsUpDown, Frame, FrameIcon, Plus } from 'lucide-react'
+import { Check, ChevronsUpDown, Frame, FrameIcon, Plus } from 'lucide-react'
 import * as React from 'react'
 import { Link, useParams } from 'react-router'
 
@@ -19,6 +19,7 @@ import {
 	useSidebar,
 } from '~/components/ui/sidebar'
 import { safeString } from '~/lib/strings'
+import { cn } from '~/lib/utils'
 import { useClient } from '~/providers/client-provider'
 
 export function PropertySwitcher() {
@@ -83,24 +84,32 @@ export function PropertySwitcher() {
 						<DropdownMenuLabel className="text-muted-foreground text-xs">
 							Properties
 						</DropdownMenuLabel>
-						{data?.rows
-							?.filter(
-								(clientUserProperty) =>
-									clientUserProperty?.property?.id !== propertyId,
-							)
-							?.map((clientUserProperty) => (
+						{data?.rows?.map((clientUserProperty) => {
+							const isActive = clientUserProperty?.property?.id === propertyId
+							return (
 								<Link
 									key={clientUserProperty.id}
 									to={`/properties/${clientUserProperty?.property?.id}`}
 								>
-									<DropdownMenuItem className="gap-2 p-2">
+									<DropdownMenuItem
+										className={cn(
+											'gap-2 p-2',
+											isActive && 'bg-accent text-accent-foreground',
+										)}
+									>
 										<div className="flex size-6 items-center justify-center rounded-md border">
 											<Frame className="size-3.5 shrink-0" />
 										</div>
-										{clientUserProperty?.property?.name}
+										<span className="flex-1 truncate">
+											{clientUserProperty?.property?.name}
+										</span>
+										{isActive && (
+											<Check className="text-muted-foreground size-4" />
+										)}
 									</DropdownMenuItem>
 								</Link>
-							))}
+							)
+						})}
 						<PermissionGuard roles={['ADMIN', 'OWNER']}>
 							<DropdownMenuSeparator />
 							<Link to="/properties/new">
