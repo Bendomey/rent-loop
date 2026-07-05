@@ -157,9 +157,9 @@ export function EditPropertyAssetUnitModule() {
 
 	const property_id = safeString(clientUserProperty?.property?.id)
 
-	const isEditable =
-		unit?.status === 'Unit.Status.Draft' ||
-		unit?.status === 'Unit.Status.Maintenance'
+	const isRentalInfoEditable =
+		unit?.status !== 'Unit.Status.Occupied' &&
+		unit?.status !== 'Unit.Status.PartiallyOccupied'
 
 	const rhfMethods = useForm<FormSchema>({
 		resolver: zodResolver(ValidationSchema),
@@ -288,188 +288,184 @@ export function EditPropertyAssetUnitModule() {
 					</TypographyMuted>
 				</div>
 
-				{!isEditable && (
+				<hr />
+
+				{/* Type */}
+				<div>
+					<div className="mb-3 space-y-1">
+						<Label>Unit Type</Label>
+						<TypographyMuted>What kind of space is this unit?</TypographyMuted>
+					</div>
+					<div className="flex flex-col gap-2">
+						{unitTypes.map((model) => {
+							const isSelected = watch('type') === model.type
+							return (
+								<button
+									key={model.type}
+									type="button"
+									className={cn(
+										'flex items-center gap-4 rounded-lg border p-4 text-left transition-colors hover:bg-zinc-50',
+										isSelected && 'border-rose-600 bg-rose-50/50',
+									)}
+									onClick={() =>
+										setValue('type', model.type, {
+											shouldDirty: true,
+											shouldValidate: true,
+										})
+									}
+								>
+									<div
+										className={cn(
+											'flex size-10 shrink-0 items-center justify-center rounded-lg bg-zinc-100',
+											isSelected && 'bg-rose-100',
+										)}
+									>
+										<model.icon
+											className={cn(
+												'size-5 text-zinc-600',
+												isSelected && 'text-rose-600',
+											)}
+										/>
+									</div>
+									<div className="min-w-0">
+										<p className="text-sm font-medium">{model.name}</p>
+										<p className="text-muted-foreground text-sm">
+											{model.description}
+										</p>
+									</div>
+								</button>
+							)
+						})}
+					</div>
+					{formState.errors?.type && (
+						<TypographySmall className="text-destructive mt-2">
+							{formState.errors.type.message}
+						</TypographySmall>
+					)}
+				</div>
+
+				<hr />
+
+				{/* Basic Information */}
+				<div className="space-y-2">
+					<TypographyH2>Basic Information</TypographyH2>
+					<TypographyMuted>
+						Set the basic information of your unit
+					</TypographyMuted>
+				</div>
+				<FieldGroup>
+					<FormField
+						name="name"
+						control={rhfMethods.control}
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>Name</FormLabel>
+								<FormControl>
+									<Input type="text" {...field} />
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+
+					<ImageUploadBulk
+						key={unit?.id}
+						label="Unit Images"
+						hint="First image will be used as the main photo"
+						acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
+						validation={{ maxByteSize: 5242880 }}
+						uploadingIds={uploadingIds}
+						imageSources={(unit?.images ?? []).map((url, i) => ({
+							id: `prefill-${i}`,
+							src: url,
+						}))}
+						onImageAdded={(image) => {
+							if (image.file) void uploadImage(image.id, image.file)
+						}}
+						onRemove={(image) => {
+							const url = imageUrlMap[image.id] ?? image.src
+							rhfMethods.setValue(
+								'images',
+								(rhfMethods.getValues('images') ?? []).filter((u) => u !== url),
+								{ shouldDirty: true },
+							)
+							setImageUrlMap(({ [image.id]: _, ...rest }) => rest)
+						}}
+					/>
+
+					<FormField
+						name="description"
+						control={rhfMethods.control}
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>Unit Details</FormLabel>
+								<FormControl>
+									<Textarea
+										placeholder="Briefly describe your property unit (e.g., size, features, or highlights)..."
+										rows={5}
+										{...field}
+									/>
+								</FormControl>
+								<FormMessage />
+								<FormDescription>Optional</FormDescription>
+							</FormItem>
+						)}
+					/>
+
+					<FeatureInput />
+				</FieldGroup>
+
+				{/* Unit Specs */}
+				<div className="space-y-8">
+					<FormField
+						name="area"
+						control={rhfMethods.control}
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>Area (sq m)</FormLabel>
+								<FormControl>
+									<Input
+										type="number"
+										step="0.01"
+										placeholder="e.g., 250.50"
+										{...field}
+										value={field.value ?? ''}
+										onChange={(e) =>
+											field.onChange(
+												e.target.value === ''
+													? undefined
+													: e.target.valueAsNumber,
+											)
+										}
+									/>
+								</FormControl>
+								<FormMessage />
+								<FormDescription>Optional</FormDescription>
+							</FormItem>
+						)}
+					/>
+				</div>
+
+				<hr />
+
+				{!isRentalInfoEditable && (
 					<div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4">
 						<Info className="mt-0.5 size-5 shrink-0 text-blue-500" />
 						<div>
 							<p className="text-sm font-medium text-blue-700">
-								Editing is disabled
+								Rental information can&apos;t be edited
 							</p>
 							<p className="text-sm text-blue-600">
-								This unit must be in <strong>Draft</strong> or{' '}
-								<strong>Maintenance</strong> status to edit. You can change the
-								status from the unit detail page.
+								This unit is currently <strong>occupied</strong> or{' '}
+								<strong>partially occupied</strong>. Rent, billing cycle, and
+								occupancy can only be changed once the unit is vacated.
 							</p>
 						</div>
 					</div>
 				)}
 
-				{isEditable && (
+				{isRentalInfoEditable && (
 					<>
-						<hr />
-
-						{/* Type */}
-						<div>
-							<div className="mb-3 space-y-1">
-								<Label>Unit Type</Label>
-								<TypographyMuted>
-									What kind of space is this unit?
-								</TypographyMuted>
-							</div>
-							<div className="flex flex-col gap-2">
-								{unitTypes.map((model) => {
-									const isSelected = watch('type') === model.type
-									return (
-										<button
-											key={model.type}
-											type="button"
-											className={cn(
-												'flex items-center gap-4 rounded-lg border p-4 text-left transition-colors hover:bg-zinc-50',
-												isSelected && 'border-rose-600 bg-rose-50/50',
-											)}
-											onClick={() =>
-												setValue('type', model.type, {
-													shouldDirty: true,
-													shouldValidate: true,
-												})
-											}
-										>
-											<div
-												className={cn(
-													'flex size-10 shrink-0 items-center justify-center rounded-lg bg-zinc-100',
-													isSelected && 'bg-rose-100',
-												)}
-											>
-												<model.icon
-													className={cn(
-														'size-5 text-zinc-600',
-														isSelected && 'text-rose-600',
-													)}
-												/>
-											</div>
-											<div className="min-w-0">
-												<p className="text-sm font-medium">{model.name}</p>
-												<p className="text-muted-foreground text-sm">
-													{model.description}
-												</p>
-											</div>
-										</button>
-									)
-								})}
-							</div>
-							{formState.errors?.type && (
-								<TypographySmall className="text-destructive mt-2">
-									{formState.errors.type.message}
-								</TypographySmall>
-							)}
-						</div>
-
-						<hr />
-
-						{/* Basic Information */}
-						<div className="space-y-2">
-							<TypographyH2>Basic Information</TypographyH2>
-							<TypographyMuted>
-								Set the basic information of your unit
-							</TypographyMuted>
-						</div>
-						<FieldGroup>
-							<FormField
-								name="name"
-								control={rhfMethods.control}
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Name</FormLabel>
-										<FormControl>
-											<Input type="text" {...field} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-
-							<ImageUploadBulk
-								key={unit?.id}
-								label="Unit Images"
-								hint="First image will be used as the main photo"
-								acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
-								validation={{ maxByteSize: 5242880 }}
-								uploadingIds={uploadingIds}
-								imageSources={(unit?.images ?? []).map((url, i) => ({
-									id: `prefill-${i}`,
-									src: url,
-								}))}
-								onImageAdded={(image) => {
-									if (image.file) void uploadImage(image.id, image.file)
-								}}
-								onRemove={(image) => {
-									const url = imageUrlMap[image.id] ?? image.src
-									rhfMethods.setValue(
-										'images',
-										(rhfMethods.getValues('images') ?? []).filter(
-											(u) => u !== url,
-										),
-										{ shouldDirty: true },
-									)
-									setImageUrlMap(({ [image.id]: _, ...rest }) => rest)
-								}}
-							/>
-
-							<FormField
-								name="description"
-								control={rhfMethods.control}
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Unit Details</FormLabel>
-										<FormControl>
-											<Textarea
-												placeholder="Briefly describe your property unit (e.g., size, features, or highlights)..."
-												rows={5}
-												{...field}
-											/>
-										</FormControl>
-										<FormMessage />
-										<FormDescription>Optional</FormDescription>
-									</FormItem>
-								)}
-							/>
-
-							<FeatureInput />
-						</FieldGroup>
-
-						{/* Unit Specs */}
-						<div className="space-y-8">
-							<FormField
-								name="area"
-								control={rhfMethods.control}
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Area (sq m)</FormLabel>
-										<FormControl>
-											<Input
-												type="number"
-												step="0.01"
-												placeholder="e.g., 250.50"
-												{...field}
-												value={field.value ?? ''}
-												onChange={(e) =>
-													field.onChange(
-														e.target.value === ''
-															? undefined
-															: e.target.valueAsNumber,
-													)
-												}
-											/>
-										</FormControl>
-										<FormMessage />
-										<FormDescription>Optional</FormDescription>
-									</FormItem>
-								)}
-							/>
-						</div>
-
-						<hr />
-
 						{/* Rental Information */}
 						<div className="space-y-8">
 							<div className="space-y-2">
@@ -482,45 +478,86 @@ export function EditPropertyAssetUnitModule() {
 							<FormField
 								name="max_occupants_allowed"
 								control={rhfMethods.control}
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Max Occupants Allowed</FormLabel>
-										<FormControl>
-											<div className="flex items-center gap-3">
-												<Button
-													type="button"
-													variant="outline"
-													size="icon"
-													disabled={field.value <= 1}
-													onClick={() => field.onChange(field.value - 1)}
-												>
-													<Minus className="size-4" />
-												</Button>
-												<span className="w-8 text-center text-sm font-medium">
-													{field.value}
-												</span>
-												<Button
-													type="button"
-													variant="outline"
-													size="icon"
-													onClick={() => field.onChange(field.value + 1)}
-												>
-													<Plus className="size-4" />
-												</Button>
-											</div>
-										</FormControl>
-										<FormMessage />
-										<div className="mt-2 flex items-start gap-2 rounded-lg bg-blue-50 p-3 dark:bg-blue-950">
-											<Info className="mt-0.5 size-4 shrink-0 text-blue-500" />
-											<p className="text-sm text-blue-700 dark:text-blue-300">
-												Increase this when you want to rent this unit to
-												multiple tenants at the same time — for example, renting
-												individual rooms in a shared apartment. The default is 1
-												(single tenant only).
-											</p>
-										</div>
-									</FormItem>
-								)}
+								render={({ field }) => {
+									const isShared = field.value > 1
+									return (
+										<FormItem>
+											<FormLabel>Occupancy</FormLabel>
+											<FormDescription>
+												Is this unit rented to one tenant, or shared among
+												multiple tenants at once?
+											</FormDescription>
+											<FormControl>
+												<div className="flex flex-col gap-3">
+													<div className="flex flex-wrap gap-3">
+														<Button
+															type="button"
+															variant={!isShared ? 'default' : 'outline'}
+															className={cn({
+																'bg-rose-600 text-white': !isShared,
+															})}
+															onClick={() => field.onChange(1)}
+														>
+															Single tenant
+														</Button>
+														<Button
+															type="button"
+															variant={isShared ? 'default' : 'outline'}
+															className={cn({
+																'bg-rose-600 text-white': isShared,
+															})}
+															onClick={() =>
+																field.onChange(
+																	field.value > 1 ? field.value : 2,
+																)
+															}
+														>
+															Multiple tenants (shared unit)
+														</Button>
+													</div>
+													{isShared && (
+														<div className="flex items-center gap-3">
+															<span className="text-sm font-medium">
+																Number of Tenants
+															</span>
+															<Button
+																type="button"
+																variant="outline"
+																size="icon"
+																disabled={field.value <= 2}
+																onClick={() => field.onChange(field.value - 1)}
+															>
+																<Minus className="size-4" />
+															</Button>
+															<span className="w-8 text-center text-sm font-medium">
+																{field.value}
+															</span>
+															<Button
+																type="button"
+																variant="outline"
+																size="icon"
+																onClick={() => field.onChange(field.value + 1)}
+															>
+																<Plus className="size-4" />
+															</Button>
+														</div>
+													)}
+												</div>
+											</FormControl>
+											<FormMessage />
+											{isShared && (
+												<div className="mt-2 flex items-start gap-2 rounded-lg bg-blue-50 p-3 dark:bg-blue-950">
+													<Info className="mt-0.5 size-4 shrink-0 text-blue-500" />
+													<p className="text-sm text-blue-700 dark:text-blue-300">
+														This unit can have up to {field.value} occupants
+														renting it at the same time — for example, a hostel
+														or shared apartment with individual rooms.
+													</p>
+												</div>
+											)}
+										</FormItem>
+									)
+								}}
 							/>
 
 							<div className="grid grid-cols-5 gap-4">
@@ -625,21 +662,19 @@ export function EditPropertyAssetUnitModule() {
 							variant="ghost"
 							disabled={isPending}
 						>
-							<ArrowLeft /> {isEditable ? 'Cancel' : 'Go Back'}
+							<ArrowLeft /> Cancel
 						</Button>
 					</Link>
-					{isEditable && (
-						<Button
-							disabled={
-								isPending || !formState.isDirty || uploadingIds.length > 0
-							}
-							size="lg"
-							variant="default"
-							className="bg-rose-600 hover:bg-rose-700"
-						>
-							{isPending && <Spinner />} Update
-						</Button>
-					)}
+					<Button
+						disabled={
+							isPending || !formState.isDirty || uploadingIds.length > 0
+						}
+						size="lg"
+						variant="default"
+						className="bg-rose-600 hover:bg-rose-700"
+					>
+						{isPending && <Spinner />} Update
+					</Button>
 				</div>
 			</form>
 		</Form>

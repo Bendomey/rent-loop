@@ -590,45 +590,82 @@ export function NewPropertyAssetUnitsModule() {
 					<FormField
 						name="max_occupants_allowed"
 						control={rhfMethods.control}
-						render={({ field }) => (
-							<FormItem>
-								<FormLabel>Max Occupants Allowed</FormLabel>
-								<FormControl>
-									<div className="flex items-center gap-3">
-										<Button
-											type="button"
-											variant="outline"
-											size="icon"
-											disabled={field.value <= 1}
-											onClick={() => field.onChange(field.value - 1)}
-										>
-											<Minus className="size-4" />
-										</Button>
-										<span className="w-8 text-center text-sm font-medium">
-											{field.value}
-										</span>
-										<Button
-											type="button"
-											variant="outline"
-											size="icon"
-											onClick={() => field.onChange(field.value + 1)}
-										>
-											<Plus className="size-4" />
-										</Button>
-									</div>
-								</FormControl>
-								<FormMessage />
-								<div className="mt-2 flex items-start gap-2 rounded-lg bg-blue-50 p-3 dark:bg-blue-950">
-									<Info className="mt-0.5 size-4 shrink-0 text-blue-500" />
-									<p className="text-sm text-blue-700 dark:text-blue-300">
-										Increase this when you want to rent this unit to multiple
-										tenants at the same time — for example, renting individual
-										rooms in a shared apartment. The default is 1 (single tenant
-										only).
-									</p>
-								</div>
-							</FormItem>
-						)}
+						render={({ field }) => {
+							const isShared = field.value > 1
+							return (
+								<FormItem>
+									<FormLabel>Occupancy</FormLabel>
+									<FormDescription>
+										Is this unit rented to one tenant, or shared among multiple
+										tenants at once?
+									</FormDescription>
+									<FormControl>
+										<div className="flex flex-col gap-3">
+											<div className="flex flex-wrap gap-3">
+												<Button
+													type="button"
+													variant={!isShared ? 'default' : 'outline'}
+													className={cn({
+														'bg-rose-600 text-white': !isShared,
+													})}
+													onClick={() => field.onChange(1)}
+												>
+													Single tenant
+												</Button>
+												<Button
+													type="button"
+													variant={isShared ? 'default' : 'outline'}
+													className={cn({ 'bg-rose-600 text-white': isShared })}
+													onClick={() =>
+														field.onChange(field.value > 1 ? field.value : 2)
+													}
+												>
+													Multiple tenants (shared unit)
+												</Button>
+											</div>
+											{isShared && (
+												<div className="flex items-center gap-3">
+													<span className="text-sm font-medium">
+														Number of Tenants
+													</span>
+													<Button
+														type="button"
+														variant="outline"
+														size="icon"
+														disabled={field.value <= 2}
+														onClick={() => field.onChange(field.value - 1)}
+													>
+														<Minus className="size-4" />
+													</Button>
+													<span className="w-8 text-center text-sm font-medium">
+														{field.value}
+													</span>
+													<Button
+														type="button"
+														variant="outline"
+														size="icon"
+														onClick={() => field.onChange(field.value + 1)}
+													>
+														<Plus className="size-4" />
+													</Button>
+												</div>
+											)}
+										</div>
+									</FormControl>
+									<FormMessage />
+									{isShared && (
+										<div className="mt-2 flex items-start gap-2 rounded-lg bg-blue-50 p-3 dark:bg-blue-950">
+											<Info className="mt-0.5 size-4 shrink-0 text-blue-500" />
+											<p className="text-sm text-blue-700 dark:text-blue-300">
+												This unit can have up to {field.value} occupants renting
+												it at the same time — for example, a hostel or shared
+												apartment with individual rooms.
+											</p>
+										</div>
+									)}
+								</FormItem>
+							)
+						}}
 					/>
 
 					<div className="grid grid-cols-5 gap-4">
