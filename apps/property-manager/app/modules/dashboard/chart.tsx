@@ -49,11 +49,12 @@ const chartConfig = {
 	},
 } satisfies ChartConfig
 
-type TimeRange = '90d' | '30d' | '7d'
+type TimeRange = '365d' | '90d' | '30d' | '7d'
 
 function dateRangeForRange(range: TimeRange): [string, string] {
 	const now = localizedDayjs()
-	const days = range === '90d' ? 90 : range === '30d' ? 30 : 7
+	const days =
+		range === '365d' ? 365 : range === '90d' ? 90 : range === '30d' ? 30 : 7
 	return [
 		now.subtract(days, 'day').format('YYYY-MM-DD'),
 		now.format('YYYY-MM-DD'),
@@ -77,6 +78,7 @@ function formatPeriodLabel(row: RevenueRow, range: TimeRange): string {
 				: row['Invoices.paidAt.month']
 	if (!raw) return ''
 	const d = localizedDayjs(raw)
+	if (range === '365d') return d.format('MMM YYYY')
 	if (range === '90d') return d.format('MMM')
 	if (range === '30d') return d.format('MMM D')
 	return d.format('D MMM')
@@ -88,7 +90,7 @@ function formatPeriodLabel(row: RevenueRow, range: TimeRange): string {
 
 export function ChartBarDefault() {
 	const { clientUser } = useClient()
-	const [timeRange, setTimeRange] = useState<TimeRange>('90d')
+	const [timeRange, setTimeRange] = useState<TimeRange>('365d')
 	const { data: token } = useGetAnalyticsToken(
 		safeString(clientUser?.client_id),
 	)
@@ -137,6 +139,7 @@ export function ChartBarDefault() {
 						variant="outline"
 						className="hidden *:data-[slot=toggle-group-item]:!px-4 @[767px]/card:flex"
 					>
+						<ToggleGroupItem value="365d">Last 12 months</ToggleGroupItem>
 						<ToggleGroupItem value="90d">Last 3 months</ToggleGroupItem>
 						<ToggleGroupItem value="30d">Last 30 days</ToggleGroupItem>
 						<ToggleGroupItem value="7d">Last 7 days</ToggleGroupItem>
@@ -150,9 +153,12 @@ export function ChartBarDefault() {
 							size="sm"
 							aria-label="Select a value"
 						>
-							<SelectValue placeholder="Last 3 months" />
+							<SelectValue placeholder="Last 12 months" />
 						</SelectTrigger>
 						<SelectContent className="rounded-xl">
+							<SelectItem value="365d" className="rounded-lg">
+								Last 12 months
+							</SelectItem>
 							<SelectItem value="90d" className="rounded-lg">
 								Last 3 months
 							</SelectItem>

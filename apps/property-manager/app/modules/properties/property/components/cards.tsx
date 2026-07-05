@@ -65,7 +65,14 @@ export function PropertySectionCards({ propertyId }: Props) {
 		values: [propertyId],
 	}
 
-	// Revenue for last 2 months — powers Total Rental Income + Growth Rate
+	// Revenue for this month and last month — powers Total Rental Income + Growth Rate.
+	// Cube's relative "last N months" range excludes the current, in-progress
+	// month, so an explicit range is used to make sure this month is included.
+	const momDateRange: [string, string] = [
+		localizedDayjs().subtract(1, 'month').startOf('month').format('YYYY-MM-DD'),
+		localizedDayjs().endOf('month').format('YYYY-MM-DD'),
+	]
+
 	const revenueQuery = useCubeQuery<RevenueRow>(
 		token,
 		['prop-revenue-mom', propertyId],
@@ -75,14 +82,14 @@ export function PropertySectionCards({ propertyId }: Props) {
 				{
 					dimension: 'Invoices.paidAt',
 					granularity: 'month',
-					dateRange: 'Last 2 months',
+					dateRange: momDateRange,
 				},
 			],
 			filters: [invoiceFilter],
 		},
 	)
 
-	// New leases created last 2 months — powers New Tenants
+	// New leases created this month and last — powers New Tenants
 	const leaseQuery = useCubeQuery<LeaseRow>(
 		token,
 		['prop-new-leases-mom', propertyId],
@@ -92,7 +99,7 @@ export function PropertySectionCards({ propertyId }: Props) {
 				{
 					dimension: 'Leases.createdAt',
 					granularity: 'month',
-					dateRange: 'Last 2 months',
+					dateRange: momDateRange,
 				},
 			],
 			filters: [leaseFilter],
@@ -164,7 +171,7 @@ export function PropertySectionCards({ propertyId }: Props) {
 	const openRequests = newRequests + inProgress + inReview
 
 	return (
-		<div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4">
+		<div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs sm:grid-cols-2">
 			{/* Total Rental Income */}
 			<Card className="hover:from-primary/10 @container/card gap-3 py-4 transition-all duration-300 ease-out hover:-translate-y-[2px] hover:scale-[1.02] hover:shadow-lg">
 				<CardHeader>

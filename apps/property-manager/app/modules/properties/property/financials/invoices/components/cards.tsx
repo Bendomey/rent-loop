@@ -53,7 +53,9 @@ export function RentPaymentSectionCards({ propertyId }: Props) {
 		values: [propertyId],
 	}
 
-	// Paid amounts for the last 2 months (for MoM comparison)
+	// Paid amounts for this month and last month (for MoM comparison).
+	// Cube's relative "last N months" range excludes the current, in-progress
+	// month, so an explicit range is used to make sure this month is included.
 	const revenueQuery = useCubeQuery<RevenueRow>(
 		token,
 		['invoice-revenue-mom', propertyId],
@@ -63,7 +65,13 @@ export function RentPaymentSectionCards({ propertyId }: Props) {
 				{
 					dimension: 'Invoices.paidAt',
 					granularity: 'month',
-					dateRange: 'Last 2 months',
+					dateRange: [
+						localizedDayjs()
+							.subtract(1, 'month')
+							.startOf('month')
+							.format('YYYY-MM-DD'),
+						localizedDayjs().endOf('month').format('YYYY-MM-DD'),
+					],
 				},
 			],
 			filters: [propertyFilter],

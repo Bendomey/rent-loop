@@ -66,14 +66,22 @@ export function SectionCards() {
 	const thisMonth = localizedDayjs().format('YYYY-MM')
 	const lastMonth = localizedDayjs().subtract(1, 'month').format('YYYY-MM')
 
-	// Revenue for the last 2 months (grouped by month to compute MoM delta)
+	// Revenue for this month and last month (grouped by month to compute MoM delta).
+	// Cube's relative "last N months" range excludes the current, in-progress
+	// month, so an explicit range is used to make sure this month is included.
 	const revenueQuery = useCubeQuery<RevenueRow>(token, ['revenue-mom'], {
 		measures: ['Invoices.paidAmount'],
 		timeDimensions: [
 			{
 				dimension: 'Invoices.paidAt',
 				granularity: 'month',
-				dateRange: 'Last 2 months',
+				dateRange: [
+					localizedDayjs()
+						.subtract(1, 'month')
+						.startOf('month')
+						.format('YYYY-MM-DD'),
+					localizedDayjs().endOf('month').format('YYYY-MM-DD'),
+				],
 			},
 		],
 	})

@@ -82,7 +82,9 @@ export function PropertyRentIncomeCards({ propertyId }: Props) {
 		},
 	)
 
-	// Monthly revenue trend (last 6 months) for the line chart
+	// Monthly revenue trend (last 6 months, including the current month) for
+	// the line chart. Cube's relative "last N months" range excludes the
+	// current, in-progress month, so an explicit range is used instead.
 	const trendQuery = useCubeQuery<TrendRow>(
 		token,
 		['prop-rent-trend', propertyId],
@@ -92,7 +94,13 @@ export function PropertyRentIncomeCards({ propertyId }: Props) {
 				{
 					dimension: 'Invoices.paidAt',
 					granularity: 'month',
-					dateRange: 'Last 6 months',
+					dateRange: [
+						localizedDayjs()
+							.subtract(5, 'month')
+							.startOf('month')
+							.format('YYYY-MM-DD'),
+						localizedDayjs().endOf('month').format('YYYY-MM-DD'),
+					],
 				},
 			],
 			filters: [invoiceFilter],

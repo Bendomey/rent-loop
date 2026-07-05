@@ -1,10 +1,9 @@
-import { Cell, Pie, PieChart } from 'recharts'
+import { Cell, Label, Pie, PieChart } from 'recharts'
 import { useCubeQuery, useGetAnalyticsToken } from '~/api/analytics'
 import {
 	Card,
 	CardContent,
 	CardDescription,
-	CardFooter,
 	CardHeader,
 	CardTitle,
 } from '~/components/ui/card'
@@ -112,7 +111,7 @@ export function UnitsChart() {
 				) : (
 					<ChartContainer
 						config={chartConfig}
-						className="mx-auto max-h-[250px]"
+						className="mx-auto aspect-square max-h-[360px]"
 					>
 						<PieChart>
 							<ChartTooltip
@@ -126,6 +125,7 @@ export function UnitsChart() {
 										]}
 									/>
 								}
+								cursor={false}
 							/>
 							<Pie
 								data={chartData}
@@ -133,24 +133,52 @@ export function UnitsChart() {
 								nameKey="name"
 								cx="50%"
 								cy="50%"
-								innerRadius={60}
-								outerRadius={90}
+								innerRadius={50}
+								outerRadius={70}
+								strokeWidth={5}
 								paddingAngle={2}
 							>
 								{chartData.map((entry) => (
 									<Cell key={entry.name} fill={entry.fill} />
 								))}
+								<Label
+									content={({ viewBox }) => {
+										if (viewBox && 'cx' in viewBox && 'cy' in viewBox) {
+											return (
+												<text
+													dominantBaseline="middle"
+													textAnchor="middle"
+													x={viewBox.cx}
+													y={viewBox.cy}
+												>
+													<tspan
+														className="fill-foreground text-3xl font-bold"
+														x={viewBox.cx}
+														y={viewBox.cy}
+													>
+														{total.toLocaleString()}
+													</tspan>
+													<tspan
+														className="fill-muted-foreground"
+														x={viewBox.cx}
+														y={(viewBox.cy ?? 0) + 24}
+													>
+														Units
+													</tspan>
+												</text>
+											)
+										}
+									}}
+								/>
 							</Pie>
-							<ChartLegend content={<ChartLegendContent nameKey="name" />} />
+							<ChartLegend
+								className="mt-5 flex-wrap justify-center gap-4 *:basis-[45%] *:justify-start"
+								content={<ChartLegendContent nameKey="name" />}
+							/>
 						</PieChart>
 					</ChartContainer>
 				)}
 			</CardContent>
-			<CardFooter className="text-muted-foreground flex justify-center text-sm">
-				{total > 0
-					? `${total} total unit${total !== 1 ? 's' : ''} across all properties`
-					: 'No units yet'}
-			</CardFooter>
 		</Card>
 	)
 }
