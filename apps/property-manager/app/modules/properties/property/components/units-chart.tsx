@@ -16,6 +16,7 @@ import { useClient } from '~/providers/client-provider'
 interface UnitRow {
 	'Units.occupiedCount': string | null
 	'Units.availableCount': string | null
+	'Units.partiallyOccupiedCount': string | null
 	'Units.maintenanceCount': string | null
 	'Units.draftCount': string | null
 	'Units.count': string | null
@@ -26,6 +27,7 @@ const chartConfig = {
 	available: { label: 'Available', color: 'var(--chart-2)' },
 	maintenance: { label: 'Maintenance', color: 'var(--chart-3)' },
 	draft: { label: 'Draft', color: 'var(--chart-4)' },
+	partiallyOccupied: { label: 'Partially Occupied', color: 'var(--chart-5)' },
 } satisfies ChartConfig
 
 interface Props {
@@ -45,6 +47,7 @@ export function PropertyUnitsChart({ propertyId }: Props) {
 			measures: [
 				'Units.occupiedCount',
 				'Units.availableCount',
+				'Units.partiallyOccupiedCount',
 				'Units.maintenanceCount',
 				'Units.draftCount',
 				'Units.count',
@@ -62,6 +65,7 @@ export function PropertyUnitsChart({ propertyId }: Props) {
 	const row = unitsQuery.data?.[0]
 	const occupied = Number(row?.['Units.occupiedCount'] ?? 0)
 	const available = Number(row?.['Units.availableCount'] ?? 0)
+	const partiallyOccupied = Number(row?.['Units.partiallyOccupiedCount'] ?? 0)
 	const maintenance = Number(row?.['Units.maintenanceCount'] ?? 0)
 	const draft = Number(row?.['Units.draftCount'] ?? 0)
 	const total = Number(row?.['Units.count'] ?? 0)
@@ -71,6 +75,11 @@ export function PropertyUnitsChart({ propertyId }: Props) {
 		{ name: 'available', value: available, fill: 'var(--chart-2)' },
 		{ name: 'maintenance', value: maintenance, fill: 'var(--chart-3)' },
 		{ name: 'draft', value: draft, fill: 'var(--chart-4)' },
+		{
+			name: 'partiallyOccupied',
+			value: partiallyOccupied,
+			fill: 'var(--chart-5)',
+		},
 	].filter((d) => d.value > 0)
 
 	const hasData = chartData.length > 0

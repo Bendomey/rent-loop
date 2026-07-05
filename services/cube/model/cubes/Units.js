@@ -21,25 +21,31 @@ cube(`Units`, {
     availableCount: {
       type: `count`,
       title: `Available Units`,
-      filters: [{ sql: `${CUBE}.status = 'AVAILABLE'` }],
+      filters: [{ sql: `${CUBE}.status = 'Unit.Status.Available'` }],
     },
 
     occupiedCount: {
       type: `count`,
       title: `Occupied Units`,
-      filters: [{ sql: `${CUBE}.status = 'OCCUPIED'` }],
+      filters: [{ sql: `${CUBE}.status = 'Unit.Status.Occupied'` }],
+    },
+
+    partiallyOccupiedCount: {
+      type: `count`,
+      title: `Partially Occupied Units`,
+      filters: [{ sql: `${CUBE}.status = 'Unit.Status.PartiallyOccupied'` }],
     },
 
     maintenanceCount: {
       type: `count`,
       title: `Units in Maintenance`,
-      filters: [{ sql: `${CUBE}.status = 'MAINTENANCE'` }],
+      filters: [{ sql: `${CUBE}.status = 'Unit.Status.Maintenance'` }],
     },
 
     draftCount: {
       type: `count`,
       title: `Draft Units`,
-      filters: [{ sql: `${CUBE}.status = 'DRAFT'` }],
+      filters: [{ sql: `${CUBE}.status = 'Unit.Status.Draft'` }],
     },
   },
 
