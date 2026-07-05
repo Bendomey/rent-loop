@@ -28,6 +28,7 @@ type PipelineState =
 	| { status: 'PROCESSING'; currentStep: ApprovalStep; progress: number }
 	| { status: 'ERROR'; failedStep: ApprovalStep; error: string }
 	| { status: 'SUCCESS' }
+	| { status: 'NEXT_STEPS'; lease?: Lease }
 
 const STEP_DESCRIPTIONS: Record<ApprovalStep, string> = {
 	GENERATE_PDF: 'Preparing your documents...',
@@ -208,10 +209,11 @@ export function useApprovalPipeline({
 				queryKey: [QUERY_KEYS.PROPERTY_TENANT_APPLICATIONS],
 			})
 			void revalidator.revalidate()
+			onSuccess(lease)
 
 			setTimeout(() => {
-				onSuccess(lease)
-			}, 2000)
+				setState({ status: 'NEXT_STEPS', lease })
+			}, 1000)
 		} catch (error) {
 			if (progressIntervalRef.current) {
 				clearInterval(progressIntervalRef.current)

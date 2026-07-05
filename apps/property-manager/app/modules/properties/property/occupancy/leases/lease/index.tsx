@@ -8,7 +8,7 @@ import {
 	User,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { Link, useLoaderData } from 'react-router'
+import { Link, useLoaderData, useSearchParams } from 'react-router'
 import { ChecklistAlerts } from './components/checklist-alerts'
 import { ChecklistSection } from './components/checklist-section'
 import { LeaseAgreementDocumentSetup } from './components/lease-agreement-document-setup'
@@ -72,6 +72,8 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
 export function LeaseDetailModule() {
 	const { lease, clientUserProperty, documentTemplates } =
 		useLoaderData<typeof loader>()
+	const [searchParams] = useSearchParams()
+	const initialTab = searchParams.get('tab') ?? 'details'
 	const { clientUserProperty: ctxProp } = useProperty()
 	const { hasPermissions: managerPermission } = useHasPropertyPermissions({
 		roles: ['MANAGER'],
@@ -258,7 +260,7 @@ export function LeaseDetailModule() {
 					{/* Main Content */}
 					<div className="col-span-12 lg:col-span-8">
 						<div className="overflow-x-auto pb-1">
-							<Tabs defaultValue="details">
+							<Tabs defaultValue={initialTab}>
 								<TabsList id="lease-tabs">
 									<TabsTrigger value="details">Lease Details</TabsTrigger>
 									<TabsTrigger value="tenant">Tenant Profile</TabsTrigger>
