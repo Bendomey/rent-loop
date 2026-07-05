@@ -9,6 +9,7 @@ import {
 	Pencil,
 	Store,
 	Trash,
+	Users,
 } from 'lucide-react'
 import { useState } from 'react'
 import {
@@ -159,7 +160,7 @@ export function PropertyAssetUnitModule() {
 	const isOccupied =
 		unit.status === 'Unit.Status.Occupied' ||
 		unit.status === 'Unit.Status.PartiallyOccupied'
-	const isEditable =
+	const isDeletable =
 		unit.status === 'Unit.Status.Draft' ||
 		unit.status === 'Unit.Status.Maintenance'
 	const isMultiProperty = clientUserProperty?.property?.type === 'MULTI'
@@ -195,7 +196,7 @@ export function PropertyAssetUnitModule() {
 			{/* Sidebar */}
 			<div className="col-span-12 lg:col-span-4">
 				<Card className="overflow-hidden pt-0 shadow-none">
-					<div className="h-full w-full overflow-hidden">
+					<div className="relative h-full w-full overflow-hidden">
 						{unit.images?.[0] ? (
 							<Image
 								className="h-full w-full object-cover"
@@ -206,6 +207,22 @@ export function PropertyAssetUnitModule() {
 							<div className="bg-muted flex h-48 w-full items-center justify-center">
 								<ImageIcon className="text-muted-foreground size-10" />
 							</div>
+						)}
+						{(unit.max_occupants_allowed ?? 0) > 1 && (
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Badge
+										variant="outline"
+										className="absolute top-2 right-2 gap-1 border-none bg-sky-500 text-white shadow-sm"
+									>
+										<Users className="size-3" />
+										Shared Unit
+									</Badge>
+								</TooltipTrigger>
+								<TooltipContent side="top">
+									Up to {unit.max_occupants_allowed} tenants
+								</TooltipContent>
+							</Tooltip>
 						)}
 					</div>
 
@@ -290,37 +307,14 @@ export function PropertyAssetUnitModule() {
 
 					<CardFooter className="flex justify-end gap-2 border-t pt-4">
 						<PropertyPermissionGuard roles={['MANAGER']}>
-							{isEditable ? (
-								<Link to={`${baseUrl}/edit`}>
-									<Button variant="outline" size="sm">
-										<Pencil className="mr-1 size-4" />
-										Edit
-									</Button>
-								</Link>
-							) : (
-								<Tooltip>
-									<TooltipTrigger asChild>
-										<span tabIndex={0} className="cursor-not-allowed">
-											<Button
-												variant="outline"
-												size="sm"
-												disabled
-												className="pointer-events-none"
-											>
-												<Pencil className="mr-1 size-4" />
-												Edit
-											</Button>
-										</span>
-									</TooltipTrigger>
-									<TooltipContent side="top">
-										{isOccupied
-											? 'This unit is occupied. Status will update automatically when the lease ends.'
-											: 'Switch this unit to Draft or Maintenance to enable editing.'}
-									</TooltipContent>
-								</Tooltip>
-							)}
+							<Link to={`${baseUrl}/edit`}>
+								<Button variant="outline" size="sm">
+									<Pencil className="mr-1 size-4" />
+									Edit
+								</Button>
+							</Link>
 							{isMultiProperty &&
-								(isEditable ? (
+								(isDeletable ? (
 									<Button
 										variant="destructive"
 										size="sm"

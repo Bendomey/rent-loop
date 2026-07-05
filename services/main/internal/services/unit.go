@@ -292,8 +292,14 @@ func (s *unitService) UpdateUnit(ctx context.Context, input UpdateUnitInput) (*m
 		})
 	}
 
-	if unit.Status != "Unit.Status.Draft" {
-		return nil, pkg.ForbiddenError("UnitNotInDraftState", nil)
+	rentalInfoChanged := input.RentFee != nil ||
+		input.RentFeeCurrency != nil ||
+		input.PaymentFrequency != nil ||
+		input.MaxOccupantsAllowed != nil
+
+	if rentalInfoChanged &&
+		(unit.Status == "Unit.Status.Occupied" || unit.Status == "Unit.Status.PartiallyOccupied") {
+		return nil, pkg.ForbiddenError("UnitIsOccupied", nil)
 	}
 
 	if input.Name != nil {
