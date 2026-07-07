@@ -14,6 +14,7 @@ import { ChecklistSection } from './components/checklist-section'
 import { LeaseAgreementDocumentSetup } from './components/lease-agreement-document-setup'
 import { StartLeaseDialog } from './components/start-lease-dialog'
 import { LeaseExpensesTab } from './expenses-tab'
+import { useGetLeaseTerminations } from '~/api/lease-terminations'
 import { Image } from '~/components/Image'
 import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
 import { useHasPropertyPermissions } from '~/components/permissions/use-has-role'
@@ -32,6 +33,8 @@ import { TypographyMuted } from '~/components/ui/typography'
 import { useTour } from '~/hooks/use-tour'
 import { PermissionState } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 import { getLeaseStatusClass, getLeaseStatusLabel } from '~/lib/lease.utils'
 import {
@@ -42,6 +45,7 @@ import { toFirstUpperCase } from '~/lib/strings'
 import { LEASE_DETAIL_TOUR_STEPS, TOUR_KEYS } from '~/lib/tours'
 import { useProperty } from '~/providers/property-provider'
 import type { loader } from '~/routes/_auth.properties.$propertyId.occupancy.leases.$leaseId'
+import { TerminateLeaseModal } from './components/terminate-modal'
 
 function DetailRow({
 	label,
@@ -75,10 +79,13 @@ export function LeaseDetailModule() {
 	const [searchParams] = useSearchParams()
 	const initialTab = searchParams.get('tab') ?? 'details'
 	const { clientUserProperty: ctxProp } = useProperty()
+	const { clientUser } = useClient()
 	const { hasPermissions: managerPermission } = useHasPropertyPermissions({
 		roles: ['MANAGER'],
 	})
 	const [startLeaseOpen, setStartLeaseOpen] = useState(false)
+	const [openStartTerminationModal, setOpenStartTerminationModal] =
+		useState(false)
 	const { startTour, hasCompletedTour } = useTour(
 		TOUR_KEYS.LEASE_DETAIL,
 		LEASE_DETAIL_TOUR_STEPS,
@@ -90,6 +97,16 @@ export function LeaseDetailModule() {
 
 	const propertyId =
 		clientUserProperty?.property_id ?? ctxProp?.property_id ?? ''
+
+	const { data: terminationsData } = useGetLeaseTerminations(
+		safeString(clientUser?.client_id),
+		propertyId,
+		lease?.id ?? '',
+		{
+			pagination: { page: 1, per: 1 },
+		},
+	)
+	const hasInProgressTermination = Boolean(terminationsData?.rows?.[0])
 
 	if (!lease) {
 		return (
@@ -127,7 +144,7 @@ export function LeaseDetailModule() {
 									/>
 								</div>
 							)}
-							<CardHeader className="flex items-start justify-between gap-2">
+							<CardHeader className="flex items-start justify-between gap-2 pt-3">
 								<div className="flex items-center gap-2">
 									<ScrollText className="text-muted-foreground size-5" />
 									<CardTitle className="text-base">{lease.code}</CardTitle>
@@ -235,9 +252,23 @@ export function LeaseDetailModule() {
 							<CardFooter className="flex justify-end gap-2 border-t pt-4">
 								{isTerminable && (
 									<PropertyPermissionGuard roles={['MANAGER']}>
-										<Button variant="destructive" size="sm" disabled>
-											Terminate Lease
-										</Button>
+										{hasInProgressTermination ? (
+											<Button variant="destructive" size="sm" asChild>
+												<Link
+													to={`/properties/${propertyId}/occupancy/leases/${lease.id}/terminate/${terminationsData?.rows?.[0]?.id}`}
+												>
+													Continue Termination
+												</Link>
+											</Button>
+										) : (
+											<Button
+												variant="destructive"
+												size="sm"
+												onClick={() => setOpenStartTerminationModal(true)}
+											>
+												Terminate Lease
+											</Button>
+										)}
 									</PropertyPermissionGuard>
 								)}
 								{isPending && (
@@ -720,6 +751,12 @@ export function LeaseDetailModule() {
 				propertyId={propertyId}
 				opened={startLeaseOpen}
 				setOpened={setStartLeaseOpen}
+			/>
+			<TerminateLeaseModal
+				opened={openStartTerminationModal}
+				setOpened={setOpenStartTerminationModal}
+				lease={lease}
+				propertyId={safeString(clientUserProperty?.property_id)}
 			/>
 		</>
 	)
