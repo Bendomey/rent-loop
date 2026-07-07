@@ -74,19 +74,11 @@ export function Step1() {
 
 	const onSubmit = async (data: FormSchema) => {
 		setOtpError(false)
-		const normalizedPhone = normalizeInternationalPhoneNumber(data.phone)
-		const trimmedEmail = data.email?.trim()
-
-		updateFormData({ phone: data.phone, email: safeString(trimmedEmail) })
-
-		const channel: Array<'EMAIL' | 'SMS'> = trimmedEmail
-			? ['EMAIL', 'SMS']
-			: ['SMS']
-
+		updateFormData({ phone: data.phone, email: safeString(data.email) })
 		sendOtp({
-			channel,
-			phone: normalizedPhone,
-			...(trimmedEmail ? { email: trimmedEmail } : {}),
+			channel: ['EMAIL', 'SMS'],
+			email: data.email,
+			phone: normalizeInternationalPhoneNumber(data.phone),
 		})
 	}
 

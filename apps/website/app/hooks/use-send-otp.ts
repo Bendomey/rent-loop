@@ -1,6 +1,5 @@
 import { toast } from 'sonner'
 import { useGetOtpCode } from '~/api/auth'
-import { formatPhoneWithCountryCode } from '~/lib/misc'
 import { normalizeInternationalPhoneNumber } from '~/lib/phone'
 
 type UseSendOtpOptions = {
@@ -22,34 +21,42 @@ export const useSendOtp = (options?: UseSendOtpOptions) => {
 	const { mutate, isPending } = useGetOtpCode()
 
 	const sendOtp = ({ channel, email, phone }: SendOtpProps) => {
-		const channels = Array.isArray(channel) ? channel : [channel]
-		const wantsSms = channels.includes('SMS')
-		const wantsEmail = channels.includes('EMAIL')
+		const requested = Array.isArray(channel) ? channel : [channel]
+
+		const trimmedEmail = email?.trim()
+		const trimmedPhone = phone?.trim()
 
 		let formattedPhone: string | undefined
-		if (wantsSms) {
-			formattedPhone = normalizeInternationalPhoneNumber(phone) ?? undefined
-			if (!formattedPhone) {
-				toast.error('Invalid phone number')
-				return
+		const channels: OtpChannel[] = []
+
+		if (requested.includes('SMS') && trimmedPhone) {
+			formattedPhone =
+				normalizeInternationalPhoneNumber(trimmedPhone) ?? undefined
+			if (formattedPhone) {
+				channels.push('SMS')
 			}
 		}
 
-		if (wantsEmail) {
-			if (!email) {
-				toast.error('Email is required')
-				return
-			}
-			if (!emailRegex.test(email)) {
-				toast.error('Invalid email address')
-				return
-			}
+		if (
+			requested.includes('EMAIL') &&
+			trimmedEmail &&
+			emailRegex.test(trimmedEmail)
+		) {
+			channels.push('EMAIL')
 		}
+
+		if (channels.length === 0) {
+			toast.error('Enter a valid phone number or email to continue')
+			return
+		}
+
+		const wantsSms = channels.includes('SMS')
+		const wantsEmail = channels.includes('EMAIL')
 
 		mutate(
 			{
 				channel: channels,
-				...(wantsEmail ? { email } : {}),
+				...(wantsEmail ? { email: trimmedEmail } : {}),
 				...(wantsSms ? { phone: formattedPhone } : {}),
 			},
 			{

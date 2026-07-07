@@ -64,7 +64,7 @@ export function Step2() {
 		setResendAttempts((a) => a + 1)
 		setResendCountdown(nextResend)
 		sendOtp({
-			channel,
+			channel: ['EMAIL', 'SMS'],
 			phone: formData.phone,
 			...(formData.email ? { email: formData.email } : {}),
 		})
