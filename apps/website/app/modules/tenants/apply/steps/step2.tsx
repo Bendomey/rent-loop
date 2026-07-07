@@ -52,6 +52,10 @@ export function Step2() {
 		return () => clearTimeout(t)
 	}, [resendCountdown])
 
+	const channel: Array<'EMAIL' | 'SMS'> = formData.email
+		? ['EMAIL', 'SMS']
+		: ['SMS']
+
 	const resend = () => {
 		if (!canResend) return
 
@@ -59,7 +63,11 @@ export function Step2() {
 
 		setResendAttempts((a) => a + 1)
 		setResendCountdown(nextResend)
-		sendOtp(formData.phone)
+		sendOtp({
+			channel: ['EMAIL', 'SMS'],
+			phone: formData.phone,
+			...(formData.email ? { email: formData.email } : {}),
+		})
 	}
 
 	useEffect(() => {
@@ -169,6 +177,15 @@ export function Step2() {
 						<span className="font-medium text-zinc-900">
 							{formData.phone || 'your phone'}
 						</span>
+						{formData.email && (
+							<>
+								{' '}
+								and{' '}
+								<span className="font-medium text-zinc-900">
+									{formData.email}
+								</span>
+							</>
+						)}
 					</TypographyMuted>
 				</div>
 

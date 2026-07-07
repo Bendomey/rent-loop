@@ -20,6 +20,9 @@ import {
 import { Spinner } from '~/components/ui/spinner'
 import { TypographyH2 } from '~/components/ui/typography'
 import { useSendOtp } from '~/hooks/use-send-otp'
+import { Input } from '~/components/ui/input'
+import { safeString } from '~/lib/strings'
+import { normalizeInternationalPhoneNumber } from '~/lib/phone'
 
 const ValidationSchema = z.object({
 	phone: z
@@ -27,6 +30,11 @@ const ValidationSchema = z.object({
 		.refine(isValidPhoneNumber, {
 			message: 'Please enter a valid phone number',
 		}),
+	email: z
+		.string()
+		.email('Please enter a valid email address')
+		.optional()
+		.or(z.literal('')),
 })
 
 type FormSchema = z.infer<typeof ValidationSchema>
@@ -44,7 +52,7 @@ export function Step1() {
 
 	const rhfMethods = useForm<FormSchema>({
 		resolver: zodResolver(ValidationSchema),
-		defaultValues: {},
+		defaultValues: { email: '' },
 	})
 
 	const { handleSubmit, control, setValue } = rhfMethods
@@ -56,12 +64,22 @@ export function Step1() {
 				shouldValidate: true,
 			})
 		}
+		if (formData.email) {
+			setValue('email', formData.email, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
 	}, [formData])
 
 	const onSubmit = async (data: FormSchema) => {
 		setOtpError(false)
-		updateFormData({ phone: data.phone })
-		sendOtp(data.phone)
+		updateFormData({ phone: data.phone, email: safeString(data.email) })
+		sendOtp({
+			channel: ['EMAIL', 'SMS'],
+			email: data.email,
+			phone: normalizeInternationalPhoneNumber(data.phone),
+		})
 	}
 
 	return (
@@ -118,6 +136,23 @@ export function Step1() {
 										We may send a verification code to confirm it's you. Enter
 										your number in international format, e.g.{' '}
 										<span className="font-medium">+233 201 234 567</span>.
+									</FormDescription>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+
+						<FormField
+							name="email"
+							control={control}
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Email</FormLabel>
+									<FormControl>
+										<Input {...field} type="text" />
+									</FormControl>
+									<FormDescription>
+										We'll send notifications to this email
 									</FormDescription>
 									<FormMessage />
 								</FormItem>
