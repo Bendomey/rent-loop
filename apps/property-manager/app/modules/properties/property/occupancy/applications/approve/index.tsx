@@ -1,24 +1,11 @@
-import {
-	AlertTriangle,
-	CheckCircle2,
-	ChevronRight,
-	ClipboardListIcon,
-	FileX,
-	HouseIcon,
-	Plus,
-	ShieldCheck,
-	User,
-	Wallet,
-} from 'lucide-react'
+import { AlertTriangle, CheckCircle2, FileX, ShieldCheck } from 'lucide-react'
 import type { Dispatch, SetStateAction } from 'react'
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
 
+import { NextStepsContent } from './next-steps-modal'
 import { useApprovalPipeline } from './use-approval-pipeline'
 import { Alert, AlertDescription } from '~/components/ui/alert'
 import { Button } from '~/components/ui/button'
-import { Checkbox } from '~/components/ui/checkbox'
 import {
 	Dialog,
 	DialogContent,
@@ -29,8 +16,6 @@ import {
 import { Progress } from '~/components/ui/progress'
 import { Spinner } from '~/components/ui/spinner'
 import { cn } from '~/lib/utils'
-
-const HIDE_WHATS_NEXT_KEY = 'rent-loop:hide-lease-whats-next-v1'
 
 interface Props {
 	data?: TenantApplication
@@ -73,8 +58,6 @@ function ApprovalModalContent({
 	onClose: () => void
 	propertyId: string
 }) {
-	const navigate = useNavigate()
-	const [dontShowAgain, setDontShowAgain] = useState(false)
 	const name = [data.first_name, data.other_names, data.last_name]
 		.filter(Boolean)
 		.join(' ')
@@ -88,24 +71,8 @@ function ApprovalModalContent({
 			},
 		})
 
-	// Fast path: if the user previously opted out, skip the "What's next?"
-	// view and go straight to the lease page, like the old behavior.
-	useEffect(() => {
-		if (
-			state.status === 'NEXT_STEPS' &&
-			localStorage.getItem(HIDE_WHATS_NEXT_KEY) === 'true'
-		) {
-			void navigate(
-				`/properties/${propertyId}/occupancy/leases/${state.lease?.id}`,
-			)
-		}
-	}, [state, navigate, propertyId])
-
 	const handleClose = () => {
 		if (state.status === 'PROCESSING') return
-		if (dontShowAgain) {
-			localStorage.setItem(HIDE_WHATS_NEXT_KEY, 'true')
-		}
 		reset()
 		onClose()
 	}
@@ -206,93 +173,14 @@ function ApprovalModalContent({
 				</div>
 			)}
 
-			{state.status === 'NEXT_STEPS' &&
-				(() => {
-					const leaseId = state.lease?.id
-					const tenantId = state.lease?.tenant_id
-
-					const items: Array<{
-						icon: typeof HouseIcon
-						label: string
-						href: string
-					}> = [
-						{
-							icon: HouseIcon,
-							label: 'Start the lease',
-							href: `/properties/${propertyId}/occupancy/leases/${leaseId}`,
-						},
-						{
-							icon: Wallet,
-							label: 'Add a charge to this lease',
-							href: `/properties/${propertyId}/occupancy/leases/${leaseId}?tab=expenses`,
-						},
-						{
-							icon: ClipboardListIcon,
-							label: 'Create a move-in inspection checklist',
-							href: `/properties/${propertyId}/occupancy/leases/${leaseId}`,
-						},
-						{
-							icon: User,
-							label: 'Visit tenant profile',
-							href: `/properties/${propertyId}/occupancy/tenants/${tenantId}`,
-						},
-						{
-							icon: Plus,
-							label: 'Create another rental application',
-							href: `/properties/${propertyId}/occupancy/applications/new`,
-						},
-					]
-
-					return (
-						<>
-							<DialogHeader className="items-center text-center">
-								<div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-									<CheckCircle2 className="size-6 text-green-600" />
-								</div>
-								<DialogTitle>What&apos;s next?</DialogTitle>
-								<DialogDescription className="text-center">
-									{name}&apos;s lease has been created. Here&apos;s what you can
-									do next.
-								</DialogDescription>
-							</DialogHeader>
-
-							<div className="divide-border flex flex-col divide-y rounded-lg border">
-								{items.map((item) => (
-									<button
-										key={item.label}
-										type="button"
-										onClick={() => {
-											onClose()
-											void navigate(item.href)
-										}}
-										className="hover:bg-muted/50 flex items-center gap-3 px-4 py-3 text-left transition-colors"
-									>
-										<item.icon className="text-muted-foreground size-4 shrink-0" />
-										<span className="flex-1 text-sm font-medium">
-											{item.label}
-										</span>
-										<ChevronRight className="text-muted-foreground size-4 shrink-0" />
-									</button>
-								))}
-							</div>
-
-							<div className="flex items-center justify-between pt-2">
-								<label className="flex items-center gap-2 text-sm">
-									<Checkbox
-										checked={dontShowAgain}
-										onCheckedChange={(checked) =>
-											setDontShowAgain(checked === true)
-										}
-									/>
-									Don&apos;t show this again
-								</label>
-								<Button variant="outline" onClick={handleClose}>
-									Close
-								</Button>
-							</div>
-						</>
-					)
-				})()}
+			{state.status === 'NEXT_STEPS' && state.lease && (
+				<NextStepsContent
+					lease={state.lease}
+					name={name}
+					propertyId={propertyId}
+					onClose={handleClose}
+				/>
+			)}
 
 			{state.status === 'ERROR' && (
 				<div className="flex flex-col items-center justify-center px-4 py-8 text-center">

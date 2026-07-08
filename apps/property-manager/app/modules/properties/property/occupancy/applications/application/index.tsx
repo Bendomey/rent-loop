@@ -1,10 +1,13 @@
+import { ArrowRight, CheckCircle2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, Outlet, useLoaderData } from 'react-router'
 import ApproveTenantApplicationModal from '../approve'
+import { WhatsNextModal } from '../approve/next-steps-modal'
 import CancelTenantApplicationModal from '../cancel'
 import DeleteTenantApplicationModal from '../delete'
 import { PropertyTenantApplicationChecklist } from './components/checklist'
 import { useCalculateChecklist } from './components/use-calculate-checklist'
+import { useGetPropertyLeases } from '~/api/leases'
 import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
@@ -17,14 +20,17 @@ import { useTour } from '~/hooks/use-tour'
 import { localizedDayjs } from '~/lib/date'
 import { safeString } from '~/lib/strings'
 import { TENANT_APPLICATION_TOUR_STEPS, TOUR_KEYS } from '~/lib/tours'
+import { useClient } from '~/providers/client-provider'
 import type { loader } from '~/routes/_auth.properties.$propertyId.occupancy.applications.$applicationId'
 
 export function PropertyTenantApplicationContainer() {
 	const { tenantApplication, clientUserProperty } =
 		useLoaderData<typeof loader>()
+	const { clientUser } = useClient()
 	const [openCancelModal, setOpenCancelModal] = useState(false)
 	const [openApproveModal, setOpenApproveModal] = useState(false)
 	const [openDeleteModal, setOpenDeleteModal] = useState(false)
+	const [openNextStepsModal, setOpenNextStepsModal] = useState(false)
 
 	const { startTour, hasCompletedTour } = useTour(
 		TOUR_KEYS.TENANT_APPLICATION,
@@ -37,6 +43,25 @@ export function PropertyTenantApplicationContainer() {
 
 	const isInvoicePaid = ['PAID', 'PARTIALLY_PAID'].includes(
 		tenantApplication?.application_payment_invoice?.status ?? '',
+	)
+
+	const isCompleted =
+		tenantApplication?.status === 'TenantApplication.Status.Completed'
+
+	// The lease created from this application isn't linked on the tenant
+	// application itself, so it's looked up by the unit it was created for.
+	const { data: unitLeases } = useGetPropertyLeases(
+		safeString(clientUser?.client_id),
+		isCompleted ? safeString(clientUserProperty?.property_id) : '',
+		{
+			pagination: { page: 1, per: 5 },
+			sorter: {},
+			search: {},
+			filters: { unit_ids: [safeString(tenantApplication?.desired_unit_id)] },
+		},
+	)
+	const lease = unitLeases?.rows?.find(
+		(l) => l.tenant_application_id === tenantApplication?.id,
 	)
 
 	if (!tenantApplication) {
@@ -91,19 +116,42 @@ export function PropertyTenantApplicationContainer() {
 
 	return (
 		<div>
-			{tenantApplication?.status === 'TenantApplication.Status.Completed' && (
-				<div className="m-5 rounded-md bg-blue-100 p-4 dark:bg-blue-950">
-					<p className="text-sm text-blue-700 dark:text-blue-300">
-						This application has been completed. You cannot update the details
-						here. Please go to the{' '}
-						<Link
-							to={`/properties/${safeString(clientUserProperty?.property_id)}/occupancy/tenants`}
-							className="font-medium underline hover:no-underline"
-						>
-							tenants page
-						</Link>{' '}
-						to update any details.
-					</p>
+			{isCompleted && (
+				<div className="m-5 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-900 dark:bg-green-950">
+					<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+						<div className="flex gap-3">
+							<div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
+								<CheckCircle2 className="size-4 text-green-600 dark:text-green-400" />
+							</div>
+							<div className="space-y-0.5">
+								<p className="text-sm font-medium text-green-900 dark:text-green-200">
+									Lease is created
+								</p>
+								<p className="text-sm text-green-700 dark:text-green-400">
+									This application has been approved and its details can no
+									longer be edited here. Head to the{' '}
+									<Link
+										to={`/properties/${safeString(clientUserProperty?.property_id)}/occupancy/tenants`}
+										className="font-medium underline hover:no-underline"
+									>
+										tenants page
+									</Link>{' '}
+									to make changes.
+								</p>
+							</div>
+						</div>
+						{lease && (
+							<Button
+								variant="outline"
+								size="sm"
+								className="shrink-0 gap-1.5 border-green-300 bg-white text-green-700 hover:bg-green-100 dark:border-green-800 dark:bg-transparent dark:text-green-300 dark:hover:bg-green-900"
+								onClick={() => setOpenNextStepsModal(true)}
+							>
+								What&apos;s next?
+								<ArrowRight className="size-4" />
+							</Button>
+						)}
+					</div>
 				</div>
 			)}
 			<div className="m-5 grid grid-cols-12 gap-4">
@@ -190,6 +238,21 @@ export function PropertyTenantApplicationContainer() {
 					data={tenantApplication}
 					propertyId={safeString(clientUserProperty?.property_id)}
 				/>
+				{lease && (
+					<WhatsNextModal
+						opened={openNextStepsModal}
+						setOpened={setOpenNextStepsModal}
+						name={[
+							tenantApplication.first_name,
+							tenantApplication.other_names,
+							tenantApplication.last_name,
+						]
+							.filter(Boolean)
+							.join(' ')}
+						propertyId={safeString(clientUserProperty?.property_id)}
+						lease={lease}
+					/>
+				)}
 			</div>
 		</div>
 	)
