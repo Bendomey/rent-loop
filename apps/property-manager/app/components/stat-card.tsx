@@ -13,7 +13,7 @@ type TrendDirection = 'up' | 'down'
 
 interface RentPaymentStatCardProps {
 	title: string
-	value: string | number
+	value: React.ReactNode
 	description: string
 	trend?: {
 		direction: TrendDirection

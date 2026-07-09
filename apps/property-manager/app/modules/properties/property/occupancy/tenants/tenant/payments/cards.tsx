@@ -1,4 +1,5 @@
 import { StatCard } from '~/components/stat-card'
+import { Skeleton } from '~/components/ui/skeleton'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 
 interface Props {
@@ -21,7 +22,11 @@ export function TenantPaymentSectionCards({
 			<StatCard
 				title="Total Payments"
 				value={
-					isLoading ? '—' : formatAmount(convertPesewasToCedis(totalAmount))
+					isLoading ? (
+						<Skeleton className="h-8 w-32" />
+					) : (
+						formatAmount(convertPesewasToCedis(totalAmount))
+					)
 				}
 				description="Total invoiced for this tenant"
 			/>
@@ -29,9 +34,11 @@ export function TenantPaymentSectionCards({
 			<StatCard
 				title="Outstanding Payments"
 				value={
-					isLoading
-						? '—'
-						: formatAmount(convertPesewasToCedis(outstandingAmount))
+					isLoading ? (
+						<Skeleton className="h-8 w-32" />
+					) : (
+						formatAmount(convertPesewasToCedis(outstandingAmount))
+					)
 				}
 				description="Issued & partially paid invoices"
 			/>
@@ -39,14 +46,24 @@ export function TenantPaymentSectionCards({
 			<StatCard
 				title="Paid Payments"
 				value={
-					isLoading ? '—' : formatAmount(convertPesewasToCedis(paidAmount))
+					isLoading ? (
+						<Skeleton className="h-8 w-32" />
+					) : (
+						formatAmount(convertPesewasToCedis(paidAmount))
+					)
 				}
 				description="Lifetime payments from this tenant"
 			/>
 
 			<StatCard
 				title="Total Invoices"
-				value={isLoading ? '—' : totalInvoices.toLocaleString()}
+				value={
+					isLoading ? (
+						<Skeleton className="h-8 w-10" />
+					) : (
+						totalInvoices.toLocaleString()
+					)
+				}
 				description="All invoices raised for this tenant"
 			/>
 		</div>
