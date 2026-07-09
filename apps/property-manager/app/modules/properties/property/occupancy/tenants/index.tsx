@@ -136,7 +136,7 @@ export function PropertyTenantsModule() {
 
 										<div className="flex items-center gap-2 text-sm">
 											<Mail size={14} className="text-zinc-500" />
-											{!tenant.email ? (
+											{tenant.email ? (
 												<TypographyP className="!mt-0 max-w-full truncate">
 													{tenant.email}
 												</TypographyP>

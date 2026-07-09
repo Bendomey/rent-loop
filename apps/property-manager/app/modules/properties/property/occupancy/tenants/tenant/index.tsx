@@ -45,11 +45,10 @@ export function TenantModule() {
 							{tenant && (
 								<Badge
 									variant="outline"
-									className={`px-2 py-1 text-xs ${
-										getTenantOccupancyStatus(tenant) === 'ACTIVE'
+									className={`px-2 py-1 text-xs ${getTenantOccupancyStatus(tenant) === 'ACTIVE'
 											? 'bg-teal-500 text-white'
 											: 'bg-zinc-400 text-white'
-									}`}
+										}`}
 								>
 									{getTenantOccupancyStatus(tenant) === 'ACTIVE'
 										? 'Active'
@@ -98,7 +97,15 @@ export function TenantModule() {
 
 							<div className="flex items-center gap-2 text-sm">
 								<Mail size={14} className="text-zinc-500" />
-								<TypographyP className="!mt-0">{tenant?.email}</TypographyP>
+								{tenant?.email ? (
+									<TypographyP className="!mt-0">
+										{tenant?.email}
+									</TypographyP>
+								) : (
+									<TypographyMuted className="!mt-0 text-xs">
+										Not provided
+									</TypographyMuted>
+								)}
 							</div>
 						</div>
 					</CardContent>
