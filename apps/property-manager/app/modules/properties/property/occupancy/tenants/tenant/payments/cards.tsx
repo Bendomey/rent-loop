@@ -1,25 +1,53 @@
 import { StatCard } from '~/components/stat-card'
-import { formatAmount } from '~/lib/format-amount'
+import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 
-export function TenantPaymentSectionCards() {
+interface Props {
+	isLoading: boolean
+	totalAmount: number
+	paidAmount: number
+	outstandingAmount: number
+	totalInvoices: number
+}
+
+export function TenantPaymentSectionCards({
+	isLoading,
+	totalAmount,
+	paidAmount,
+	outstandingAmount,
+	totalInvoices,
+}: Props) {
 	return (
-		<div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+		<div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs sm:grid-cols-2">
 			<StatCard
-				title="Next Rent Due"
-				value={formatAmount(1200)}
-				description="Due on 1 Feb 2025"
+				title="Total Payments"
+				value={
+					isLoading ? '—' : formatAmount(convertPesewasToCedis(totalAmount))
+				}
+				description="Total invoiced for this tenant"
 			/>
 
 			<StatCard
-				title="Outstanding Rent"
-				value={formatAmount(3500)}
-				description="Overdue balance"
+				title="Outstanding Payments"
+				value={
+					isLoading
+						? '—'
+						: formatAmount(convertPesewasToCedis(outstandingAmount))
+				}
+				description="Issued & partially paid invoices"
 			/>
 
 			<StatCard
-				title="Total Paid"
-				value={formatAmount(1440)}
+				title="Paid Payments"
+				value={
+					isLoading ? '—' : formatAmount(convertPesewasToCedis(paidAmount))
+				}
 				description="Lifetime payments from this tenant"
+			/>
+
+			<StatCard
+				title="Total Invoices"
+				value={isLoading ? '—' : totalInvoices.toLocaleString()}
+				description="All invoices raised for this tenant"
 			/>
 		</div>
 	)

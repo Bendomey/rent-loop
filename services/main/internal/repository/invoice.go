@@ -92,6 +92,7 @@ type ListInvoicesFilter struct {
 	PayerType                  *string
 	PayerClientID              *string
 	PayerLeaseID               *string
+	PayerTenantID              *string
 	PayeeType                  *string
 	PayeeClientID              *string
 	PayeeTenantID              *string
@@ -113,6 +114,7 @@ func (r *invoiceRepository) List(ctx context.Context, filterQuery ListInvoicesFi
 		invoicePayerTypeScope(filterQuery.PayerType),
 		invoicePayerClientIDScope(filterQuery.PayerClientID),
 		invoicePayerLeaseIDScope(filterQuery.PayerLeaseID),
+		invoicePayerTenantIDScope(filterQuery.PayerTenantID),
 		invoicePayeeTypeScope(filterQuery.PayeeType),
 		invoicePayeeClientIDScope(filterQuery.PayeeClientID),
 		invoicePayeeTenantIDScope(filterQuery.PayeeTenantID),
@@ -154,6 +156,7 @@ func (r *invoiceRepository) Count(ctx context.Context, filterQuery ListInvoicesF
 			invoicePayerTypeScope(filterQuery.PayerType),
 			invoicePayerClientIDScope(filterQuery.PayerClientID),
 			invoicePayerLeaseIDScope(filterQuery.PayerLeaseID),
+			invoicePayerTenantIDScope(filterQuery.PayerTenantID),
 			invoicePayeeTypeScope(filterQuery.PayeeType),
 			invoicePayeeClientIDScope(filterQuery.PayeeClientID),
 			invoicePayeeTenantIDScope(filterQuery.PayeeTenantID),
@@ -279,6 +282,28 @@ func invoicePayerLeaseIDScope(payerLeaseID *string) func(db *gorm.DB) *gorm.DB {
 			return db
 		}
 		return db.Where("invoices.payer_lease_id = ?", *payerLeaseID)
+	}
+}
+
+// invoicePayerTenantIDScope filters invoices paid by any of a tenant's leases
+// in this property (a tenant can have more than one lease over time, e.g.
+// renewals or a unit change), mirroring invoiceTenantOwnerContextScope's
+// payer_lease_id / context_tenant_application_id fallback for application-stage
+// invoices (a tenant_application has no tenant_id of its own until it's
+// approved into a lease).
+func invoicePayerTenantIDScope(payerTenantID *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if payerTenantID == nil {
+			return db
+		}
+		return db.Where(
+			`invoices.payer_lease_id IN (SELECT id FROM leases WHERE tenant_id = ?)
+			 OR invoices.context_tenant_application_id IN (
+				SELECT tenant_application_id FROM leases WHERE tenant_id = ? AND tenant_application_id IS NOT NULL
+			 )`,
+			*payerTenantID,
+			*payerTenantID,
+		)
 	}
 }
 

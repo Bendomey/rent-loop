@@ -74,6 +74,23 @@ cube(`Invoices`, {
       title: `Invoice Status`,
     },
 
+    // Derived via the invoice's own lease/booking/tenant-application context,
+    // mirroring Payments.tenantId. tenant_applications has no tenant_id of its
+    // own (the tenant doesn't exist yet at application time) — a lease is the
+    // only bridge, created once the application is approved. So
+    // application-stage invoices (e.g. security deposit before approval) are
+    // resolved by looking up the lease that was later created from that
+    // application.
+    tenantId: {
+      sql: `COALESCE(
+        (SELECT l.tenant_id::text FROM leases l WHERE l.id = ${CUBE}.context_lease_id LIMIT 1),
+        (SELECT b.tenant_id::text FROM bookings b WHERE b.id = ${CUBE}.context_booking_id LIMIT 1),
+        (SELECT l.tenant_id::text FROM leases l WHERE l.tenant_application_id = ${CUBE}.context_tenant_application_id LIMIT 1)
+      )`,
+      type: `string`,
+      title: `Tenant ID`,
+    },
+
     contextType: {
       sql: `context_type`,
       type: `string`,

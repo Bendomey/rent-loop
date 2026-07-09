@@ -330,14 +330,31 @@ type ListInvoicesQuery struct {
 	PayerType                 *string   `json:"payer_type"                   query:"payer_type"`
 	PayerClientID             *string   `json:"payer_client_id"              query:"payer_client_id"`
 	PayerLeaseID              *string   `json:"payer_lease_id"               query:"payer_lease_id"`
+	PayerTenantID             *string   `json:"payer_tenant_id"              query:"payer_tenant_id"              description:"Filter invoices paid by any of this tenant's leases in the property"`
 	PayeeType                 *string   `json:"payee_type"                   query:"payee_type"`
 	PayeeClientID             *string   `json:"payee_client_id"              query:"payee_client_id"`
 	ContextType               *string   `json:"context_type"                 query:"context_type"`
 	ContextLeaseTerminationID *string   `json:"context_lease_termination_id" query:"context_lease_termination_id"`
-	Status                    *[]string `json:"status"                       query:"status"                       validate:"omitempty,dive,oneof=DRAFT ISSUED PARTIALLY_PAID PAID VOID"`
-	Active                    *bool     `json:"active"                       query:"active"                                                                                             description:"Filter invoices by active status. true for active invoices, false for VOID invoices"`
+	Status                    *[]string `json:"status"                       query:"status"                                                                                                                         validate:"omitempty,dive,oneof=DRAFT ISSUED PARTIALLY_PAID PAID VOID"`
+	Active                    *bool     `json:"active"                       query:"active"                       description:"Filter invoices by active status. true for active invoices, false for VOID invoices"`
 }
 
+// ListInvoices godoc
+//
+//	@Summary		List invoices (Admin)
+//	@Description	List invoices for a property (Admin)
+//	@Tags			Invoice
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			client_id	path		string																								true	"Client ID"
+//	@Param			property_id	path		string																								true	"Property ID"
+//	@Param			q			query		ListInvoicesQuery																					true	"Query parameters"
+//	@Success		200			{object}	object{data=object{rows=[]transformations.OutputInvoice,meta=lib.HTTPReturnPaginatedMetaResponse}}	"Invoices"
+//	@Failure		400			{object}	lib.HTTPError																						"Invalid query parameters"
+//	@Failure		401			{object}	string																								"Invalid or absent authentication token"
+//	@Failure		500			{object}	string																								"An unexpected error occurred"
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/invoices [get]
 func (h *InvoiceHandler) ListInvoices(w http.ResponseWriter, r *http.Request) {
 	filterQuery, filterErr := lib.GenerateQuery(r.URL.Query())
 	if filterErr != nil {
@@ -355,6 +372,7 @@ func (h *InvoiceHandler) ListInvoices(w http.ResponseWriter, r *http.Request) {
 		PayerType:                 lib.NullOrString(r.URL.Query().Get("payer_type")),
 		PayerClientID:             lib.NullOrString(r.URL.Query().Get("payer_client_id")),
 		PayerLeaseID:              lib.NullOrString(r.URL.Query().Get("payer_lease_id")),
+		PayerTenantID:             lib.NullOrString(r.URL.Query().Get("payer_tenant_id")),
 		PayeeType:                 lib.NullOrString(r.URL.Query().Get("payee_type")),
 		PayeeClientID:             lib.NullOrString(r.URL.Query().Get("payee_client_id")),
 		ContextType:               lib.NullOrString(r.URL.Query().Get("context_type")),

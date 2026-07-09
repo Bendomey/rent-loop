@@ -6,6 +6,7 @@ import { useCubeQuery, useGetAnalyticsToken } from '~/api/analytics'
 import {
 	Card,
 	CardDescription,
+	CardFooter,
 	CardHeader,
 	CardTitle,
 } from '~/components/ui/card'
@@ -139,6 +140,9 @@ export function TenantProfileModule({
 						)}
 					</CardTitle>
 				</CardHeader>
+				<CardFooter className="text-muted-foreground text-xs">
+					All-time successful payments made by this tenant for this property
+				</CardFooter>
 			</Card>
 			<div className="col-span-2 grid grid-cols-2 gap-2 lg:col-span-1 lg:grid-cols-3">
 				{isLease ? (

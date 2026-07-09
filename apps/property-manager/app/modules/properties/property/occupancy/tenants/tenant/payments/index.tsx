@@ -11,8 +11,8 @@ import { useMemo } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
 import { TenantPaymentSectionCards } from './cards'
 import { TenantPaymentController } from './controller'
+import { useCubeQuery, useGetAnalyticsToken } from '~/api/analytics'
 import { useGetInvoices } from '~/api/invoices'
-import { useGetTenantLeases } from '~/api/leases'
 import { DataTable } from '~/components/datatable'
 import { Badge } from '~/components/ui/badge'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
@@ -41,21 +41,13 @@ export function TenantPaymentsModule() {
 		: PAGINATION_DEFAULTS.PER_PAGE
 	const status = searchParams.get('status') ?? undefined
 
-	const { data: leasesData } = useGetTenantLeases(
-		safeString(clientUser?.client_id),
-		safeString(clientUserProperty?.property_id),
-		safeString(tenantId),
-		{ filters: {}, pagination: { page: 1, per: 1 } },
-	)
-	const leaseId = leasesData?.rows?.[0]?.id
-
 	const { data, isPending, isRefetching, error, refetch } = useGetInvoices(
 		safeString(clientUser?.client_id),
 		safeString(clientUserProperty?.property_id),
 		{
 			filters: {
-				status: status,
-				payer_lease_id: leaseId,
+				status,
+				payer_tenant_id: safeString(tenantId),
 			},
 			pagination: { page, per },
 			sorter: { sort: 'desc', sort_by: 'created_at' },
@@ -63,6 +55,44 @@ export function TenantPaymentsModule() {
 	)
 
 	const isLoading = isPending || isRefetching
+
+	// Stats are sourced from Cube (all-time, unfiltered by status/page) rather
+	// than the paginated invoice list above.
+	const { data: token } = useGetAnalyticsToken(
+		safeString(clientUser?.client_id),
+	)
+	const statsQuery = useCubeQuery<{
+		'Invoices.totalAmount': string | null
+		'Invoices.paidAmount': string | null
+		'Invoices.outstandingAmount': string | null
+		'Invoices.count': string | null
+	}>(token, ['tenant-invoice-stats', safeString(tenantId)], {
+		measures: [
+			'Invoices.totalAmount',
+			'Invoices.paidAmount',
+			'Invoices.outstandingAmount',
+			'Invoices.count',
+		],
+		filters: [
+			{
+				member: 'Invoices.tenantId',
+				operator: 'equals',
+				values: [safeString(tenantId)],
+			},
+			{
+				member: 'Invoices.propertyId',
+				operator: 'equals',
+				values: [safeString(clientUserProperty?.property_id)],
+			},
+		],
+	})
+	const statsRow = statsQuery.data?.[0]
+	const totalAmount = Number(statsRow?.['Invoices.totalAmount'] ?? 0)
+	const paidAmount = Number(statsRow?.['Invoices.paidAmount'] ?? 0)
+	const outstandingAmount = Number(
+		statsRow?.['Invoices.outstandingAmount'] ?? 0,
+	)
+	const totalInvoices = Number(statsRow?.['Invoices.count'] ?? 0)
 
 	const columns: ColumnDef<Invoice>[] = useMemo(() => {
 		return [
@@ -171,7 +201,13 @@ export function TenantPaymentsModule() {
 				</TypographyMuted>
 			</div>
 
-			<TenantPaymentSectionCards />
+			<TenantPaymentSectionCards
+				isLoading={statsQuery.isPending}
+				totalAmount={totalAmount}
+				paidAmount={paidAmount}
+				outstandingAmount={outstandingAmount}
+				totalInvoices={totalInvoices}
+			/>
 
 			<div className="bg-background space-y-5 rounded-lg border p-3 sm:p-5">
 				<TenantPaymentController isLoading={isLoading} refetch={refetch} />
