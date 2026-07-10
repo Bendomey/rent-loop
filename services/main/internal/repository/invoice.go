@@ -100,7 +100,7 @@ type ListInvoicesFilter struct {
 	ContextLeaseTerminationID  *string
 	Status                     *[]string
 	Active                     *bool
-	PropertyID                 *string
+	PropertyIDs                *[]string
 	ClientID                   *string
 	ContextLeaseID             *string
 	ContextTenantApplicationID *string
@@ -124,7 +124,7 @@ func (r *invoiceRepository) List(ctx context.Context, filterQuery ListInvoicesFi
 		DateRangeScope("invoices", filterQuery.DateRange),
 		SearchScope("invoices", filterQuery.Search),
 		invoiceActiveScope(filterQuery.Active),
-		invoicePropertyIDScope(filterQuery.PropertyID),
+		invoicePropertyIDsScope(filterQuery.PropertyIDs),
 		invoiceClientIDScope(filterQuery.ClientID),
 		invoiceLeaseContextScope(filterQuery.ContextLeaseID, filterQuery.ContextTenantApplicationID),
 
@@ -163,7 +163,7 @@ func (r *invoiceRepository) Count(ctx context.Context, filterQuery ListInvoicesF
 			invoiceContextTypeScope(filterQuery.ContextType),
 			invoiceStatusScope(filterQuery.Status),
 			invoiceActiveScope(filterQuery.Active),
-			invoicePropertyIDScope(filterQuery.PropertyID),
+			invoicePropertyIDsScope(filterQuery.PropertyIDs),
 			invoiceClientIDScope(filterQuery.ClientID),
 			invoiceLeaseContextScope(filterQuery.ContextLeaseID, filterQuery.ContextTenantApplicationID),
 
@@ -352,12 +352,12 @@ func invoiceStatusScope(statuses *[]string) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
-func invoicePropertyIDScope(propertyID *string) func(db *gorm.DB) *gorm.DB {
+func invoicePropertyIDsScope(propertyIDs *[]string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		if propertyID == nil {
+		if propertyIDs == nil {
 			return db
 		}
-		return db.Where("invoices.property_id = ?", *propertyID)
+		return db.Where("invoices.property_id IN (?)", *propertyIDs)
 	}
 }
 

@@ -5679,8 +5679,20 @@ paths:
       - Analytics
   /api/v1/admin/clients/{client_id}/announcements:
     get:
-      description: List announcements for the current client
+      description: List announcements. When called via /properties/{property_id}/announcements,
+        scoped to exactly that property (existing behavior). When called via /announcements
+        (no property_id in the URL — used by mobile), includes broadcast announcements
+        plus every property-specific announcement the caller has access to; optionally
+        narrowed with one or more property_id query values.
       parameters:
+      - collectionFormat: multi
+        description: Property ID(s) to narrow results to (only applies to the /announcements
+          route); omit to see broadcast plus every property the caller can access
+        in: query
+        items:
+          type: string
+        name: property_id
+        type: array
       - in: query
         name: end_date
         type: string
@@ -7128,6 +7140,513 @@ paths:
       summary: Update an existing document (Admin)
       tags:
       - Documents
+  /api/v1/admin/clients/{client_id}/expenses:
+    get:
+      consumes:
+      - application/json
+      description: List expenses across every property the caller has access to, optionally
+        narrowed with one or more property_id query values
+      parameters:
+      - collectionFormat: multi
+        description: Property ID(s) to narrow results to; omit to see every property
+          the caller can access
+        in: query
+        items:
+          type: string
+        name: property_id
+        type: array
+      - enum:
+        - LEASE
+        - MAINTENANCE
+        in: query
+        name: context_type
+        type: string
+      - in: query
+        name: end_date
+        type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Expenses
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputExpense'
+                    type: array
+                type: object
+            type: object
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "403":
+          description: Requested property_id is outside the caller's access scope
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List expenses across properties (Admin, mobile)
+      tags:
+      - Expenses
+  /api/v1/admin/clients/{client_id}/invoices:
+    get:
+      consumes:
+      - application/json
+      description: List invoices across every property the caller has access to, optionally
+        narrowed with one or more property_id query values
+      parameters:
+      - collectionFormat: multi
+        description: Property ID(s) to narrow results to; omit to see every property
+          the caller can access
+        in: query
+        items:
+          type: string
+        name: property_id
+        type: array
+      - in: query
+        name: active
+        type: boolean
+      - in: query
+        name: context_lease_termination_id
+        type: string
+      - in: query
+        name: context_type
+        type: string
+      - in: query
+        name: end_date
+        type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - in: query
+        name: payee_client_id
+        type: string
+      - in: query
+        name: payee_type
+        type: string
+      - in: query
+        name: payer_client_id
+        type: string
+      - in: query
+        name: payer_lease_id
+        type: string
+      - in: query
+        name: payer_tenant_id
+        type: string
+      - in: query
+        name: payer_type
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: status
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputInvoice'
+                    type: array
+                type: object
+            type: object
+        "400":
+          description: An error occurred while filtering invoices
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Absent or invalid authentication token
+          schema:
+            type: string
+        "403":
+          description: Requested property_id is outside the caller's access scope
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List invoices across properties (Admin, mobile)
+      tags:
+      - Invoice
+  /api/v1/admin/clients/{client_id}/leases:
+    get:
+      consumes:
+      - application/json
+      description: List leases across every property the caller has access to, optionally
+        narrowed with one or more property_id query values
+      parameters:
+      - collectionFormat: multi
+        description: Property ID(s) to narrow results to; omit to see every property
+          the caller can access
+        in: query
+        items:
+          type: string
+        name: property_id
+        type: array
+      - in: query
+        name: end_date
+        type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
+      - enum:
+        - MANUAL
+        - ONLINE
+        example: MANUAL
+        in: query
+        name: lease_agreement_document_mode
+        type: string
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - example: b4d0243c-6581-4104-8185-d83a45ebe41b
+        in: query
+        name: parent_lease_id
+        type: string
+      - enum:
+        - HOURLY
+        - DAILY
+        - MONTHLY
+        - QUARTERLY
+        - BIANNUALLY
+        - ANNUALLY
+        - ONETIME
+        example: HOURLY
+        in: query
+        name: payment_frequency
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      - enum:
+        - Lease.Status.Pending
+        - Lease.Status.Active
+        - Lease.Status.Terminated
+        - Lease.Status.Completed
+        - Lease.Status.Cancelled
+        example: Lease.Status.Pending
+        in: query
+        name: status
+        type: string
+      - enum:
+        - HOURS
+        - DAYS
+        - MONTHS
+        example: HOURS
+        in: query
+        name: stay_duration_frequency
+        type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: unit_ids
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputAdminLease'
+                    type: array
+                type: object
+            type: object
+        "400":
+          description: An error occurred while filtering leases
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Absent or invalid authentication token
+          schema:
+            type: string
+        "403":
+          description: Requested property_id is outside the caller's access scope
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List leases across properties (Admin, mobile)
+      tags:
+      - Lease
+  /api/v1/admin/clients/{client_id}/maintenance-requests:
+    get:
+      consumes:
+      - application/json
+      description: List maintenance requests across every property the caller has
+        access to, optionally narrowed with one or more property_id query values
+      parameters:
+      - collectionFormat: multi
+        description: Property ID(s) to narrow results to; omit to see every property
+          the caller can access
+        in: query
+        items:
+          type: string
+        name: property_id
+        type: array
+      - in: query
+        name: assigned_manager_id
+        type: string
+      - in: query
+        name: assigned_worker_id
+        type: string
+      - in: query
+        name: category
+        type: string
+      - in: query
+        name: end_date
+        type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
+      - in: query
+        name: lease_id
+        type: string
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: priority
+        type: string
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: status
+        type: array
+      - in: query
+        name: tenant_id
+        type: string
+      - in: query
+        name: unit_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Maintenance requests
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.AdminOutputMaintenanceRequest'
+                    type: array
+                type: object
+            type: object
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "403":
+          description: Requested property_id is outside the caller's access scope
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List maintenance requests across properties (Admin, mobile)
+      tags:
+      - MaintenanceRequests
   /api/v1/admin/clients/{client_id}/payment-accounts:
     get:
       consumes:
@@ -14331,6 +14850,115 @@ paths:
       summary: Get property by slug (Admin)
       tags:
       - Properties
+  /api/v1/admin/clients/{client_id}/tenants:
+    get:
+      consumes:
+      - application/json
+      description: List unique tenants across every property the caller has access
+        to, optionally narrowed with one or more property_id query values. status=ACTIVE
+        means tenant has at least one active lease; status=EXPIRED means tenant has
+        no active leases but has past leases.
+      parameters:
+      - collectionFormat: multi
+        description: Property ID(s) to narrow results to; omit to see every property
+          the caller can access
+        in: query
+        items:
+          type: string
+        name: property_id
+        type: array
+      - in: query
+        name: end_date
+        type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      - enum:
+        - ACTIVE
+        - EXPIRED
+        example: ACTIVE
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputAdminTenant'
+                    type: array
+                type: object
+            type: object
+        "400":
+          description: An error occurred while filtering tenants
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Absent or invalid authentication token
+          schema:
+            type: string
+        "403":
+          description: Requested property_id is outside the caller's access scope
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List tenants across properties (Admin, mobile)
+      tags:
+      - Tenants
   /api/v1/admin/clients/apply:
     post:
       consumes:

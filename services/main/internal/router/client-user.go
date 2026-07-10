@@ -54,8 +54,6 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 			// user-scoped routes (no client_id needed in URL)
 			r.Patch("/v1/tenants/{tenant_id}", handlers.TenantHandler.UpdateTenant)
 
-			// client-scoped routes — require valid client membership
-
 			r.Route("/v1/notifications", func(r chi.Router) {
 				r.Get("/unread-count", handlers.NotificationHandler.PMGetUnreadCount)
 				r.Post("/read-all", handlers.NotificationHandler.PMMarkAllRead)
@@ -63,6 +61,7 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 				r.Post("/{notification_id}/read", handlers.NotificationHandler.PMMarkNotificationRead)
 			})
 
+			// client-scoped routes — require valid client membership
 			r.Route("/v1/admin/clients/{client_id}", func(r chi.Router) {
 				r.Use(middlewares.ValidateClientMembershipMiddleware(appCtx))
 
@@ -396,11 +395,28 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 					})
 				})
 
-				// global announcements
+				// cross-property (mobile) routes — property_id is an optional, repeatable
+				// query filter here instead of a required URL segment; results are always
+				// bounded by InjectPropertyAccessScopeMiddleware's resolved access scope.
+				r.Group(func(r chi.Router) {
+					r.Use(middlewares.InjectPropertyAccessScopeMiddleware(appCtx))
+
+					r.Get("/leases", handlers.LeaseHandler.ListLeasesAcrossProperties)
+					r.Get("/tenants", handlers.TenantHandler.ListTenantsAcrossProperties)
+					r.Get("/invoices", handlers.InvoiceHandler.ListInvoicesAcrossProperties)
+					r.Get("/maintenance-requests", handlers.MaintenanceRequestHandler.ListAcrossProperties)
+					r.Get("/expenses", handlers.ExpenseHandler.ListExpensesAcrossProperties)
+				})
+
+				// global announcements. Only GET / (the cross-property/mobile list) needs
+				// InjectPropertyAccessScopeMiddleware — scoped to just that route rather than
+				// the whole group, so writes/publish/schedule don't pay for an unused
+				// ClientUserProperty lookup on every request.
 				r.Route("/announcements", func(r chi.Router) {
 					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
 						Post("/", handlers.AnnouncementHandler.CreateAnnouncement)
-					r.Get("/", handlers.AnnouncementHandler.ListAnnouncements)
+					r.With(middlewares.InjectPropertyAccessScopeMiddleware(appCtx)).
+						Get("/", handlers.AnnouncementHandler.ListAnnouncements)
 					r.Route("/{announcement_id}", func(r chi.Router) {
 						r.Get("/", handlers.AnnouncementHandler.GetAnnouncementById)
 						r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).

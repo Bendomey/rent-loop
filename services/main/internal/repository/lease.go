@@ -88,7 +88,8 @@ type ListLeasesFilter struct {
 	lib.FilterQuery
 	TenantID                   *string
 	TenantAccountID            *string
-	PropertyID                 *string
+	PropertyIDs                *[]string
+	ClientID                   *string
 	Status                     *string
 	ParentLeaseID              *string
 	PaymentFrequency           *string
@@ -103,7 +104,7 @@ func (r *leaseRepository) List(ctx context.Context, filterQuery ListLeasesFilter
 	db := r.DB.WithContext(ctx).Scopes(
 		leaseFilterScope("tenant_id", filterQuery.TenantID),
 		tenantAccountLeasesScope(filterQuery.TenantAccountID),
-		propertyLeasesScope(filterQuery.PropertyID),
+		propertyLeasesScope(filterQuery.PropertyIDs, filterQuery.ClientID),
 		leaseFilterScope("status", filterQuery.Status),
 		leaseFilterScope("parent_lease_id", filterQuery.ParentLeaseID),
 		leaseFilterScope("payment_frequency", filterQuery.PaymentFrequency),
@@ -137,7 +138,7 @@ func (r *leaseRepository) Count(ctx context.Context, filterQuery ListLeasesFilte
 	result := r.DB.WithContext(ctx).Model(&models.Lease{}).Scopes(
 		leaseFilterScope("tenant_id", filterQuery.TenantID),
 		tenantAccountLeasesScope(filterQuery.TenantAccountID),
-		propertyLeasesScope(filterQuery.PropertyID),
+		propertyLeasesScope(filterQuery.PropertyIDs, filterQuery.ClientID),
 		leaseFilterScope("status", filterQuery.Status),
 		leaseFilterScope("parent_lease_id", filterQuery.ParentLeaseID),
 		leaseFilterScope("payment_frequency", filterQuery.PaymentFrequency),
@@ -174,13 +175,23 @@ func (r *leaseRepository) CountActiveByUnitID(ctx context.Context, unitID string
 	return count, nil
 }
 
-func propertyLeasesScope(propertyID *string) func(db *gorm.DB) *gorm.DB {
+// propertyLeasesScope resolves the property/client filter for leases. propertyIDs is an
+// IN-list (a one-element slice for an exact match — the nested /properties/{property_id}
+// route — or many for the cross-property route) and takes precedence when set; clientID is
+// the unrestricted-for-client case (join through units -> properties, without enumerating
+// every property). nil/nil means no filter at all.
+func propertyLeasesScope(propertyIDs *[]string, clientID *string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		if propertyID == nil {
-			return db
+		if propertyIDs != nil {
+			return db.Joins("INNER JOIN units ON leases.unit_id = units.id").
+				Where("units.property_id IN (?)", *propertyIDs)
 		}
-
-		return db.Joins("INNER JOIN units ON leases.unit_id = units.id").Where("units.property_id = ?", propertyID)
+		if clientID != nil {
+			return db.Joins("INNER JOIN units ON leases.unit_id = units.id").
+				Joins("INNER JOIN properties ON units.property_id = properties.id").
+				Where("properties.client_id = ?", *clientID)
+		}
+		return db
 	}
 }
 

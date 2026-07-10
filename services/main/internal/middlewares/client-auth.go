@@ -174,6 +174,54 @@ func ValidatePropertyAccessMiddleware(appCtx pkg.AppContext) func(http.Handler) 
 	}
 }
 
+// InjectPropertyAccessScopeMiddleware resolves which properties the current client user
+// can see, for the cross-property "global" list routes (as opposed to
+// ValidatePropertyAccessMiddleware, which checks access to exactly one property_id taken
+// from the URL). OWNER gets unrestricted access to every property under their client;
+// ADMIN/STAFF are limited to whatever ClientUserProperty rows they've been explicitly
+// assigned — resolved fresh on every request so a revoked/granted assignment takes effect
+// immediately, without needing a new login.
+func InjectPropertyAccessScopeMiddleware(appCtx pkg.AppContext) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			clientCtx, ok := lib.ClientUserFromContext(r.Context())
+			if !ok || clientCtx == nil {
+				http.Error(w, "AuthorizationFailed", http.StatusUnauthorized)
+				return
+			}
+
+			if clientCtx.Role == "OWNER" {
+				ctx := lib.WithPropertyAccessScope(r.Context(), &lib.PropertyAccessScope{
+					ClientID:     clientCtx.ClientID,
+					Unrestricted: true,
+				})
+				next.ServeHTTP(w, r.WithContext(ctx))
+				return
+			}
+
+			var cups []models.ClientUserProperty
+			result := appCtx.DB.Select("property_id").
+				Where("client_user_id = ? AND deleted_at IS NULL", clientCtx.ID).
+				Find(&cups)
+			if result.Error != nil {
+				http.Error(w, "InternalServerError", http.StatusInternalServerError)
+				return
+			}
+
+			propertyIDs := make([]string, 0, len(cups))
+			for _, cup := range cups {
+				propertyIDs = append(propertyIDs, cup.PropertyID)
+			}
+
+			ctx := lib.WithPropertyAccessScope(r.Context(), &lib.PropertyAccessScope{
+				ClientID:    clientCtx.ClientID,
+				PropertyIDs: propertyIDs,
+			})
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
+}
+
 func ValidateRoleClientUserPropertyMiddleware(
 	_ pkg.AppContext,
 	allowedRoles ...string,

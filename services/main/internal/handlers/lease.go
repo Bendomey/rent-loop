@@ -170,11 +170,12 @@ func (h *LeaseHandler) ListLeasesByTenant(w http.ResponseWriter, r *http.Request
 
 	tenantID := chi.URLParam(r, "tenant_id")
 	propertyID := chi.URLParam(r, "property_id")
+	propertyIDs := []string{propertyID}
 
 	input := repository.ListLeasesFilter{
 		FilterQuery:                *filterQuery,
 		TenantID:                   &tenantID,
-		PropertyID:                 &propertyID,
+		PropertyIDs:                &propertyIDs,
 		Status:                     lib.NullOrString(r.URL.Query().Get("status")),
 		ParentLeaseID:              lib.NullOrString(r.URL.Query().Get("parent_lease_id")),
 		PaymentFrequency:           lib.NullOrString(r.URL.Query().Get("payment_frequency")),
@@ -235,10 +236,11 @@ func (h *LeaseHandler) ListLeasesByProperty(w http.ResponseWriter, r *http.Reque
 	}
 
 	propertyID := chi.URLParam(r, "property_id")
+	propertyIDs := []string{propertyID}
 
 	input := repository.ListLeasesFilter{
 		FilterQuery:                *filterQuery,
-		PropertyID:                 &propertyID,
+		PropertyIDs:                &propertyIDs,
 		Status:                     lib.NullOrString(r.URL.Query().Get("status")),
 		ParentLeaseID:              lib.NullOrString(r.URL.Query().Get("parent_lease_id")),
 		PaymentFrequency:           lib.NullOrString(r.URL.Query().Get("payment_frequency")),
@@ -269,6 +271,74 @@ func (h *LeaseHandler) ListLeasesByProperty(w http.ResponseWriter, r *http.Reque
 
 	json.NewEncoder(w).
 		Encode(lib.ReturnListResponse(filterQuery, leasesTransformed, leasesCount))
+}
+
+// ListLeasesAcrossProperties godoc
+//
+//	@Summary		List leases across properties (Admin, mobile)
+//	@Description	List leases across every property the caller has access to, optionally narrowed with one or more property_id query values
+//	@Tags			Lease
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			property_id	query		[]string		false	"Property ID(s) to narrow results to; omit to see every property the caller can access"	collectionFormat(multi)
+//	@Param			q			query		ListLeasesQuery	true	"Leases"
+//	@Success		200			{object}	object{data=object{rows=[]transformations.OutputAdminLease,meta=lib.HTTPReturnPaginatedMetaResponse}}
+//	@Failure		400			{object}	lib.HTTPError	"An error occurred while filtering leases"
+//	@Failure		401			{object}	string			"Absent or invalid authentication token"
+//	@Failure		403			{object}	string			"Requested property_id is outside the caller's access scope"
+//	@Failure		500			{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/admin/clients/{client_id}/leases [get]
+func (h *LeaseHandler) ListLeasesAcrossProperties(w http.ResponseWriter, r *http.Request) {
+	filterQuery, filterQueryErr := lib.GenerateQuery(r.URL.Query())
+	if filterQueryErr != nil {
+		HandleErrorResponse(w, filterQueryErr)
+		return
+	}
+
+	isFilterQueryPassedValidation := lib.ValidateRequest(h.appCtx.Validator, filterQuery, w)
+	if !isFilterQueryPassedValidation {
+		return
+	}
+
+	propertyIDs, unrestrictedClientID, scopeOk := ResolvePropertyScopeFilter(w, r, h.appCtx)
+	if !scopeOk {
+		return
+	}
+
+	input := repository.ListLeasesFilter{
+		FilterQuery:                *filterQuery,
+		PropertyIDs:                propertyIDs,
+		ClientID:                   unrestrictedClientID,
+		Status:                     lib.NullOrString(r.URL.Query().Get("status")),
+		ParentLeaseID:              lib.NullOrString(r.URL.Query().Get("parent_lease_id")),
+		PaymentFrequency:           lib.NullOrString(r.URL.Query().Get("payment_frequency")),
+		StayDurationFrequency:      lib.NullOrString(r.URL.Query().Get("stay_duration_frequency")),
+		LeaseAgreementDocumentMode: lib.NullOrString(r.URL.Query().Get("lease_agreement_document_mode")),
+		UnitIds:                    lib.NullOrStringArray(r.URL.Query()["unit_ids"]),
+	}
+
+	leases, leasesErr := h.service.ListLeases(r.Context(), input)
+	if leasesErr != nil {
+		HandleErrorResponse(w, leasesErr)
+		return
+	}
+
+	leasesCount, leasesCountErr := h.service.CountLeases(r.Context(), input)
+	if leasesCountErr != nil {
+		HandleErrorResponse(w, leasesCountErr)
+		return
+	}
+
+	leasesTransformed := make([]any, 0)
+	for _, lease := range leases {
+		leasesTransformed = append(
+			leasesTransformed,
+			transformations.DBAdminLeaseToRest(&lease),
+		)
+	}
+
+	json.NewEncoder(w).Encode(lib.ReturnListResponse(filterQuery, leasesTransformed, leasesCount))
 }
 
 // ListLeasesByTenantAccount godoc

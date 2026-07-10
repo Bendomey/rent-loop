@@ -229,15 +229,16 @@ type ListAnnouncementsFilterRequest struct {
 // ListAnnouncements godoc
 //
 //	@Summary		List announcements (Admin)
-//	@Description	List announcements for the current client
+//	@Description	List announcements. When called via /properties/{property_id}/announcements, scoped to exactly that property (existing behavior). When called via /announcements (no property_id in the URL — used by mobile), includes broadcast announcements plus every property-specific announcement the caller has access to; optionally narrowed with one or more property_id query values.
 //	@Tags			Announcements
 //	@Security		BearerAuth
 //	@Produce		json
-//	@Param			q	query		ListAnnouncementsFilterRequest	false	"Filters"
-//	@Success		200	{object}	object{data=object{rows=[]transformations.AdminOutputAnnouncement,meta=lib.HTTPReturnPaginatedMetaResponse}}
-//	@Failure		400	{object}	lib.HTTPError
-//	@Failure		401	{object}	string
-//	@Failure		500	{object}	string
+//	@Param			property_id	query		[]string						false	"Property ID(s) to narrow results to (only applies to the /announcements route); omit to see broadcast plus every property the caller can access"	collectionFormat(multi)
+//	@Param			q			query		ListAnnouncementsFilterRequest	false	"Filters"
+//	@Success		200			{object}	object{data=object{rows=[]transformations.AdminOutputAnnouncement,meta=lib.HTTPReturnPaginatedMetaResponse}}
+//	@Failure		400			{object}	lib.HTTPError
+//	@Failure		401			{object}	string
+//	@Failure		500			{object}	string
 //	@Router			/api/v1/admin/clients/{client_id}/announcements [get]
 func (h *AnnouncementHandler) ListAnnouncements(w http.ResponseWriter, r *http.Request) {
 	currentUser, currentUserOk := lib.ClientUserFromContext(r.Context())
@@ -267,19 +268,32 @@ func (h *AnnouncementHandler) ListAnnouncements(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	// Optional property scoping via URL param
-	var propertyID lib.Optional[string]
-	if pid := chi.URLParam(r, "property_id"); pid != "" {
-		propertyID = lib.Optional[string]{Value: &pid, IsSet: true}
-	} else {
-		propertyID = lib.Optional[string]{IsSet: true, Value: nil} // Set with nil value to filter for announcements with no property_id (i.e. broadcast)
-	}
+	var input repository.ListAnnouncementsFilter
 
-	input := repository.ListAnnouncementsFilter{
-		ClientID:   &clientID,
-		PropertyID: propertyID,
-		Status:     filters.Status,
-		Type:       filters.Type,
+	if pid := chi.URLParam(r, "property_id"); pid != "" {
+		// Nested /properties/{property_id}/announcements route: exact match to that
+		// property, access to it already gated by ValidatePropertyAccessMiddleware.
+		input = repository.ListAnnouncementsFilter{
+			ClientID:   &clientID,
+			PropertyID: lib.Optional[string]{Value: &pid, IsSet: true},
+			Status:     filters.Status,
+			Type:       filters.Type,
+		}
+	} else {
+		// No property_id in the URL: this is the cross-property (mobile) route. Previously
+		// this branch always filtered to broadcast-only; now it includes broadcast plus
+		// every property-specific announcement the caller has access to (nil scope = OWNER
+		// = everything under the client; a resolved set for ADMIN/STAFF).
+		propertyAccessIDs, _, scopeOk := ResolvePropertyScopeFilter(w, r, h.appCtx)
+		if !scopeOk {
+			return
+		}
+		input = repository.ListAnnouncementsFilter{
+			ClientID:          &clientID,
+			PropertyAccessIDs: propertyAccessIDs,
+			Status:            filters.Status,
+			Type:              filters.Type,
+		}
 	}
 
 	announcements, announcementsErr := h.service.List(r.Context(), *filterQuery, input)

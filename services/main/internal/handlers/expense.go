@@ -260,8 +260,72 @@ func (h *ExpenseHandler) ListPropertyExpenses(w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	propertyID := chi.URLParam(r, "property_id")
+	propertyIDs := []string{propertyID}
 	filters := repository.ListExpensesFilter{
-		PropertyID: chi.URLParam(r, "property_id"),
+		PropertyIDs: &propertyIDs,
+	}
+
+	expenses, listErr := h.service.ListExpenses(r.Context(), *filterQuery, filters)
+	count, countErr := h.service.CountExpenses(r.Context(), *filterQuery, filters)
+	if listErr != nil {
+		HandleErrorResponse(w, listErr)
+		return
+	}
+	if countErr != nil {
+		HandleErrorResponse(w, countErr)
+		return
+	}
+
+	rows := make([]any, len(expenses))
+	for i := range expenses {
+		rows[i] = transformations.DBExpenseToRest(&expenses[i])
+	}
+
+	json.NewEncoder(w).Encode(lib.ReturnListResponse(filterQuery, rows, count))
+}
+
+// ListExpensesAcrossProperties godoc
+//
+//	@Summary		List expenses across properties (Admin, mobile)
+//	@Description	List expenses across every property the caller has access to, optionally narrowed with one or more property_id query values
+//	@Tags			Expenses
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			property_id	query		[]string																							false	"Property ID(s) to narrow results to; omit to see every property the caller can access"	collectionFormat(multi)
+//	@Param			q			query		ListExpensesQuery																					false	"Query parameters"
+//	@Success		200			{object}	object{data=object{rows=[]transformations.OutputExpense,meta=lib.HTTPReturnPaginatedMetaResponse}}	"Expenses"
+//	@Failure		401			{object}	string																								"Invalid or absent authentication token"
+//	@Failure		403			{object}	string																								"Requested property_id is outside the caller's access scope"
+//	@Failure		500			{object}	string																								"An unexpected error occurred"
+//	@Router			/api/v1/admin/clients/{client_id}/expenses [get]
+func (h *ExpenseHandler) ListExpensesAcrossProperties(w http.ResponseWriter, r *http.Request) {
+	_, ok := lib.ClientUserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var listQuery ListExpensesQuery
+	if !lib.ValidateRequest(h.appCtx.Validator, listQuery, w) {
+		return
+	}
+
+	filterQuery, err := lib.GenerateQuery(r.URL.Query())
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	propertyIDs, unrestrictedClientID, scopeOk := ResolvePropertyScopeFilter(w, r, h.appCtx)
+	if !scopeOk {
+		return
+	}
+
+	filters := repository.ListExpensesFilter{
+		PropertyIDs: propertyIDs,
+		ClientID:    unrestrictedClientID,
 	}
 
 	expenses, listErr := h.service.ListExpenses(r.Context(), *filterQuery, filters)
@@ -317,8 +381,10 @@ func (h *ExpenseHandler) ListLeaseExpenses(w http.ResponseWriter, r *http.Reques
 	}
 
 	leaseID := chi.URLParam(r, "lease_id")
+	propertyID := chi.URLParam(r, "property_id")
+	propertyIDs := []string{propertyID}
 	filters := repository.ListExpensesFilter{
-		PropertyID:     chi.URLParam(r, "property_id"),
+		PropertyIDs:    &propertyIDs,
 		ContextLeaseID: &leaseID,
 	}
 
@@ -375,8 +441,10 @@ func (h *ExpenseHandler) ListMRExpenses(w http.ResponseWriter, r *http.Request) 
 	}
 
 	mrID := chi.URLParam(r, "maintenance_request_id")
+	propertyID := chi.URLParam(r, "property_id")
+	propertyIDs := []string{propertyID}
 	filters := repository.ListExpensesFilter{
-		PropertyID:                  chi.URLParam(r, "property_id"),
+		PropertyIDs:                 &propertyIDs,
 		ContextMaintenanceRequestID: &mrID,
 	}
 
