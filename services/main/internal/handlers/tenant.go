@@ -129,10 +129,74 @@ func (h *TenantHandler) ListTenantsByProperty(w http.ResponseWriter, r *http.Req
 	}
 
 	propertyID := chi.URLParam(r, "property_id")
+	propertyIDs := []string{propertyID}
 
 	input := repository.ListTenantsByPropertyFilter{
 		FilterQuery: *filterQuery,
-		PropertyID:  &propertyID,
+		PropertyIDs: &propertyIDs,
+		Status:      lib.NullOrString(r.URL.Query().Get("status")),
+	}
+
+	tenants, tenantsErr := h.service.ListTenantsByProperty(r.Context(), input)
+	if tenantsErr != nil {
+		HandleErrorResponse(w, tenantsErr)
+		return
+	}
+
+	tenantsCount, tenantsCountErr := h.service.CountTenantsByProperty(r.Context(), input)
+	if tenantsCountErr != nil {
+		HandleErrorResponse(w, tenantsCountErr)
+		return
+	}
+
+	tenantsTransformed := make([]any, 0)
+	for _, tenant := range *tenants {
+		tenantsTransformed = append(
+			tenantsTransformed,
+			transformations.DBAdminTenantToRestWithRecentActivity(&tenant),
+		)
+	}
+
+	json.NewEncoder(w).Encode(lib.ReturnListResponse(filterQuery, tenantsTransformed, tenantsCount))
+}
+
+// ListTenantsAcrossProperties godoc
+//
+//	@Summary		List tenants across properties (Admin, mobile)
+//	@Description	List unique tenants across every property the caller has access to, optionally narrowed with one or more property_id query values. status=ACTIVE means tenant has at least one active lease; status=EXPIRED means tenant has no active leases but has past leases.
+//	@Tags			Tenants
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			property_id	query		[]string					false	"Property ID(s) to narrow results to; omit to see every property the caller can access"	collectionFormat(multi)
+//	@Param			q			query		ListTenantsByPropertyQuery	true	"Filter options"
+//	@Success		200			{object}	object{data=object{rows=[]transformations.OutputAdminTenant,meta=lib.HTTPReturnPaginatedMetaResponse}}
+//	@Failure		400			{object}	lib.HTTPError	"An error occurred while filtering tenants"
+//	@Failure		401			{object}	string			"Absent or invalid authentication token"
+//	@Failure		403			{object}	string			"Requested property_id is outside the caller's access scope"
+//	@Failure		500			{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/admin/clients/{client_id}/tenants [get]
+func (h *TenantHandler) ListTenantsAcrossProperties(w http.ResponseWriter, r *http.Request) {
+	filterQuery, filterQueryErr := lib.GenerateQuery(r.URL.Query())
+	if filterQueryErr != nil {
+		HandleErrorResponse(w, filterQueryErr)
+		return
+	}
+
+	isFilterQueryPassedValidation := lib.ValidateRequest(h.appCtx.Validator, filterQuery, w)
+	if !isFilterQueryPassedValidation {
+		return
+	}
+
+	propertyIDs, unrestrictedClientID, scopeOk := ResolvePropertyScopeFilter(w, r, h.appCtx)
+	if !scopeOk {
+		return
+	}
+
+	input := repository.ListTenantsByPropertyFilter{
+		FilterQuery: *filterQuery,
+		PropertyIDs: propertyIDs,
+		ClientID:    unrestrictedClientID,
 		Status:      lib.NullOrString(r.URL.Query().Get("status")),
 	}
 

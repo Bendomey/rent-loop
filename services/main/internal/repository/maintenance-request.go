@@ -75,7 +75,7 @@ type GetMaintenanceRequestQuery struct {
 
 type ListMaintenanceRequestsFilter struct {
 	ClientID          *string
-	PropertyID        *string
+	PropertyIDs       *[]string
 	UnitID            *string
 	LeaseID           *string
 	Statuses          []string
@@ -138,7 +138,7 @@ func (r *maintenanceRequestRepository) List(
 			DateRangeScope("maintenance_requests", filterQuery.DateRange),
 			SearchScope("maintenance_requests", filterQuery.Search),
 			mrClientIDScope(filters.ClientID),
-			mrPropertyIDScope(filters.PropertyID),
+			mrPropertyIDsScope(filters.PropertyIDs),
 			mrUnitIDScope(filters.UnitID),
 			mrLeaseIDScope(filters.LeaseID),
 			mrStatusScope(filters.Statuses),
@@ -177,7 +177,7 @@ func (r *maintenanceRequestRepository) Count(
 			DateRangeScope("maintenance_requests", filterQuery.DateRange),
 			SearchScope("maintenance_requests", filterQuery.Search),
 			mrClientIDScope(filters.ClientID),
-			mrPropertyIDScope(filters.PropertyID),
+			mrPropertyIDsScope(filters.PropertyIDs),
 			mrUnitIDScope(filters.UnitID),
 			mrLeaseIDScope(filters.LeaseID),
 			mrStatusScope(filters.Statuses),
@@ -418,15 +418,15 @@ func mrClientIDScope(clientID *string) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
-func mrPropertyIDScope(propertyID *string) func(db *gorm.DB) *gorm.DB {
+func mrPropertyIDsScope(propertyIDs *[]string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		if propertyID == nil {
+		if propertyIDs == nil {
 			return db
 		}
 		subQuery := db.Session(&gorm.Session{NewDB: true}).
 			Table("units").
 			Select("id").
-			Where("property_id = ? AND deleted_at IS NULL", *propertyID)
+			Where("property_id IN (?) AND deleted_at IS NULL", *propertyIDs)
 		return db.Where("maintenance_requests.unit_id IN (?)", subQuery)
 	}
 }
@@ -589,7 +589,7 @@ func (r *maintenanceRequestRepository) CountByStatus(
 		Select("status, count(*) as count").
 		Scopes(
 			mrClientIDScope(filters.ClientID),
-			mrPropertyIDScope(filters.PropertyID),
+			mrPropertyIDsScope(filters.PropertyIDs),
 			mrUnitIDScope(filters.UnitID),
 			mrLeaseIDScope(filters.LeaseID),
 			mrTenantScope(filters.TenantID),

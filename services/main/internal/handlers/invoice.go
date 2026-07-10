@@ -367,6 +367,9 @@ func (h *InvoiceHandler) ListInvoices(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	propertyID := chi.URLParam(r, "property_id")
+	propertyIDs := []string{propertyID}
+
 	input := repository.ListInvoicesFilter{
 		FilterQuery:               *filterQuery,
 		PayerType:                 lib.NullOrString(r.URL.Query().Get("payer_type")),
@@ -379,7 +382,77 @@ func (h *InvoiceHandler) ListInvoices(w http.ResponseWriter, r *http.Request) {
 		ContextLeaseTerminationID: lib.NullOrString(r.URL.Query().Get("context_lease_termination_id")),
 		Status:                    lib.NullOrStringArray(r.URL.Query()["status"]),
 		Active:                    lib.NullOrBool(r.URL.Query().Get("active")),
-		PropertyID:                lib.NullOrString(chi.URLParam(r, "property_id")),
+		PropertyIDs:               &propertyIDs,
+	}
+
+	invoices, count, err := h.service.ListInvoices(r.Context(), input)
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	data := make([]interface{}, len(*invoices))
+	for i, invoice := range *invoices {
+		data[i] = transformations.DBInvoiceToRest(&invoice)
+	}
+
+	json.NewEncoder(w).Encode(lib.ReturnListResponse(filterQuery, data, count))
+}
+
+// ListInvoicesAcrossProperties godoc
+//
+//	@Summary		List invoices across properties (Admin, mobile)
+//	@Description	List invoices across every property the caller has access to, optionally narrowed with one or more property_id query values
+//	@Tags			Invoice
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			property_id	query		[]string			false	"Property ID(s) to narrow results to; omit to see every property the caller can access"	collectionFormat(multi)
+//	@Param			q			query		ListInvoicesQuery	true	"Invoices"
+//	@Success		200			{object}	object{data=object{rows=[]transformations.OutputInvoice,meta=lib.HTTPReturnPaginatedMetaResponse}}
+//	@Failure		400			{object}	lib.HTTPError	"An error occurred while filtering invoices"
+//	@Failure		401			{object}	string			"Absent or invalid authentication token"
+//	@Failure		403			{object}	string			"Requested property_id is outside the caller's access scope"
+//	@Failure		500			{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/admin/clients/{client_id}/invoices [get]
+func (h *InvoiceHandler) ListInvoicesAcrossProperties(w http.ResponseWriter, r *http.Request) {
+	currentUser, ok := lib.ClientUserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	filterQuery, filterErr := lib.GenerateQuery(r.URL.Query())
+	if filterErr != nil {
+		HandleErrorResponse(w, filterErr)
+		return
+	}
+
+	isFiltersPassedValidation := lib.ValidateRequest(h.appCtx.Validator, filterQuery, w)
+	if !isFiltersPassedValidation {
+		return
+	}
+
+	propertyIDs, _, scopeOk := ResolvePropertyScopeFilter(w, r, h.appCtx)
+	if !scopeOk {
+		return
+	}
+
+	clientID := currentUser.ClientID
+	input := repository.ListInvoicesFilter{
+		FilterQuery:               *filterQuery,
+		ClientID:                  &clientID,
+		PropertyIDs:               propertyIDs,
+		PayerType:                 lib.NullOrString(r.URL.Query().Get("payer_type")),
+		PayerClientID:             lib.NullOrString(r.URL.Query().Get("payer_client_id")),
+		PayerLeaseID:              lib.NullOrString(r.URL.Query().Get("payer_lease_id")),
+		PayerTenantID:             lib.NullOrString(r.URL.Query().Get("payer_tenant_id")),
+		PayeeType:                 lib.NullOrString(r.URL.Query().Get("payee_type")),
+		PayeeClientID:             lib.NullOrString(r.URL.Query().Get("payee_client_id")),
+		ContextType:               lib.NullOrString(r.URL.Query().Get("context_type")),
+		ContextLeaseTerminationID: lib.NullOrString(r.URL.Query().Get("context_lease_termination_id")),
+		Status:                    lib.NullOrStringArray(r.URL.Query()["status"]),
+		Active:                    lib.NullOrBool(r.URL.Query().Get("active")),
 	}
 
 	invoices, count, err := h.service.ListInvoices(r.Context(), input)

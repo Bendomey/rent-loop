@@ -98,6 +98,30 @@ func ClientUserPropertyFromContext(ctx context.Context) (*ClientUserPropertyFrom
 	return cup, ok
 }
 
+// for property access scope (cross-property resolution for the "global" mobile routes,
+// resolved once per request by middlewares.InjectPropertyAccessScopeMiddleware)
+type PropertyAccessScope struct {
+	ClientID string
+	// Unrestricted is true for OWNER — access to every property under ClientID,
+	// without enumerating them. PropertyIDs is unused when this is true.
+	Unrestricted bool
+	// PropertyIDs is the exact set of properties this ADMIN/STAFF user is assigned to
+	// (via ClientUserProperty). Always non-nil when Unrestricted is false — an empty
+	// slice means the user has zero assigned properties, not "no filter."
+	PropertyIDs []string
+}
+
+const propertyAccessScopeContextKey contextKey = "rentloop-property-access-scope"
+
+func WithPropertyAccessScope(ctx context.Context, scope *PropertyAccessScope) context.Context {
+	return context.WithValue(ctx, propertyAccessScopeContextKey, scope)
+}
+
+func PropertyAccessScopeFromContext(ctx context.Context) (*PropertyAccessScope, bool) {
+	scope, ok := ctx.Value(propertyAccessScopeContextKey).(*PropertyAccessScope)
+	return scope, ok
+}
+
 // for tenant account
 const tenantAccountContextKey contextKey = "rentloop-tenant-account"
 

@@ -178,6 +178,7 @@ func (h *MaintenanceRequestHandler) List(w http.ResponseWriter, r *http.Request)
 	}
 
 	propertyID := chi.URLParam(r, "property_id")
+	propertyIDs := []string{propertyID}
 	clientID := currentUser.ClientID
 	filters := repository.ListMaintenanceRequestsFilter{
 		ClientID:          &clientID,
@@ -186,7 +187,73 @@ func (h *MaintenanceRequestHandler) List(w http.ResponseWriter, r *http.Request)
 		Category:          lib.NullOrString(r.URL.Query().Get("category")),
 		AssignedWorkerID:  lib.NullOrString(r.URL.Query().Get("assigned_worker_id")),
 		AssignedManagerID: lib.NullOrString(r.URL.Query().Get("assigned_manager_id")),
-		PropertyID:        &propertyID,
+		PropertyIDs:       &propertyIDs,
+		UnitID:            lib.NullOrString(r.URL.Query().Get("unit_id")),
+		LeaseID:           lib.NullOrString(r.URL.Query().Get("lease_id")),
+		TenantID:          lib.NullOrString(r.URL.Query().Get("tenant_id")),
+	}
+
+	mrs, listErr := h.service.ListMaintenanceRequests(r.Context(), *filterQuery, filters)
+	count, countErr := h.service.CountMaintenanceRequests(r.Context(), *filterQuery, filters)
+	if listErr != nil {
+		HandleErrorResponse(w, listErr)
+		return
+	}
+	if countErr != nil {
+		HandleErrorResponse(w, countErr)
+		return
+	}
+
+	rows := make([]any, len(mrs))
+	for i := range mrs {
+		rows[i] = transformations.DBMaintenanceRequestToRest(&mrs[i])
+	}
+
+	json.NewEncoder(w).Encode(lib.ReturnListResponse(filterQuery, rows, count))
+}
+
+// ListAcrossProperties godoc
+//
+//	@Summary		List maintenance requests across properties (Admin, mobile)
+//	@Description	List maintenance requests across every property the caller has access to, optionally narrowed with one or more property_id query values
+//	@Tags			MaintenanceRequests
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			property_id	query		[]string																											false	"Property ID(s) to narrow results to; omit to see every property the caller can access"	collectionFormat(multi)
+//	@Param			q			query		ListMaintenanceRequestsQuery																						true	"Query parameters"
+//	@Success		200			{object}	object{data=object{rows=[]transformations.AdminOutputMaintenanceRequest,meta=lib.HTTPReturnPaginatedMetaResponse}}	"Maintenance requests"
+//	@Failure		401			{object}	string																												"Invalid or absent authentication token"
+//	@Failure		403			{object}	string																												"Requested property_id is outside the caller's access scope"
+//	@Failure		500			{object}	string																												"An unexpected error occurred"
+//	@Router			/api/v1/admin/clients/{client_id}/maintenance-requests [get]
+func (h *MaintenanceRequestHandler) ListAcrossProperties(w http.ResponseWriter, r *http.Request) {
+	currentUser, ok := lib.ClientUserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	filterQuery, err := lib.GenerateQuery(r.URL.Query())
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	propertyIDs, _, scopeOk := ResolvePropertyScopeFilter(w, r, h.appCtx)
+	if !scopeOk {
+		return
+	}
+
+	clientID := currentUser.ClientID
+	filters := repository.ListMaintenanceRequestsFilter{
+		ClientID:          &clientID,
+		PropertyIDs:       propertyIDs,
+		Statuses:          r.URL.Query()["status"],
+		Priority:          lib.NullOrString(r.URL.Query().Get("priority")),
+		Category:          lib.NullOrString(r.URL.Query().Get("category")),
+		AssignedWorkerID:  lib.NullOrString(r.URL.Query().Get("assigned_worker_id")),
+		AssignedManagerID: lib.NullOrString(r.URL.Query().Get("assigned_manager_id")),
 		UnitID:            lib.NullOrString(r.URL.Query().Get("unit_id")),
 		LeaseID:           lib.NullOrString(r.URL.Query().Get("lease_id")),
 		TenantID:          lib.NullOrString(r.URL.Query().Get("tenant_id")),

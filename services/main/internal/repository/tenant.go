@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
@@ -87,8 +88,9 @@ func (r *tenantRepository) GetOneByProperty(
 	query GetTenantByPropertyQuery,
 ) (*models.Tenant, error) {
 	var tenant models.Tenant
+	propertyIDs := []string{query.PropertyID}
 	db := r.DB.WithContext(ctx).
-		Scopes(propertyTenantsWithStatusScope(&query.PropertyID, nil)).
+		Scopes(propertyTenantsWithStatusScope(&propertyIDs, nil, nil)).
 		Where("tenants.id = ?", query.ID).
 		Preload("Leases", recentLeasePreloadScope(query.PropertyID)).
 		Preload("Bookings", recentBookingPreloadScope(query.PropertyID))
@@ -153,8 +155,9 @@ func (r *tenantRepository) Count(ctx context.Context, filterQuery ListTenantsFil
 
 type ListTenantsByPropertyFilter struct {
 	lib.FilterQuery
-	PropertyID *string
-	Status     *string // "ACTIVE" | "EXPIRED"
+	PropertyIDs *[]string
+	ClientID    *string
+	Status      *string // "ACTIVE" | "EXPIRED"
 }
 
 func (r *tenantRepository) ListTenantsByProperty(
@@ -164,7 +167,7 @@ func (r *tenantRepository) ListTenantsByProperty(
 	var tenants []models.Tenant
 
 	db := r.DB.WithContext(ctx).Scopes(
-		propertyTenantsWithStatusScope(filterQuery.PropertyID, filterQuery.Status),
+		propertyTenantsWithStatusScope(filterQuery.PropertyIDs, filterQuery.ClientID, filterQuery.Status),
 		IDsFilterScope("tenants", filterQuery.IDs),
 		DateRangeScope("tenants", filterQuery.DateRange),
 		SearchScope("tenants", filterQuery.Search),
@@ -172,10 +175,11 @@ func (r *tenantRepository) ListTenantsByProperty(
 		OrderScope("tenants", filterQuery.OrderBy, filterQuery.Order),
 	)
 
-	if filterQuery.PropertyID != nil {
+	if filterQuery.PropertyIDs != nil && len(*filterQuery.PropertyIDs) == 1 {
+		propertyID := (*filterQuery.PropertyIDs)[0]
 		db = db.
-			Preload("Leases", recentLeasePreloadScope(*filterQuery.PropertyID)).
-			Preload("Bookings", recentBookingPreloadScope(*filterQuery.PropertyID))
+			Preload("Leases", recentLeasePreloadScope(propertyID)).
+			Preload("Bookings", recentBookingPreloadScope(propertyID))
 	}
 
 	if filterQuery.Populate != nil {
@@ -199,7 +203,7 @@ func (r *tenantRepository) CountTenantsByProperty(
 	var count int64
 
 	result := r.DB.WithContext(ctx).Model(&models.Tenant{}).Scopes(
-		propertyTenantsWithStatusScope(filterQuery.PropertyID, filterQuery.Status),
+		propertyTenantsWithStatusScope(filterQuery.PropertyIDs, filterQuery.ClientID, filterQuery.Status),
 		DateRangeScope("tenants", filterQuery.DateRange),
 		SearchScope("tenants", filterQuery.Search),
 	).Count(&count)
@@ -211,48 +215,80 @@ func (r *tenantRepository) CountTenantsByProperty(
 	return count, nil
 }
 
-// propertyTenantsWithStatusScope scopes tenants to those that have a lease or
-// booking in the given property. ACTIVE means an pending/active lease or a
-// CONFIRMED/CHECKED_IN booking currently exists; EXPIRED means the tenant has
-// some past lease or booking in the property but nothing currently active; no
-// status filter means the tenant has any lease or booking in the property,
-// past or present.
-func propertyTenantsWithStatusScope(propertyID *string, status *string) func(db *gorm.DB) *gorm.DB {
+// propertyMatchCondition returns a WHERE fragment (with its args) matching "this column
+// belongs to the resolved property scope" — used inside propertyTenantsWithStatusScope to
+// avoid duplicating the IN-list / client-wide-join logic across its three status branches and
+// two source tables (leases via units, bookings directly).
+func propertyMatchCondition(column string, propertyIDs *[]string, clientID *string) (string, []any) {
+	if propertyIDs != nil {
+		return fmt.Sprintf("%s IN (?)", column), []any{*propertyIDs}
+	}
+	return fmt.Sprintf(
+		"%s IN (SELECT id FROM properties WHERE client_id = ? AND deleted_at IS NULL)",
+		column,
+	), []any{*clientID}
+}
+
+// propertyTenantsWithStatusScope scopes tenants to those that have a lease or booking in the
+// resolved property scope (an explicit set of properties — one element for an exact match, or
+// every property under a client — see propertyMatchCondition). ACTIVE means a pending/active
+// lease or a CONFIRMED/CHECKED_IN booking currently exists; EXPIRED means the tenant has some
+// past lease or booking in scope but nothing currently active; no status filter means the
+// tenant has any lease or booking in scope, past or present.
+func propertyTenantsWithStatusScope(
+	propertyIDs *[]string,
+	clientID *string,
+	status *string,
+) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		if propertyID == nil {
+		if propertyIDs == nil && clientID == nil {
 			return db
 		}
 
+		unitsCond, unitsArgs := propertyMatchCondition("units.property_id", propertyIDs, clientID)
+		bookingsCond, bookingsArgs := propertyMatchCondition("bookings.property_id", propertyIDs, clientID)
+
 		if status != nil && *status == "ACTIVE" {
-			return db.Where(
-				"(tenants.id IN (SELECT DISTINCT leases.tenant_id FROM leases JOIN units ON leases.unit_id = units.id WHERE units.property_id = ? AND leases.status IN ('Lease.Status.Pending', 'Lease.Status.Active') AND leases.deleted_at IS NULL)) OR (tenants.id IN (SELECT DISTINCT bookings.tenant_id FROM bookings WHERE bookings.property_id = ? AND bookings.status IN ('CONFIRMED', 'CHECKED_IN') AND bookings.deleted_at IS NULL))",
-				*propertyID,
-				*propertyID,
+			query := fmt.Sprintf(
+				"(tenants.id IN (SELECT DISTINCT leases.tenant_id FROM leases JOIN units ON leases.unit_id = units.id WHERE %s AND leases.status IN ('Lease.Status.Pending', 'Lease.Status.Active') AND leases.deleted_at IS NULL)) OR (tenants.id IN (SELECT DISTINCT bookings.tenant_id FROM bookings WHERE %s AND bookings.status IN ('CONFIRMED', 'CHECKED_IN') AND bookings.deleted_at IS NULL))",
+				unitsCond,
+				bookingsCond,
 			)
+			return db.Where(query, append(append([]any{}, unitsArgs...), bookingsArgs...)...)
 		}
 
 		if status != nil && *status == "EXPIRED" {
-			return db.
-				Where(
-					"(tenants.id IN (SELECT DISTINCT leases.tenant_id FROM leases JOIN units ON leases.unit_id = units.id WHERE units.property_id = ? AND leases.status IN ('Lease.Status.Terminated', 'Lease.Status.Completed', 'Lease.Status.Cancelled') AND leases.deleted_at IS NULL)) OR (tenants.id IN (SELECT DISTINCT bookings.tenant_id FROM bookings WHERE bookings.property_id = ? AND bookings.status IN ('COMPLETED', 'CANCELLED') AND bookings.deleted_at IS NULL))",
-					*propertyID, *propertyID,
-				).
-				Where(
-					"tenants.id NOT IN (SELECT DISTINCT leases.tenant_id FROM leases JOIN units ON leases.unit_id = units.id WHERE units.property_id = ? AND leases.status = 'Lease.Status.Active' AND leases.deleted_at IS NULL)",
-					*propertyID,
-				).
-				Where(
-					"tenants.id NOT IN (SELECT DISTINCT bookings.tenant_id FROM bookings WHERE bookings.property_id = ? AND bookings.status IN ('CONFIRMED', 'CHECKED_IN') AND bookings.deleted_at IS NULL)",
-					*propertyID,
-				)
+			db = db.Where(
+				fmt.Sprintf(
+					"(tenants.id IN (SELECT DISTINCT leases.tenant_id FROM leases JOIN units ON leases.unit_id = units.id WHERE %s AND leases.status IN ('Lease.Status.Terminated', 'Lease.Status.Completed', 'Lease.Status.Cancelled') AND leases.deleted_at IS NULL)) OR (tenants.id IN (SELECT DISTINCT bookings.tenant_id FROM bookings WHERE %s AND bookings.status IN ('COMPLETED', 'CANCELLED') AND bookings.deleted_at IS NULL))",
+					unitsCond,
+					bookingsCond,
+				),
+				append(append([]any{}, unitsArgs...), bookingsArgs...)...,
+			)
+			db = db.Where(
+				fmt.Sprintf(
+					"tenants.id NOT IN (SELECT DISTINCT leases.tenant_id FROM leases JOIN units ON leases.unit_id = units.id WHERE %s AND leases.status = 'Lease.Status.Active' AND leases.deleted_at IS NULL)",
+					unitsCond,
+				),
+				unitsArgs...,
+			)
+			return db.Where(
+				fmt.Sprintf(
+					"tenants.id NOT IN (SELECT DISTINCT bookings.tenant_id FROM bookings WHERE %s AND bookings.status IN ('CONFIRMED', 'CHECKED_IN') AND bookings.deleted_at IS NULL)",
+					bookingsCond,
+				),
+				bookingsArgs...,
+			)
 		}
 
-		// No status filter: all tenants with any lease or booking in the property
-		return db.Where(
-			"(tenants.id IN (SELECT DISTINCT leases.tenant_id FROM leases JOIN units ON leases.unit_id = units.id WHERE units.property_id = ? AND leases.deleted_at IS NULL)) OR (tenants.id IN (SELECT DISTINCT bookings.tenant_id FROM bookings WHERE bookings.property_id = ? AND bookings.deleted_at IS NULL))",
-			*propertyID,
-			*propertyID,
+		// No status filter: all tenants with any lease or booking in scope
+		query := fmt.Sprintf(
+			"(tenants.id IN (SELECT DISTINCT leases.tenant_id FROM leases JOIN units ON leases.unit_id = units.id WHERE %s AND leases.deleted_at IS NULL)) OR (tenants.id IN (SELECT DISTINCT bookings.tenant_id FROM bookings WHERE %s AND bookings.deleted_at IS NULL))",
+			unitsCond,
+			bookingsCond,
 		)
+		return db.Where(query, append(append([]any{}, unitsArgs...), bookingsArgs...)...)
 	}
 }
 
