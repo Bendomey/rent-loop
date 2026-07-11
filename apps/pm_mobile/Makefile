@@ -21,3 +21,6 @@ lint:
 
 run:
 	flutter run
+
+test:
+	flutter test

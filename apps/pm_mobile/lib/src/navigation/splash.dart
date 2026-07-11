@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:rentloop_manager/src/architecture/app_startup.dart';
+import 'package:rentloop_manager/src/architecture/app_startup/app_startup_notifier.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -15,7 +15,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(appStartupProvider.notifier).init();
+      ref.read(appStartupNotifierProvider.notifier).init();
     });
   }
 

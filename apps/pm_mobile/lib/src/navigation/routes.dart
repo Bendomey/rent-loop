@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:rentloop_manager/src/architecture/app_startup.dart';
+import 'package:rentloop_manager/src/architecture/app_startup/app_startup_notifier.dart';
 import 'package:rentloop_manager/src/modules/auth/login/root.dart';
 import 'package:rentloop_manager/src/modules/auth/welcome/root.dart';
 import 'package:rentloop_manager/src/modules/auth/workspace_select/root.dart';
@@ -47,7 +47,7 @@ GoRouter? appRouter;
 class _RouterNotifier extends ChangeNotifier {
   _RouterNotifier(this._ref) {
     _ref.listen<AppStartupState>(
-      appStartupProvider,
+      appStartupNotifierProvider,
       (_, __) => notifyListeners(),
     );
   }
@@ -61,7 +61,7 @@ GoRouter buildRoutes(WidgetRef ref) {
     initialLocation: '/splash',
     refreshListenable: notifier,
     redirect: (context, state) {
-      final startup = ref.read(appStartupProvider);
+      final startup = ref.read(appStartupNotifierProvider);
       final loc = state.matchedLocation;
 
       switch (startup.status) {
