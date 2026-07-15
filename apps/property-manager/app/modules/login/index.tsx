@@ -22,7 +22,7 @@ import { TypographyH1, TypographyH3 } from '~/components/ui/typography'
 import { cn } from '~/lib/utils'
 
 const ValidationSchema = z.object({
-	email: z.email('Invalid email address'),
+	email: z.email('Invalid email address').transform((val) => val.toLowerCase().trim()),
 	password: z
 		.string({ error: 'Password is required' })
 		.min(6, 'Password must be at least 6 characters long'),
