@@ -61,7 +61,7 @@ const ValidationSchema = z.object({
 	phone: z
 		.string({ error: 'Contact phone number is required' })
 		.refine(isValidPhoneNumber, { message: 'Enter a valid phone number' }),
-	email: z.email('Please enter a valid support email address'),
+	email: z.email('Please enter a valid support email address').transform((val) => val.toLowerCase().trim()),
 	property_assignments: z.array(
 		z.object({
 			property_id: z.string(),
