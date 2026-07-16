@@ -38,6 +38,7 @@ import 'package:rentloop_manager/src/modules/main/tenants/detail.dart';
 import 'package:rentloop_manager/src/modules/main/tenants/root.dart';
 import 'package:rentloop_manager/src/modules/main/properties/detail.dart';
 import 'package:rentloop_manager/src/modules/main/properties/root.dart';
+import 'package:rentloop_manager/src/modules/main/properties/units_list.dart';
 import 'package:rentloop_manager/src/modules/main/shell.dart';
 import 'splash.dart';
 
@@ -158,6 +159,11 @@ GoRouter buildRoutes(WidgetRef ref) {
         builder: (_, state) =>
             PropertyDetailScreen(id: state.pathParameters['id']!),
         routes: [
+          GoRoute(
+            path: 'units',
+            builder: (_, state) =>
+                UnitsListScreen(propertyId: state.pathParameters['id']!),
+          ),
           GoRoute(
             path: 'settings',
             builder: (_, state) =>

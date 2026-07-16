@@ -13,8 +13,9 @@ String _$agreementApiHash() => r'0f6761d2f18ba09045dfe7a8a16d68d5a30c8fa2';
 final agreementApiProvider = AutoDisposeProvider<AgreementApi>.internal(
   agreementApi,
   name: r'agreementApiProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$agreementApiHash,
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$agreementApiHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );

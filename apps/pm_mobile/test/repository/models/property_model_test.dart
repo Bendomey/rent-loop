@@ -27,6 +27,20 @@ void main() {
     expect(model.images, ['https://example.com/a.jpg']);
   });
 
+  test('PropertyModel.fromJson parses modes', () {
+    final json = {
+      'id': 'prop-3',
+      'name': 'Beachside Villas',
+      'type': 'MULTI',
+      'status': 'Property.Status.Active',
+      'modes': ['LEASE', 'BOOKING'],
+    };
+
+    final model = PropertyModel.fromJson(json);
+
+    expect(model.modes, ['LEASE', 'BOOKING']);
+  });
+
   test('PropertyModel.fromJson handles missing optional fields', () {
     final json = {
       'id': 'prop-2',

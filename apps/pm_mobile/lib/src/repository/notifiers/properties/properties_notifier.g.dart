@@ -13,14 +13,14 @@ String _$propertiesNotifierHash() =>
 @ProviderFor(PropertiesNotifier)
 final propertiesNotifierProvider =
     AutoDisposeNotifierProvider<PropertiesNotifier, PropertiesState>.internal(
-  PropertiesNotifier.new,
-  name: r'propertiesNotifierProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$propertiesNotifierHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+      PropertiesNotifier.new,
+      name: r'propertiesNotifierProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$propertiesNotifierHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
 
 typedef _$PropertiesNotifier = AutoDisposeNotifier<PropertiesState>;
 // ignore_for_file: type=lint

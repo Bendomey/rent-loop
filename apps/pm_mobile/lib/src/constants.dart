@@ -1,6 +1,8 @@
 // ── API ───────────────────────────────────────────────────────────────────────
 const String kApiBaseUrl = 'https://api.rentloopapp.com';
 
+const String kCubeApiUrl = 'https://rentloop-cube.fly.dev';
+
 // ── External web destinations ─────────────────────────────────────────────────
 // All deep links from the mobile app carry UTM parameters so analytics can
 // attribute which screen and CTA drove the traffic.

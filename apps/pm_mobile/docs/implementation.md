@@ -11,7 +11,9 @@
 - **Entry point:** `lib/src/api/root.dart` — `AbstractApi` base class
 - **Key classes:** `AbstractApi` (`execute()`: GET/POST/PATCH/DELETE, attaches `Authorization: Bearer <token>` unless `authRequired: false`, throws `ApiException` on ≥400), `ApiException` (parses `json['errors']['message']`, `null`-safe on malformed bodies)
 - `user_api.dart` — `UserApi extends AbstractApi`: `login({email, password})` (unauthenticated, `POST /api/v1/admin/users/login`, returns `UserLoginResult{token, user}`), `getMe()` (authenticated, `GET /api/v1/admin/users/me`, returns `UserModel`)
-- `property_api.dart` — `PropertyApi extends AbstractApi`: `getProperties({clientId, page, pageSize, ids, order, orderBy, status, search})` (`GET /api/v1/admin/clients/{client_id}/properties`, returns `PropertiesPage{rows: List<PropertyModel>, meta: PaginationMetaModel}`); `status` is the full dotted enum value (e.g. `Property.Status.Active`), `search` maps to `query`+`search_fields=name`
+- `property_api.dart` — `PropertyApi extends AbstractApi`: `getProperties({clientId, page, pageSize, ids, order, orderBy, status, search})` (`GET /api/v1/admin/clients/{client_id}/properties`, returns `PropertiesPage{rows: List<PropertyModel>, meta: PaginationMetaModel}`); `status` is the full dotted enum value (e.g. `Property.Status.Active`), `search` maps to `query`+`search_fields=name`. Also `getProperty({clientId, propertyId})` (`GET /api/v1/admin/clients/{client_id}/properties/{property_id}`, returns a single `PropertyModel`)
+- `unit_api.dart` — `UnitApi extends AbstractApi`: `getUnits({clientId, propertyId, page, pageSize})` (`GET /api/v1/admin/clients/{client_id}/properties/{property_id}/units`, returns `UnitsPage{rows: List<UnitModel>, meta: PaginationMetaModel}`)
+- `analytics_api.dart` — `AnalyticsApi extends AbstractApi`: `getToken({clientId})` (`GET /api/v1/admin/clients/{client_id}/analytics/token`, returns a short-lived Cube JWT); `CubeApi` (plain class, not `AbstractApi` — different host/token): `load({token, query})` POSTs to `$kCubeApiUrl/cubejs-api/v1/load`, returns the raw `data` rows
 
 ### architecture/
 - **Entry point:** `lib/src/architecture/app_startup/app_startup_notifier.dart` (replaced the old hand-written mock at `architecture/app_startup.dart`, now deleted)
@@ -35,6 +37,9 @@
 - `workspace_resolution.dart` — `isActiveClientUser(ClientUserModel)` (last-dot-segment case-insensitive match against `"active"`, e.g. `"ClientUser.Status.Active"` → `"active"` — deliberately not a substring `contains` check, which would misclassify `"Inactive"`), `resolveWorkspace(clientUsers, {storedClientId})` (auto-selects on exactly one active membership, or a stored id matching an active one; else `null`)
 - `api_error_messages.dart` — `translateApiErrorMessage({errorMessage, defaultErrorMessage})`; currently default-case-only (no confirmed API error codes yet), mirrors `apps/go`'s pattern of adding specific cases as they're discovered
 - `property_status.dart` — `propertyStatusLabel(status)` (last-dot-segment, mirrors `workspace_resolution.dart`'s convention), `propertyTypeLabel(type)` (`SINGLE`/`MULTI` → display label)
+- `money.dart` — `pesewasToCedis(int pesewas)` (mirrors `apps/go`'s `MoneyLib.pesawasToCedis` convention)
+- `unit_status.dart` — `unitTypeLabel(type)` (APARTMENT/HOUSE/STUDIO/OFFICE/RETAIL → display label), `shouldShowSeeAllUnits(totalUnits)` (the property detail screen's units preview caps at 5 — this is `total >= 6`)
+- `property_stats_logic.dart` — `parseCubeNum(value)` (Cube returns every measure as a string), `currentMonthDateRange(now)` (ISO date-range helper for the Cube Invoices query), `computePropertyStats({unitsRows, invoiceRows, leaseRows, bookingRows, applicationRows})` (combines 5 separate Cube query results into one `PropertyStats`)
 
 ### navigation/
 - `routes.dart` — `buildRoutes(ref)`: internal `_RouterNotifier` (`ChangeNotifier`) listens to `appStartupNotifierProvider` (renamed from the old `appStartupProvider`) and calls `notifyListeners()` on change, wired as GoRouter's `refreshListenable`. Redirect `switch` on `AppStartupStatus`: `loading`/`error` → `/splash`, `unauthenticated` → `/auth/welcome`, `workspaceSelect` → `/auth/workspace-select`, `ready` → `/` (main shell)
@@ -51,6 +56,9 @@
 - `models/user_model.dart`, `client_user_model.dart`, `client_model.dart` — `@JsonSerializable` DTOs matching the confirmed live API schema (`UserModel.clientUsers` defaults to `[]` when the `client_users` key is absent, not throw)
 - `notifiers/auth/login_notifier.dart` — `LoginNotifier` (`LoginState extends ApiState`): `submit({email, password})` runs `UserApi.login()` → `TokenManager.save()` → `AppStartupNotifier.completeLogin()` → success, all in one try/catch (`ApiException` → translated message, other errors → default message); `reset()` returns to a clean idle state, called only from the login screen's error-dismiss handler
 - `notifiers/properties/properties_notifier.dart` — `PropertiesNotifier` (`PropertiesState{items, total, hasNextPage, currentPage, isLoadingMore, isLoading, error}`): `loadFirstPage(PropertiesQuery{search, status})` resets to page 1, `loadNextPage()` appends page N+1 (pageSize 10) — the first paginated-list notifier in this app, modeled on `apps/go`'s `MaintenanceRequestsNotifier`
+- `notifiers/units/units_notifier.dart` — `UnitsNotifier` (`UnitsState{items, total, hasNextPage, currentPage, isLoadingMore, isLoading, error}`): `loadFirstPage(propertyId)` / `loadNextPage()` — same shape as `PropertiesNotifier`, minus a filter object (this screen has no search/status filter)
+- `providers/properties/property_detail_provider.dart`, `property_stats_provider.dart`, `property_units_preview_provider.dart` — `@riverpod Future<T>` family providers keyed by property id: real property data, Cube-derived `PropertyStats`, and a 5-item units preview page, respectively
+- `models/unit_model.dart`, `property_stats_model.dart` — `UnitModel` (`@JsonSerializable`, subset of `AdminOutputUnit`), `PropertyStats` (plain class, aggregate of 5 Cube queries, not a single API response — `occupancyPercent` getter)
 
 ### modules/main/
 Five `StatefulShellRoute` tab branches — `home`, `properties`, `activity`, `money`, `more` — each with a `root.dart` plus feature-specific add/detail/settings files. `tenants/` and `announcements/` are reachable via nested routes off `more/` and the main shell respectively.
@@ -59,9 +67,12 @@ Real (wired to `currentUserNotifierProvider`/`currentWorkspaceNotifierProvider`)
 - `home/root.dart` — `_TopHeader`'s workspace-name eyebrow and manager avatar. The rest of the screen (revenue card, stat grid, needs-attention, collection trend, quick actions) is still mocked.
 - `more/root.dart` — `_ProfileCard` (name/email) and `_WorkspaceCard` (workspace name/role — the previously-fabricated `properties · units` stat was dropped, since that data isn't in the API response). Logout button calls `appStartupNotifierProvider.notifier.logout()`.
 - `workspace_sheet.dart` — the in-shell workspace switcher (`showWorkspaceSheet(context)`, opened from Home's eyebrow and More's workspace card — note the signature dropped its old `activeId` param, since the sheet now reads the active workspace off the provider itself). Lists `client_users`; tapping an active one calls `currentWorkspaceNotifierProvider.notifier.select()`; inactive ones are dimmed/non-tappable, same convention as `workspace_select/root.dart`.
-- `properties/root.dart` — the list screen is real: `propertiesNotifierProvider`-backed infinite scroll (10/page), pull-to-refresh, debounced search, status filter chips. `detail.dart`/`add.dart`/`edit_sheets.dart`/`settings/` remain mocked (independent private mock data, not shared with `root.dart`).
+- `properties/root.dart` — the list screen is real: `propertiesNotifierProvider`-backed infinite scroll (10/page), pull-to-refresh, debounced search, status filter chips.
+- `properties/detail.dart` — the detail screen is real: three independent providers (property/stats/units-preview) each with their own skeleton/error handling; swipeable hero image carousel (falls back to a type-colored placeholder tile when a property has no images); Manage grid counts are Cube-sourced (Units/Tenants/Leases/Applications always, Bookings only when the property's `modes` includes `BOOKING`); units preview caps at 5 with a "See all" action (hidden below 6 total units) that pushes `units_list.dart`. Unit rows are not tappable yet — no unit-detail screen exists.
+- `properties/units_list.dart` — new paginated "all units" screen for a property, `UnitsNotifier`-backed infinite scroll (10/page), mirrors `root.dart`'s pattern minus search/filters.
+- `add.dart`/`edit_sheets.dart`/`settings/` remain mocked.
 
-Still fully mocked: `properties/detail.dart`/`add.dart`/`edit_sheets.dart`/`settings/`, `tenants/`, `activity/`, `money/`, `announcements/`, and everything else under `more/` (members, payment accounts, documents, agreement, billing, settings).
+Still fully mocked: `properties/add.dart`/`edit_sheets.dart`/`settings/`, `tenants/`, `activity/`, `money/`, `announcements/`, and everything else under `more/` (members, payment accounts, documents, agreement, billing, settings).
 
 ### shared/
 - `theme.dart` — Material3 `ThemeData` builder
@@ -73,6 +84,7 @@ Still fully mocked: `properties/detail.dart`/`add.dart`/`edit_sheets.dart`/`sett
 | Variable | Source | Purpose |
 |---|---|---|
 | `kApiBaseUrl` | `constants.dart` | REST base URL — `https://api.rentloopapp.com` (staging), now actively used by `AbstractApi.execute()` |
+| `kCubeApiUrl` | `constants.dart` | Cube.js REST base (staging) — `https://rentloop-cube.fly.dev`, used by `CubeApi.load()` |
 | `kPmHost` | `constants.dart` | Host for deep links into the React PM portal (`pm.rentloopapp.com`) |
 | `pmUrl()` / `applyUrl()` / `forgotPasswordUrl()` | `constants.dart` | UTM-tagged deep-link builders (`utm_source=manager_app`, `utm_medium=mobile`) for links out to the web portal |
 | `rentloop_manager.token` | `FlutterSecureStorage`, via `TokenManager` | Persisted JWT |
@@ -84,3 +96,5 @@ Still fully mocked: `properties/detail.dart`/`add.dart`/`edit_sheets.dart`/`sett
 - `resolveWorkspace()`'s auto-select rule: exactly one active membership always wins outright (ignoring any stored id); otherwise a stored id is only honored if it still points at an *active* membership — a stale id pointing at a now-deactivated membership is silently ignored, not auto-selected
 - `isActiveClientUser()` matches on the last dot-segment of the raw status string, not a substring `contains` — this was a real bug caught in review (`"Inactive"` contains the substring `"active"`, so a naive `contains('active')` check would misclassify a deactivated membership as active)
 - `docs/` is checked into git (not gitignored) for this app, matching the convention already established in `apps/go/docs/`
+- `propertyStatusLabel()` (in `property_status.dart`) is reused as-is for unit statuses too (`Unit.Status.*` dot-splits the same way `Property.Status.*` does) — no separate `unitStatusLabel()` was written
+- The property detail screen's stats card and Manage grid share one `propertyStatsProvider` fetch (5 parallel Cube queries) rather than each cell issuing its own query — Cube.js has no single multi-cube query in the REST `/load` endpoint used here, so each measure group (Units, Invoices, Leases, Bookings, TenantApplications) is still a separate `CubeApi.load()` call, just run concurrently via `Future.wait` and parsed together by `computePropertyStats()`

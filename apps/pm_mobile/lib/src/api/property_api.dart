@@ -63,6 +63,18 @@ class PropertyApi extends AbstractApi {
       meta: PaginationMetaModel.fromJson(data['meta'] as Map<String, dynamic>),
     );
   }
+
+  Future<PropertyModel> getProperty({
+    required String clientId,
+    required String propertyId,
+  }) async {
+    final response = await execute(
+      method: 'GET',
+      path: '/api/v1/admin/clients/$clientId/properties/$propertyId',
+    );
+    final json = jsonDecode(response.body) as Map<String, dynamic>;
+    return PropertyModel.fromJson(json['data'] as Map<String, dynamic>);
+  }
 }
 
 @riverpod

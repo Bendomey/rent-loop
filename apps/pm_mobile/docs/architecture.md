@@ -1,7 +1,7 @@
 # Architecture
 
 ## Project Type
-Flutter / Dart 3.8.1+ mobile app (property-manager / landlord-facing client for RentLoop rental platform). Companion to the React property-manager portal (`apps/property-manager`). Targets iOS and Android. **Auth is real** (login, cold-start token validation, workspace selection, logout, against `https://api.rentloopapp.com`) as of the 2026-07-11 login integration — see `docs/decisions.md` and `docs/superpowers/specs/2026-07-10-login-integration-design.md`. **The properties list is also real** (paginated, 10/page, infinite scroll, search + status filter) as of the 2026-07-16 properties list integration — see `docs/superpowers/specs/2026-07-16-properties-list-integration-design.md`. Every other module/screen (properties detail/add/settings, tenants, activity, money, announcements) is still UI-only against mock/static data, pending its own integration pass.
+Flutter / Dart 3.8.1+ mobile app (property-manager / landlord-facing client for RentLoop rental platform). Companion to the React property-manager portal (`apps/property-manager`). Targets iOS and Android. **Auth is real** (login, cold-start token validation, workspace selection, logout, against `https://api.rentloopapp.com`) as of the 2026-07-11 login integration — see `docs/decisions.md` and `docs/superpowers/specs/2026-07-10-login-integration-design.md`. **The properties list is also real** (paginated, 10/page, infinite scroll, search + status filter) as of the 2026-07-16 properties list integration — see `docs/superpowers/specs/2026-07-16-properties-list-integration-design.md`. **The property detail page is also real** (property data, Cube-sourced stats card + Manage grid, paginated units list) as of the 2026-07-16 property detail integration — see `docs/superpowers/specs/2026-07-16-property-detail-integration-design.md`. Every other module/screen (properties add/settings, tenants, activity, money, announcements) is still UI-only against mock/static data, pending its own integration pass.
 
 ## Directory Map
 ```
@@ -34,7 +34,7 @@ apps/pm_mobile/
 | `lib/` | Utility helpers — `Storage`/`SecureStorage`/`TokenManager`/`WorkspaceIdManager` plain classes, `api_error_messages.dart` (`translateApiErrorMessage`), `workspace_resolution.dart` (`isActiveClientUser`, `resolveWorkspace`) |
 | `modules/auth/` | `welcome/`, `login/` (real `LoginNotifier` wiring), `workspace_select/` (real `client_users` data) — pre-shell auth flow |
 | `modules/main/home/` | Landlord dashboard/home tab — top header (workspace name, manager avatar) is real; revenue/occupancy/stats sections still mocked |
-| `modules/main/properties/` | Property **list is real** (paginated, 10/page, search + status filter) — detail, add, per-property settings (general/members/documents) still mocked |
+| `modules/main/properties/` | Property **list and detail are real** (list: paginated, 10/page, search + status filter; detail: real property/stats/units-preview, Cube-sourced stats card + Manage grid, paginated units list at `units_list.dart`) — add, per-property settings (general/members/documents) still mocked |
 | `modules/main/tenants/` | Tenant list + detail — mocked |
 | `modules/main/activity/` | Maintenance requests, bookings, applications (list/add/detail) — mocked |
 | `modules/main/money/` | Invoices, record payment — mocked |
@@ -55,7 +55,9 @@ apps/pm_mobile/
 5. Selecting a workspace calls `AppStartupNotifier.selectWorkspace()` → `CurrentWorkspaceNotifier.select()` (persists + sets state) → status `ready` → `GoRouter` (via `refreshListenable`) redirects into the main `StatefulShellRoute` (5 tabs: home, properties, activity, money, more)
 6. Logout clears JWT, workspace id, and both notifiers, back to `unauthenticated`
 
-**Every other module** (properties, tenants, activity, money, announcements, and most of `more/`) still renders local mock data — no API calls in those trees yet. The pattern is proven and ready to replicate: `AbstractApi.execute()` → resource `XxxApi` class → Riverpod query provider / `ApiState` mutation notifier → screen (see `docs/patterns.md`), one module at a time.
+**Property detail (real):** `PropertyDetailScreen` watches three independent family providers keyed by property id — `propertyDetailProvider` (`GET .../properties/{id}`), `propertyStatsProvider` (Cube-sourced: occupancy/revenue/leases/bookings/applications, via `AnalyticsApi.getToken` + `CubeApi.load`), and `propertyUnitsPreviewProvider` (first 5 units). Each section shows its own shimmer skeleton / inline error independently — one failing doesn't block the others. "See all" under the units preview (shown only when total units ≥ 6) pushes `/properties/:id/units`, a `UnitsNotifier`-backed infinite-scroll list mirroring the properties list's pagination pattern.
+
+**Every other module** (tenants, activity, money, announcements, and most of `more/`) still renders local mock data — no API calls in those trees yet. The pattern is proven and ready to replicate: `AbstractApi.execute()` → resource `XxxApi` class → Riverpod query provider / `ApiState` mutation notifier → screen (see `docs/patterns.md`), one module at a time.
 
 ## External Dependencies
 | Name | Purpose |

@@ -12,14 +12,14 @@ String _$paymentAccountApiHash() => r'740a1ef1d7e52e1d5c6e064321b11321fd794850';
 @ProviderFor(paymentAccountApi)
 final paymentAccountApiProvider =
     AutoDisposeProvider<PaymentAccountApi>.internal(
-  paymentAccountApi,
-  name: r'paymentAccountApiProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$paymentAccountApiHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+      paymentAccountApi,
+      name: r'paymentAccountApiProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$paymentAccountApiHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
 
 typedef PaymentAccountApiRef = AutoDisposeProviderRef<PaymentAccountApi>;
 // ignore_for_file: type=lint

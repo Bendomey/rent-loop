@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-07-16 — Property detail page integration
+- Wired the single-property detail screen to real data: property fetch, a Cube-sourced stats card (occupancy donut, monthly revenue) and Manage grid (Units/Tenants/Leases/Applications/Bookings counts), and a real 5-item units preview.
+- Added a swipeable hero image carousel (falls back to the existing placeholder tile when a property has no images).
+- Added a new paginated "all units" screen (`units_list.dart`, `/properties/:id/units`), infinite-scroll, shown via a "See all" action that's hidden below 6 total units.
+- Added a new `TenantApplications` Cube model (`services/cube/model/cubes/TenantApplications.js`) so the Applications count has a real data source — no prior cube covered tenant applications.
+- Modules affected: `services/cube/model/cubes/`, `apps/pm_mobile/lib/src/api/` (`unit_api.dart`, `analytics_api.dart`, `property_api.dart`), `apps/pm_mobile/lib/src/repository/` (models, providers, notifiers), `apps/pm_mobile/lib/src/modules/main/properties/` (`detail.dart`, `units_list.dart`), `apps/pm_mobile/lib/src/lib/` (`money.dart`, `unit_status.dart`, `property_stats_logic.dart`), `apps/pm_mobile/lib/src/navigation/routes.dart`.
+
 ## 2026-07-16 — Properties list integration
 - Replaced the mocked property list with real, paginated data from `GET /api/v1/admin/clients/{client_id}/properties` (10/page, infinite scroll)
 - Extended `PropertyModel`/`PropertyApi.getProperties()` with the real fields/params the list needed; added `PropertiesNotifier` (first paginated-list notifier in this app)

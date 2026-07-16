@@ -12,6 +12,7 @@ class PropertyModel {
   final String? city;
   final String? region;
   final List<String>? images;
+  final List<String>? modes;
 
   PropertyModel({
     required this.id,
@@ -22,6 +23,7 @@ class PropertyModel {
     this.city,
     this.region,
     this.images,
+    this.modes,
   });
 
   factory PropertyModel.fromJson(Map<String, dynamic> json) =>

@@ -351,6 +351,9 @@ class _PropCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final statusLabel = propertyStatusLabel(prop.status);
     final typeLabel = propertyTypeLabel(prop.type);
+    final modes = prop.modes ?? const [];
+    final isLease = modes.contains('LEASE');
+    final isBooking = modes.contains('BOOKING');
     final location = [
       prop.address,
     ].where((v) => v != null && v.isNotEmpty).join(', ');
@@ -462,7 +465,16 @@ class _PropCard extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 9),
-                    RLPill(typeLabel, tone: RLTone.neutral),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [
+                        RLPill(typeLabel, tone: RLTone.neutral),
+                        if (isLease) RLPill('Long stay', tone: RLTone.neutral),
+                        if (isBooking)
+                          RLPill('Short stay', tone: RLTone.neutral),
+                      ],
+                    ),
                   ],
                 ),
               ),
