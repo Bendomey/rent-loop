@@ -1,55 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:rentloop_manager/src/architecture/current_user/current_user_notifier.dart';
+import 'package:rentloop_manager/src/architecture/current_workspace/current_workspace_notifier.dart';
 import 'package:rentloop_manager/src/constants.dart';
+import 'package:rentloop_manager/src/lib/workspace_resolution.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-// Static data — mirrors the design spec.
-const _kWorkspaces = [
-  _WsData(id: 'ws1', name: 'Owusu Estates',            initial: 'OE', role: 'Manager', units: 64),
-  _WsData(id: 'ws2', name: 'Cantonments Property Co.', initial: 'CP', role: 'Staff',   units: 24),
-  _WsData(id: 'ws3', name: 'Labadi Hospitality Group', initial: 'LH', role: 'Manager', units: 18),
-];
-
-class _WsData {
-  const _WsData({required this.id, required this.name, required this.initial, required this.role, required this.units});
-  final String id;
-  final String name;
-  final String initial;
-  final String role;
-  final int units;
-}
-
-// Call this from the home screen's workspace eyebrow button.
-Future<void> showWorkspaceSheet(BuildContext context, {required String activeId}) {
+// Call this from the home screen's workspace eyebrow button or the More
+// screen's workspace card. The member list and the active selection are
+// read off currentUserNotifierProvider / currentWorkspaceNotifierProvider —
+// no separate API call, that data was already fetched at login/`/me`.
+Future<void> showWorkspaceSheet(BuildContext context) {
   return showModalBottomSheet<void>(
     context: context,
     backgroundColor: Colors.transparent,
     barrierColor: const Color.fromRGBO(17, 17, 16, 0.35),
     isScrollControlled: true,
-    builder: (_) => _WorkspaceSheet(activeId: activeId),
+    builder: (_) => const _WorkspaceSheet(),
   );
 }
 
-class _WorkspaceSheet extends StatefulWidget {
-  const _WorkspaceSheet({required this.activeId});
-  final String activeId;
+class _WorkspaceSheet extends ConsumerWidget {
+  const _WorkspaceSheet();
 
   @override
-  State<_WorkspaceSheet> createState() => _WorkspaceSheetState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final clientUsers =
+        ref.watch(currentUserNotifierProvider)?.clientUsers ?? const [];
+    final activeClientId = ref
+        .watch(currentWorkspaceNotifierProvider)
+        ?.clientId;
 
-class _WorkspaceSheetState extends State<_WorkspaceSheet> {
-  late String _activeId;
-
-  @override
-  void initState() {
-    super.initState();
-    _activeId = widget.activeId;
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
@@ -99,7 +82,11 @@ class _WorkspaceSheetState extends State<_WorkspaceSheet> {
                         color: RLTokens.fill,
                         borderRadius: BorderRadius.circular(RLTokens.rSm),
                       ),
-                      child: const Icon(Icons.close, size: 17, color: RLTokens.inkSoft),
+                      child: const Icon(
+                        Icons.close,
+                        size: 17,
+                        color: RLTokens.inkSoft,
+                      ),
                     ),
                   ),
                 ],
@@ -110,77 +97,106 @@ class _WorkspaceSheetState extends State<_WorkspaceSheet> {
             Padding(
               padding: const EdgeInsets.fromLTRB(14, 4, 14, 0),
               child: Column(
-                children: _kWorkspaces.asMap().entries.map((e) {
-                  final ws   = e.value;
-                  final last = e.key == _kWorkspaces.length - 1;
-                  final on   = ws.id == _activeId;
-                  return GestureDetector(
-                    onTap: () async {
-                      await Haptics.vibrate(HapticsType.selection);
-                      setState(() => _activeId = ws.id);
-                      await Future.delayed(const Duration(milliseconds: 180));
-                      if (context.mounted) Navigator.of(context).pop();
-                    },
-                    behavior: HitTestBehavior.opaque,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-                      decoration: BoxDecoration(
-                        border: last ? null : Border(
-                          bottom: BorderSide(color: RLTokens.hairlineSoft),
+                children: clientUsers.asMap().entries.map((e) {
+                  final cu = e.value;
+                  final last = e.key == clientUsers.length - 1;
+                  final active = isActiveClientUser(cu);
+                  final on = cu.clientId == activeClientId;
+                  final name = cu.client?.name ?? 'Unknown workspace';
+                  final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
+
+                  return Opacity(
+                    opacity: active ? 1.0 : 0.5,
+                    child: GestureDetector(
+                      onTap: active
+                          ? () async {
+                              await Haptics.vibrate(HapticsType.selection);
+                              await ref
+                                  .read(
+                                    currentWorkspaceNotifierProvider.notifier,
+                                  )
+                                  .select(cu);
+                              await Future.delayed(
+                                const Duration(milliseconds: 180),
+                              );
+                              if (context.mounted) Navigator.of(context).pop();
+                            }
+                          : null,
+                      behavior: HitTestBehavior.opaque,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 12,
                         ),
-                      ),
-                      child: Row(
-                        children: [
-                          // Workspace tile (default 46px)
-                          _WsTile(initial: ws.initial),
-                          const SizedBox(width: 13),
-                          // Name and role
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  ws.name,
-                                  style: TextStyle(
-                                    fontFamily: RLTokens.fontSans,
-                                    fontSize: 15.5,
-                                    fontWeight: RLTokens.semibold,
-                                    color: RLTokens.ink,
+                        decoration: BoxDecoration(
+                          border: last
+                              ? null
+                              : Border(
+                                  bottom: BorderSide(
+                                    color: RLTokens.hairlineSoft,
                                   ),
                                 ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  '${ws.role} · ${ws.units} units',
-                                  style: TextStyle(
-                                    fontFamily: RLTokens.fontSans,
-                                    fontSize: 12.5,
-                                    color: RLTokens.muted,
+                        ),
+                        child: Row(
+                          children: [
+                            // Workspace tile (default 46px)
+                            _WsTile(initial: initial),
+                            const SizedBox(width: 13),
+                            // Name and role
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    name,
+                                    style: TextStyle(
+                                      fontFamily: RLTokens.fontSans,
+                                      fontSize: 15.5,
+                                      fontWeight: RLTokens.semibold,
+                                      color: RLTokens.ink,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    cu.role,
+                                    style: TextStyle(
+                                      fontFamily: RLTokens.fontSans,
+                                      fontSize: 12.5,
+                                      color: RLTokens.muted,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          // Active indicator
-                          on
-                              ? Container(
-                                  width: 24,
-                                  height: 24,
-                                  decoration: const BoxDecoration(
-                                    color: RLTokens.crimson,
-                                    shape: BoxShape.circle,
+                            const SizedBox(width: 8),
+                            // Active indicator
+                            on
+                                ? Container(
+                                    width: 24,
+                                    height: 24,
+                                    decoration: const BoxDecoration(
+                                      color: RLTokens.crimson,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.check,
+                                      size: 14,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : Container(
+                                    width: 24,
+                                    height: 24,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: RLTokens.hairline,
+                                        width: 1.5,
+                                      ),
+                                    ),
                                   ),
-                                  child: const Icon(Icons.check, size: 14, color: Colors.white),
-                                )
-                              : Container(
-                                  width: 24,
-                                  height: 24,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(color: RLTokens.hairline, width: 1.5),
-                                  ),
-                                ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   );
@@ -194,8 +210,12 @@ class _WorkspaceSheetState extends State<_WorkspaceSheet> {
               child: GestureDetector(
                 onTap: () async {
                   await Haptics.vibrate(HapticsType.selection);
-                  final url = applyUrl(campaign: 'workspace_sheet', content: 'create_workspace');
-                  if (await canLaunchUrl(url)) await launchUrl(url, mode: LaunchMode.externalApplication);
+                  final url = applyUrl(
+                    campaign: 'workspace_sheet',
+                    content: 'create_workspace',
+                  );
+                  if (await canLaunchUrl(url))
+                    await launchUrl(url, mode: LaunchMode.externalApplication);
                 },
                 child: Container(
                   width: double.infinity,

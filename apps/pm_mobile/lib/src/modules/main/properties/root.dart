@@ -1,75 +1,95 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:shimmer/shimmer.dart';
+
+import 'package:rentloop_manager/src/lib/property_status.dart';
+import 'package:rentloop_manager/src/repository/models/property_model.dart';
+import 'package:rentloop_manager/src/repository/notifiers/properties/properties_notifier.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
-// ── Seed data (matches design spec) ──────────────────────────────────────────
+const _kStatusFilters = ['All', 'Active', 'Maintenance', 'Inactive'];
 
-class _PropData {
-  const _PropData({
-    required this.id,
-    required this.name,
-    required this.area,
-    required this.type,
-    required this.mode,
-    required this.units,
-    required this.occupied,
-    required this.available,
-    required this.maint,
-    required this.revenue,
-    required this.status,
-  });
-  final String id;
-  final String name;
-  final String area;
-  final String type;
-  final String mode;
-  final int    units;
-  final int    occupied;
-  final int    available;
-  final int    maint;
-  final int    revenue;
-  final String status;
-}
-
-const _kProps = [
-  _PropData(id: 'p1', name: 'Cantonments Court',   area: 'Cantonments, Accra',  type: 'Apartments', mode: 'Lease',   units: 24, occupied: 22, available: 1, maint: 1, revenue: 86000, status: 'Active'),
-  _PropData(id: 'p2', name: 'Spintex Heights',      area: 'Spintex Road, Accra', type: 'Apartments', mode: 'Both',    units: 18, occupied: 15, available: 2, maint: 1, revenue: 54000, status: 'Active'),
-  _PropData(id: 'p3', name: 'Labadi Beach Suites',  area: 'Labadi, Accra',       type: 'Serviced',   mode: 'Booking', units: 12, occupied: 11, available: 1, maint: 0, revenue: 31500, status: 'Active'),
-  _PropData(id: 'p4', name: 'East Legon Villa',     area: 'East Legon, Accra',   type: 'House',      mode: 'Lease',   units:  1, occupied:  1, available: 0, maint: 0, revenue:  9000, status: 'Active'),
-  _PropData(id: 'p5', name: 'Osu Retail Block',     area: 'Oxford St, Osu',      type: 'Commercial', mode: 'Lease',   units:  9, occupied:  7, available: 2, maint: 0, revenue:  4000, status: 'Draft'),
-];
-
-const _kFilters = ['All', 'Long stay', 'Short stay', 'Both', 'Draft'];
-
-final _totalUnits = _kProps.fold(0, (s, p) => s + p.units);
+String? _statusApiValue(String label) => switch (label) {
+  'Active' => 'Property.Status.Active',
+  'Maintenance' => 'Property.Status.Maintenance',
+  'Inactive' => 'Property.Status.Inactive',
+  _ => null,
+};
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
-class PropertiesScreen extends StatefulWidget {
+class PropertiesScreen extends ConsumerStatefulWidget {
   const PropertiesScreen({super.key});
 
   @override
-  State<PropertiesScreen> createState() => _PropertiesScreenState();
+  ConsumerState<PropertiesScreen> createState() => _PropertiesScreenState();
 }
 
-class _PropertiesScreenState extends State<PropertiesScreen> {
-  String _filter = 'All';
+class _PropertiesScreenState extends ConsumerState<PropertiesScreen> {
+  String _statusFilter = 'All';
+  PropertiesQuery _query = const PropertiesQuery();
+  late final TextEditingController _searchController;
+  late final ScrollController _scrollController;
+  Timer? _searchDebounce;
 
-  List<_PropData> get _visible => _filter == 'All'
-      ? _kProps
-      : _kProps.where((p) {
-          if (_filter == 'Draft')      return p.status == 'Draft';
-          if (_filter == 'Long stay')  return p.mode == 'Lease' || p.mode == 'Both';
-          if (_filter == 'Short stay') return p.mode == 'Booking' || p.mode == 'Both';
-          if (_filter == 'Both')       return p.mode == 'Both';
-          return false;
-        }).toList();
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController();
+    _scrollController = ScrollController()..addListener(_onScroll);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(propertiesNotifierProvider.notifier).loadFirstPage(_query);
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _scrollController.dispose();
+    _searchDebounce?.cancel();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      ref.read(propertiesNotifierProvider.notifier).loadNextPage();
+    }
+  }
+
+  void _onSearchChanged(String value) {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 400), () {
+      setState(() {
+        _query = _query.copyWith(search: value, clearSearch: value.isEmpty);
+      });
+      ref.read(propertiesNotifierProvider.notifier).loadFirstPage(_query);
+    });
+  }
+
+  Future<void> _onSelectStatus(String label) async {
+    await Haptics.vibrate(HapticsType.selection);
+    final apiValue = _statusApiValue(label);
+    setState(() {
+      _statusFilter = label;
+      _query = _query.copyWith(status: apiValue, clearStatus: apiValue == null);
+    });
+    ref.read(propertiesNotifierProvider.notifier).loadFirstPage(_query);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final visible = _visible;
+    final state = ref.watch(propertiesNotifierProvider);
+    final showSkeleton = state.isLoading && state.items.isEmpty;
+    final showError = state.error != null && state.items.isEmpty;
+    final showEmpty =
+        !state.isLoading && state.error == null && state.items.isEmpty;
+
     return Scaffold(
       backgroundColor: RLTokens.surface,
       floatingActionButton: FloatingActionButton.extended(
@@ -93,49 +113,100 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
       ),
       body: RefreshIndicator(
         color: RLTokens.crimson,
-        onRefresh: () async => Haptics.vibrate(HapticsType.light),
+        onRefresh: () =>
+            ref.read(propertiesNotifierProvider.notifier).loadFirstPage(_query),
         child: CustomScrollView(
+          controller: _scrollController,
+          physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
             SliverToBoxAdapter(child: _Header()),
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(RLTokens.gutter, 12, RLTokens.gutter, 0),
-                child: RLSearchBar(hint: 'Search properties or units'),
+                padding: const EdgeInsets.fromLTRB(
+                  RLTokens.gutter,
+                  12,
+                  RLTokens.gutter,
+                  0,
+                ),
+                child: RLSearchBar(
+                  hint: 'Search properties',
+                  controller: _searchController,
+                  onChanged: _onSearchChanged,
+                ),
               ),
             ),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(RLTokens.gutter, 14, 0, 0),
                 child: RLFilterChips(
-                  options: _kFilters,
-                  selected: _filter,
-                  onSelect: (f) async {
-                    await Haptics.vibrate(HapticsType.selection);
-                    setState(() => _filter = f);
-                  },
+                  options: _kStatusFilters,
+                  selected: _statusFilter,
+                  onSelect: _onSelectStatus,
                 ),
               ),
             ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(RLTokens.gutter, 16, RLTokens.gutter, 10),
-                child: Text(
-                  '${visible.length} ${visible.length == 1 ? 'property' : 'properties'} · $_totalUnits units',
-                  style: TextStyle(
-                    fontFamily: RLTokens.fontMono,
-                    fontSize: 11,
-                    letterSpacing: 0.5,
-                    color: RLTokens.mutedSoft,
+            if (showSkeleton)
+              const SliverToBoxAdapter(child: _PropertiesSkeleton())
+            else if (showError)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Padding(
+                  padding: const EdgeInsets.all(RLTokens.gutter),
+                  child: RLSectionError(
+                    onRetry: () => ref
+                        .read(propertiesNotifierProvider.notifier)
+                        .loadFirstPage(_query),
+                  ),
+                ),
+              )
+            else if (showEmpty)
+              const SliverFillRemaining(
+                hasScrollBody: false,
+                child: _EmptyProperties(),
+              )
+            else ...[
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    RLTokens.gutter,
+                    16,
+                    RLTokens.gutter,
+                    10,
+                  ),
+                  child: Text(
+                    '${state.items.length} of ${state.total} ${state.total == 1 ? 'property' : 'properties'}',
+                    style: TextStyle(
+                      fontFamily: RLTokens.fontMono,
+                      fontSize: 11,
+                      letterSpacing: 0.5,
+                      color: RLTokens.mutedSoft,
+                    ),
                   ),
                 ),
               ),
-            ),
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (_, i) => _PropCard(prop: visible[i]),
-                childCount: visible.length,
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (_, i) => _PropCard(prop: state.items[i]),
+                  childCount: state.items.length,
+                ),
               ),
-            ),
+              if (state.isLoadingMore)
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    child: Center(
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          color: RLTokens.crimson,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
             const SliverToBoxAdapter(child: SizedBox(height: 100)),
           ],
         ),
@@ -151,7 +222,12 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: RLTokens.surface,
-      padding: const EdgeInsets.fromLTRB(RLTokens.gutter, RLTokens.statusTop, RLTokens.gutter, 16),
+      padding: const EdgeInsets.fromLTRB(
+        RLTokens.gutter,
+        RLTokens.statusTop,
+        RLTokens.gutter,
+        16,
+      ),
       child: Row(
         children: [
           Text(
@@ -165,11 +241,101 @@ class _Header extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          RLIconBtn(icon: Icons.add, onTap: () async {
-            await Haptics.vibrate(HapticsType.medium);
-            if (context.mounted) context.push('/properties/add');
-          }),
+          RLIconBtn(
+            icon: Icons.add,
+            onTap: () async {
+              await Haptics.vibrate(HapticsType.medium);
+              if (context.mounted) context.push('/properties/add');
+            },
+          ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Empty state ───────────────────────────────────────────────────────────────
+
+class _EmptyProperties extends StatelessWidget {
+  const _EmptyProperties();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(RLTokens.gutter),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: RLTokens.fill,
+                borderRadius: BorderRadius.circular(13),
+              ),
+              child: const Icon(
+                Icons.apartment_outlined,
+                size: 22,
+                color: RLTokens.mutedSoft,
+              ),
+            ),
+            const SizedBox(height: 11),
+            Text(
+              'No properties found',
+              style: TextStyle(
+                fontFamily: RLTokens.fontSans,
+                fontSize: 15,
+                fontWeight: RLTokens.semibold,
+                color: RLTokens.ink,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 3),
+            Text(
+              'Try a different search or filter.',
+              style: TextStyle(
+                fontFamily: RLTokens.fontSans,
+                fontSize: 12.5,
+                color: RLTokens.muted,
+                height: 1.45,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Skeleton ──────────────────────────────────────────────────────────────────
+
+class _PropertiesSkeleton extends StatelessWidget {
+  const _PropertiesSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Shimmer.fromColors(
+      baseColor: RLTokens.fill,
+      highlightColor: RLTokens.paper,
+      child: Column(
+        children: List.generate(
+          4,
+          (_) => Container(
+            margin: const EdgeInsets.fromLTRB(
+              RLTokens.gutter,
+              16,
+              RLTokens.gutter,
+              0,
+            ),
+            height: 116,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(RLTokens.rLg),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -179,21 +345,31 @@ class _Header extends StatelessWidget {
 
 class _PropCard extends StatelessWidget {
   const _PropCard({required this.prop});
-  final _PropData prop;
+  final PropertyModel prop;
 
   @override
   Widget build(BuildContext context) {
-    final p       = prop;
-    final occPct  = (p.occupied / p.units * 100).roundToDouble();
-    final isActive = p.status == 'Active';
+    final statusLabel = propertyStatusLabel(prop.status);
+    final typeLabel = propertyTypeLabel(prop.type);
+    final modes = prop.modes ?? const [];
+    final isLease = modes.contains('LEASE');
+    final isBooking = modes.contains('BOOKING');
+    final location = [
+      prop.address,
+    ].where((v) => v != null && v.isNotEmpty).join(', ');
 
     return GestureDetector(
       onTap: () async {
         await Haptics.vibrate(HapticsType.selection);
-        if (context.mounted) context.push('/properties/${p.id}');
+        if (context.mounted) context.push('/properties/${prop.id}');
       },
       child: Container(
-        margin: const EdgeInsets.fromLTRB(RLTokens.gutter, 0, RLTokens.gutter, 12),
+        margin: const EdgeInsets.fromLTRB(
+          RLTokens.gutter,
+          0,
+          RLTokens.gutter,
+          12,
+        ),
         decoration: BoxDecoration(
           color: RLTokens.surface,
           borderRadius: BorderRadius.circular(RLTokens.rLg),
@@ -206,43 +382,53 @@ class _PropCard extends StatelessWidget {
             SizedBox(
               width: 104,
               height: 116,
-              child: _PropThumb(type: p.type),
+              child: _PropThumb(
+                type: prop.type,
+                imageUrl: (prop.images != null && prop.images!.isNotEmpty)
+                    ? prop.images!.first
+                    : null,
+              ),
             ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(13),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Name + status
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              p.name,
-                              style: TextStyle(
-                                fontFamily: RLTokens.fontSerif,
-                                fontSize: 17,
-                                color: RLTokens.ink,
-                                letterSpacing: -0.3,
-                                height: 1.15,
-                              ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(13),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Name + status
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            prop.name,
+                            style: TextStyle(
+                              fontFamily: RLTokens.fontSerif,
+                              fontSize: 17,
+                              color: RLTokens.ink,
+                              letterSpacing: -0.3,
+                              height: 1.15,
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          RLPill(p.status, tone: isActive ? RLTone.success : RLTone.neutral),
-                        ],
-                      ),
-                      const SizedBox(height: 5),
-                      // Location
+                        ),
+                        const SizedBox(width: 8),
+                        RLPill(statusLabel, tone: statusTone(statusLabel)),
+                      ],
+                    ),
+                    const SizedBox(height: 5),
+                    // Location
+                    if (location.isNotEmpty)
                       Row(
                         children: [
-                          const Icon(Icons.location_on_outlined, size: 13, color: RLTokens.mutedSoft),
+                          const Icon(
+                            Icons.location_on_outlined,
+                            size: 13,
+                            color: RLTokens.mutedSoft,
+                          ),
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
-                              p.area,
+                              location,
                               style: TextStyle(
                                 fontFamily: RLTokens.fontSans,
                                 fontSize: 12,
@@ -253,114 +439,112 @@ class _PropCard extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 10),
-                      // Occupancy bar
-                      Row(
-                        children: [
-                          Expanded(
-                            child: RLBar(
-                              percent: occPct,
-                              height: 6,
-                              color: RLTokens.crimson,
-                              trackColor: RLTokens.fill,
-                            ),
+                    const SizedBox(height: 10),
+                    // Occupancy placeholder — no backing field on this
+                    // endpoint yet; kept visually so a later pass can wire
+                    // real occupancy data into this exact slot.
+                    Row(
+                      children: [
+                        Expanded(
+                          child: RLBar(
+                            percent: 0,
+                            height: 6,
+                            color: RLTokens.crimson,
+                            trackColor: RLTokens.fill,
                           ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '${p.occupied}/${p.units}',
-                            style: TextStyle(
-                              fontFamily: RLTokens.fontMono,
-                              fontSize: 11,
-                              color: RLTokens.muted,
-                            ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '—/—',
+                          style: TextStyle(
+                            fontFamily: RLTokens.fontMono,
+                            fontSize: 11,
+                            color: RLTokens.mutedSoft,
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 9),
-                      // Mode pill(s) + revenue
-                      Row(
-                        children: [
-                          if (p.mode == 'Both') ...[
-                            RLPill('Long stay', tone: RLTone.neutral),
-                            const SizedBox(width: 5),
-                            RLPill('Short stay', tone: RLTone.neutral),
-                          ] else
-                            RLPill(
-                              p.mode == 'Lease' ? 'Long stay' : 'Short stay',
-                              tone: RLTone.neutral,
-                            ),
-                          const Spacer(),
-                          RichText(
-                            text: TextSpan(
-                              style: TextStyle(
-                                fontFamily: RLTokens.fontSans,
-                                fontSize: 13,
-                                fontWeight: RLTokens.semibold,
-                                color: RLTokens.ink,
-                              ),
-                              children: [
-                                TextSpan(text: 'GH₵ ${_fmtNum(p.revenue)}'),
-                                TextSpan(
-                                  text: '/mo',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: RLTokens.regular,
-                                    color: RLTokens.mutedSoft,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 9),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [
+                        RLPill(typeLabel, tone: RLTone.neutral),
+                        if (isLease) RLPill('Long stay', tone: RLTone.neutral),
+                        if (isBooking)
+                          RLPill('Short stay', tone: RLTone.neutral),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-// ── Property thumbnail placeholder ────────────────────────────────────────────
+// ── Property thumbnail (real photo, falls back to a type-colored tile) ────────
 
 class _PropThumb extends StatelessWidget {
-  const _PropThumb({required this.type});
+  const _PropThumb({required this.type, this.imageUrl});
   final String type;
+  final String? imageUrl;
 
   static Color _color(String type) => switch (type) {
-    'Apartments' => const Color(0xFF2A4099),
-    'Serviced'   => const Color(0xFF1A8570),
-    'House'      => const Color(0xFF8A5F20),
-    'Commercial' => const Color(0xFF48586F),
-    _            => const Color(0xFF2C3340),
+    'MULTI' => const Color(0xFF2A4099),
+    _ => const Color(0xFF8A5F20),
   };
 
   static IconData _icon(String type) => switch (type) {
-    'Apartments' => Icons.apartment_rounded,
-    'Serviced'   => Icons.hotel_rounded,
-    'House'      => Icons.house_rounded,
-    'Commercial' => Icons.store_rounded,
-    _            => Icons.business_rounded,
+    'MULTI' => Icons.apartment_rounded,
+    _ => Icons.house_rounded,
   };
 
   @override
   Widget build(BuildContext context) {
-    final bg = _color(type);
+    if (imageUrl != null) {
+      return Image.network(
+        imageUrl!,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        // No real photo yet, or the URL is broken — fall back to the
+        // decorative tile rather than a blank/broken-image icon.
+        errorBuilder: (_, _, _) => _PlaceholderTile(type: type),
+        loadingBuilder: (_, child, progress) =>
+            progress == null ? child : _PlaceholderTile(type: type),
+      );
+    }
+    return _PlaceholderTile(type: type);
+  }
+}
+
+class _PlaceholderTile extends StatelessWidget {
+  const _PlaceholderTile({required this.type});
+  final String type;
+
+  @override
+  Widget build(BuildContext context) {
+    final bg = _PropThumb._color(type);
     return Container(
       color: bg,
       child: Stack(
         children: [
           Center(
-            child: Icon(_icon(type), size: 34, color: Colors.white.withAlpha(40)),
+            child: Icon(
+              _PropThumb._icon(type),
+              size: 34,
+              color: Colors.white.withAlpha(40),
+            ),
           ),
           Positioned(
             bottom: 9,
             left: 9,
             child: Text(
-              type.toUpperCase(),
+              propertyTypeLabel(type).toUpperCase(),
               style: TextStyle(
                 fontFamily: RLTokens.fontMono,
                 fontSize: 8.5,
@@ -374,8 +558,3 @@ class _PropThumb extends StatelessWidget {
     );
   }
 }
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-String _fmtNum(int n) =>
-    n.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => ',');

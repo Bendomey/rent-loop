@@ -15,7 +15,14 @@ const _kUnits = [
 
 const _kPriorities = ['High', 'Medium', 'Low'];
 
-const _kCategories = ['Plumbing', 'Electrical', 'HVAC', 'Appliance', 'General', 'Security'];
+const _kCategories = [
+  'Plumbing',
+  'Electrical',
+  'HVAC',
+  'Appliance',
+  'General',
+  'Security',
+];
 
 const _kVisibility = ['Visible for Tenant', 'Hidden from Tenant'];
 
@@ -60,10 +67,14 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
   void _pick(String key, String value) {
     setState(() {
       switch (key) {
-        case 'unit':     _unit = value;
-        case 'priority': _priority = value;
-        case 'category': _category = value;
-        case 'vis':      _visibility = value;
+        case 'unit':
+          _unit = value;
+        case 'priority':
+          _priority = value;
+        case 'category':
+          _category = value;
+        case 'vis':
+          _visibility = value;
       }
       _activePicker = null;
     });
@@ -199,7 +210,9 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
                         count: _photoCount,
                         onRemove: (i) {
                           Haptics.vibrate(HapticsType.selection);
-                          setState(() => _photoCount = (_photoCount - 1).clamp(0, 99));
+                          setState(
+                            () => _photoCount = (_photoCount - 1).clamp(0, 99),
+                          );
                         },
                         onAdd: () {
                           Haptics.vibrate(HapticsType.selection);
@@ -281,7 +294,10 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
                       if (context.mounted) Navigator.of(context).pop();
                     },
                     child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 12,
+                      ),
                       child: Text(
                         'Cancel',
                         style: TextStyle(
@@ -319,10 +335,9 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
           if (_activePicker == 'priority')
             _PickerSheet(
               title: 'Priority',
-              options: _kPriorities.map((l) => _PickerOption(
-                label: l,
-                tone: statusTone(l),
-              )).toList(),
+              options: _kPriorities
+                  .map((l) => _PickerOption(label: l, tone: statusTone(l)))
+                  .toList(),
               selected: _priority,
               onPick: (v) => _pick('priority', v),
               onClose: _closePicker,
@@ -330,7 +345,9 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
           if (_activePicker == 'category')
             _PickerSheet(
               title: 'Category',
-              options: _kCategories.map((l) => _PickerOption(label: l)).toList(),
+              options: _kCategories
+                  .map((l) => _PickerOption(label: l))
+                  .toList(),
               selected: _category,
               onPick: (v) => _pick('category', v),
               onClose: _closePicker,
@@ -338,10 +355,9 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
           if (_activePicker == 'vis')
             _PickerSheet(
               title: 'Tenant visibility',
-              options: _kVisibility.map((l) => _PickerOption(
-                label: l,
-                sub: _kVisibilitySubs[l],
-              )).toList(),
+              options: _kVisibility
+                  .map((l) => _PickerOption(label: l, sub: _kVisibilitySubs[l]))
+                  .toList(),
               selected: _visibility,
               onPick: (v) => _pick('vis', v),
               onClose: _closePicker,
@@ -396,7 +412,11 @@ class _FormField extends StatelessWidget {
 // ── Select field ──────────────────────────────────────────────────────────────
 
 class _SelectField extends StatelessWidget {
-  const _SelectField({required this.value, required this.placeholder, required this.onTap});
+  const _SelectField({
+    required this.value,
+    required this.placeholder,
+    required this.onTap,
+  });
   final String value;
   final String placeholder;
   final VoidCallback onTap;
@@ -427,7 +447,11 @@ class _SelectField extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            const Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: RLTokens.mutedSoft),
+            const Icon(
+              Icons.keyboard_arrow_down_rounded,
+              size: 18,
+              color: RLTokens.mutedSoft,
+            ),
           ],
         ),
       ),
@@ -523,7 +547,11 @@ class _TextAreaField extends StatelessWidget {
 // ── Photos row ────────────────────────────────────────────────────────────────
 
 class _PhotosRow extends StatelessWidget {
-  const _PhotosRow({required this.count, required this.onRemove, required this.onAdd});
+  const _PhotosRow({
+    required this.count,
+    required this.onRemove,
+    required this.onAdd,
+  });
   final int count;
   final ValueChanged<int> onRemove;
   final VoidCallback onAdd;
@@ -552,7 +580,11 @@ class _PhotosRow extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: const [
-                Icon(Icons.camera_alt_outlined, size: 22, color: RLTokens.mutedSoft),
+                Icon(
+                  Icons.camera_alt_outlined,
+                  size: 22,
+                  color: RLTokens.mutedSoft,
+                ),
                 SizedBox(height: 4),
                 Text(
                   'Add',
@@ -590,7 +622,11 @@ class _PhotoThumb extends StatelessWidget {
               borderRadius: BorderRadius.circular(RLTokens.rMd),
             ),
             child: const Center(
-              child: Icon(Icons.image_outlined, size: 28, color: RLTokens.mutedSoft),
+              child: Icon(
+                Icons.image_outlined,
+                size: 28,
+                color: RLTokens.mutedSoft,
+              ),
             ),
           ),
           Positioned(
@@ -716,12 +752,17 @@ class _PickerSheet extends StatelessWidget {
                             onTap: () => onPick(o.label),
                             behavior: HitTestBehavior.opaque,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 8),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 13,
+                                horizontal: 8,
+                              ),
                               decoration: BoxDecoration(
                                 border: isLast
                                     ? null
                                     : const Border(
-                                        bottom: BorderSide(color: RLTokens.hairlineSoft),
+                                        bottom: BorderSide(
+                                          color: RLTokens.hairlineSoft,
+                                        ),
                                       ),
                               ),
                               child: Row(
@@ -732,14 +773,17 @@ class _PickerSheet extends StatelessWidget {
                                   ],
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           o.label,
                                           style: TextStyle(
                                             fontFamily: RLTokens.fontSans,
                                             fontSize: 15,
-                                            fontWeight: isSelected ? RLTokens.bold : RLTokens.medium,
+                                            fontWeight: isSelected
+                                                ? RLTokens.bold
+                                                : RLTokens.medium,
                                             color: RLTokens.ink,
                                           ),
                                         ),

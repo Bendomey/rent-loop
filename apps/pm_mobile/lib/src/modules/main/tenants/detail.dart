@@ -21,27 +21,78 @@ class _TenantData {
   final String unit;
   final String phone;
   final String status;
-  final int    balance;
+  final int balance;
   final String since;
-  final int    rent;
+  final int rent;
 }
 
 const _kTenants = [
-  _TenantData(id: 't1', name: 'Kwame Mensah', unit: 'Unit 4B · Cantonments Court', phone: '+233 24 558 1190', status: 'Active',  balance: 0,    since: 'Mar 2024', rent: 4200),
-  _TenantData(id: 't2', name: 'Ama Boateng',  unit: 'Unit 5A · Cantonments Court', phone: '+233 20 771 4402', status: 'Active',  balance: 4200, since: 'Jan 2025', rent: 4200),
-  _TenantData(id: 't3', name: 'Yaw Asante',   unit: 'Unit 3B · Cantonments Court', phone: '+233 55 309 8821', status: 'Active',  balance: 0,    since: 'Aug 2023', rent: 5500),
-  _TenantData(id: 't4', name: 'Efua Sarpong', unit: 'Unit 7 · Spintex Heights',    phone: '+233 27 644 1180', status: 'Active',  balance: 1500, since: 'Nov 2024', rent: 3500),
-  _TenantData(id: 't5', name: 'Kojo Antwi',   unit: 'Shop 2 · Osu Retail Block',   phone: '+233 24 902 3318', status: 'Expired', balance: 0,    since: 'Feb 2022', rent: 6000),
+  _TenantData(
+    id: 't1',
+    name: 'Kwame Mensah',
+    unit: 'Unit 4B · Cantonments Court',
+    phone: '+233 24 558 1190',
+    status: 'Active',
+    balance: 0,
+    since: 'Mar 2024',
+    rent: 4200,
+  ),
+  _TenantData(
+    id: 't2',
+    name: 'Ama Boateng',
+    unit: 'Unit 5A · Cantonments Court',
+    phone: '+233 20 771 4402',
+    status: 'Active',
+    balance: 4200,
+    since: 'Jan 2025',
+    rent: 4200,
+  ),
+  _TenantData(
+    id: 't3',
+    name: 'Yaw Asante',
+    unit: 'Unit 3B · Cantonments Court',
+    phone: '+233 55 309 8821',
+    status: 'Active',
+    balance: 0,
+    since: 'Aug 2023',
+    rent: 5500,
+  ),
+  _TenantData(
+    id: 't4',
+    name: 'Efua Sarpong',
+    unit: 'Unit 7 · Spintex Heights',
+    phone: '+233 27 644 1180',
+    status: 'Active',
+    balance: 1500,
+    since: 'Nov 2024',
+    rent: 3500,
+  ),
+  _TenantData(
+    id: 't5',
+    name: 'Kojo Antwi',
+    unit: 'Shop 2 · Osu Retail Block',
+    phone: '+233 24 902 3318',
+    status: 'Expired',
+    balance: 0,
+    since: 'Feb 2022',
+    rent: 6000,
+  ),
 ];
 
 // ── Record row model ──────────────────────────────────────────────────────────
 
 class _RecordRow {
-  const _RecordRow({required this.label, required this.sub, required this.iconBg, required this.iconFg, required this.icon});
-  final String   label;
-  final String   sub;
-  final Color    iconBg;
-  final Color    iconFg;
+  const _RecordRow({
+    required this.label,
+    required this.sub,
+    required this.iconBg,
+    required this.iconFg,
+    required this.icon,
+  });
+  final String label;
+  final String sub;
+  final Color iconBg;
+  final Color iconFg;
   final IconData icon;
 }
 
@@ -52,15 +103,42 @@ class TenantDetailScreen extends StatelessWidget {
   final String id;
 
   static const _recordRows = [
-    _RecordRow(label: 'Leases',       sub: '1 active · 1 past',  iconBg: RLTokens.infoBg,    iconFg: RLTokens.info,    icon: Icons.description_outlined),
-    _RecordRow(label: 'Payments',     sub: 'On-time rate 96%',   iconBg: RLTokens.successBg, iconFg: RLTokens.success, icon: Icons.credit_card_outlined),
-    _RecordRow(label: 'Maintenance',  sub: '2 requests',         iconBg: RLTokens.warningBg, iconFg: RLTokens.warning, icon: Icons.build_outlined),
-    _RecordRow(label: 'Activity log', sub: 'Full audit trail',   iconBg: RLTokens.neutralBg, iconFg: RLTokens.neutral, icon: Icons.history_rounded),
+    _RecordRow(
+      label: 'Leases',
+      sub: '1 active · 1 past',
+      iconBg: RLTokens.infoBg,
+      iconFg: RLTokens.info,
+      icon: Icons.description_outlined,
+    ),
+    _RecordRow(
+      label: 'Payments',
+      sub: 'On-time rate 96%',
+      iconBg: RLTokens.successBg,
+      iconFg: RLTokens.success,
+      icon: Icons.credit_card_outlined,
+    ),
+    _RecordRow(
+      label: 'Maintenance',
+      sub: '2 requests',
+      iconBg: RLTokens.warningBg,
+      iconFg: RLTokens.warning,
+      icon: Icons.build_outlined,
+    ),
+    _RecordRow(
+      label: 'Activity log',
+      sub: 'Full audit trail',
+      iconBg: RLTokens.neutralBg,
+      iconFg: RLTokens.neutral,
+      icon: Icons.history_rounded,
+    ),
   ];
 
   @override
   Widget build(BuildContext context) {
-    final t = _kTenants.firstWhere((x) => x.id == id, orElse: () => _kTenants.first);
+    final t = _kTenants.firstWhere(
+      (x) => x.id == id,
+      orElse: () => _kTenants.first,
+    );
 
     return Scaffold(
       backgroundColor: RLTokens.surface,
@@ -82,7 +160,12 @@ class TenantDetailScreen extends StatelessWidget {
           ),
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(RLTokens.gutter, 0, RLTokens.gutter, 32),
+              padding: const EdgeInsets.fromLTRB(
+                RLTokens.gutter,
+                0,
+                RLTokens.gutter,
+                32,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -92,13 +175,23 @@ class TenantDetailScreen extends StatelessWidget {
                   // Stat grid
                   Row(
                     children: [
-                      Expanded(child: _StatCard(label: 'Monthly rent', value: '₵${_fmt(t.rent)}', valueColor: RLTokens.ink)),
+                      Expanded(
+                        child: _StatCard(
+                          label: 'Monthly rent',
+                          value: '₵${_fmt(t.rent)}',
+                          valueColor: RLTokens.ink,
+                        ),
+                      ),
                       const SizedBox(width: 10),
-                      Expanded(child: _StatCard(
-                        label: 'Balance',
-                        value: t.balance > 0 ? '₵${_fmt(t.balance)}' : '₵0',
-                        valueColor: t.balance > 0 ? RLTokens.crimson : RLTokens.success,
-                      )),
+                      Expanded(
+                        child: _StatCard(
+                          label: 'Balance',
+                          value: t.balance > 0 ? '₵${_fmt(t.balance)}' : '₵0',
+                          valueColor: t.balance > 0
+                              ? RLTokens.crimson
+                              : RLTokens.success,
+                        ),
+                      ),
                     ],
                   ),
 
@@ -184,10 +277,14 @@ class _Hero extends StatelessWidget {
 // ── Stat card ─────────────────────────────────────────────────────────────────
 
 class _StatCard extends StatelessWidget {
-  const _StatCard({required this.label, required this.value, required this.valueColor});
+  const _StatCard({
+    required this.label,
+    required this.value,
+    required this.valueColor,
+  });
   final String label;
   final String value;
-  final Color  valueColor;
+  final Color valueColor;
 
   @override
   Widget build(BuildContext context) {
@@ -243,8 +340,12 @@ class _DetailsCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _FieldRow(k: 'Status', v: t.status, vColor: t.status == 'Active' ? RLTokens.success : RLTokens.muted),
-          _FieldRow(k: 'Phone',  v: t.phone),
+          _FieldRow(
+            k: 'Status',
+            v: t.status,
+            vColor: t.status == 'Active' ? RLTokens.success : RLTokens.muted,
+          ),
+          _FieldRow(k: 'Phone', v: t.phone),
           _FieldRow(k: 'Tenant since', v: t.since, last: true),
         ],
       ),
@@ -253,23 +354,37 @@ class _DetailsCard extends StatelessWidget {
 }
 
 class _FieldRow extends StatelessWidget {
-  const _FieldRow({required this.k, required this.v, this.vColor, this.last = false});
-  final String  k;
-  final String  v;
-  final Color?  vColor;
-  final bool    last;
+  const _FieldRow({
+    required this.k,
+    required this.v,
+    this.vColor,
+    this.last = false,
+  });
+  final String k;
+  final String v;
+  final Color? vColor;
+  final bool last;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
-        border: last ? null : const Border(bottom: BorderSide(color: RLTokens.hairlineSoft)),
+        border: last
+            ? null
+            : const Border(bottom: BorderSide(color: RLTokens.hairlineSoft)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(k, style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 13.5, color: RLTokens.muted)),
+          Text(
+            k,
+            style: const TextStyle(
+              fontFamily: RLTokens.fontSans,
+              fontSize: 13.5,
+              color: RLTokens.muted,
+            ),
+          ),
           Text(
             v,
             style: TextStyle(
@@ -302,7 +417,7 @@ class _RecordCard extends StatelessWidget {
       ),
       child: Column(
         children: List.generate(rows.length, (i) {
-          final r      = rows[i];
+          final r = rows[i];
           final isLast = i == rows.length - 1;
           return GestureDetector(
             onTap: () async => Haptics.vibrate(HapticsType.selection),
@@ -312,7 +427,9 @@ class _RecordCard extends StatelessWidget {
               decoration: BoxDecoration(
                 border: isLast
                     ? null
-                    : const Border(bottom: BorderSide(color: RLTokens.hairlineSoft)),
+                    : const Border(
+                        bottom: BorderSide(color: RLTokens.hairlineSoft),
+                      ),
               ),
               child: Row(
                 children: [
@@ -351,7 +468,11 @@ class _RecordCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const Icon(Icons.chevron_right_rounded, size: 17, color: RLTokens.micro),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    size: 17,
+                    color: RLTokens.micro,
+                  ),
                 ],
               ),
             ),

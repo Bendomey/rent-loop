@@ -22,15 +22,51 @@ class _BookingData {
   final String status;
   final String inDate;
   final String outDate;
-  final int    nights;
-  final int    amount;
+  final int nights;
+  final int amount;
 }
 
 const _kBookings = [
-  _BookingData(id: 'b1', guest: 'Michael Tetteh',  unit: 'Suite 1 · Labadi Beach', status: 'Checked In', inDate: 'Jun 3',  outDate: 'Jun 7',  nights: 4, amount: 3200),
-  _BookingData(id: 'b2', guest: 'Sarah Addai',      unit: 'Suite 4 · Labadi Beach', status: 'Confirmed',  inDate: 'Jun 8',  outDate: 'Jun 11', nights: 3, amount: 2400),
-  _BookingData(id: 'b3', guest: 'Corporate · MTN',  unit: 'Suite 2 · Labadi Beach', status: 'Pending',    inDate: 'Jun 12', outDate: 'Jun 19', nights: 7, amount: 5600),
-  _BookingData(id: 'b4', guest: 'Linda Quaye',      unit: 'Suite 6 · Labadi Beach', status: 'Confirmed',  inDate: 'Jun 14', outDate: 'Jun 16', nights: 2, amount: 1600),
+  _BookingData(
+    id: 'b1',
+    guest: 'Michael Tetteh',
+    unit: 'Suite 1 · Labadi Beach',
+    status: 'Checked In',
+    inDate: 'Jun 3',
+    outDate: 'Jun 7',
+    nights: 4,
+    amount: 3200,
+  ),
+  _BookingData(
+    id: 'b2',
+    guest: 'Sarah Addai',
+    unit: 'Suite 4 · Labadi Beach',
+    status: 'Confirmed',
+    inDate: 'Jun 8',
+    outDate: 'Jun 11',
+    nights: 3,
+    amount: 2400,
+  ),
+  _BookingData(
+    id: 'b3',
+    guest: 'Corporate · MTN',
+    unit: 'Suite 2 · Labadi Beach',
+    status: 'Pending',
+    inDate: 'Jun 12',
+    outDate: 'Jun 19',
+    nights: 7,
+    amount: 5600,
+  ),
+  _BookingData(
+    id: 'b4',
+    guest: 'Linda Quaye',
+    unit: 'Suite 6 · Labadi Beach',
+    status: 'Confirmed',
+    inDate: 'Jun 14',
+    outDate: 'Jun 16',
+    nights: 2,
+    amount: 1600,
+  ),
 ];
 
 // ── Screen ────────────────────────────────────────────────────────────────────
@@ -43,12 +79,15 @@ class BookingDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final b   = _kBookings.firstWhere((x) => x.id == id, orElse: () => _kBookings.first);
+    final b = _kBookings.firstWhere(
+      (x) => x.id == id,
+      orElse: () => _kBookings.first,
+    );
     final cur = _steps.indexOf(b.status).clamp(0, _steps.length - 1);
     final cta = switch (b.status) {
-      'Pending'   => 'Confirm booking',
+      'Pending' => 'Confirm booking',
       'Confirmed' => 'Check guest in',
-      _           => 'Check out',
+      _ => 'Check out',
     };
 
     return Scaffold(
@@ -211,7 +250,11 @@ class _StayCard extends StatelessWidget {
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.arrow_forward_rounded, size: 18, color: RLTokens.crimson),
+              const Icon(
+                Icons.arrow_forward_rounded,
+                size: 18,
+                color: RLTokens.crimson,
+              ),
               const SizedBox(height: 2),
               Text(
                 '${b.nights}n',
@@ -315,8 +358,23 @@ class _FieldRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(k, style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 13.5, color: RLTokens.muted)),
-          Text(v, style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 13.5, fontWeight: RLTokens.semibold, color: RLTokens.ink)),
+          Text(
+            k,
+            style: const TextStyle(
+              fontFamily: RLTokens.fontSans,
+              fontSize: 13.5,
+              color: RLTokens.muted,
+            ),
+          ),
+          Text(
+            v,
+            style: const TextStyle(
+              fontFamily: RLTokens.fontSans,
+              fontSize: 13.5,
+              fontWeight: RLTokens.semibold,
+              color: RLTokens.ink,
+            ),
+          ),
         ],
       ),
     );
@@ -332,7 +390,12 @@ class _ActionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.fromLTRB(20, 12, 20, 12 + MediaQuery.of(context).padding.bottom),
+      padding: EdgeInsets.fromLTRB(
+        20,
+        12,
+        20,
+        12 + MediaQuery.of(context).padding.bottom,
+      ),
       decoration: BoxDecoration(
         color: RLTokens.surface,
         border: const Border(top: BorderSide(color: RLTokens.hairline)),

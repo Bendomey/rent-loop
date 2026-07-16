@@ -5,27 +5,63 @@ import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
 const _kMembers = [
-  _Member(name: 'Akosua Owusu',     role: 'Owner',   email: 'akosua@owusuestates.com',   phone: '+233 24 558 1190', status: 'Active'),
-  _Member(name: 'Jane Mensah',      role: 'Manager', email: 'jane.mensah@gmail.com',      phone: '+233 50 165 2108', status: 'Active'),
-  _Member(name: 'Emmanuel Baidoo',  role: 'Staff',   email: 'ebaidoo79@gmail.com',        phone: '+233 50 633 9153', status: 'Active'),
-  _Member(name: 'Gideon Bempong',   role: 'Staff',   email: 'gideonbempong533@gmail.com', phone: '+233 27 709 9220', status: 'Invited'),
-  _Member(name: 'Edward Adjei',     role: 'Manager', email: 'edd.net49@gmail.com',        phone: '+233 55 860 1966', status: 'Active'),
+  _Member(
+    name: 'Akosua Owusu',
+    role: 'Owner',
+    email: 'akosua@owusuestates.com',
+    phone: '+233 24 558 1190',
+    status: 'Active',
+  ),
+  _Member(
+    name: 'Jane Mensah',
+    role: 'Manager',
+    email: 'jane.mensah@gmail.com',
+    phone: '+233 50 165 2108',
+    status: 'Active',
+  ),
+  _Member(
+    name: 'Emmanuel Baidoo',
+    role: 'Staff',
+    email: 'ebaidoo79@gmail.com',
+    phone: '+233 50 633 9153',
+    status: 'Active',
+  ),
+  _Member(
+    name: 'Gideon Bempong',
+    role: 'Staff',
+    email: 'gideonbempong533@gmail.com',
+    phone: '+233 27 709 9220',
+    status: 'Invited',
+  ),
+  _Member(
+    name: 'Edward Adjei',
+    role: 'Manager',
+    email: 'edd.net49@gmail.com',
+    phone: '+233 55 860 1966',
+    status: 'Active',
+  ),
 ];
 
 class _Member {
-  const _Member({required this.name, required this.role, required this.email, required this.phone, required this.status});
+  const _Member({
+    required this.name,
+    required this.role,
+    required this.email,
+    required this.phone,
+    required this.status,
+  });
   final String name, role, email, phone, status;
 }
 
 Color _statusColor(String s) => switch (s) {
-  'Active'  => RLTokens.success,
+  'Active' => RLTokens.success,
   'Invited' => RLTokens.warning,
-  _         => RLTokens.danger,
+  _ => RLTokens.danger,
 };
 Color _statusBg(String s) => switch (s) {
-  'Active'  => RLTokens.successBg,
+  'Active' => RLTokens.successBg,
   'Invited' => RLTokens.warningBg,
-  _         => RLTokens.dangerBg,
+  _ => RLTokens.dangerBg,
 };
 
 class PropertyMembersScreen extends StatelessWidget {
@@ -41,7 +77,8 @@ class PropertyMembersScreen extends StatelessWidget {
         icon: Icons.add_rounded,
         onPressed: () async {
           await Haptics.vibrate(HapticsType.medium);
-          if (context.mounted) context.push('/properties/$id/settings/members/add');
+          if (context.mounted)
+            context.push('/properties/$id/settings/members/add');
         },
       ),
       body: Column(
@@ -49,31 +86,53 @@ class PropertyMembersScreen extends StatelessWidget {
           RLBackHeader(
             title: 'Members',
             trailing: IconButton(
-              icon: const Icon(Icons.add_rounded, size: 22, color: RLTokens.ink),
+              icon: const Icon(
+                Icons.add_rounded,
+                size: 22,
+                color: RLTokens.ink,
+              ),
               onPressed: () async {
                 await Haptics.vibrate(HapticsType.selection);
-                if (context.mounted) context.push('/properties/$id/settings/members/add');
+                if (context.mounted)
+                  context.push('/properties/$id/settings/members/add');
               },
             ),
           ),
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(RLTokens.gutter, 6, RLTokens.gutter, 120),
+              padding: const EdgeInsets.fromLTRB(
+                RLTokens.gutter,
+                6,
+                RLTokens.gutter,
+                120,
+              ),
               children: [
                 const Text(
                   'Manage members',
-                  style: TextStyle(fontFamily: RLTokens.fontSerif, fontSize: 24, color: RLTokens.ink, letterSpacing: -0.4),
+                  style: TextStyle(
+                    fontFamily: RLTokens.fontSerif,
+                    fontSize: 24,
+                    color: RLTokens.ink,
+                    letterSpacing: -0.4,
+                  ),
                 ),
                 const SizedBox(height: 5),
                 const Text(
                   'These people have access to this property.',
-                  style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 13, color: RLTokens.muted),
+                  style: TextStyle(
+                    fontFamily: RLTokens.fontSans,
+                    fontSize: 13,
+                    color: RLTokens.muted,
+                  ),
                 ),
                 const SizedBox(height: 14),
 
                 // Search bar
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 11,
+                  ),
                   decoration: BoxDecoration(
                     color: RLTokens.fill,
                     borderRadius: BorderRadius.circular(12),
@@ -81,9 +140,20 @@ class PropertyMembersScreen extends StatelessWidget {
                   ),
                   child: const Row(
                     children: [
-                      Icon(Icons.search_rounded, size: 18, color: RLTokens.mutedSoft),
+                      Icon(
+                        Icons.search_rounded,
+                        size: 18,
+                        color: RLTokens.mutedSoft,
+                      ),
                       SizedBox(width: 10),
-                      Text('Search members', style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 14, color: RLTokens.mutedSoft)),
+                      Text(
+                        'Search members',
+                        style: TextStyle(
+                          fontFamily: RLTokens.fontSans,
+                          fontSize: 14,
+                          color: RLTokens.mutedSoft,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -96,12 +166,22 @@ class PropertyMembersScreen extends StatelessWidget {
                       const Expanded(
                         child: Text(
                           'Team',
-                          style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 12.5, fontWeight: RLTokens.semibold, color: RLTokens.muted),
+                          style: TextStyle(
+                            fontFamily: RLTokens.fontSans,
+                            fontSize: 12.5,
+                            fontWeight: RLTokens.semibold,
+                            color: RLTokens.muted,
+                          ),
                         ),
                       ),
                       Text(
                         '${_kMembers.length} members',
-                        style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 12.5, fontWeight: RLTokens.semibold, color: RLTokens.crimson),
+                        style: const TextStyle(
+                          fontFamily: RLTokens.fontSans,
+                          fontSize: 12.5,
+                          fontWeight: RLTokens.semibold,
+                          color: RLTokens.crimson,
+                        ),
                       ),
                     ],
                   ),
@@ -130,25 +210,57 @@ class PropertyMembersScreen extends StatelessWidget {
                                 Row(
                                   children: [
                                     Expanded(
-                                      child: Text(m.name, style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 15, fontWeight: RLTokens.semibold, color: RLTokens.ink)),
+                                      child: Text(
+                                        m.name,
+                                        style: const TextStyle(
+                                          fontFamily: RLTokens.fontSans,
+                                          fontSize: 15,
+                                          fontWeight: RLTokens.semibold,
+                                          color: RLTokens.ink,
+                                        ),
+                                      ),
                                     ),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 2,
+                                      ),
                                       decoration: BoxDecoration(
                                         color: RLTokens.fill,
                                         borderRadius: BorderRadius.circular(5),
                                       ),
                                       child: Text(
                                         m.role.toUpperCase(),
-                                        style: const TextStyle(fontFamily: RLTokens.fontMono, fontSize: 9.5, fontWeight: RLTokens.bold, letterSpacing: 0.6, color: RLTokens.muted),
+                                        style: const TextStyle(
+                                          fontFamily: RLTokens.fontMono,
+                                          fontSize: 9.5,
+                                          fontWeight: RLTokens.bold,
+                                          letterSpacing: 0.6,
+                                          color: RLTokens.muted,
+                                        ),
                                       ),
                                     ),
                                   ],
                                 ),
                                 const SizedBox(height: 4),
-                                Text(m.email, style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 12.5, color: RLTokens.muted), overflow: TextOverflow.ellipsis),
+                                Text(
+                                  m.email,
+                                  style: const TextStyle(
+                                    fontFamily: RLTokens.fontSans,
+                                    fontSize: 12.5,
+                                    color: RLTokens.muted,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                                 const SizedBox(height: 2),
-                                Text(m.phone, style: const TextStyle(fontFamily: RLTokens.fontMono, fontSize: 11.5, color: RLTokens.mutedSoft)),
+                                Text(
+                                  m.phone,
+                                  style: const TextStyle(
+                                    fontFamily: RLTokens.fontMono,
+                                    fontSize: 11.5,
+                                    color: RLTokens.mutedSoft,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -157,20 +269,35 @@ class PropertyMembersScreen extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
                                 decoration: BoxDecoration(
                                   color: _statusBg(m.status),
-                                  borderRadius: BorderRadius.circular(RLTokens.rPill),
+                                  borderRadius: BorderRadius.circular(
+                                    RLTokens.rPill,
+                                  ),
                                 ),
                                 child: Text(
                                   m.status,
-                                  style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 12, fontWeight: RLTokens.semibold, color: _statusColor(m.status)),
+                                  style: TextStyle(
+                                    fontFamily: RLTokens.fontSans,
+                                    fontSize: 12,
+                                    fontWeight: RLTokens.semibold,
+                                    color: _statusColor(m.status),
+                                  ),
                                 ),
                               ),
                               const SizedBox(height: 12),
                               GestureDetector(
-                                onTap: () => Haptics.vibrate(HapticsType.selection),
-                                child: const Icon(Icons.delete_outline_rounded, size: 18, color: RLTokens.micro),
+                                onTap: () =>
+                                    Haptics.vibrate(HapticsType.selection),
+                                child: const Icon(
+                                  Icons.delete_outline_rounded,
+                                  size: 18,
+                                  color: RLTokens.micro,
+                                ),
                               ),
                             ],
                           ),

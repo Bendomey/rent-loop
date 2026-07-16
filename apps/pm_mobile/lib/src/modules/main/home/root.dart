@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:rentloop_manager/src/architecture/current_user/current_user_notifier.dart';
+import 'package:rentloop_manager/src/architecture/current_workspace/current_workspace_notifier.dart';
 import 'package:rentloop_manager/src/modules/main/checklist_sheet.dart';
 import 'package:rentloop_manager/src/modules/main/workspace_sheet.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
@@ -8,8 +11,6 @@ import 'package:rentloop_manager/src/shared/widgets.dart';
 
 // Static design data — matches the handoff spec exactly.
 // Will be replaced by live API calls when the data layer is wired up.
-const _kWorkspaceName = 'Owusu Estates';
-const _kManagerName = 'Akosua Owusu';
 const _kRevenue = 184500;
 const _kRevenueDelta = '+12%';
 const _kCollected = 92.0; // %
@@ -66,22 +67,28 @@ class HomeScreen extends StatelessWidget {
 
 // ── Top header ─────────────────────────────────────────────────────────────────
 
-class _TopHeader extends StatelessWidget {
+class _TopHeader extends ConsumerWidget {
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final workspaceName =
+        ref.watch(currentWorkspaceNotifierProvider)?.client?.name ??
+        'your workspace';
+    final managerName =
+        ref.watch(currentUserNotifierProvider)?.name ?? 'Manager';
+
     return RLTopHeader(
       eyebrow: GestureDetector(
         onTap: () async {
           await Haptics.vibrate(HapticsType.selection);
           if (context.mounted) {
-            await showWorkspaceSheet(context, activeId: 'ws1');
+            await showWorkspaceSheet(context);
           }
         },
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              _kWorkspaceName,
+              workspaceName,
               style: TextStyle(
                 fontFamily: RLTokens.fontMono,
                 fontSize: 10.5,
@@ -109,7 +116,7 @@ class _TopHeader extends StatelessWidget {
             if (context.mounted) context.push('/notifications');
           },
         ),
-        RLAvatar(_kManagerName, size: 38, crimsonTone: true),
+        RLAvatar(managerName, size: 38, crimsonTone: true),
       ],
     );
   }
@@ -467,19 +474,18 @@ class _CollectionTrendSection extends StatelessWidget {
                     const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children:
-                          _months
-                              .map(
-                                (m) => Text(
-                                  m,
-                                  style: TextStyle(
-                                    fontFamily: RLTokens.fontMono,
-                                    fontSize: 9.5,
-                                    color: RLTokens.micro,
-                                  ),
-                                ),
-                              )
-                              .toList(),
+                      children: _months
+                          .map(
+                            (m) => Text(
+                              m,
+                              style: TextStyle(
+                                fontFamily: RLTokens.fontMono,
+                                fontSize: 9.5,
+                                color: RLTokens.micro,
+                              ),
+                            ),
+                          )
+                          .toList(),
                     ),
                   ],
                 ),
@@ -533,19 +539,18 @@ class _QuickActionsSection extends StatelessWidget {
           scrollDirection: Axis.horizontal,
           clipBehavior: Clip.none,
           child: Row(
-            children:
-                _actions
-                    .asMap()
-                    .entries
-                    .map(
-                      (e) => Padding(
-                        padding: EdgeInsets.only(
-                          right: e.key < _actions.length - 1 ? 10 : 0,
-                        ),
-                        child: _QuickChip(action: e.value),
-                      ),
-                    )
-                    .toList(),
+            children: _actions
+                .asMap()
+                .entries
+                .map(
+                  (e) => Padding(
+                    padding: EdgeInsets.only(
+                      right: e.key < _actions.length - 1 ? 10 : 0,
+                    ),
+                    child: _QuickChip(action: e.value),
+                  ),
+                )
+                .toList(),
           ),
         ),
       ],

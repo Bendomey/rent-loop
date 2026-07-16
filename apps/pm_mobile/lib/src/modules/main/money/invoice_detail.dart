@@ -19,18 +19,66 @@ class _InvData {
   final String payer;
   final String unit;
   final String due;
-  final int    amount;
-  final int    paid;
+  final int amount;
+  final int paid;
   final String status;
 }
 
 const _kInvoices = [
-  _InvData(id: 'INV-2041', payer: 'Ama Boateng',    unit: 'Unit 5A · Cantonments', due: 'Jun 1',  amount: 4200, paid: 0,    status: 'Overdue'),
-  _InvData(id: 'INV-2042', payer: 'Efua Sarpong',   unit: 'Unit 7 · Spintex',      due: 'Jun 1',  amount: 3500, paid: 2000, status: 'Partially Paid'),
-  _InvData(id: 'INV-2039', payer: 'Kwame Mensah',   unit: 'Unit 4B · Cantonments', due: 'Jun 1',  amount: 4200, paid: 4200, status: 'Paid'),
-  _InvData(id: 'INV-2043', payer: 'Yaw Asante',     unit: 'Unit 3B · Cantonments', due: 'Jun 5',  amount: 5500, paid: 0,    status: 'Issued'),
-  _InvData(id: 'INV-2044', payer: 'Michael Tetteh', unit: 'Suite 1 · Labadi',      due: 'Jun 3',  amount: 3200, paid: 3200, status: 'Paid'),
-  _InvData(id: 'INV-2045', payer: 'Daniel Ofori',   unit: 'Unit 12 · Spintex',     due: 'Jun 10', amount: 3500, paid: 0,    status: 'Draft'),
+  _InvData(
+    id: 'INV-2041',
+    payer: 'Ama Boateng',
+    unit: 'Unit 5A · Cantonments',
+    due: 'Jun 1',
+    amount: 4200,
+    paid: 0,
+    status: 'Overdue',
+  ),
+  _InvData(
+    id: 'INV-2042',
+    payer: 'Efua Sarpong',
+    unit: 'Unit 7 · Spintex',
+    due: 'Jun 1',
+    amount: 3500,
+    paid: 2000,
+    status: 'Partially Paid',
+  ),
+  _InvData(
+    id: 'INV-2039',
+    payer: 'Kwame Mensah',
+    unit: 'Unit 4B · Cantonments',
+    due: 'Jun 1',
+    amount: 4200,
+    paid: 4200,
+    status: 'Paid',
+  ),
+  _InvData(
+    id: 'INV-2043',
+    payer: 'Yaw Asante',
+    unit: 'Unit 3B · Cantonments',
+    due: 'Jun 5',
+    amount: 5500,
+    paid: 0,
+    status: 'Issued',
+  ),
+  _InvData(
+    id: 'INV-2044',
+    payer: 'Michael Tetteh',
+    unit: 'Suite 1 · Labadi',
+    due: 'Jun 3',
+    amount: 3200,
+    paid: 3200,
+    status: 'Paid',
+  ),
+  _InvData(
+    id: 'INV-2045',
+    payer: 'Daniel Ofori',
+    unit: 'Unit 12 · Spintex',
+    due: 'Jun 10',
+    amount: 3500,
+    paid: 0,
+    status: 'Draft',
+  ),
 ];
 
 // ── Screen ────────────────────────────────────────────────────────────────────
@@ -41,11 +89,14 @@ class InvoiceDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final inv         = _kInvoices.firstWhere((x) => x.id == id, orElse: () => _kInvoices.first);
+    final inv = _kInvoices.firstWhere(
+      (x) => x.id == id,
+      orElse: () => _kInvoices.first,
+    );
     final outstanding = inv.amount - inv.paid;
     final lines = [
       (desc: 'Monthly rent — June 2026', amount: inv.amount - 200),
-      (desc: 'Service charge',            amount: 200),
+      (desc: 'Service charge', amount: 200),
     ];
 
     return Scaffold(
@@ -62,7 +113,11 @@ class InvoiceDetailScreen extends StatelessWidget {
               onTap: () async => Haptics.vibrate(HapticsType.selection),
               child: const Padding(
                 padding: EdgeInsets.all(10),
-                child: Icon(Icons.description_outlined, size: 22, color: RLTokens.ink),
+                child: Icon(
+                  Icons.description_outlined,
+                  size: 22,
+                  color: RLTokens.ink,
+                ),
               ),
             ),
           ),
@@ -104,7 +159,7 @@ class InvoiceDetailScreen extends StatelessWidget {
 class _Hero extends StatelessWidget {
   const _Hero({required this.inv, required this.outstanding});
   final _InvData inv;
-  final int      outstanding;
+  final int outstanding;
 
   @override
   Widget build(BuildContext context) {
@@ -112,7 +167,13 @@ class _Hero extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 20),
       child: Column(
         children: [
-          Center(child: RLPill(inv.status, tone: statusTone(inv.status), large: true)),
+          Center(
+            child: RLPill(
+              inv.status,
+              tone: statusTone(inv.status),
+              large: true,
+            ),
+          ),
           const SizedBox(height: 14),
           Center(child: RLMoney(inv.amount, size: 46)),
           const SizedBox(height: 8),
@@ -214,34 +275,38 @@ class _LineItemsCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          ...lines.map((l) => Container(
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            decoration: const BoxDecoration(
-              border: Border(bottom: BorderSide(color: RLTokens.hairlineSoft)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  l.desc,
-                  style: const TextStyle(
-                    fontFamily: RLTokens.fontSans,
-                    fontSize: 13.5,
-                    color: RLTokens.inkSoft,
-                  ),
+          ...lines.map(
+            (l) => Container(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              decoration: const BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(color: RLTokens.hairlineSoft),
                 ),
-                Text(
-                  '₵${_fmt(l.amount)}',
-                  style: const TextStyle(
-                    fontFamily: RLTokens.fontSans,
-                    fontSize: 13.5,
-                    fontWeight: RLTokens.semibold,
-                    color: RLTokens.ink,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    l.desc,
+                    style: const TextStyle(
+                      fontFamily: RLTokens.fontSans,
+                      fontSize: 13.5,
+                      color: RLTokens.inkSoft,
+                    ),
                   ),
-                ),
-              ],
+                  Text(
+                    '₵${_fmt(l.amount)}',
+                    style: const TextStyle(
+                      fontFamily: RLTokens.fontSans,
+                      fontSize: 13.5,
+                      fontWeight: RLTokens.semibold,
+                      color: RLTokens.ink,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          )),
+          ),
           // Total row
           Padding(
             padding: const EdgeInsets.fromLTRB(0, 13, 0, 4),
@@ -301,7 +366,11 @@ class _PaymentHistoryCard extends StatelessWidget {
                       color: RLTokens.successBg,
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Icon(Icons.check_rounded, size: 18, color: RLTokens.success),
+                    child: Icon(
+                      Icons.check_rounded,
+                      size: 18,
+                      color: RLTokens.success,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -357,7 +426,12 @@ class _ActionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.fromLTRB(20, 12, 20, 12 + MediaQuery.of(context).padding.bottom),
+      padding: EdgeInsets.fromLTRB(
+        20,
+        12,
+        20,
+        12 + MediaQuery.of(context).padding.bottom,
+      ),
       decoration: BoxDecoration(
         color: RLTokens.surface,
         border: const Border(top: BorderSide(color: RLTokens.hairline)),

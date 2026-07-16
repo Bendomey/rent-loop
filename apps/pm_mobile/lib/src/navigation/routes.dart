@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:rentloop_manager/src/architecture/app_startup.dart';
+import 'package:rentloop_manager/src/architecture/app_startup/app_startup_notifier.dart';
 import 'package:rentloop_manager/src/modules/auth/login/root.dart';
 import 'package:rentloop_manager/src/modules/auth/welcome/root.dart';
 import 'package:rentloop_manager/src/modules/auth/workspace_select/root.dart';
@@ -38,6 +38,7 @@ import 'package:rentloop_manager/src/modules/main/tenants/detail.dart';
 import 'package:rentloop_manager/src/modules/main/tenants/root.dart';
 import 'package:rentloop_manager/src/modules/main/properties/detail.dart';
 import 'package:rentloop_manager/src/modules/main/properties/root.dart';
+import 'package:rentloop_manager/src/modules/main/properties/units_list.dart';
 import 'package:rentloop_manager/src/modules/main/shell.dart';
 import 'splash.dart';
 
@@ -47,7 +48,7 @@ GoRouter? appRouter;
 class _RouterNotifier extends ChangeNotifier {
   _RouterNotifier(this._ref) {
     _ref.listen<AppStartupState>(
-      appStartupProvider,
+      appStartupNotifierProvider,
       (_, __) => notifyListeners(),
     );
   }
@@ -61,17 +62,31 @@ GoRouter buildRoutes(WidgetRef ref) {
     initialLocation: '/splash',
     refreshListenable: notifier,
     redirect: (context, state) {
-      final startup = ref.read(appStartupProvider);
+      final startup = ref.read(appStartupNotifierProvider);
       final loc = state.matchedLocation;
 
       switch (startup.status) {
         case AppStartupStatus.loading:
+          // `loading` is also set transiently during in-app actions (e.g.
+          // AppStartupNotifier.completeLogin()), not just the initial
+          // cold-start — don't force navigation to /splash mid-action, or
+          // it races the in-flight action's own state transition (it also
+          // re-triggers SplashScreen's init() call). The genuine cold-start
+          // case already starts on /splash (it's initialLocation), so no
+          // forced redirect is needed for it either.
+          return null;
+
         case AppStartupStatus.error:
           if (loc == '/splash') return null;
           return '/splash';
 
         case AppStartupStatus.unauthenticated:
-          if (loc.startsWith('/auth')) return null;
+          // Only /auth/welcome and /auth/login are valid resting places
+          // when unauthenticated — NOT /auth/workspace-select, which
+          // requires an active session. A broader `loc.startsWith('/auth')`
+          // check would (and did) leave a just-logged-out user stranded on
+          // workspace-select instead of sending them to /auth/welcome.
+          if (loc == '/auth/welcome' || loc == '/auth/login') return null;
           return '/auth/welcome';
 
         case AppStartupStatus.workspaceSelect:
@@ -141,43 +156,42 @@ GoRouter buildRoutes(WidgetRef ref) {
       ),
       GoRoute(
         path: '/properties/:id',
-        builder:
-            (_, state) => PropertyDetailScreen(id: state.pathParameters['id']!),
+        builder: (_, state) =>
+            PropertyDetailScreen(id: state.pathParameters['id']!),
         routes: [
           GoRoute(
+            path: 'units',
+            builder: (_, state) =>
+                UnitsListScreen(propertyId: state.pathParameters['id']!),
+          ),
+          GoRoute(
             path: 'settings',
-            builder:
-                (_, state) =>
-                    PropertySettingsHubScreen(id: state.pathParameters['id']!),
+            builder: (_, state) =>
+                PropertySettingsHubScreen(id: state.pathParameters['id']!),
             routes: [
               GoRoute(
                 path: 'general',
-                builder:
-                    (_, state) => PropertyGeneralSettingsScreen(
-                      id: state.pathParameters['id']!,
-                    ),
+                builder: (_, state) => PropertyGeneralSettingsScreen(
+                  id: state.pathParameters['id']!,
+                ),
               ),
               GoRoute(
                 path: 'members',
-                builder:
-                    (_, state) =>
-                        PropertyMembersScreen(id: state.pathParameters['id']!),
+                builder: (_, state) =>
+                    PropertyMembersScreen(id: state.pathParameters['id']!),
                 routes: [
                   GoRoute(
                     path: 'add',
-                    builder:
-                        (_, state) => AddPropertyMemberScreen(
-                          id: state.pathParameters['id']!,
-                        ),
+                    builder: (_, state) => AddPropertyMemberScreen(
+                      id: state.pathParameters['id']!,
+                    ),
                   ),
                 ],
               ),
               GoRoute(
                 path: 'documents',
-                builder:
-                    (_, state) => PropertyDocumentsScreen(
-                      id: state.pathParameters['id']!,
-                    ),
+                builder: (_, state) =>
+                    PropertyDocumentsScreen(id: state.pathParameters['id']!),
               ),
             ],
           ),
@@ -191,9 +205,8 @@ GoRouter buildRoutes(WidgetRef ref) {
       ),
       GoRoute(
         path: '/activity/maintenances/:id',
-        builder:
-            (_, state) =>
-                MaintenanceDetailScreen(id: state.pathParameters['id']!),
+        builder: (_, state) =>
+            MaintenanceDetailScreen(id: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/activity/bookings/add',
@@ -205,21 +218,20 @@ GoRouter buildRoutes(WidgetRef ref) {
       ),
       GoRoute(
         path: '/activity/bookings/:id',
-        builder:
-            (_, state) => BookingDetailScreen(id: state.pathParameters['id']!),
+        builder: (_, state) =>
+            BookingDetailScreen(id: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/activity/applications/:id',
-        builder:
-            (_, state) =>
-                ApplicationDetailScreen(id: state.pathParameters['id']!),
+        builder: (_, state) =>
+            ApplicationDetailScreen(id: state.pathParameters['id']!),
       ),
 
       // money routes
       GoRoute(
         path: '/money/invoices/:id',
-        builder:
-            (_, state) => InvoiceDetailScreen(id: state.pathParameters['id']!),
+        builder: (_, state) =>
+            InvoiceDetailScreen(id: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/money/record-payment',
@@ -249,10 +261,7 @@ GoRouter buildRoutes(WidgetRef ref) {
         path: '/more/members',
         builder: (_, __) => const MembersScreen(),
         routes: [
-          GoRoute(
-            path: 'add',
-            builder: (_, __) => const AddMemberScreen(),
-          ),
+          GoRoute(path: 'add', builder: (_, __) => const AddMemberScreen()),
         ],
       ),
       GoRoute(
@@ -274,9 +283,8 @@ GoRouter buildRoutes(WidgetRef ref) {
         routes: [
           GoRoute(
             path: ':id',
-            builder:
-                (_, state) =>
-                    TenantDetailScreen(id: state.pathParameters['id']!),
+            builder: (_, state) =>
+                TenantDetailScreen(id: state.pathParameters['id']!),
           ),
         ],
       ),

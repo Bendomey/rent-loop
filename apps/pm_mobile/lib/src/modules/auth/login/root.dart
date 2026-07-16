@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
-import 'package:rentloop_manager/src/architecture/app_startup.dart';
+import 'package:rentloop_manager/src/repository/notifiers/auth/login_notifier.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:rentloop_manager/src/constants.dart';
 
-final _applyUrl        = applyUrl(campaign: 'login', content: 'apply_cta');
-final _forgotPasswordUrl = forgotPasswordUrl(campaign: 'login', content: 'forgot_password');
+final _applyUrl = applyUrl(campaign: 'login', content: 'apply_cta');
+final _forgotPasswordUrl = forgotPasswordUrl(
+  campaign: 'login',
+  content: 'forgot_password',
+);
 
 Future<void> _launch(Uri url) async {
   if (await canLaunchUrl(url)) {
@@ -26,11 +29,10 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _emailCtrl = TextEditingController(text: 'akosua@owusuestates.com');
-  final _passCtrl  = TextEditingController(text: 'rentloop2026');
-  bool _showPass   = false;
-  bool _loading    = false;
-  String? _error;
+  final _emailCtrl = TextEditingController();
+  final _passCtrl = TextEditingController();
+  bool _showPass = false;
+  String? _validationError;
 
   @override
   void dispose() {
@@ -40,39 +42,43 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _signIn() async {
-    final email    = _emailCtrl.text.trim();
+    final email = _emailCtrl.text.trim();
     final password = _passCtrl.text;
 
     if (email.isEmpty || password.isEmpty) {
       await Haptics.vibrate(HapticsType.error);
-      setState(() => _error = 'Please enter your email and password.');
+      setState(
+        () => _validationError = 'Please enter your email and password.',
+      );
       return;
     }
 
     await Haptics.vibrate(HapticsType.medium);
-    setState(() { _loading = true; _error = null; });
+    setState(() => _validationError = null);
 
-    try {
-      await ref.read(appStartupProvider.notifier).login(
-        email: email,
-        password: password,
-      );
-      await Haptics.vibrate(HapticsType.success);
-    } catch (e) {
-      await Haptics.vibrate(HapticsType.error);
-      if (mounted) {
-        setState(() {
-          _loading = false;
-          _error = e is Exception
-              ? e.toString().replaceFirst('Exception: ', '')
-              : 'Something went wrong. Check your connection and try again.';
-        });
-      }
-    }
+    // Loading/error state is tracked by loginNotifierProvider, not local
+    // state — this avoids touching AppStartupState mid-request, which
+    // would otherwise bounce the router to /splash while the request is
+    // still in flight.
+    await ref
+        .read(loginNotifierProvider.notifier)
+        .submit(email: email, password: password);
+
+    if (!mounted) return;
+    final status = ref.read(loginNotifierProvider).status;
+    await Haptics.vibrate(
+      status.isSuccess() ? HapticsType.success : HapticsType.error,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final loginState = ref.watch(loginNotifierProvider);
+    final loading = loginState.status.isLoading();
+    final error =
+        _validationError ??
+        (loginState.status.isFailed() ? loginState.errorMessage : null);
+
     return Scaffold(
       // Pure white — matches MG.bg in the design spec, overrides the
       // theme's paper scaffold background.
@@ -102,7 +108,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               color: RLTokens.ink,
                             ),
                             children: const [
-                              TextSpan(text: 'rent', style: TextStyle(color: RLTokens.crimson)),
+                              TextSpan(
+                                text: 'rent',
+                                style: TextStyle(color: RLTokens.crimson),
+                              ),
                               TextSpan(text: 'loop'),
                             ],
                           ),
@@ -135,12 +144,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const SizedBox(height: 30),
 
                     // Error banner
-                    if (_error != null) ...[
+                    if (error != null) ...[
                       RLInlineBanner(
                         tone: RLBannerTone.danger,
                         title: 'Sign-in failed',
-                        body: _error,
-                        onDismiss: () => setState(() => _error = null),
+                        body: error,
+                        onDismiss: () {
+                          setState(() => _validationError = null);
+                          ref.read(loginNotifierProvider.notifier).reset();
+                        },
                       ),
                       const SizedBox(height: 18),
                     ],
@@ -210,19 +222,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                     // Sign in button
                     GestureDetector(
-                      onTap: _loading ? null : _signIn,
+                      onTap: loading ? null : _signIn,
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 150),
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         decoration: BoxDecoration(
-                          color: _loading
+                          color: loading
                               ? RLTokens.crimson.withAlpha(180)
                               : RLTokens.crimson,
                           borderRadius: BorderRadius.circular(RLTokens.rMd),
                         ),
                         child: Center(
-                          child: _loading
+                          child: loading
                               ? const SizedBox(
                                   width: 20,
                                   height: 20,
@@ -369,7 +381,10 @@ class _LoginField extends StatelessWidget {
               decoration: const InputDecoration(
                 isDense: true,
                 filled: false,
-                contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 15,
+                  vertical: 15,
+                ),
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
@@ -380,10 +395,7 @@ class _LoginField extends StatelessWidget {
             ),
           ),
           if (trailing != null)
-            Padding(
-              padding: const EdgeInsets.only(right: 15),
-              child: trailing,
-            ),
+            Padding(padding: const EdgeInsets.only(right: 15), child: trailing),
         ],
       ),
     );
@@ -405,10 +417,7 @@ class _LogoMark extends StatelessWidget {
         color: RLTokens.crimson,
         borderRadius: BorderRadius.circular(size * 0.308),
       ),
-      child: CustomPaint(
-        size: Size(size, size),
-        painter: _HouseMarkPainter(),
-      ),
+      child: CustomPaint(size: Size(size, size), painter: _HouseMarkPainter()),
     );
   }
 }

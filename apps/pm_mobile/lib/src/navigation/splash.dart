@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:rentloop_manager/src/architecture/app_startup.dart';
+import 'package:rentloop_manager/src/architecture/app_startup/app_startup_notifier.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -15,7 +15,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(appStartupProvider.notifier).init();
+      ref.read(appStartupNotifierProvider.notifier).init();
     });
   }
 
@@ -34,14 +34,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                 color: RLTokens.crimson,
                 borderRadius: BorderRadius.circular(15),
               ),
-              child: const Center(
-                child: _HouseIcon(),
-              ),
+              child: const Center(child: _HouseIcon()),
             ),
             const SizedBox(height: 16),
             Text(
               'rentloop',
-              style: TextStyle(fontFamily: RLTokens.fontSans, 
+              style: TextStyle(
+                fontFamily: RLTokens.fontSans,
                 fontSize: 22,
                 fontWeight: RLTokens.bold,
                 letterSpacing: -0.4,
@@ -94,7 +93,10 @@ class _HousePainter extends CustomPainter {
 
     // Door: rect x=10 y=14 w=6 h=7
     canvas.drawRRect(
-      RRect.fromRectAndRadius(const Rect.fromLTWH(10, 14, 6, 7), const Radius.circular(1.2)),
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(10, 14, 6, 7),
+        const Radius.circular(1.2),
+      ),
       Paint()..color = Colors.white,
     );
   }

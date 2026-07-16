@@ -14,7 +14,7 @@ class AddPropertyMemberScreen extends StatefulWidget {
 }
 
 class _State extends State<AddPropertyMemberScreen> {
-  final _nameCtrl  = TextEditingController();
+  final _nameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
   String _role = 'Admin';
@@ -41,7 +41,12 @@ class _State extends State<AddPropertyMemberScreen> {
           const RLBackHeader(title: 'New member'),
           Expanded(
             child: SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(RLTokens.gutter, 14, RLTokens.gutter, 120 + bottom),
+              padding: EdgeInsets.fromLTRB(
+                RLTokens.gutter,
+                14,
+                RLTokens.gutter,
+                120 + bottom,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -58,18 +63,33 @@ class _State extends State<AddPropertyMemberScreen> {
                   const SizedBox(height: 7),
                   const Text(
                     "We'll send an invitation to join via email or phone number.",
-                    style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 13.5, color: RLTokens.muted, height: 1.5),
+                    style: TextStyle(
+                      fontFamily: RLTokens.fontSans,
+                      fontSize: 13.5,
+                      color: RLTokens.muted,
+                      height: 1.5,
+                    ),
                   ),
                   const SizedBox(height: 24),
 
                   // Full name
                   const _FieldLabel('Full name'),
-                  _Field(controller: _nameCtrl, placeholder: 'John Doe', keyboardType: TextInputType.name, textCapitalization: TextCapitalization.words),
+                  _Field(
+                    controller: _nameCtrl,
+                    placeholder: 'John Doe',
+                    keyboardType: TextInputType.name,
+                    textCapitalization: TextCapitalization.words,
+                  ),
                   const SizedBox(height: 18),
 
                   // Email
                   const _FieldLabel('Email'),
-                  _Field(controller: _emailCtrl, placeholder: 'name@example.com', keyboardType: TextInputType.emailAddress, prefixIcon: Icons.mail_outline_rounded),
+                  _Field(
+                    controller: _emailCtrl,
+                    placeholder: 'name@example.com',
+                    keyboardType: TextInputType.emailAddress,
+                    prefixIcon: Icons.mail_outline_rounded,
+                  ),
                   const SizedBox(height: 18),
 
                   // Phone
@@ -90,20 +110,36 @@ class _State extends State<AddPropertyMemberScreen> {
                           },
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 180),
-                            margin: EdgeInsets.only(right: r == 'Admin' ? 8 : 0),
-                            padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 10),
+                            margin: EdgeInsets.only(
+                              right: r == 'Admin' ? 8 : 0,
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 13,
+                              horizontal: 10,
+                            ),
                             decoration: BoxDecoration(
-                              color: on ? RLTokens.crimsonTint : RLTokens.surface,
-                              border: Border.all(color: on ? RLTokens.crimson : RLTokens.hairline, width: 1.5),
+                              color: on
+                                  ? RLTokens.crimsonTint
+                                  : RLTokens.surface,
+                              border: Border.all(
+                                color: on
+                                    ? RLTokens.crimson
+                                    : RLTokens.hairline,
+                                width: 1.5,
+                              ),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(
-                                  r == 'Admin' ? Icons.settings_outlined : Icons.person_outline_rounded,
+                                  r == 'Admin'
+                                      ? Icons.settings_outlined
+                                      : Icons.person_outline_rounded,
                                   size: 17,
-                                  color: on ? RLTokens.crimson : RLTokens.inkSoft,
+                                  color: on
+                                      ? RLTokens.crimson
+                                      : RLTokens.inkSoft,
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
@@ -125,7 +161,12 @@ class _State extends State<AddPropertyMemberScreen> {
                   const SizedBox(height: 10),
                   Text(
                     '$_roleDesc You can change their role later.',
-                    style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 12.5, color: RLTokens.muted, height: 1.5),
+                    style: const TextStyle(
+                      fontFamily: RLTokens.fontSans,
+                      fontSize: 12.5,
+                      color: RLTokens.muted,
+                      height: 1.5,
+                    ),
                   ),
                 ],
               ),
@@ -148,7 +189,12 @@ class _Footer extends StatelessWidget {
   Widget build(BuildContext context) {
     final bottom = MediaQuery.of(context).padding.bottom;
     return Container(
-      padding: EdgeInsets.fromLTRB(RLTokens.gutter, 12, RLTokens.gutter, 12 + bottom),
+      padding: EdgeInsets.fromLTRB(
+        RLTokens.gutter,
+        12,
+        RLTokens.gutter,
+        12 + bottom,
+      ),
       decoration: const BoxDecoration(
         color: RLTokens.surface,
         border: Border(top: BorderSide(color: RLTokens.hairline)),
@@ -164,7 +210,12 @@ class _Footer extends StatelessWidget {
               padding: EdgeInsets.symmetric(horizontal: 4, vertical: 12),
               child: Text(
                 'Cancel',
-                style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 14.5, fontWeight: RLTokens.semibold, color: RLTokens.ink),
+                style: TextStyle(
+                  fontFamily: RLTokens.fontSans,
+                  fontSize: 14.5,
+                  fontWeight: RLTokens.semibold,
+                  color: RLTokens.ink,
+                ),
               ),
             ),
           ),
@@ -181,10 +232,19 @@ class _Footer extends StatelessWidget {
                 children: [
                   Text(
                     'Send invitation',
-                    style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 14.5, fontWeight: RLTokens.semibold, color: Colors.white),
+                    style: TextStyle(
+                      fontFamily: RLTokens.fontSans,
+                      fontSize: 14.5,
+                      fontWeight: RLTokens.semibold,
+                      color: Colors.white,
+                    ),
                   ),
                   SizedBox(width: 6),
-                  Icon(Icons.arrow_forward_rounded, size: 16, color: Colors.white),
+                  Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 16,
+                    color: Colors.white,
+                  ),
                 ],
               ),
             ),
@@ -207,7 +267,12 @@ class _FieldLabel extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 8),
       child: Text(
         text,
-        style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 13.5, fontWeight: RLTokens.semibold, color: RLTokens.ink),
+        style: const TextStyle(
+          fontFamily: RLTokens.fontSans,
+          fontSize: 13.5,
+          fontWeight: RLTokens.semibold,
+          color: RLTokens.ink,
+        ),
       ),
     );
   }
@@ -233,17 +298,39 @@ class _Field extends StatelessWidget {
       controller: controller,
       keyboardType: keyboardType,
       textCapitalization: textCapitalization,
-      style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 15, color: RLTokens.ink),
+      style: const TextStyle(
+        fontFamily: RLTokens.fontSans,
+        fontSize: 15,
+        color: RLTokens.ink,
+      ),
       decoration: InputDecoration(
         hintText: placeholder,
-        hintStyle: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 15, color: RLTokens.mutedSoft),
-        prefixIcon: prefixIcon != null ? Icon(prefixIcon, size: 18, color: RLTokens.mutedSoft) : null,
+        hintStyle: const TextStyle(
+          fontFamily: RLTokens.fontSans,
+          fontSize: 15,
+          color: RLTokens.mutedSoft,
+        ),
+        prefixIcon: prefixIcon != null
+            ? Icon(prefixIcon, size: 18, color: RLTokens.mutedSoft)
+            : null,
         filled: true,
         fillColor: RLTokens.surface,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        border:        OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: RLTokens.hairline, width: 1.5)),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: RLTokens.hairline, width: 1.5)),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: RLTokens.crimson,   width: 1.5)),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: RLTokens.hairline, width: 1.5),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: RLTokens.hairline, width: 1.5),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: RLTokens.crimson, width: 1.5),
+        ),
       ),
     );
   }
@@ -270,23 +357,43 @@ class _PhoneField extends StatelessWidget {
               children: const [
                 Text('🇬🇭', style: TextStyle(fontSize: 17)),
                 SizedBox(width: 6),
-                Icon(Icons.keyboard_arrow_down_rounded, size: 13, color: RLTokens.mutedSoft),
+                Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  size: 13,
+                  color: RLTokens.mutedSoft,
+                ),
               ],
             ),
           ),
           Container(width: 1, height: 26, color: RLTokens.hairline),
           const SizedBox(width: 12),
-          const Text('+233', style: TextStyle(fontFamily: RLTokens.fontMono, fontSize: 15, color: RLTokens.muted)),
+          const Text(
+            '+233',
+            style: TextStyle(
+              fontFamily: RLTokens.fontMono,
+              fontSize: 15,
+              color: RLTokens.muted,
+            ),
+          ),
           const SizedBox(width: 6),
           Expanded(
             child: TextField(
               controller: controller,
               keyboardType: TextInputType.phone,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              style: const TextStyle(fontFamily: RLTokens.fontMono, fontSize: 15, color: RLTokens.ink, letterSpacing: 0.5),
+              style: const TextStyle(
+                fontFamily: RLTokens.fontMono,
+                fontSize: 15,
+                color: RLTokens.ink,
+                letterSpacing: 0.5,
+              ),
               decoration: const InputDecoration(
                 hintText: '24 000 0000',
-                hintStyle: TextStyle(fontFamily: RLTokens.fontMono, fontSize: 15, color: RLTokens.mutedSoft),
+                hintStyle: TextStyle(
+                  fontFamily: RLTokens.fontMono,
+                  fontSize: 15,
+                  color: RLTokens.mutedSoft,
+                ),
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,

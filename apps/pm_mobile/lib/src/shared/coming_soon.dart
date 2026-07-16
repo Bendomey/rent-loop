@@ -26,7 +26,11 @@ class RLComingSoon extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.construction_rounded, size: 40, color: RLTokens.hairline),
+                  Icon(
+                    Icons.construction_rounded,
+                    size: 40,
+                    color: RLTokens.hairline,
+                  ),
                   SizedBox(height: 14),
                   Text(
                     'Coming soon',

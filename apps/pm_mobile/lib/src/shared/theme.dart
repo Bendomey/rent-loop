@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'tokens.dart';
 
 ThemeData buildTheme() {
-  const sans  = RLTokens.fontSans;
+  const sans = RLTokens.fontSans;
   const serif = RLTokens.fontSerif;
-  const mono  = RLTokens.fontMono;
+  const mono = RLTokens.fontMono;
 
   final base = ThemeData(
     useMaterial3: true,

@@ -49,11 +49,11 @@ class _TabBar extends StatelessWidget {
   final ValueChanged<int> onTap;
 
   static const _tabs = [
-    _TabSpec(label: 'Home',       icon: 'home'),
+    _TabSpec(label: 'Home', icon: 'home'),
     _TabSpec(label: 'Properties', icon: 'building'),
-    _TabSpec(label: 'Activity',   icon: 'activity'),
-    _TabSpec(label: 'Money',      icon: 'money'),
-    _TabSpec(label: 'More',       icon: 'more'),
+    _TabSpec(label: 'Activity', icon: 'activity'),
+    _TabSpec(label: 'Money', icon: 'money'),
+    _TabSpec(label: 'More', icon: 'more'),
   ];
 
   @override
@@ -93,7 +93,11 @@ class _TabSpec {
 }
 
 class _TabItem extends StatelessWidget {
-  const _TabItem({required this.spec, required this.active, required this.onTap});
+  const _TabItem({
+    required this.spec,
+    required this.active,
+    required this.onTap,
+  });
   final _TabSpec spec;
   final bool active;
   final VoidCallback onTap;
@@ -101,7 +105,7 @@ class _TabItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = active ? RLTokens.crimson : RLTokens.mutedSoft;
-    final sw    = active ? 2.0 : 1.7;
+    final sw = active ? 2.0 : 1.7;
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
@@ -112,7 +116,11 @@ class _TabItem extends StatelessWidget {
             width: 23,
             height: 23,
             child: CustomPaint(
-              painter: _TabIconPainter(name: spec.icon, color: color, strokeWidth: sw),
+              painter: _TabIconPainter(
+                name: spec.icon,
+                color: color,
+                strokeWidth: sw,
+              ),
             ),
           ),
           const SizedBox(height: 4),
@@ -138,7 +146,11 @@ class _TabItem extends StatelessWidget {
 // All paths are authored for a 24×24 viewBox and scaled to the widget size.
 
 class _TabIconPainter extends CustomPainter {
-  const _TabIconPainter({required this.name, required this.color, required this.strokeWidth});
+  const _TabIconPainter({
+    required this.name,
+    required this.color,
+    required this.strokeWidth,
+  });
   final String name;
   final Color color;
   final double strokeWidth;
@@ -192,9 +204,12 @@ class _TabIconPainter extends CustomPainter {
         // M9 7h0  M15 7h0  M9 11h0  M15 11h0  M9 15h0  M15 15h0
         final dotR = (strokeWidth + 0.4) / 2;
         for (final o in [
-          const Offset(9, 7), const Offset(15, 7),
-          const Offset(9, 11), const Offset(15, 11),
-          const Offset(9, 15), const Offset(15, 15),
+          const Offset(9, 7),
+          const Offset(15, 7),
+          const Offset(9, 11),
+          const Offset(15, 11),
+          const Offset(9, 15),
+          const Offset(15, 15),
         ]) {
           canvas.drawCircle(o, dotR, fill);
         }

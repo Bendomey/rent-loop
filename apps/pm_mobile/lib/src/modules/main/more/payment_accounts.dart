@@ -5,5 +5,6 @@ class PaymentAccountsScreen extends StatelessWidget {
   const PaymentAccountsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) => const RLComingSoon(title: 'Payment accounts');
+  Widget build(BuildContext context) =>
+      const RLComingSoon(title: 'Payment accounts');
 }

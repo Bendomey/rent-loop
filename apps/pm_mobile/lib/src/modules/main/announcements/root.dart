@@ -7,7 +7,13 @@ import 'package:rentloop_manager/src/shared/widgets.dart';
 // ── Seed data ─────────────────────────────────────────────────────────────────
 
 class _AnnData {
-  const _AnnData({required this.id, required this.title, required this.audience, required this.status, required this.date});
+  const _AnnData({
+    required this.id,
+    required this.title,
+    required this.audience,
+    required this.status,
+    required this.date,
+  });
   final String id;
   final String title;
   final String audience;
@@ -16,10 +22,34 @@ class _AnnData {
 }
 
 const _kAnn = [
-  _AnnData(id: 'an1', title: 'Water supply maintenance Sat', audience: 'Cantonments Court',    status: 'Active',    date: 'Jun 4'),
-  _AnnData(id: 'an2', title: 'New security gate hours',      audience: 'All properties',        status: 'Active',    date: 'May 30'),
-  _AnnData(id: 'an3', title: 'June rent reminder',           audience: 'All tenants',           status: 'Scheduled', date: 'Jun 1'),
-  _AnnData(id: 'an4', title: 'Pool closed for cleaning',     audience: 'Labadi Beach Suites',   status: 'Expired',   date: 'May 20'),
+  _AnnData(
+    id: 'an1',
+    title: 'Water supply maintenance Sat',
+    audience: 'Cantonments Court',
+    status: 'Active',
+    date: 'Jun 4',
+  ),
+  _AnnData(
+    id: 'an2',
+    title: 'New security gate hours',
+    audience: 'All properties',
+    status: 'Active',
+    date: 'May 30',
+  ),
+  _AnnData(
+    id: 'an3',
+    title: 'June rent reminder',
+    audience: 'All tenants',
+    status: 'Scheduled',
+    date: 'Jun 1',
+  ),
+  _AnnData(
+    id: 'an4',
+    title: 'Pool closed for cleaning',
+    audience: 'Labadi Beach Suites',
+    status: 'Expired',
+    date: 'May 20',
+  ),
 ];
 
 // ── Screen ────────────────────────────────────────────────────────────────────
@@ -52,7 +82,12 @@ class AnnouncementsScreen extends StatelessWidget {
           ),
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(RLTokens.gutter, 0, RLTokens.gutter, 40),
+              padding: const EdgeInsets.fromLTRB(
+                RLTokens.gutter,
+                0,
+                RLTokens.gutter,
+                40,
+              ),
               children: [
                 const SizedBox(height: 10),
 
@@ -63,10 +98,12 @@ class AnnouncementsScreen extends StatelessWidget {
                 RLLabel('${_kAnn.length} announcements'),
 
                 // Announcement cards
-                ..._kAnn.map((an) => Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: _AnnCard(an: an),
-                )),
+                ..._kAnn.map(
+                  (an) => Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: _AnnCard(an: an),
+                  ),
+                ),
               ],
             ),
           ),
@@ -170,7 +207,11 @@ class _AnnCard extends StatelessWidget {
             const SizedBox(height: 9),
             Row(
               children: [
-                const Icon(Icons.people_outline_rounded, size: 13, color: RLTokens.mutedSoft),
+                const Icon(
+                  Icons.people_outline_rounded,
+                  size: 13,
+                  color: RLTokens.mutedSoft,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   an.audience,

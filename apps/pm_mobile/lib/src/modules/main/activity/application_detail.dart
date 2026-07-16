@@ -19,46 +19,83 @@ class _AppData {
   final String name;
   final String unit;
   final String status;
-  final int    rent;
-  final int    stage;
+  final int rent;
+  final int stage;
   final String phone;
 }
 
 const _kApps = [
-  _AppData(id: 'a1', name: 'Adjoa Frimpong', unit: 'Unit 1C · Cantonments Court', status: 'New',         rent: 3000, stage: 1, phone: '+233 26 118 5540'),
-  _AppData(id: 'a2', name: 'Daniel Ofori',   unit: 'Unit 12 · Spintex Heights',   status: 'In Progress', rent: 3500, stage: 3, phone: '+233 24 330 7781'),
-  _AppData(id: 'a3', name: 'Naa Adjeley',    unit: 'Shop 5 · Osu Retail Block',   status: 'In Progress', rent: 6000, stage: 2, phone: '+233 20 555 9921'),
-  _AppData(id: 'a4', name: 'Selorm Kudjo',   unit: 'Unit 9 · Spintex Heights',    status: 'New',         rent: 3500, stage: 1, phone: '+233 55 712 0034'),
+  _AppData(
+    id: 'a1',
+    name: 'Adjoa Frimpong',
+    unit: 'Unit 1C · Cantonments Court',
+    status: 'New',
+    rent: 3000,
+    stage: 1,
+    phone: '+233 26 118 5540',
+  ),
+  _AppData(
+    id: 'a2',
+    name: 'Daniel Ofori',
+    unit: 'Unit 12 · Spintex Heights',
+    status: 'In Progress',
+    rent: 3500,
+    stage: 3,
+    phone: '+233 24 330 7781',
+  ),
+  _AppData(
+    id: 'a3',
+    name: 'Naa Adjeley',
+    unit: 'Shop 5 · Osu Retail Block',
+    status: 'In Progress',
+    rent: 6000,
+    stage: 2,
+    phone: '+233 20 555 9921',
+  ),
+  _AppData(
+    id: 'a4',
+    name: 'Selorm Kudjo',
+    unit: 'Unit 9 · Spintex Heights',
+    status: 'New',
+    rent: 3500,
+    stage: 1,
+    phone: '+233 55 712 0034',
+  ),
 ];
 
 // ── Onboarding steps ──────────────────────────────────────────────────────────
 
 class _SetupStep {
-  const _SetupStep({required this.label, required this.sub, required this.icon, required this.done});
-  final String   label;
-  final String   sub;
+  const _SetupStep({
+    required this.label,
+    required this.sub,
+    required this.icon,
+    required this.done,
+  });
+  final String label;
+  final String sub;
   final IconData icon;
-  final bool     done;
+  final bool done;
 }
 
 List<_SetupStep> _buildSetup(_AppData a) => [
   _SetupStep(
     label: 'Lease documents',
-    sub:   'Standard Tenancy Agreement',
-    icon:  Icons.description_outlined,
-    done:  a.stage > 1,
+    sub: 'Standard Tenancy Agreement',
+    icon: Icons.description_outlined,
+    done: a.stage > 1,
   ),
   _SetupStep(
     label: 'Financials',
-    sub:   'App fee + GH₵ ${_fmt(a.rent)}/mo',
-    icon:  Icons.account_balance_wallet_outlined,
-    done:  a.stage > 2,
+    sub: 'App fee + GH₵ ${_fmt(a.rent)}/mo',
+    icon: Icons.account_balance_wallet_outlined,
+    done: a.stage > 2,
   ),
   _SetupStep(
     label: 'Move-in setup',
-    sub:   'Date + checklist',
-    icon:  Icons.location_on_outlined,
-    done:  a.stage > 3,
+    sub: 'Date + checklist',
+    icon: Icons.location_on_outlined,
+    done: a.stage > 3,
   ),
 ];
 
@@ -70,7 +107,7 @@ class ApplicationDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final a     = _kApps.firstWhere((x) => x.id == id, orElse: () => _kApps.first);
+    final a = _kApps.firstWhere((x) => x.id == id, orElse: () => _kApps.first);
     final setup = _buildSetup(a);
 
     return Scaffold(
@@ -222,14 +259,16 @@ class _SetupCard extends StatelessWidget {
       ),
       child: Column(
         children: List.generate(steps.length, (i) {
-          final s      = steps[i];
+          final s = steps[i];
           final isLast = i == steps.length - 1;
           return Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 13),
             decoration: BoxDecoration(
               border: isLast
                   ? null
-                  : const Border(bottom: BorderSide(color: RLTokens.hairlineSoft)),
+                  : const Border(
+                      bottom: BorderSide(color: RLTokens.hairlineSoft),
+                    ),
             ),
             child: Row(
               children: [
@@ -279,7 +318,11 @@ class _SetupCard extends StatelessWidget {
                 if (s.done)
                   RLPill('Done', tone: RLTone.success)
                 else
-                  const Icon(Icons.chevron_right_rounded, size: 17, color: RLTokens.mutedSoft),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    size: 17,
+                    color: RLTokens.mutedSoft,
+                  ),
               ],
             ),
           );
@@ -369,9 +412,15 @@ class _InfoBanner extends StatelessWidget {
                   const TextSpan(text: 'Approving creates a '),
                   const TextSpan(
                     text: 'Pending lease',
-                    style: TextStyle(fontWeight: RLTokens.semibold, color: RLTokens.ink),
+                    style: TextStyle(
+                      fontWeight: RLTokens.semibold,
+                      color: RLTokens.ink,
+                    ),
                   ),
-                  TextSpan(text: ' for $unitLabel. It starts billing once you activate it.'),
+                  TextSpan(
+                    text:
+                        ' for $unitLabel. It starts billing once you activate it.',
+                  ),
                 ],
               ),
             ),
@@ -390,7 +439,12 @@ class _ActionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.fromLTRB(20, 12, 20, 12 + MediaQuery.of(context).padding.bottom),
+      padding: EdgeInsets.fromLTRB(
+        20,
+        12,
+        20,
+        12 + MediaQuery.of(context).padding.bottom,
+      ),
       decoration: BoxDecoration(
         color: RLTokens.surface,
         border: const Border(top: BorderSide(color: RLTokens.hairline)),

@@ -1,0 +1,31 @@
+# Changelog
+
+## 2026-07-16 — Property detail page integration
+- Wired the single-property detail screen to real data: property fetch, a Cube-sourced stats card (occupancy donut, monthly revenue) and Manage grid (Units/Tenants/Leases/Applications/Bookings counts), and a real 5-item units preview.
+- Added a swipeable hero image carousel (falls back to the existing placeholder tile when a property has no images).
+- Added a new paginated "all units" screen (`units_list.dart`, `/properties/:id/units`), infinite-scroll, shown via a "See all" action that's hidden below 6 total units.
+- Added a new `TenantApplications` Cube model (`services/cube/model/cubes/TenantApplications.js`) so the Applications count has a real data source — no prior cube covered tenant applications.
+- Modules affected: `services/cube/model/cubes/`, `apps/pm_mobile/lib/src/api/` (`unit_api.dart`, `analytics_api.dart`, `property_api.dart`), `apps/pm_mobile/lib/src/repository/` (models, providers, notifiers), `apps/pm_mobile/lib/src/modules/main/properties/` (`detail.dart`, `units_list.dart`), `apps/pm_mobile/lib/src/lib/` (`money.dart`, `unit_status.dart`, `property_stats_logic.dart`), `apps/pm_mobile/lib/src/navigation/routes.dart`.
+
+## 2026-07-16 — Properties list integration
+- Replaced the mocked property list with real, paginated data from `GET /api/v1/admin/clients/{client_id}/properties` (10/page, infinite scroll)
+- Extended `PropertyModel`/`PropertyApi.getProperties()` with the real fields/params the list needed; added `PropertiesNotifier` (first paginated-list notifier in this app)
+- Added a real debounced search and a status filter (All/Active/Maintenance/Inactive) to the Properties tab
+- `RLSearchBar` gained an optional real-`TextField` mode
+- Modules affected: `api/`, `lib/`, `repository/notifiers/`, `modules/main/properties/`, `shared/widgets.dart`
+
+## 2026-07-11 — Login integration + real-data wiring for workspace/profile surfaces
+- Implemented real login, cold-start token validation, workspace selection, and logout against `https://api.rentloopapp.com`, replacing the fully-mocked `AppStartupNotifier` (11-task plan; design spec + plan under `docs/superpowers/`)
+- New: `api/root.dart` (`AbstractApi`, `ApiException`), `api/user_api.dart` (`UserApi.login()`/`getMe()`); `repository/api_state.dart`, `repository/models/{user,client_user,client}_model.dart`, `repository/notifiers/auth/login_notifier.dart`; `architecture/{secure_storage,token_manager,workspace_id_manager,current_user,current_workspace,app_startup}/`; `lib/{storage,secure_storage,token_manager,workspace_id_manager,workspace_resolution,api_error_messages}.dart`
+- Deleted the old hand-written mock `architecture/app_startup.dart`; replaced with `@riverpod` code-gen `AppStartupNotifier` at `architecture/app_startup/app_startup_notifier.dart` (provider renamed `appStartupProvider` → `appStartupNotifierProvider`)
+- Modified for real-data wiring: `modules/auth/login/root.dart`, `modules/auth/workspace_select/root.dart`, `modules/main/workspace_sheet.dart`, `modules/main/more/root.dart` (profile + workspace cards), `modules/main/home/root.dart` (top header only), `navigation/{splash,routes}.dart`
+- Added `json_annotation` dependency (`pubspec.yaml`)
+- Added tests: `test/api/root_test.dart`, `test/lib/workspace_resolution_test.dart`, `test/repository/models/*_test.dart` (17 tests total, all passing)
+- Fixed during review: `isActiveClientUser` originally used a substring `contains('active')` check that misclassified `"Inactive"` as active; changed to a last-dot-segment exact match
+- Still mocked: `properties/`, `tenants/`, `activity/`, `money/`, `announcements/`, and most of `more/` (members, payment accounts, documents, agreement, billing, settings) — pending their own integration passes
+- Modules affected: `api/`, `architecture/`, `lib/`, `repository/`, `modules/auth/`, `modules/main/home/`, `modules/main/more/`, `modules/main/workspace_sheet.dart`, `navigation/`
+
+## 2026-07-10 — Initial index
+- First scan of codebase
+- Generated architecture.md, implementation.md, patterns.md, decisions.md
+- Notable finding: app is UI-only (mock data throughout), no `api/`/`repository/` layer yet — API integration work is about to begin, starting with `modules/auth/login`
