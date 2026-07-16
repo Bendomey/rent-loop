@@ -19,6 +19,10 @@ class ClientModel {
   final String? supportPhone;
   @JsonKey(name: 'website_url')
   final String? websiteUrl;
+  @JsonKey(name: 'id_type')
+  final String? idType;
+  @JsonKey(name: 'id_number')
+  final String? idNumber;
   @JsonKey(name: 'created_at')
   final String? createdAt;
   @JsonKey(name: 'updated_at')
@@ -36,6 +40,8 @@ class ClientModel {
     this.supportEmail,
     this.supportPhone,
     this.websiteUrl,
+    this.idType,
+    this.idNumber,
     this.createdAt,
     this.updatedAt,
   });

@@ -16,6 +16,8 @@ void main() {
       'support_email': 'support@acme.test',
       'support_phone': '+233551235555',
       'website_url': 'https://acme.test',
+      'id_type': 'NATIONAL_ID',
+      'id_number': 'GHA-123456789-0',
       'created_at': '2023-01-01T00:00:00Z',
       'updated_at': '2023-01-02T00:00:00Z',
     };
@@ -26,6 +28,18 @@ void main() {
     expect(model.name, 'Acme Corp');
     expect(model.subType, 'LANDLORD');
     expect(model.supportEmail, 'support@acme.test');
+    expect(model.idType, 'NATIONAL_ID');
+    expect(model.idNumber, 'GHA-123456789-0');
     expect(model.toJson()['sub_type'], 'LANDLORD');
+    expect(model.toJson()['id_type'], 'NATIONAL_ID');
+  });
+
+  test('ClientModel.fromJson defaults id_type/id_number to null when absent', () {
+    final json = {'id': 'client-1', 'name': 'Acme Corp'};
+
+    final model = ClientModel.fromJson(json);
+
+    expect(model.idType, isNull);
+    expect(model.idNumber, isNull);
   });
 }

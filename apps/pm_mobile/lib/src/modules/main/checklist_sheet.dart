@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:rentloop_manager/src/repository/providers/onboarding_checklist_provider.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
-// ─── Checklist data (static — will be driven by API) ─────────────────────────
+// ─── Checklist item + shared step-list builder ───────────────────────────────
 
 class _ChecklistItem {
   final String title;
@@ -20,39 +22,40 @@ class _ChecklistItem {
   });
 }
 
-const _kChecklist = <_ChecklistItem>[
+List<_ChecklistItem> _buildSteps(OnboardingChecklistState state) => [
   _ChecklistItem(
     title: 'Accept Agreements',
     desc:
         'Review and accept the Terms of Service and other legal agreements required to use Rentloop.',
-    done: false,
+    done: state.hasAcceptedAllAgreements,
     route: '/more/agreement',
   ),
   _ChecklistItem(
     title: 'Complete Profile',
     desc:
         'Your profile tells us a bit about you and your business so we can better tailor the experience to your needs.',
-    done: true,
+    done: state.isProfileComplete,
     route: '/more/settings',
   ),
-  _ChecklistItem(
-    title: 'Add your identity details',
-    desc:
-        'Provide your ID type and number to verify your identity as a property owner.',
-    done: true,
-    route: '/more/settings',
-  ),
+  if (state.isIndividual)
+    _ChecklistItem(
+      title: 'Add your identity details',
+      desc:
+          'Provide your ID type and number to verify your identity as a property owner.',
+      done: state.isIdentityComplete,
+      route: '/more/settings',
+    ),
   _ChecklistItem(
     title: 'Add a property',
     desc: 'Add your first property to start managing your rentals and tenants.',
-    done: false,
+    done: state.isPropertiesComplete,
     route: '/properties/add',
   ),
   _ChecklistItem(
     title: 'Add your payment accounts',
     desc:
         'Connect your account details to start accepting payments online.',
-    done: true,
+    done: state.isPaymentAccountsComplete,
     route: '/more/payment-accounts',
   ),
 ];
@@ -69,12 +72,18 @@ const _kPendingBd    = Color.fromRGBO(233, 123, 42, 0.30);
 
 // ─── Banner (placed in HomeScreen above the revenue card) ─────────────────────
 
-class ChecklistBanner extends StatelessWidget {
+class ChecklistBanner extends ConsumerWidget {
   const ChecklistBanner({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final done = _kChecklist.where((c) => c.done).length;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final checklist = ref.watch(onboardingChecklistProvider);
+    if (!checklist.hasValue) return const SizedBox.shrink();
+
+    final steps = _buildSteps(checklist.value!);
+    final done = steps.where((c) => c.done).length;
+    if (done == steps.length) return const SizedBox.shrink();
+
     return GestureDetector(
       onTap: () async {
         await Haptics.vibrate(HapticsType.selection);
@@ -110,7 +119,7 @@ class ChecklistBanner extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '$done/${_kChecklist.length} steps complete',
+                    '$done/${steps.length} steps complete',
                     style: const TextStyle(
                       fontFamily: RLTokens.fontSans,
                       fontSize: 12.5,
@@ -123,7 +132,7 @@ class ChecklistBanner extends StatelessWidget {
             const SizedBox(width: 8),
             // Progress dots — gap: 3 between items (no margin before first)
             Row(
-              children: _kChecklist
+              children: steps
                   .asMap()
                   .entries
                   .map(
@@ -165,14 +174,19 @@ Future<void> showChecklistSheet(BuildContext context) {
 
 // ─── Sheet ────────────────────────────────────────────────────────────────────
 
-class _ChecklistSheet extends StatelessWidget {
+class _ChecklistSheet extends ConsumerWidget {
   final void Function(String route) onNavigate;
 
   const _ChecklistSheet({required this.onNavigate});
 
   @override
-  Widget build(BuildContext context) {
-    final done = _kChecklist.where((c) => c.done).length;
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Only reachable via ChecklistBanner's onTap, which already guarantees
+    // onboardingChecklistProvider has a value — safe to assume it here too.
+    final state = ref.watch(onboardingChecklistProvider).value!;
+    final steps = _buildSteps(state);
+    final done = steps.where((c) => c.done).length;
+
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
@@ -258,7 +272,7 @@ class _ChecklistSheet extends StatelessWidget {
                 children: [
                   Expanded(
                     child: RLBar(
-                      percent: (done / _kChecklist.length) * 100,
+                      percent: (done / steps.length) * 100,
                       height: 7,
                       color: RLTokens.success,
                       trackColor: RLTokens.successBg,
@@ -266,7 +280,7 @@ class _ChecklistSheet extends StatelessWidget {
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    '$done/${_kChecklist.length}',
+                    '$done/${steps.length}',
                     style: TextStyle(
                       fontFamily: RLTokens.fontMono,
                       fontSize: 11,
@@ -284,9 +298,9 @@ class _ChecklistSheet extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
                 child: Column(
                   children: [
-                    for (int i = 0; i < _kChecklist.length; i++) ...[
+                    for (int i = 0; i < steps.length; i++) ...[
                       if (i > 0) const SizedBox(height: 10),
-                      _StepCard(item: _kChecklist[i], onNavigate: onNavigate),
+                      _StepCard(item: steps[i], onNavigate: onNavigate),
                     ],
                   ],
                 ),

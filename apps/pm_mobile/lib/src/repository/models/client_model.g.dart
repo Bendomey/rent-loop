@@ -18,6 +18,8 @@ ClientModel _$ClientModelFromJson(Map<String, dynamic> json) => ClientModel(
       supportEmail: json['support_email'] as String?,
       supportPhone: json['support_phone'] as String?,
       websiteUrl: json['website_url'] as String?,
+      idType: json['id_type'] as String?,
+      idNumber: json['id_number'] as String?,
       createdAt: json['created_at'] as String?,
       updatedAt: json['updated_at'] as String?,
     );
@@ -35,6 +37,8 @@ Map<String, dynamic> _$ClientModelToJson(ClientModel instance) =>
       'support_email': instance.supportEmail,
       'support_phone': instance.supportPhone,
       'website_url': instance.websiteUrl,
+      'id_type': instance.idType,
+      'id_number': instance.idNumber,
       'created_at': instance.createdAt,
       'updated_at': instance.updatedAt,
     };
