@@ -7,6 +7,9 @@ String translateApiErrorMessage({
   String? defaultErrorMessage,
 }) {
   switch (errorMessage) {
+    case 'PasswordIncorrect':
+    case 'UserNotFound':
+      return 'Your credentials are incorrect. Please try again.';
     // No specific error codes confirmed for the login flow yet — add
     // cases here as they're discovered against the real API (e.g. wrong
     // password, deactivated account).

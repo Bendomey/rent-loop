@@ -13,7 +13,13 @@ import 'package:rentloop_manager/src/repository/models/user_model.dart';
 
 part 'app_startup_notifier.g.dart';
 
-enum AppStartupStatus { loading, unauthenticated, workspaceSelect, ready, error }
+enum AppStartupStatus {
+  loading,
+  unauthenticated,
+  workspaceSelect,
+  ready,
+  error,
+}
 
 class AppStartupState {
   const AppStartupState({required this.status, this.errorMessage});
@@ -72,7 +78,9 @@ class AppStartupNotifier extends _$AppStartupNotifier {
 
   /// Called when the user taps a workspace on the picker screen.
   Future<void> selectWorkspace(ClientUserModel clientUser) async {
-    await ref.read(currentWorkspaceNotifierProvider.notifier).select(clientUser);
+    await ref
+        .read(currentWorkspaceNotifierProvider.notifier)
+        .select(clientUser);
     state = const AppStartupState(status: AppStartupStatus.ready);
   }
 
@@ -96,7 +104,9 @@ class AppStartupNotifier extends _$AppStartupNotifier {
     );
 
     if (resolved != null) {
-      await ref.read(currentWorkspaceNotifierProvider.notifier).select(resolved);
+      await ref
+          .read(currentWorkspaceNotifierProvider.notifier)
+          .select(resolved);
       state = const AppStartupState(status: AppStartupStatus.ready);
     } else {
       state = const AppStartupState(status: AppStartupStatus.workspaceSelect);

@@ -66,12 +66,26 @@ GoRouter buildRoutes(WidgetRef ref) {
 
       switch (startup.status) {
         case AppStartupStatus.loading:
+          // `loading` is also set transiently during in-app actions (e.g.
+          // AppStartupNotifier.completeLogin()), not just the initial
+          // cold-start — don't force navigation to /splash mid-action, or
+          // it races the in-flight action's own state transition (it also
+          // re-triggers SplashScreen's init() call). The genuine cold-start
+          // case already starts on /splash (it's initialLocation), so no
+          // forced redirect is needed for it either.
+          return null;
+
         case AppStartupStatus.error:
           if (loc == '/splash') return null;
           return '/splash';
 
         case AppStartupStatus.unauthenticated:
-          if (loc.startsWith('/auth')) return null;
+          // Only /auth/welcome and /auth/login are valid resting places
+          // when unauthenticated — NOT /auth/workspace-select, which
+          // requires an active session. A broader `loc.startsWith('/auth')`
+          // check would (and did) leave a just-logged-out user stranded on
+          // workspace-select instead of sending them to /auth/welcome.
+          if (loc == '/auth/welcome' || loc == '/auth/login') return null;
           return '/auth/welcome';
 
         case AppStartupStatus.workspaceSelect:
