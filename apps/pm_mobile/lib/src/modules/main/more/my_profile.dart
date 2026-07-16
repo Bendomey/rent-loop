@@ -144,19 +144,19 @@ class _EditRow extends StatelessWidget {
               Expanded(
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 14, vertical: 13),
+                    horizontal: 14,
+                    vertical: 13,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                        color: RLTokens.hairline, width: 1.5),
+                    border: Border.all(color: RLTokens.hairline, width: 1.5),
                   ),
                   child: Text(
                     value,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontFamily:
-                          mono ? RLTokens.fontMono : RLTokens.fontSans,
+                      fontFamily: mono ? RLTokens.fontMono : RLTokens.fontSans,
                       fontSize: 14.5,
                       color: RLTokens.muted,
                     ),
@@ -168,7 +168,9 @@ class _EditRow extends StatelessWidget {
                 onTap: () => Haptics.vibrate(HapticsType.selection),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 15, vertical: 13),
+                    horizontal: 15,
+                    vertical: 13,
+                  ),
                   decoration: BoxDecoration(
                     color: RLTokens.fill,
                     borderRadius: BorderRadius.circular(11),

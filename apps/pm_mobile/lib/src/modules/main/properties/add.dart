@@ -16,21 +16,24 @@ class _State extends State<AddPropertyScreen> {
   int _step = 1; // 1-based
 
   // Step 1
-  String _type   = 'Single Unit';
+  String _type = 'Single Unit';
   String _status = 'Active';
   String _rental = 'Long-term (Leases)';
 
   // Step 2
-  final _nameCtrl    = TextEditingController(text: 'Cantonments Court');
+  final _nameCtrl = TextEditingController(text: 'Cantonments Court');
   final _detailsCtrl = TextEditingController(
-    text: 'Gated 2-bed apartment block, 24 units, borehole water and standby generator.',
+    text:
+        'Gated 2-bed apartment block, 24 units, borehole water and standby generator.',
   );
   final _tagDraftCtrl = TextEditingController();
   List<String> _tags = ['Apartments', 'Gated'];
 
   // Step 3
-  final _addressCtrl = TextEditingController(text: '12 Switchback Rd, Cantonments, Accra');
-  final _gpsCtrl     = TextEditingController();
+  final _addressCtrl = TextEditingController(
+    text: '12 Switchback Rd, Cantonments, Accra',
+  );
+  final _gpsCtrl = TextEditingController();
 
   @override
   void dispose() {
@@ -93,35 +96,44 @@ class _State extends State<AddPropertyScreen> {
   Widget _buildStep() {
     return switch (_step) {
       1 => _Step1(
-        type:   _type,
+        type: _type,
         status: _status,
         rental: _rental,
-        onType:   (v) { Haptics.vibrate(HapticsType.selection); setState(() => _type   = v); },
-        onStatus: (v) { Haptics.vibrate(HapticsType.selection); setState(() => _status = v); },
-        onRental: (v) { Haptics.vibrate(HapticsType.selection); setState(() => _rental = v); },
+        onType: (v) {
+          Haptics.vibrate(HapticsType.selection);
+          setState(() => _type = v);
+        },
+        onStatus: (v) {
+          Haptics.vibrate(HapticsType.selection);
+          setState(() => _status = v);
+        },
+        onRental: (v) {
+          Haptics.vibrate(HapticsType.selection);
+          setState(() => _rental = v);
+        },
       ),
       2 => _Step2(
-        nameCtrl:    _nameCtrl,
+        nameCtrl: _nameCtrl,
         detailsCtrl: _detailsCtrl,
         tagDraftCtrl: _tagDraftCtrl,
-        tags:    _tags,
-        onAddTag:    _addTag,
+        tags: _tags,
+        onAddTag: _addTag,
         onRemoveTag: _removeTag,
       ),
-      3 => _Step3(
-        addressCtrl: _addressCtrl,
-        gpsCtrl:     _gpsCtrl,
-      ),
+      3 => _Step3(addressCtrl: _addressCtrl, gpsCtrl: _gpsCtrl),
       _ => _Step4(
-        type:    _type,
-        status:  _status,
-        rental:  _rental,
-        name:    _nameCtrl.text,
+        type: _type,
+        status: _status,
+        rental: _rental,
+        name: _nameCtrl.text,
         details: _detailsCtrl.text,
-        tags:    _tags,
+        tags: _tags,
         address: _addressCtrl.text,
-        gps:     _gpsCtrl.text,
-        onEdit:  (s) { Haptics.vibrate(HapticsType.selection); setState(() => _step = s); },
+        gps: _gpsCtrl.text,
+        onEdit: (s) {
+          Haptics.vibrate(HapticsType.selection);
+          setState(() => _step = s);
+        },
       ),
     };
   }
@@ -148,7 +160,11 @@ class _WizHeader extends StatelessWidget {
             child: Row(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.close_rounded, size: 22, color: RLTokens.ink),
+                  icon: const Icon(
+                    Icons.close_rounded,
+                    size: 22,
+                    color: RLTokens.ink,
+                  ),
                   onPressed: () async {
                     await Haptics.vibrate(HapticsType.selection);
                     onClose();
@@ -264,7 +280,11 @@ class _WizFooter extends StatelessWidget {
                     padding: EdgeInsets.symmetric(horizontal: 4, vertical: 12),
                     child: Row(
                       children: [
-                        Icon(Icons.chevron_left_rounded, size: 18, color: RLTokens.ink),
+                        Icon(
+                          Icons.chevron_left_rounded,
+                          size: 18,
+                          color: RLTokens.ink,
+                        ),
                         SizedBox(width: 4),
                         Text(
                           'Back',
@@ -301,7 +321,9 @@ class _WizFooter extends StatelessWidget {
                   ),
                   const SizedBox(width: 6),
                   Icon(
-                    step < 4 ? Icons.arrow_forward_rounded : Icons.check_rounded,
+                    step < 4
+                        ? Icons.arrow_forward_rounded
+                        : Icons.check_rounded,
                     size: 16,
                     color: Colors.white,
                   ),
@@ -347,12 +369,23 @@ class _Step1 extends StatelessWidget {
         const SizedBox(height: 7),
         RichText(
           text: const TextSpan(
-            style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 13.5, color: RLTokens.muted, height: 1.5),
+            style: TextStyle(
+              fontFamily: RLTokens.fontSans,
+              fontSize: 13.5,
+              color: RLTokens.muted,
+              height: 1.5,
+            ),
             children: [
-              TextSpan(text: 'Choose the category that best matches your property\'s layout or use. '),
+              TextSpan(
+                text:
+                    'Choose the category that best matches your property\'s layout or use. ',
+              ),
               TextSpan(
                 text: 'Learn more',
-                style: TextStyle(color: RLTokens.crimson, fontWeight: RLTokens.semibold),
+                style: TextStyle(
+                  color: RLTokens.crimson,
+                  fontWeight: RLTokens.semibold,
+                ),
               ),
             ],
           ),
@@ -360,21 +393,25 @@ class _Step1 extends StatelessWidget {
         const SizedBox(height: 20),
         Row(
           children: [
-            Expanded(child: _TypeCard(
-              icon: Icons.home_outlined,
-              title: 'Single Unit',
-              desc: 'One complete space, rented by one tenant.',
-              selected: type == 'Single Unit',
-              onTap: () => onType('Single Unit'),
-            )),
+            Expanded(
+              child: _TypeCard(
+                icon: Icons.home_outlined,
+                title: 'Single Unit',
+                desc: 'One complete space, rented by one tenant.',
+                selected: type == 'Single Unit',
+                onTap: () => onType('Single Unit'),
+              ),
+            ),
             const SizedBox(width: 10),
-            Expanded(child: _TypeCard(
-              icon: Icons.apartment_outlined,
-              title: 'Multi-Unit',
-              desc: 'Divided into separate spaces for many tenants.',
-              selected: type == 'Multi-Unit',
-              onTap: () => onType('Multi-Unit'),
-            )),
+            Expanded(
+              child: _TypeCard(
+                icon: Icons.apartment_outlined,
+                title: 'Multi-Unit',
+                desc: 'Divided into separate spaces for many tenants.',
+                selected: type == 'Multi-Unit',
+                onTap: () => onType('Multi-Unit'),
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 24),
@@ -445,7 +482,11 @@ class _TypeCard extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(icon, size: 30, color: selected ? RLTokens.crimson : RLTokens.ink),
+                Icon(
+                  icon,
+                  size: 30,
+                  color: selected ? RLTokens.crimson : RLTokens.ink,
+                ),
                 const SizedBox(height: 10),
                 Text(
                   title,
@@ -479,7 +520,11 @@ class _TypeCard extends StatelessWidget {
                     color: RLTokens.crimson,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.check_rounded, size: 12, color: Colors.white),
+                  child: const Icon(
+                    Icons.check_rounded,
+                    size: 12,
+                    color: Colors.white,
+                  ),
                 ),
               ),
           ],
@@ -509,7 +554,9 @@ class _StatusPills extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 8),
               decoration: BoxDecoration(
                 color: on ? RLTokens.crimson : RLTokens.surface,
-                border: Border.all(color: on ? RLTokens.crimson : RLTokens.hairline),
+                border: Border.all(
+                  color: on ? RLTokens.crimson : RLTokens.hairline,
+                ),
                 borderRadius: BorderRadius.circular(11),
               ),
               child: Center(
@@ -569,7 +616,11 @@ class _RentalRow extends StatelessWidget {
                 color: selected ? RLTokens.surface : RLTokens.fill,
                 borderRadius: BorderRadius.circular(11),
               ),
-              child: Icon(icon, size: 20, color: selected ? RLTokens.crimson : RLTokens.inkSoft),
+              child: Icon(
+                icon,
+                size: 20,
+                color: selected ? RLTokens.crimson : RLTokens.inkSoft,
+              ),
             ),
             const SizedBox(width: 13),
             Expanded(
@@ -613,7 +664,10 @@ class _RentalRow extends StatelessWidget {
               ),
               child: selected
                   ? const Center(
-                      child: CircleAvatar(radius: 4, backgroundColor: Colors.white),
+                      child: CircleAvatar(
+                        radius: 4,
+                        backgroundColor: Colors.white,
+                      ),
                     )
                   : null,
             ),
@@ -658,7 +712,11 @@ class _Step2 extends StatelessWidget {
         const SizedBox(height: 7),
         const Text(
           'Name your property and add a photo.',
-          style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 13.5, color: RLTokens.muted),
+          style: TextStyle(
+            fontFamily: RLTokens.fontSans,
+            fontSize: 13.5,
+            color: RLTokens.muted,
+          ),
         ),
         const SizedBox(height: 22),
         const _WLabel('Name'),
@@ -667,7 +725,11 @@ class _Step2 extends StatelessWidget {
         const _WLabel('Property image', optional: true),
         Container(
           decoration: BoxDecoration(
-            border: Border.all(color: RLTokens.hairline, width: 1.5, style: BorderStyle.solid),
+            border: Border.all(
+              color: RLTokens.hairline,
+              width: 1.5,
+              style: BorderStyle.solid,
+            ),
             borderRadius: BorderRadius.circular(14),
           ),
           child: Column(
@@ -676,10 +738,16 @@ class _Step2 extends StatelessWidget {
                 height: 130,
                 decoration: BoxDecoration(
                   color: RLTokens.fill,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(13)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(13),
+                  ),
                 ),
                 child: const Center(
-                  child: Icon(Icons.camera_alt_outlined, size: 30, color: RLTokens.mutedSoft),
+                  child: Icon(
+                    Icons.camera_alt_outlined,
+                    size: 30,
+                    color: RLTokens.mutedSoft,
+                  ),
                 ),
               ),
               Padding(
@@ -687,7 +755,10 @@ class _Step2 extends StatelessWidget {
                 child: GestureDetector(
                   onTap: () => Haptics.vibrate(HapticsType.selection),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 18),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 10,
+                      horizontal: 18,
+                    ),
                     decoration: BoxDecoration(
                       color: RLTokens.surface,
                       border: Border.all(color: RLTokens.hairline),
@@ -721,23 +792,55 @@ class _Step2 extends StatelessWidget {
           controller: detailsCtrl,
           maxLines: 4,
           textCapitalization: TextCapitalization.sentences,
-          style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 14.5, color: RLTokens.ink, height: 1.5),
+          style: const TextStyle(
+            fontFamily: RLTokens.fontSans,
+            fontSize: 14.5,
+            color: RLTokens.ink,
+            height: 1.5,
+          ),
           decoration: InputDecoration(
             hintText: 'Briefly describe your property…',
-            hintStyle: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 14.5, color: RLTokens.mutedSoft),
+            hintStyle: const TextStyle(
+              fontFamily: RLTokens.fontSans,
+              fontSize: 14.5,
+              color: RLTokens.mutedSoft,
+            ),
             filled: true,
             fillColor: RLTokens.surface,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-            border:        OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: RLTokens.hairline, width: 1.5)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: RLTokens.hairline, width: 1.5)),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: RLTokens.crimson,   width: 1.5)),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 13,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: RLTokens.hairline,
+                width: 1.5,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: RLTokens.hairline,
+                width: 1.5,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: RLTokens.crimson, width: 1.5),
+            ),
           ),
         ),
         const SizedBox(height: 20),
         const _WLabel('Tags', optional: true),
         Row(
           children: [
-            Expanded(child: _WInput(controller: tagDraftCtrl, placeholder: 'Type a tag…')),
+            Expanded(
+              child: _WInput(
+                controller: tagDraftCtrl,
+                placeholder: 'Type a tag…',
+              ),
+            ),
             const SizedBox(width: 8),
             GestureDetector(
               onTap: () async {
@@ -745,7 +848,10 @@ class _Step2 extends StatelessWidget {
                 onAddTag();
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 14,
+                ),
                 decoration: BoxDecoration(
                   color: RLTokens.ink,
                   borderRadius: BorderRadius.circular(12),
@@ -793,7 +899,11 @@ class _Step2 extends StatelessWidget {
                         await Haptics.vibrate(HapticsType.selection);
                         onRemoveTag(e.key);
                       },
-                      child: const Icon(Icons.close_rounded, size: 14, color: RLTokens.mutedSoft),
+                      child: const Icon(
+                        Icons.close_rounded,
+                        size: 14,
+                        color: RLTokens.mutedSoft,
+                      ),
                     ),
                   ],
                 ),
@@ -830,7 +940,11 @@ class _Step3 extends StatelessWidget {
         const SizedBox(height: 7),
         const Text(
           'Search the address, or drop a Ghana Post GPS code.',
-          style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 13.5, color: RLTokens.muted),
+          style: TextStyle(
+            fontFamily: RLTokens.fontSans,
+            fontSize: 13.5,
+            color: RLTokens.muted,
+          ),
         ),
         const SizedBox(height: 22),
         const _WLabel('Address'),
@@ -852,7 +966,11 @@ class _Step3 extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.location_on_rounded, size: 30, color: RLTokens.crimson),
+                const Icon(
+                  Icons.location_on_rounded,
+                  size: 30,
+                  color: RLTokens.crimson,
+                ),
                 const SizedBox(height: 6),
                 const Text(
                   'Map preview',
@@ -910,7 +1028,12 @@ class _Step4 extends StatelessWidget {
         const SizedBox(height: 7),
         const Text(
           'Check everything below. Edit any step before submitting.',
-          style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 13.5, color: RLTokens.muted, height: 1.5),
+          style: TextStyle(
+            fontFamily: RLTokens.fontSans,
+            fontSize: 13.5,
+            color: RLTokens.muted,
+            height: 1.5,
+          ),
         ),
         const SizedBox(height: 20),
         _ReviewCard(
@@ -935,9 +1058,16 @@ class _Step4 extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Expanded(child: _ReviewPair(k: 'Name', v: name)),
+                  Expanded(
+                    child: _ReviewPair(k: 'Name', v: name),
+                  ),
                   const SizedBox(width: 14),
-                  Expanded(child: _ReviewPair(k: 'Tags', v: tags.isEmpty ? '—' : tags.join(', '))),
+                  Expanded(
+                    child: _ReviewPair(
+                      k: 'Tags',
+                      v: tags.isEmpty ? '—' : tags.join(', '),
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 8),
@@ -951,9 +1081,17 @@ class _Step4 extends StatelessWidget {
           onEdit: () => onEdit(3),
           child: Row(
             children: [
-              Expanded(child: _ReviewPair(k: 'Address', v: address.isEmpty ? '—' : address)),
+              Expanded(
+                child: _ReviewPair(
+                  k: 'Address',
+                  v: address.isEmpty ? '—' : address,
+                ),
+              ),
               const SizedBox(width: 14),
-              SizedBox(width: 96, child: _ReviewPair(k: 'GPS', v: gps.isEmpty ? '—' : gps)),
+              SizedBox(
+                width: 96,
+                child: _ReviewPair(k: 'GPS', v: gps.isEmpty ? '—' : gps),
+              ),
             ],
           ),
         ),
@@ -963,7 +1101,11 @@ class _Step4 extends StatelessWidget {
 }
 
 class _ReviewCard extends StatelessWidget {
-  const _ReviewCard({required this.title, required this.onEdit, required this.child});
+  const _ReviewCard({
+    required this.title,
+    required this.onEdit,
+    required this.child,
+  });
   final String title;
   final VoidCallback onEdit;
   final Widget child;
@@ -997,7 +1139,11 @@ class _ReviewCard extends StatelessWidget {
                 onTap: onEdit,
                 child: const Row(
                   children: [
-                    Icon(Icons.settings_outlined, size: 14, color: RLTokens.crimson),
+                    Icon(
+                      Icons.settings_outlined,
+                      size: 14,
+                      color: RLTokens.crimson,
+                    ),
                     SizedBox(width: 4),
                     Text(
                       'Edit',
@@ -1065,12 +1211,15 @@ class _ReviewPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final (bg, fg) = switch (tone) {
       _PillTone.green => (RLTokens.successBg, RLTokens.success),
-      _PillTone.blue  => (RLTokens.infoBg,    RLTokens.info),
-      _PillTone.gray  => (RLTokens.neutralBg,  RLTokens.inkSoft),
+      _PillTone.blue => (RLTokens.infoBg, RLTokens.info),
+      _PillTone.gray => (RLTokens.neutralBg, RLTokens.inkSoft),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(RLTokens.rPill)),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(RLTokens.rPill),
+      ),
       child: Text(
         label,
         style: TextStyle(
@@ -1128,7 +1277,11 @@ class _WLabel extends StatelessWidget {
           if (optional)
             const Text(
               'Optional',
-              style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 11.5, color: RLTokens.mutedSoft),
+              style: TextStyle(
+                fontFamily: RLTokens.fontSans,
+                fontSize: 11.5,
+                color: RLTokens.mutedSoft,
+              ),
             ),
         ],
       ),
@@ -1150,19 +1303,39 @@ class _WInput extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextField(
       controller: controller,
-      style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 15, color: RLTokens.ink),
+      style: const TextStyle(
+        fontFamily: RLTokens.fontSans,
+        fontSize: 15,
+        color: RLTokens.ink,
+      ),
       decoration: InputDecoration(
         hintText: placeholder,
-        hintStyle: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 15, color: RLTokens.mutedSoft),
+        hintStyle: const TextStyle(
+          fontFamily: RLTokens.fontSans,
+          fontSize: 15,
+          color: RLTokens.mutedSoft,
+        ),
         prefixIcon: prefixIcon != null
             ? Icon(prefixIcon, size: 18, color: RLTokens.mutedSoft)
             : null,
         filled: true,
         fillColor: RLTokens.surface,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        border:        OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: RLTokens.hairline, width: 1.5)),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: RLTokens.hairline, width: 1.5)),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: RLTokens.crimson,   width: 1.5)),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: RLTokens.hairline, width: 1.5),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: RLTokens.hairline, width: 1.5),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: RLTokens.crimson, width: 1.5),
+        ),
       ),
     );
   }

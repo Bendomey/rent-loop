@@ -53,8 +53,7 @@ List<_ChecklistItem> _buildSteps(OnboardingChecklistState state) => [
   ),
   _ChecklistItem(
     title: 'Add your payment accounts',
-    desc:
-        'Connect your account details to start accepting payments online.',
+    desc: 'Connect your account details to start accepting payments online.',
     done: state.isPaymentAccountsComplete,
     route: '/more/payment-accounts',
   ),
@@ -62,13 +61,13 @@ List<_ChecklistItem> _buildSteps(OnboardingChecklistState state) => [
 
 // ─── Shared colors (design spec exact values) ─────────────────────────────────
 
-const _kOrangeBg     = Color.fromRGBO(233, 123, 42, 0.10);
+const _kOrangeBg = Color.fromRGBO(233, 123, 42, 0.10);
 const _kOrangeBorder = Color.fromRGBO(233, 123, 42, 0.30);
-const _kOrangeTitle  = Color(0xFF9A4A12);
-const _kDoneGreenBg  = Color.fromRGBO(27, 158, 92, 0.07);
-const _kDoneGreenBd  = Color.fromRGBO(27, 158, 92, 0.28);
-const _kPendingBg    = Color.fromRGBO(233, 123, 42, 0.08);
-const _kPendingBd    = Color.fromRGBO(233, 123, 42, 0.30);
+const _kOrangeTitle = Color(0xFF9A4A12);
+const _kDoneGreenBg = Color.fromRGBO(27, 158, 92, 0.07);
+const _kDoneGreenBd = Color.fromRGBO(27, 158, 92, 0.28);
+const _kPendingBg = Color.fromRGBO(233, 123, 42, 0.08);
+const _kPendingBd = Color.fromRGBO(233, 123, 42, 0.30);
 
 // ─── Banner (placed in HomeScreen above the revenue card) ─────────────────────
 
@@ -342,11 +341,11 @@ class _StepCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tappable  = !item.done;
-    final bg        = item.done ? _kDoneGreenBg  : _kPendingBg;
-    final bd        = item.done ? _kDoneGreenBd  : _kPendingBd;
+    final tappable = !item.done;
+    final bg = item.done ? _kDoneGreenBg : _kPendingBg;
+    final bd = item.done ? _kDoneGreenBd : _kPendingBd;
     final iconColor = item.done ? RLTokens.success : RLTokens.warning;
-    final titleClr  = item.done ? RLTokens.success : _kOrangeTitle;
+    final titleClr = item.done ? RLTokens.success : _kOrangeTitle;
 
     return GestureDetector(
       onTap: tappable
@@ -366,9 +365,7 @@ class _StepCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Icon(
-              item.done
-                  ? Icons.task_alt_rounded
-                  : Icons.warning_amber_rounded,
+              item.done ? Icons.task_alt_rounded : Icons.warning_amber_rounded,
               size: 20,
               color: iconColor,
             ),

@@ -37,7 +37,10 @@ class UserApi extends AbstractApi {
   }
 
   Future<UserModel> getMe() async {
-    final response = await execute(method: 'GET', path: '/api/v1/admin/users/me');
+    final response = await execute(
+      method: 'GET',
+      path: '/api/v1/admin/users/me',
+    );
     final json = jsonDecode(response.body) as Map<String, dynamic>;
     return UserModel.fromJson(json['data'] as Map<String, dynamic>);
   }

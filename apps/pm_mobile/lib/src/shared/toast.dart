@@ -23,19 +23,19 @@ enum RLToastTone { error, success, offline, info, undo }
 
 extension _RLToastToneX on RLToastTone {
   Color get fg => switch (this) {
-    RLToastTone.error   => const Color(0xFFFF6F8E),
+    RLToastTone.error => const Color(0xFFFF6F8E),
     RLToastTone.success => const Color(0xFF5FD08F),
     RLToastTone.offline => const Color(0xFFF0A868),
-    RLToastTone.info    => const Color(0xFF7FA6FF),
-    RLToastTone.undo    => const Color(0xFFFF6F8E),
+    RLToastTone.info => const Color(0xFF7FA6FF),
+    RLToastTone.undo => const Color(0xFFFF6F8E),
   };
 
   IconData get icon => switch (this) {
-    RLToastTone.error   => Icons.warning_rounded,
+    RLToastTone.error => Icons.warning_rounded,
     RLToastTone.success => Icons.check_rounded,
     RLToastTone.offline => Icons.wifi_off_rounded,
-    RLToastTone.info    => Icons.info_outline_rounded,
-    RLToastTone.undo    => Icons.undo_rounded,
+    RLToastTone.info => Icons.info_outline_rounded,
+    RLToastTone.undo => Icons.undo_rounded,
   };
 }
 
@@ -81,8 +81,9 @@ class RLToastNotifier extends Notifier<RLToastData?> {
   }
 }
 
-final rlToastProvider =
-    NotifierProvider<RLToastNotifier, RLToastData?>(RLToastNotifier.new);
+final rlToastProvider = NotifierProvider<RLToastNotifier, RLToastData?>(
+  RLToastNotifier.new,
+);
 
 // ── Convenience function ──────────────────────────────────────────────────────
 
@@ -95,16 +96,18 @@ void showRLToast(
   VoidCallback? onAction,
   Duration duration = const Duration(seconds: 4),
 }) {
-  ref.read(rlToastProvider.notifier).show(
-    RLToastData(
-      tone: tone,
-      title: title,
-      body: body,
-      actionLabel: actionLabel,
-      onAction: onAction,
-    ),
-    duration: duration,
-  );
+  ref
+      .read(rlToastProvider.notifier)
+      .show(
+        RLToastData(
+          tone: tone,
+          title: title,
+          body: body,
+          actionLabel: actionLabel,
+          onAction: onAction,
+        ),
+        duration: duration,
+      );
 }
 
 // ── Widget ────────────────────────────────────────────────────────────────────

@@ -41,7 +41,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _TopBar(index: _index, count: _count, isLast: isLast, onSkip: _skip),
+            _TopBar(
+              index: _index,
+              count: _count,
+              isLast: isLast,
+              onSkip: _skip,
+            ),
             Expanded(
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 300),
@@ -62,10 +67,13 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               transitionBuilder: (child, anim) => FadeTransition(
                 opacity: anim,
                 child: SlideTransition(
-                  position: Tween<Offset>(
-                    begin: const Offset(0, 0.06),
-                    end: Offset.zero,
-                  ).animate(CurvedAnimation(parent: anim, curve: Curves.easeOut)),
+                  position:
+                      Tween<Offset>(
+                        begin: const Offset(0, 0.06),
+                        end: Offset.zero,
+                      ).animate(
+                        CurvedAnimation(parent: anim, curve: Curves.easeOut),
+                      ),
                   child: child,
                 ),
               ),
@@ -108,7 +116,8 @@ const _kSlides = <_Slide>[
   (
     eyebrow: 'Get paid',
     title: 'Money in,\nbeautifully tracked.',
-    body: "Send invoices, record payments and see what's outstanding at a glance.",
+    body:
+        "Send invoices, record payments and see what's outstanding at a glance.",
   ),
 ];
 
@@ -254,8 +263,10 @@ class _ContinueButtonState extends State<_ContinueButton>
       vsync: this,
       duration: const Duration(milliseconds: 80),
     );
-    _scale = Tween<double>(begin: 1.0, end: 0.97)
-        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
+    _scale = Tween<double>(
+      begin: 1.0,
+      end: 0.97,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
   }
 
   @override
@@ -709,7 +720,8 @@ class _StageOps extends StatelessWidget {
                                 const SizedBox(width: 16),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         item.title,
@@ -840,8 +852,9 @@ class _StageMoney extends StatelessWidget {
                 final pct = _data[i] / maxVal;
                 return Expanded(
                   child: Padding(
-                    padding:
-                        EdgeInsets.only(right: i < _data.length - 1 ? 10 : 0),
+                    padding: EdgeInsets.only(
+                      right: i < _data.length - 1 ? 10 : 0,
+                    ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [

@@ -5,5 +5,6 @@ class DocumentsScreen extends StatelessWidget {
   const DocumentsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) => const RLComingSoon(title: 'Documents & e-sign');
+  Widget build(BuildContext context) =>
+      const RLComingSoon(title: 'Documents & e-sign');
 }

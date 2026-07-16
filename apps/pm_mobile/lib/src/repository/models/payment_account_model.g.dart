@@ -7,12 +7,8 @@ part of 'payment_account_model.dart';
 // **************************************************************************
 
 PaymentAccountModel _$PaymentAccountModelFromJson(Map<String, dynamic> json) =>
-    PaymentAccountModel(
-      id: json['id'] as String,
-    );
+    PaymentAccountModel(id: json['id'] as String);
 
 Map<String, dynamic> _$PaymentAccountModelToJson(
-        PaymentAccountModel instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-    };
+  PaymentAccountModel instance,
+) => <String, dynamic>{'id': instance.id};

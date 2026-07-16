@@ -35,10 +35,7 @@ class PaymentAccountApi extends AbstractApi {
     String? order,
     String? orderBy,
   }) async {
-    final query = <String, String>{
-      'page': '$page',
-      'page_size': '$pageSize',
-    };
+    final query = <String, String>{'page': '$page', 'page_size': '$pageSize'};
     if (order != null) query['order'] = order;
     if (orderBy != null) query['order_by'] = orderBy;
     if (isDefault != null) query['is_default'] = '$isDefault';

@@ -20,14 +20,54 @@ class _Member {
 }
 
 const _kMembers = [
-  _Member(name: 'Delppy123',       role: 'Admin', email: 'business@delppy123.com',         status: 'Active'),
-  _Member(name: 'Jane Doe',         role: 'Admin', email: 'rentloopapp@gmail.com',           status: 'Active'),
-  _Member(name: 'test',             role: 'Admin', email: 'test@gmail.com',                  status: 'Inactive'),
-  _Member(name: 'Gideon Bempong',   role: 'Admin', email: 'gideonbempong533+1@gmail.com',   status: 'Active'),
-  _Member(name: 'Emmanuel Baidoo',  role: 'Staff', email: 'ebaidoo79@gmail.com',             status: 'Active'),
-  _Member(name: 'Edward Adjei',     role: 'Staff', email: 'edd.net49@gmail.com',             status: 'Active'),
-  _Member(name: 'Ned Kelly',        role: 'Admin', email: 'nedkelly205@gmail.com',           status: 'Active'),
-  _Member(name: 'Delali',           role: 'Staff', email: 'michaelsavior5@gmail.com',        status: 'Active'),
+  _Member(
+    name: 'Delppy123',
+    role: 'Admin',
+    email: 'business@delppy123.com',
+    status: 'Active',
+  ),
+  _Member(
+    name: 'Jane Doe',
+    role: 'Admin',
+    email: 'rentloopapp@gmail.com',
+    status: 'Active',
+  ),
+  _Member(
+    name: 'test',
+    role: 'Admin',
+    email: 'test@gmail.com',
+    status: 'Inactive',
+  ),
+  _Member(
+    name: 'Gideon Bempong',
+    role: 'Admin',
+    email: 'gideonbempong533+1@gmail.com',
+    status: 'Active',
+  ),
+  _Member(
+    name: 'Emmanuel Baidoo',
+    role: 'Staff',
+    email: 'ebaidoo79@gmail.com',
+    status: 'Active',
+  ),
+  _Member(
+    name: 'Edward Adjei',
+    role: 'Staff',
+    email: 'edd.net49@gmail.com',
+    status: 'Active',
+  ),
+  _Member(
+    name: 'Ned Kelly',
+    role: 'Admin',
+    email: 'nedkelly205@gmail.com',
+    status: 'Active',
+  ),
+  _Member(
+    name: 'Delali',
+    role: 'Staff',
+    email: 'michaelsavior5@gmail.com',
+    status: 'Active',
+  ),
 ];
 
 const _kFilters = ['All', 'Admin', 'Staff', 'Active', 'Inactive'];
@@ -76,8 +116,11 @@ class _MembersScreenState extends State<MembersScreen> {
                   onTap: _goAdd,
                   child: const Padding(
                     padding: EdgeInsets.all(9),
-                    child: Icon(Icons.add_rounded,
-                        size: 22, color: RLTokens.ink),
+                    child: Icon(
+                      Icons.add_rounded,
+                      size: 22,
+                      color: RLTokens.ink,
+                    ),
                   ),
                 ),
               ),
@@ -119,7 +162,9 @@ class _MembersScreenState extends State<MembersScreen> {
                         },
                       ),
                       // Members list
-                      RLLabel('${members.length} member${members.length == 1 ? '' : 's'}'),
+                      RLLabel(
+                        '${members.length} member${members.length == 1 ? '' : 's'}',
+                      ),
                       if (members.isEmpty)
                         _EmptyState()
                       else
@@ -129,10 +174,12 @@ class _MembersScreenState extends State<MembersScreen> {
                             children: members
                                 .asMap()
                                 .entries
-                                .map((e) => _MemberRow(
-                                      member: e.value,
-                                      isLast: e.key == members.length - 1,
-                                    ))
+                                .map(
+                                  (e) => _MemberRow(
+                                    member: e.value,
+                                    isLast: e.key == members.length - 1,
+                                  ),
+                                )
                                 .toList(),
                           ),
                         ),
@@ -174,8 +221,7 @@ class _MemberRow extends StatelessWidget {
       decoration: BoxDecoration(
         border: isLast
             ? null
-            : const Border(
-                bottom: BorderSide(color: RLTokens.hairlineSoft)),
+            : const Border(bottom: BorderSide(color: RLTokens.hairlineSoft)),
       ),
       child: Row(
         children: [
@@ -202,7 +248,9 @@ class _MemberRow extends StatelessWidget {
                     const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 5, vertical: 1),
+                        horizontal: 5,
+                        vertical: 1,
+                      ),
                       decoration: BoxDecoration(
                         border: Border.all(color: RLTokens.hairline),
                         borderRadius: BorderRadius.circular(5),
@@ -236,10 +284,7 @@ class _MemberRow extends StatelessWidget {
           const SizedBox(width: 8),
           Row(
             children: [
-              RLDot(
-                tone: isActive ? RLTone.success : RLTone.danger,
-                size: 7,
-              ),
+              RLDot(tone: isActive ? RLTone.success : RLTone.danger, size: 7),
               const SizedBox(width: 5),
               Text(
                 member.status,
@@ -274,8 +319,11 @@ class _EmptyState extends StatelessWidget {
               color: RLTokens.fill,
               borderRadius: BorderRadius.circular(15),
             ),
-            child: const Icon(Icons.group_outlined,
-                size: 26, color: RLTokens.mutedSoft),
+            child: const Icon(
+              Icons.group_outlined,
+              size: 26,
+              color: RLTokens.mutedSoft,
+            ),
           ),
           const SizedBox(height: 12),
           const Text(

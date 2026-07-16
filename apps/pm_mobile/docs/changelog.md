@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-07-16 — Properties list integration
+- Replaced the mocked property list with real, paginated data from `GET /api/v1/admin/clients/{client_id}/properties` (10/page, infinite scroll)
+- Extended `PropertyModel`/`PropertyApi.getProperties()` with the real fields/params the list needed; added `PropertiesNotifier` (first paginated-list notifier in this app)
+- Added a real debounced search and a status filter (All/Active/Maintenance/Inactive) to the Properties tab
+- `RLSearchBar` gained an optional real-`TextField` mode
+- Modules affected: `api/`, `lib/`, `repository/notifiers/`, `modules/main/properties/`, `shared/widgets.dart`
+
 ## 2026-07-11 — Login integration + real-data wiring for workspace/profile surfaces
 - Implemented real login, cold-start token validation, workspace selection, and logout against `https://api.rentloopapp.com`, replacing the fully-mocked `AppStartupNotifier` (11-task plan; design spec + plan under `docs/superpowers/`)
 - New: `api/root.dart` (`AbstractApi`, `ApiException`), `api/user_api.dart` (`UserApi.login()`/`getMe()`); `repository/api_state.dart`, `repository/models/{user,client_user,client}_model.dart`, `repository/notifiers/auth/login_notifier.dart`; `architecture/{secure_storage,token_manager,workspace_id_manager,current_user,current_workspace,app_startup}/`; `lib/{storage,secure_storage,token_manager,workspace_id_manager,workspace_resolution,api_error_messages}.dart`

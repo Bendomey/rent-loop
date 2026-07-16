@@ -98,7 +98,9 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                       const _FormLabel(label: 'Full name'),
                       const SizedBox(height: 6),
                       _InputField(
-                          controller: _nameCtrl, placeholder: 'John Doe'),
+                        controller: _nameCtrl,
+                        placeholder: 'John Doe',
+                      ),
                       const SizedBox(height: 18),
 
                       // Email
@@ -147,7 +149,8 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                     padding: const EdgeInsets.only(top: 22),
                     decoration: const BoxDecoration(
                       border: Border(
-                          top: BorderSide(color: RLTokens.hairlineSoft)),
+                        top: BorderSide(color: RLTokens.hairlineSoft),
+                      ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -198,7 +201,9 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                               child: AnimatedContainer(
                                 duration: const Duration(milliseconds: 150),
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 13, vertical: 8),
+                                  horizontal: 13,
+                                  vertical: 8,
+                                ),
                                 decoration: BoxDecoration(
                                   color: on
                                       ? RLTokens.crimsonTint
@@ -215,9 +220,11 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     if (on) ...[
-                                      const Icon(Icons.check_rounded,
-                                          size: 13,
-                                          color: RLTokens.crimson),
+                                      const Icon(
+                                        Icons.check_rounded,
+                                        size: 13,
+                                        color: RLTokens.crimson,
+                                      ),
                                       const SizedBox(width: 6),
                                     ],
                                     Text(
@@ -271,8 +278,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                     if (context.mounted) Navigator.of(context).pop();
                   },
                   child: const Padding(
-                    padding: EdgeInsets.symmetric(
-                        vertical: 12, horizontal: 4),
+                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 4),
                     child: Text(
                       'Cancel',
                       style: TextStyle(
@@ -323,7 +329,9 @@ class _RoleSelector extends StatelessWidget {
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 150),
                 padding: const EdgeInsets.symmetric(
-                    vertical: 13, horizontal: 10),
+                  vertical: 13,
+                  horizontal: 10,
+                ),
                 decoration: BoxDecoration(
                   color: on ? RLTokens.crimsonTint : RLTokens.surface,
                   border: Border.all(
@@ -417,8 +425,7 @@ class _InputField extends StatelessWidget {
         borderRadius: BorderRadius.circular(RLTokens.rMd),
         border: Border.all(color: RLTokens.hairline, width: 1.5),
       ),
-      padding: EdgeInsets.only(
-          left: leadingIcon != null ? 10 : 14, right: 14),
+      padding: EdgeInsets.only(left: leadingIcon != null ? 10 : 14, right: 14),
       child: Row(
         children: [
           if (leadingIcon != null) ...[
@@ -445,8 +452,7 @@ class _InputField extends StatelessWidget {
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
                 isDense: true,
-                contentPadding:
-                    const EdgeInsets.symmetric(vertical: 14),
+                contentPadding: const EdgeInsets.symmetric(vertical: 14),
               ),
             ),
           ),
@@ -475,8 +481,11 @@ class _PhoneField extends StatelessWidget {
             children: const [
               Text('🇬🇭', style: TextStyle(fontSize: 17)),
               SizedBox(width: 6),
-              Icon(Icons.keyboard_arrow_down_rounded,
-                  size: 13, color: RLTokens.mutedSoft),
+              Icon(
+                Icons.keyboard_arrow_down_rounded,
+                size: 13,
+                color: RLTokens.mutedSoft,
+              ),
             ],
           ),
           Container(

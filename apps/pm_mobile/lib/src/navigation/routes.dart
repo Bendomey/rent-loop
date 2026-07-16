@@ -155,43 +155,37 @@ GoRouter buildRoutes(WidgetRef ref) {
       ),
       GoRoute(
         path: '/properties/:id',
-        builder:
-            (_, state) => PropertyDetailScreen(id: state.pathParameters['id']!),
+        builder: (_, state) =>
+            PropertyDetailScreen(id: state.pathParameters['id']!),
         routes: [
           GoRoute(
             path: 'settings',
-            builder:
-                (_, state) =>
-                    PropertySettingsHubScreen(id: state.pathParameters['id']!),
+            builder: (_, state) =>
+                PropertySettingsHubScreen(id: state.pathParameters['id']!),
             routes: [
               GoRoute(
                 path: 'general',
-                builder:
-                    (_, state) => PropertyGeneralSettingsScreen(
-                      id: state.pathParameters['id']!,
-                    ),
+                builder: (_, state) => PropertyGeneralSettingsScreen(
+                  id: state.pathParameters['id']!,
+                ),
               ),
               GoRoute(
                 path: 'members',
-                builder:
-                    (_, state) =>
-                        PropertyMembersScreen(id: state.pathParameters['id']!),
+                builder: (_, state) =>
+                    PropertyMembersScreen(id: state.pathParameters['id']!),
                 routes: [
                   GoRoute(
                     path: 'add',
-                    builder:
-                        (_, state) => AddPropertyMemberScreen(
-                          id: state.pathParameters['id']!,
-                        ),
+                    builder: (_, state) => AddPropertyMemberScreen(
+                      id: state.pathParameters['id']!,
+                    ),
                   ),
                 ],
               ),
               GoRoute(
                 path: 'documents',
-                builder:
-                    (_, state) => PropertyDocumentsScreen(
-                      id: state.pathParameters['id']!,
-                    ),
+                builder: (_, state) =>
+                    PropertyDocumentsScreen(id: state.pathParameters['id']!),
               ),
             ],
           ),
@@ -205,9 +199,8 @@ GoRouter buildRoutes(WidgetRef ref) {
       ),
       GoRoute(
         path: '/activity/maintenances/:id',
-        builder:
-            (_, state) =>
-                MaintenanceDetailScreen(id: state.pathParameters['id']!),
+        builder: (_, state) =>
+            MaintenanceDetailScreen(id: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/activity/bookings/add',
@@ -219,21 +212,20 @@ GoRouter buildRoutes(WidgetRef ref) {
       ),
       GoRoute(
         path: '/activity/bookings/:id',
-        builder:
-            (_, state) => BookingDetailScreen(id: state.pathParameters['id']!),
+        builder: (_, state) =>
+            BookingDetailScreen(id: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/activity/applications/:id',
-        builder:
-            (_, state) =>
-                ApplicationDetailScreen(id: state.pathParameters['id']!),
+        builder: (_, state) =>
+            ApplicationDetailScreen(id: state.pathParameters['id']!),
       ),
 
       // money routes
       GoRoute(
         path: '/money/invoices/:id',
-        builder:
-            (_, state) => InvoiceDetailScreen(id: state.pathParameters['id']!),
+        builder: (_, state) =>
+            InvoiceDetailScreen(id: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/money/record-payment',
@@ -263,10 +255,7 @@ GoRouter buildRoutes(WidgetRef ref) {
         path: '/more/members',
         builder: (_, __) => const MembersScreen(),
         routes: [
-          GoRoute(
-            path: 'add',
-            builder: (_, __) => const AddMemberScreen(),
-          ),
+          GoRoute(path: 'add', builder: (_, __) => const AddMemberScreen()),
         ],
       ),
       GoRoute(
@@ -288,9 +277,8 @@ GoRouter buildRoutes(WidgetRef ref) {
         routes: [
           GoRoute(
             path: ':id',
-            builder:
-                (_, state) =>
-                    TenantDetailScreen(id: state.pathParameters['id']!),
+            builder: (_, state) =>
+                TenantDetailScreen(id: state.pathParameters['id']!),
           ),
         ],
       ),

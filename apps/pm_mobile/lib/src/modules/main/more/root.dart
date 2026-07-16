@@ -15,13 +15,21 @@ import 'package:url_launcher/url_launcher.dart';
 // ── Row item model ────────────────────────────────────────────────────────────
 
 class _RowItem {
-  const _RowItem({required this.label, required this.sub, required this.icon, required this.bg, required this.fg, this.route, this.action});
-  final String        label;
-  final String        sub;
-  final IconData      icon;
-  final Color         bg;
-  final Color         fg;
-  final String?       route;
+  const _RowItem({
+    required this.label,
+    required this.sub,
+    required this.icon,
+    required this.bg,
+    required this.fg,
+    this.route,
+    this.action,
+  });
+  final String label;
+  final String sub;
+  final IconData icon;
+  final Color bg;
+  final Color fg;
+  final String? route;
   final Future<void> Function(BuildContext)? action;
 }
 
@@ -37,18 +45,80 @@ class MoreScreen extends ConsumerWidget {
         'your workspace';
 
     final manageRows = [
-      const _RowItem(label: 'Tenants',            sub: 'Directory & profiles',    icon: Icons.people_outline_rounded,  bg: RLTokens.infoBg,      fg: RLTokens.info,    route: '/more/tenants'),
-      const _RowItem(label: 'Announcements',      sub: 'Notices & polls',          icon: Icons.campaign_outlined,       bg: RLTokens.crimsonTint, fg: RLTokens.crimson, route: '/more/announcements'),
-      const _RowItem(label: 'Documents & e-sign', sub: 'Agreements, audit trail',  icon: Icons.description_outlined,    bg: RLTokens.warningBg,   fg: RLTokens.warning, route: '/more/documents'),
-      const _RowItem(label: 'Reports',            sub: 'Workspace analytics',      icon: Icons.bar_chart_rounded,       bg: RLTokens.successBg,   fg: RLTokens.success),
+      const _RowItem(
+        label: 'Tenants',
+        sub: 'Directory & profiles',
+        icon: Icons.people_outline_rounded,
+        bg: RLTokens.infoBg,
+        fg: RLTokens.info,
+        route: '/more/tenants',
+      ),
+      const _RowItem(
+        label: 'Announcements',
+        sub: 'Notices & polls',
+        icon: Icons.campaign_outlined,
+        bg: RLTokens.crimsonTint,
+        fg: RLTokens.crimson,
+        route: '/more/announcements',
+      ),
+      const _RowItem(
+        label: 'Documents & e-sign',
+        sub: 'Agreements, audit trail',
+        icon: Icons.description_outlined,
+        bg: RLTokens.warningBg,
+        fg: RLTokens.warning,
+        route: '/more/documents',
+      ),
+      const _RowItem(
+        label: 'Reports',
+        sub: 'Workspace analytics',
+        icon: Icons.bar_chart_rounded,
+        bg: RLTokens.successBg,
+        fg: RLTokens.success,
+      ),
     ];
 
     final orgRows = [
-      const _RowItem(label: 'General settings',                   sub: 'Profile, company, location', icon: Icons.settings_outlined,   bg: RLTokens.neutralBg,   fg: RLTokens.neutral, route: '/more/settings'),
-      const _RowItem(label: 'Members & roles',                    sub: '5 members',         icon: Icons.person_outline_rounded,  bg: RLTokens.neutralBg,   fg: RLTokens.neutral, route: '/more/members'),
-      const _RowItem(label: 'Payment accounts',                   sub: 'MoMo · Bank transfer', icon: Icons.credit_card_outlined, bg: RLTokens.successBg,   fg: RLTokens.success, route: '/more/payment-accounts'),
-      _RowItem(label: 'Rentloop x $workspaceName\'s Agreement',   sub: '3 templates',       icon: Icons.folder_outlined,         bg: RLTokens.infoBg,      fg: RLTokens.info,    route: '/more/agreement'),
-      const _RowItem(label: 'Billing',                            sub: 'Growth plan',        icon: Icons.receipt_long_outlined,  bg: RLTokens.warningBg,   fg: RLTokens.warning, route: '/more/billing'),
+      const _RowItem(
+        label: 'General settings',
+        sub: 'Profile, company, location',
+        icon: Icons.settings_outlined,
+        bg: RLTokens.neutralBg,
+        fg: RLTokens.neutral,
+        route: '/more/settings',
+      ),
+      const _RowItem(
+        label: 'Members & roles',
+        sub: '5 members',
+        icon: Icons.person_outline_rounded,
+        bg: RLTokens.neutralBg,
+        fg: RLTokens.neutral,
+        route: '/more/members',
+      ),
+      const _RowItem(
+        label: 'Payment accounts',
+        sub: 'MoMo · Bank transfer',
+        icon: Icons.credit_card_outlined,
+        bg: RLTokens.successBg,
+        fg: RLTokens.success,
+        route: '/more/payment-accounts',
+      ),
+      _RowItem(
+        label: 'Rentloop x $workspaceName\'s Agreement',
+        sub: '3 templates',
+        icon: Icons.folder_outlined,
+        bg: RLTokens.infoBg,
+        fg: RLTokens.info,
+        route: '/more/agreement',
+      ),
+      const _RowItem(
+        label: 'Billing',
+        sub: 'Growth plan',
+        icon: Icons.receipt_long_outlined,
+        bg: RLTokens.warningBg,
+        fg: RLTokens.warning,
+        route: '/more/billing',
+      ),
     ];
 
     final accountRows = [
@@ -60,7 +130,8 @@ class MoreScreen extends ConsumerWidget {
         fg: RLTokens.neutral,
         action: (_) async {
           final uri = Uri.parse('https://wa.me/233201080802');
-          if (await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
+          if (await canLaunchUrl(uri))
+            await launchUrl(uri, mode: LaunchMode.externalApplication);
         },
       ),
       _RowItem(
@@ -82,7 +153,12 @@ class MoreScreen extends ConsumerWidget {
           const RLTopHeader(title: 'More'),
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(RLTokens.gutter, 0, RLTokens.gutter, 40),
+              padding: const EdgeInsets.fromLTRB(
+                RLTokens.gutter,
+                0,
+                RLTokens.gutter,
+                40,
+              ),
               children: [
                 const SizedBox(height: 10),
                 _ProfileCard(),
@@ -115,7 +191,11 @@ class MoreScreen extends ConsumerWidget {
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.logout_rounded, size: 18, color: RLTokens.crimson),
+                        Icon(
+                          Icons.logout_rounded,
+                          size: 18,
+                          color: RLTokens.crimson,
+                        ),
                         SizedBox(width: 8),
                         Text(
                           'Log out',
@@ -199,7 +279,11 @@ class _ProfileCard extends ConsumerWidget {
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, size: 18, color: RLTokens.micro),
+            const Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: RLTokens.micro,
+            ),
           ],
         ),
       ),
@@ -290,7 +374,11 @@ class _WorkspaceCard extends ConsumerWidget {
                   ),
                 ),
                 SizedBox(width: 3),
-                Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: RLTokens.crimson),
+                Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  size: 16,
+                  color: RLTokens.crimson,
+                ),
               ],
             ),
           ],
@@ -317,7 +405,7 @@ class _RowGroup extends StatelessWidget {
       ),
       child: Column(
         children: List.generate(rows.length, (i) {
-          final r      = rows[i];
+          final r = rows[i];
           final isLast = i == rows.length - 1;
           return GestureDetector(
             onTap: () async {
@@ -335,7 +423,9 @@ class _RowGroup extends StatelessWidget {
               decoration: BoxDecoration(
                 border: isLast
                     ? null
-                    : const Border(bottom: BorderSide(color: RLTokens.hairlineSoft)),
+                    : const Border(
+                        bottom: BorderSide(color: RLTokens.hairlineSoft),
+                      ),
               ),
               child: Row(
                 children: [
@@ -374,7 +464,11 @@ class _RowGroup extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const Icon(Icons.chevron_right_rounded, size: 17, color: RLTokens.micro),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    size: 17,
+                    color: RLTokens.micro,
+                  ),
                 ],
               ),
             ),

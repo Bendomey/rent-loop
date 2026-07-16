@@ -18,7 +18,8 @@ class WorkspaceSelectScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final clientUsers = ref.watch(currentUserNotifierProvider)?.clientUsers ?? const [];
+    final clientUsers =
+        ref.watch(currentUserNotifierProvider)?.clientUsers ?? const [];
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -43,7 +44,10 @@ class WorkspaceSelectScreen extends ConsumerWidget {
                         color: RLTokens.ink,
                       ),
                       children: const [
-                        TextSpan(text: 'rent', style: TextStyle(color: RLTokens.crimson)),
+                        TextSpan(
+                          text: 'rent',
+                          style: TextStyle(color: RLTokens.crimson),
+                        ),
                         TextSpan(text: 'loop'),
                       ],
                     ),
@@ -65,7 +69,11 @@ class WorkspaceSelectScreen extends ConsumerWidget {
                         color: RLTokens.fill,
                         borderRadius: BorderRadius.circular(RLTokens.rSm),
                       ),
-                      child: const Icon(Icons.logout, size: 17, color: RLTokens.inkSoft),
+                      child: const Icon(
+                        Icons.logout,
+                        size: 17,
+                        color: RLTokens.inkSoft,
+                      ),
                     ),
                   ),
                 ],
@@ -116,8 +124,12 @@ class WorkspaceSelectScreen extends ConsumerWidget {
               GestureDetector(
                 onTap: () async {
                   await Haptics.vibrate(HapticsType.selection);
-                  final url = applyUrl(campaign: 'workspace_select', content: 'create_workspace');
-                  if (await canLaunchUrl(url)) await launchUrl(url, mode: LaunchMode.externalApplication);
+                  final url = applyUrl(
+                    campaign: 'workspace_select',
+                    content: 'create_workspace',
+                  );
+                  if (await canLaunchUrl(url))
+                    await launchUrl(url, mode: LaunchMode.externalApplication);
                 },
                 child: CustomPaint(
                   painter: _DashedRectPainter(
@@ -240,7 +252,11 @@ class _WorkspaceCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               if (!_disabled)
-                const Icon(Icons.chevron_right, size: 18, color: RLTokens.micro),
+                const Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: RLTokens.micro,
+                ),
             ],
           ),
         ),
@@ -285,7 +301,11 @@ class _WsTile extends StatelessWidget {
 // ── Dashed border painter ─────────────────────────────────────────────────────
 
 class _DashedRectPainter extends CustomPainter {
-  const _DashedRectPainter({required this.radius, required this.color, required this.strokeWidth});
+  const _DashedRectPainter({
+    required this.radius,
+    required this.color,
+    required this.strokeWidth,
+  });
   final double radius;
   final Color color;
   final double strokeWidth;
@@ -298,14 +318,17 @@ class _DashedRectPainter extends CustomPainter {
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round;
 
-    final rRect  = RRect.fromRectAndRadius(Offset.zero & size, Radius.circular(radius));
-    final path   = Path()..addRRect(rRect);
+    final rRect = RRect.fromRectAndRadius(
+      Offset.zero & size,
+      Radius.circular(radius),
+    );
+    final path = Path()..addRRect(rRect);
     final metric = path.computeMetrics().first;
 
     const dashLen = 6.0;
-    const gapLen  = 5.0;
-    var distance  = 0.0;
-    final dashed  = Path();
+    const gapLen = 5.0;
+    var distance = 0.0;
+    final dashed = Path();
 
     while (distance < metric.length) {
       final end = (distance + dashLen).clamp(0.0, metric.length);
@@ -335,10 +358,7 @@ class _LogoMark extends StatelessWidget {
         color: RLTokens.crimson,
         borderRadius: BorderRadius.circular(size * 0.308),
       ),
-      child: CustomPaint(
-        size: Size(size, size),
-        painter: _HouseMarkPainter(),
-      ),
+      child: CustomPaint(size: Size(size, size), painter: _HouseMarkPainter()),
     );
   }
 }

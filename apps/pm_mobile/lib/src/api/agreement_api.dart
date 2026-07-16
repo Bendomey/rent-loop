@@ -11,9 +11,7 @@ part 'agreement_api.g.dart';
 class AgreementApi extends AbstractApi {
   AgreementApi({required super.tokenManager});
 
-  Future<List<AgreementModel>> getAgreements({
-    required String clientId,
-  }) async {
+  Future<List<AgreementModel>> getAgreements({required String clientId}) async {
     final response = await execute(
       method: 'GET',
       path: '/api/v1/admin/clients/$clientId/agreements',

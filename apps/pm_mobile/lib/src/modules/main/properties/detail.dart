@@ -25,20 +25,80 @@ class _PropData {
   final String area;
   final String type;
   final String mode;
-  final int    units;
-  final int    occupied;
-  final int    available;
-  final int    maint;
-  final int    revenue;
+  final int units;
+  final int occupied;
+  final int available;
+  final int maint;
+  final int revenue;
   final String status;
 }
 
 const _kProps = [
-  _PropData(id: 'p1', name: 'Cantonments Court',   area: 'Cantonments, Accra',  type: 'Apartments', mode: 'Lease',   units: 24, occupied: 22, available: 1, maint: 1, revenue: 86000, status: 'Active'),
-  _PropData(id: 'p2', name: 'Spintex Heights',      area: 'Spintex Road, Accra', type: 'Apartments', mode: 'Both',    units: 18, occupied: 15, available: 2, maint: 1, revenue: 54000, status: 'Active'),
-  _PropData(id: 'p3', name: 'Labadi Beach Suites',  area: 'Labadi, Accra',       type: 'Serviced',   mode: 'Booking', units: 12, occupied: 11, available: 1, maint: 0, revenue: 31500, status: 'Active'),
-  _PropData(id: 'p4', name: 'East Legon Villa',     area: 'East Legon, Accra',   type: 'House',      mode: 'Lease',   units:  1, occupied:  1, available: 0, maint: 0, revenue:  9000, status: 'Active'),
-  _PropData(id: 'p5', name: 'Osu Retail Block',     area: 'Oxford St, Osu',      type: 'Commercial', mode: 'Lease',   units:  9, occupied:  7, available: 2, maint: 0, revenue:  4000, status: 'Draft'),
+  _PropData(
+    id: 'p1',
+    name: 'Cantonments Court',
+    area: 'Cantonments, Accra',
+    type: 'Apartments',
+    mode: 'Lease',
+    units: 24,
+    occupied: 22,
+    available: 1,
+    maint: 1,
+    revenue: 86000,
+    status: 'Active',
+  ),
+  _PropData(
+    id: 'p2',
+    name: 'Spintex Heights',
+    area: 'Spintex Road, Accra',
+    type: 'Apartments',
+    mode: 'Both',
+    units: 18,
+    occupied: 15,
+    available: 2,
+    maint: 1,
+    revenue: 54000,
+    status: 'Active',
+  ),
+  _PropData(
+    id: 'p3',
+    name: 'Labadi Beach Suites',
+    area: 'Labadi, Accra',
+    type: 'Serviced',
+    mode: 'Booking',
+    units: 12,
+    occupied: 11,
+    available: 1,
+    maint: 0,
+    revenue: 31500,
+    status: 'Active',
+  ),
+  _PropData(
+    id: 'p4',
+    name: 'East Legon Villa',
+    area: 'East Legon, Accra',
+    type: 'House',
+    mode: 'Lease',
+    units: 1,
+    occupied: 1,
+    available: 0,
+    maint: 0,
+    revenue: 9000,
+    status: 'Active',
+  ),
+  _PropData(
+    id: 'p5',
+    name: 'Osu Retail Block',
+    area: 'Oxford St, Osu',
+    type: 'Commercial',
+    mode: 'Lease',
+    units: 9,
+    occupied: 7,
+    available: 2,
+    maint: 0,
+    revenue: 4000,
+    status: 'Draft',
+  ),
 ];
 
 // ── Unit data ─────────────────────────────────────────────────────────────────
@@ -52,19 +112,47 @@ class _UnitData {
     this.tenant,
     required this.rent,
   });
-  final String  id;
-  final String  name;
-  final String  cat;
-  final String  status;
+  final String id;
+  final String name;
+  final String cat;
+  final String status;
   final String? tenant;
-  final int     rent;
+  final int rent;
 }
 
 const _kUnits = [
-  _UnitData(id: 'u1', name: 'Unit 4B', cat: '2-Bedroom', status: 'Occupied',    tenant: 'Kwame Mensah', rent: 4200),
-  _UnitData(id: 'u2', name: 'Unit 5A', cat: '2-Bedroom', status: 'Occupied',    tenant: 'Ama Boateng',  rent: 4200),
-  _UnitData(id: 'u3', name: 'Unit 1C', cat: '1-Bedroom', status: 'Available',   tenant: null,           rent: 3000),
-  _UnitData(id: 'u4', name: 'Unit 3B', cat: '3-Bedroom', status: 'Maintenance', tenant: 'Yaw Asante',   rent: 5500),
+  _UnitData(
+    id: 'u1',
+    name: 'Unit 4B',
+    cat: '2-Bedroom',
+    status: 'Occupied',
+    tenant: 'Kwame Mensah',
+    rent: 4200,
+  ),
+  _UnitData(
+    id: 'u2',
+    name: 'Unit 5A',
+    cat: '2-Bedroom',
+    status: 'Occupied',
+    tenant: 'Ama Boateng',
+    rent: 4200,
+  ),
+  _UnitData(
+    id: 'u3',
+    name: 'Unit 1C',
+    cat: '1-Bedroom',
+    status: 'Available',
+    tenant: null,
+    rent: 3000,
+  ),
+  _UnitData(
+    id: 'u4',
+    name: 'Unit 3B',
+    cat: '3-Bedroom',
+    status: 'Maintenance',
+    tenant: 'Yaw Asante',
+    rent: 5500,
+  ),
 ];
 
 // ── Screen ────────────────────────────────────────────────────────────────────
@@ -75,8 +163,11 @@ class PropertyDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final p       = _kProps.firstWhere((x) => x.id == id, orElse: () => _kProps.first);
-    final occPct  = (p.occupied / p.units * 100).roundToDouble();
+    final p = _kProps.firstWhere(
+      (x) => x.id == id,
+      orElse: () => _kProps.first,
+    );
+    final occPct = (p.occupied / p.units * 100).roundToDouble();
     final isActive = p.status == 'Active';
 
     return Scaffold(
@@ -93,7 +184,8 @@ class PropertyDetailScreen extends StatelessWidget {
               icon: Icons.settings_outlined,
               onTap: () async {
                 await Haptics.vibrate(HapticsType.selection);
-                if (context.mounted) context.push('/properties/${p.id}/settings');
+                if (context.mounted)
+                  context.push('/properties/${p.id}/settings');
               },
             ),
           ),
@@ -104,7 +196,9 @@ class PropertyDetailScreen extends StatelessWidget {
               child: CustomScrollView(
                 slivers: [
                   // Hero image
-                  SliverToBoxAdapter(child: _HeroImage(type: p.type, name: p.name, propId: p.id)),
+                  SliverToBoxAdapter(
+                    child: _HeroImage(type: p.type, name: p.name, propId: p.id),
+                  ),
 
                   // Info body
                   SliverPadding(
@@ -114,7 +208,10 @@ class PropertyDetailScreen extends StatelessWidget {
                         // Status + mode pills
                         Row(
                           children: [
-                            RLPill(p.status, tone: isActive ? RLTone.success : RLTone.neutral),
+                            RLPill(
+                              p.status,
+                              tone: isActive ? RLTone.success : RLTone.neutral,
+                            ),
                             const SizedBox(width: 8),
                             if (p.mode == 'Both') ...[
                               RLPill('Long stay', tone: RLTone.neutral),
@@ -131,7 +228,11 @@ class PropertyDetailScreen extends StatelessWidget {
 
                         Row(
                           children: [
-                            const Icon(Icons.location_on_outlined, size: 15, color: RLTokens.mutedSoft),
+                            const Icon(
+                              Icons.location_on_outlined,
+                              size: 15,
+                              color: RLTokens.mutedSoft,
+                            ),
                             const SizedBox(width: 6),
                             Text(
                               p.area,
@@ -153,7 +254,12 @@ class PropertyDetailScreen extends StatelessWidget {
                         _ManageGrid(p: p),
 
                         // Units preview
-                        RLLabel('Units', action: 'See all', onAction: () async => Haptics.vibrate(HapticsType.selection)),
+                        RLLabel(
+                          'Units',
+                          action: 'See all',
+                          onAction: () async =>
+                              Haptics.vibrate(HapticsType.selection),
+                        ),
                         _UnitsCard(),
                         const SizedBox(height: 32),
                       ]),
@@ -172,25 +278,29 @@ class PropertyDetailScreen extends StatelessWidget {
 // ── Hero image placeholder ────────────────────────────────────────────────────
 
 class _HeroImage extends StatelessWidget {
-  const _HeroImage({required this.type, required this.name, required this.propId});
+  const _HeroImage({
+    required this.type,
+    required this.name,
+    required this.propId,
+  });
   final String type;
   final String name;
   final String propId;
 
   static Color _bg(String type) => switch (type) {
     'Apartments' => const Color(0xFF2A4099),
-    'Serviced'   => const Color(0xFF1A8570),
-    'House'      => const Color(0xFF8A5F20),
+    'Serviced' => const Color(0xFF1A8570),
+    'House' => const Color(0xFF8A5F20),
     'Commercial' => const Color(0xFF48586F),
-    _            => const Color(0xFF2C3340),
+    _ => const Color(0xFF2C3340),
   };
 
   static IconData _icon(String type) => switch (type) {
     'Apartments' => Icons.apartment_rounded,
-    'Serviced'   => Icons.hotel_rounded,
-    'House'      => Icons.house_rounded,
+    'Serviced' => Icons.hotel_rounded,
+    'House' => Icons.house_rounded,
     'Commercial' => Icons.store_rounded,
-    _            => Icons.business_rounded,
+    _ => Icons.business_rounded,
   };
 
   @override
@@ -203,7 +313,11 @@ class _HeroImage extends StatelessWidget {
       child: Stack(
         children: [
           Center(
-            child: Icon(_icon(type), size: 64, color: Colors.white.withAlpha(30)),
+            child: Icon(
+              _icon(type),
+              size: 64,
+              color: Colors.white.withAlpha(30),
+            ),
           ),
           Positioned(
             bottom: 16,
@@ -245,7 +359,7 @@ class _HeroImage extends StatelessWidget {
 class _OccupancyCard extends StatelessWidget {
   const _OccupancyCard({required this.p, required this.occPct});
   final _PropData p;
-  final double    occPct;
+  final double occPct;
 
   @override
   Widget build(BuildContext context) {
@@ -328,8 +442,8 @@ class _OccupancyCard extends StatelessWidget {
 class _ManageAction {
   const _ManageAction({required this.icon, required this.label, this.count});
   final IconData icon;
-  final String   label;
-  final int?     count;
+  final String label;
+  final int? count;
 }
 
 class _ManageGrid extends StatelessWidget {
@@ -339,12 +453,32 @@ class _ManageGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final actions = [
-      _ManageAction(icon: Icons.grid_view_rounded,       label: 'Units',        count: p.units),
-      _ManageAction(icon: Icons.people_outline_rounded,  label: 'Tenants',      count: p.occupied),
-      _ManageAction(icon: Icons.description_outlined,    label: 'Leases',       count: p.occupied),
-      _ManageAction(icon: Icons.assignment_outlined,     label: 'Applications', count: 2),
-      _ManageAction(icon: Icons.calendar_today_outlined, label: 'Bookings',     count: p.mode != 'Lease' ? 4 : 0),
-      const _ManageAction(icon: Icons.explore_outlined,  label: 'Calendar'),
+      _ManageAction(
+        icon: Icons.grid_view_rounded,
+        label: 'Units',
+        count: p.units,
+      ),
+      _ManageAction(
+        icon: Icons.people_outline_rounded,
+        label: 'Tenants',
+        count: p.occupied,
+      ),
+      _ManageAction(
+        icon: Icons.description_outlined,
+        label: 'Leases',
+        count: p.occupied,
+      ),
+      _ManageAction(
+        icon: Icons.assignment_outlined,
+        label: 'Applications',
+        count: 2,
+      ),
+      _ManageAction(
+        icon: Icons.calendar_today_outlined,
+        label: 'Bookings',
+        count: p.mode != 'Lease' ? 4 : 0,
+      ),
+      const _ManageAction(icon: Icons.explore_outlined, label: 'Calendar'),
     ];
 
     Widget row(int start) => Row(
@@ -352,20 +486,17 @@ class _ManageGrid extends StatelessWidget {
         final idx = start + j;
         return Expanded(
           child: Padding(
-            padding: EdgeInsets.only(left: j == 0 ? 0 : 5, right: j == 2 ? 0 : 5),
+            padding: EdgeInsets.only(
+              left: j == 0 ? 0 : 5,
+              right: j == 2 ? 0 : 5,
+            ),
             child: _ManageCell(action: actions[idx]),
           ),
         );
       }),
     );
 
-    return Column(
-      children: [
-        row(0),
-        const SizedBox(height: 10),
-        row(3),
-      ],
-    );
+    return Column(children: [row(0), const SizedBox(height: 10), row(3)]);
   }
 }
 
@@ -380,38 +511,38 @@ class _ManageCell extends StatelessWidget {
       child: SizedBox(
         height: 96,
         child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: RLTokens.surface,
-          borderRadius: BorderRadius.circular(RLTokens.rLg),
-          border: Border.all(color: RLTokens.hairline),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(action.icon, size: 21, color: RLTokens.crimson),
-            const Spacer(),
-            Text(
-              action.label,
-              style: TextStyle(
-                fontFamily: RLTokens.fontSans,
-                fontSize: 13,
-                fontWeight: RLTokens.semibold,
-                color: RLTokens.ink,
-              ),
-            ),
-            if (action.count != null)
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: RLTokens.surface,
+            borderRadius: BorderRadius.circular(RLTokens.rLg),
+            border: Border.all(color: RLTokens.hairline),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(action.icon, size: 21, color: RLTokens.crimson),
+              const Spacer(),
               Text(
-                '${action.count}',
+                action.label,
                 style: TextStyle(
-                  fontFamily: RLTokens.fontMono,
-                  fontSize: 11,
-                  color: RLTokens.muted,
+                  fontFamily: RLTokens.fontSans,
+                  fontSize: 13,
+                  fontWeight: RLTokens.semibold,
+                  color: RLTokens.ink,
                 ),
               ),
-          ],
+              if (action.count != null)
+                Text(
+                  '${action.count}',
+                  style: TextStyle(
+                    fontFamily: RLTokens.fontMono,
+                    fontSize: 11,
+                    color: RLTokens.muted,
+                  ),
+                ),
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
@@ -431,14 +562,14 @@ class _UnitsCard extends StatelessWidget {
       ),
       child: Column(
         children: _kUnits.asMap().entries.map((e) {
-          final u    = e.value;
+          final u = e.value;
           final last = e.key == _kUnits.length - 1;
-          final sub  = u.tenant != null ? '${u.cat} · ${u.tenant}' : u.cat;
+          final sub = u.tenant != null ? '${u.cat} · ${u.tenant}' : u.cat;
           final tone = switch (u.status) {
-            'Occupied'    => RLTone.info,
-            'Available'   => RLTone.success,
+            'Occupied' => RLTone.info,
+            'Available' => RLTone.success,
             'Maintenance' => RLTone.warning,
-            _             => RLTone.neutral,
+            _ => RLTone.neutral,
           };
           final label = u.name.replaceFirst('Unit ', '');
           return RLRow(

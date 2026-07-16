@@ -7,8 +7,11 @@ import 'package:rentloop_manager/src/shared/widgets.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:rentloop_manager/src/constants.dart';
 
-final _applyUrl        = applyUrl(campaign: 'login', content: 'apply_cta');
-final _forgotPasswordUrl = forgotPasswordUrl(campaign: 'login', content: 'forgot_password');
+final _applyUrl = applyUrl(campaign: 'login', content: 'apply_cta');
+final _forgotPasswordUrl = forgotPasswordUrl(
+  campaign: 'login',
+  content: 'forgot_password',
+);
 
 Future<void> _launch(Uri url) async {
   if (await canLaunchUrl(url)) {
@@ -27,8 +30,8 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailCtrl = TextEditingController();
-  final _passCtrl  = TextEditingController();
-  bool _showPass   = false;
+  final _passCtrl = TextEditingController();
+  bool _showPass = false;
   String? _validationError;
 
   @override
@@ -39,12 +42,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _signIn() async {
-    final email    = _emailCtrl.text.trim();
+    final email = _emailCtrl.text.trim();
     final password = _passCtrl.text;
 
     if (email.isEmpty || password.isEmpty) {
       await Haptics.vibrate(HapticsType.error);
-      setState(() => _validationError = 'Please enter your email and password.');
+      setState(
+        () => _validationError = 'Please enter your email and password.',
+      );
       return;
     }
 
@@ -55,10 +60,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     // state — this avoids touching AppStartupState mid-request, which
     // would otherwise bounce the router to /splash while the request is
     // still in flight.
-    await ref.read(loginNotifierProvider.notifier).submit(
-      email: email,
-      password: password,
-    );
+    await ref
+        .read(loginNotifierProvider.notifier)
+        .submit(email: email, password: password);
 
     if (!mounted) return;
     final status = ref.read(loginNotifierProvider).status;
@@ -71,7 +75,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final loginState = ref.watch(loginNotifierProvider);
     final loading = loginState.status.isLoading();
-    final error = _validationError ??
+    final error =
+        _validationError ??
         (loginState.status.isFailed() ? loginState.errorMessage : null);
 
     return Scaffold(
@@ -103,7 +108,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               color: RLTokens.ink,
                             ),
                             children: const [
-                              TextSpan(text: 'rent', style: TextStyle(color: RLTokens.crimson)),
+                              TextSpan(
+                                text: 'rent',
+                                style: TextStyle(color: RLTokens.crimson),
+                              ),
                               TextSpan(text: 'loop'),
                             ],
                           ),
@@ -373,7 +381,10 @@ class _LoginField extends StatelessWidget {
               decoration: const InputDecoration(
                 isDense: true,
                 filled: false,
-                contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 15,
+                  vertical: 15,
+                ),
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
@@ -384,10 +395,7 @@ class _LoginField extends StatelessWidget {
             ),
           ),
           if (trailing != null)
-            Padding(
-              padding: const EdgeInsets.only(right: 15),
-              child: trailing,
-            ),
+            Padding(padding: const EdgeInsets.only(right: 15), child: trailing),
         ],
       ),
     );
@@ -409,10 +417,7 @@ class _LogoMark extends StatelessWidget {
         color: RLTokens.crimson,
         borderRadius: BorderRadius.circular(size * 0.308),
       ),
-      child: CustomPaint(
-        size: Size(size, size),
-        painter: _HouseMarkPainter(),
-      ),
+      child: CustomPaint(size: Size(size, size), painter: _HouseMarkPainter()),
     );
   }
 }

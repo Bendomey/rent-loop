@@ -73,9 +73,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               isCompany: _isCompany,
                               onSwitch: () {
                                 Haptics.vibrate(HapticsType.selection);
-                                setState(() => _sheet = _isCompany
-                                    ? 'switchIndividual'
-                                    : 'switchCompany');
+                                setState(
+                                  () => _sheet = _isCompany
+                                      ? 'switchIndividual'
+                                      : 'switchCompany',
+                                );
                               },
                             ),
                           ),
@@ -133,29 +135,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onClose: () => setState(() => _sheet = null),
             ),
           if (_sheet == 'company')
-            _EditCompanySheet(
-              onClose: () => setState(() => _sheet = null),
-            ),
+            _EditCompanySheet(onClose: () => setState(() => _sheet = null)),
           if (_sheet == 'identity')
-            _EditIdentitySheet(
-              onClose: () => setState(() => _sheet = null),
-            ),
+            _EditIdentitySheet(onClose: () => setState(() => _sheet = null)),
           if (_sheet == 'location')
-            _EditLocationSheet(
-              onClose: () => setState(() => _sheet = null),
-            ),
+            _EditLocationSheet(onClose: () => setState(() => _sheet = null)),
           if (_sheet == 'switchIndividual')
             _SwitchAcctDialog(
               to: 'Individual',
-              onConfirm: () =>
-                  setState(() { _acctType = 'Individual'; _sheet = null; }),
+              onConfirm: () => setState(() {
+                _acctType = 'Individual';
+                _sheet = null;
+              }),
               onClose: () => setState(() => _sheet = null),
             ),
           if (_sheet == 'switchCompany')
             _SwitchAcctDialog(
               to: 'Company',
-              onConfirm: () =>
-                  setState(() { _acctType = 'Company'; _sheet = null; }),
+              onConfirm: () => setState(() {
+                _acctType = 'Company';
+                _sheet = null;
+              }),
               onClose: () => setState(() => _sheet = null),
             ),
         ],
@@ -298,33 +298,29 @@ class _OGrid extends StatelessWidget {
     final rows = <Widget>[];
     for (var i = 0; i < children.length; i += 2) {
       if (rows.isNotEmpty) rows.add(const SizedBox(height: 14));
-      rows.add(Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(child: children[i]),
-          const SizedBox(width: 16),
-          Expanded(
-            child: i + 1 < children.length
-                ? children[i + 1]
-                : const SizedBox(),
-          ),
-        ],
-      ));
+      rows.add(
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: children[i]),
+            const SizedBox(width: 16),
+            Expanded(
+              child: i + 1 < children.length
+                  ? children[i + 1]
+                  : const SizedBox(),
+            ),
+          ],
+        ),
+      );
     }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: rows,
-    );
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: rows);
   }
 }
 
 // ── Card content ──────────────────────────────────────────────────────────────
 
 class _ProfileContent extends StatelessWidget {
-  const _ProfileContent({
-    required this.isCompany,
-    required this.onSwitch,
-  });
+  const _ProfileContent({required this.isCompany, required this.onSwitch});
   final bool isCompany;
   final VoidCallback onSwitch;
 
@@ -353,8 +349,7 @@ class _ProfileContent extends StatelessWidget {
           runSpacing: 8,
           children: [
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
+              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
               decoration: BoxDecoration(
                 border: Border.all(color: RLTokens.hairline),
                 borderRadius: BorderRadius.circular(20),
@@ -384,8 +379,10 @@ class _ProfileContent extends StatelessWidget {
             ),
             if (isCompany)
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 11,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: RLTokens.fill,
                   borderRadius: BorderRadius.circular(20),
@@ -406,8 +403,7 @@ class _ProfileContent extends StatelessWidget {
         GestureDetector(
           onTap: onSwitch,
           child: Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
             decoration: BoxDecoration(
               color: RLTokens.surface,
               border: Border.all(color: RLTokens.hairline),
@@ -416,8 +412,11 @@ class _ProfileContent extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.swap_horiz_rounded,
-                    size: 16, color: RLTokens.ink),
+                const Icon(
+                  Icons.swap_horiz_rounded,
+                  size: 16,
+                  color: RLTokens.ink,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   'Switch to ${isCompany ? 'Individual' : 'Company'}',
@@ -445,12 +444,14 @@ class _CompanyDetailsContent extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _OGrid(children: const [
-          _OField(label: 'Description', value: null),
-          _OField(label: 'Registration no.', value: null),
-          _OField(label: 'Support email', value: 'domeyope@rentloopapp.com'),
-          _OField(label: 'Support phone', value: '+233 20 123 4567'),
-        ]),
+        _OGrid(
+          children: const [
+            _OField(label: 'Description', value: null),
+            _OField(label: 'Registration no.', value: null),
+            _OField(label: 'Support email', value: 'domeyope@rentloopapp.com'),
+            _OField(label: 'Support phone', value: '+233 20 123 4567'),
+          ],
+        ),
         const SizedBox(height: 14),
         const _OField(label: 'Website', value: null),
       ],
@@ -463,11 +464,13 @@ class _IdentityContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _OGrid(children: const [
-      _OField(label: 'ID type', value: 'National ID'),
-      _OField(label: 'ID number', value: 'kjiyb'),
-      _OField(label: 'Expiry date', value: '09/04/2026'),
-    ]);
+    return _OGrid(
+      children: const [
+        _OField(label: 'ID type', value: 'National ID'),
+        _OField(label: 'ID number', value: 'kjiyb'),
+        _OField(label: 'Expiry date', value: '09/04/2026'),
+      ],
+    );
   }
 }
 
@@ -485,11 +488,13 @@ class _LocationContent extends StatelessWidget {
               'Adenta new site Presbyterian church, Liberty Road, Adenta Municipality',
         ),
         const SizedBox(height: 14),
-        _OGrid(children: const [
-          _OField(label: 'Country', value: 'Ghana'),
-          _OField(label: 'Region', value: 'Greater Accra Region'),
-          _OField(label: 'City', value: 'Adenta Municipality'),
-        ]),
+        _OGrid(
+          children: const [
+            _OField(label: 'Country', value: 'Ghana'),
+            _OField(label: 'Region', value: 'Greater Accra Region'),
+            _OField(label: 'City', value: 'Adenta Municipality'),
+          ],
+        ),
       ],
     );
   }
@@ -579,11 +584,15 @@ class _OSheet extends StatelessWidget {
                             height: 32,
                             decoration: BoxDecoration(
                               color: RLTokens.fill,
-                              borderRadius:
-                                  BorderRadius.circular(RLTokens.rPill),
+                              borderRadius: BorderRadius.circular(
+                                RLTokens.rPill,
+                              ),
                             ),
-                            child: const Icon(Icons.close_rounded,
-                                size: 16, color: RLTokens.ink),
+                            child: const Icon(
+                              Icons.close_rounded,
+                              size: 16,
+                              color: RLTokens.ink,
+                            ),
                           ),
                         ),
                       ],
@@ -602,7 +611,8 @@ class _OSheet extends StatelessWidget {
                     padding: EdgeInsets.fromLTRB(20, 12, 20, 12 + bottomPad),
                     decoration: const BoxDecoration(
                       border: Border(
-                          top: BorderSide(color: RLTokens.hairlineSoft)),
+                        top: BorderSide(color: RLTokens.hairlineSoft),
+                      ),
                     ),
                     child: RLBtn(
                       label: 'Save changes',
@@ -624,10 +634,7 @@ class _OSheet extends StatelessWidget {
 // ── Edit profile sheet ────────────────────────────────────────────────────────
 
 class _EditProfileSheet extends StatefulWidget {
-  const _EditProfileSheet({
-    required this.isCompany,
-    required this.onClose,
-  });
+  const _EditProfileSheet({required this.isCompany, required this.onClose});
   final bool isCompany;
   final VoidCallback onClose;
 
@@ -666,67 +673,60 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _FormLabel(
-            label: widget.isCompany ? 'Company name' : 'Full name',
-          ),
+          _FormLabel(label: widget.isCompany ? 'Company name' : 'Full name'),
           const SizedBox(height: 6),
           _InputField(
             controller: _nameCtrl,
-            placeholder:
-                widget.isCompany ? 'Company name' : 'Full name',
+            placeholder: widget.isCompany ? 'Company name' : 'Full name',
           ),
           if (widget.isCompany) ...[
             const SizedBox(height: 16),
             const _FormLabel(label: 'Sub type'),
             const SizedBox(height: 8),
             Row(
-              children:
-                  ['Property Manager', 'Developer', 'Agency']
-                      .asMap()
-                      .entries
-                      .map((e) {
-                final s = e.value;
-                final on = s == _sub;
-                return Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                        right: e.key < 2 ? 8 : 0),
-                    child: GestureDetector(
-                      onTap: () {
-                        Haptics.vibrate(HapticsType.selection);
-                        setState(() => _sub = s);
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 150),
-                        padding:
-                            const EdgeInsets.symmetric(vertical: 11),
-                        decoration: BoxDecoration(
-                          color: on
-                              ? RLTokens.crimson
-                              : RLTokens.surface,
-                          border: Border.all(
-                            color: on
-                                ? RLTokens.crimson
-                                : RLTokens.hairline,
-                            width: 1.5,
-                          ),
-                          borderRadius: BorderRadius.circular(11),
-                        ),
-                        child: Text(
-                          s,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontFamily: RLTokens.fontSans,
-                            fontSize: 12.5,
-                            fontWeight: RLTokens.semibold,
-                            color: on ? Colors.white : RLTokens.ink,
+              children: ['Property Manager', 'Developer', 'Agency']
+                  .asMap()
+                  .entries
+                  .map((e) {
+                    final s = e.value;
+                    final on = s == _sub;
+                    return Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.only(right: e.key < 2 ? 8 : 0),
+                        child: GestureDetector(
+                          onTap: () {
+                            Haptics.vibrate(HapticsType.selection);
+                            setState(() => _sub = s);
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 150),
+                            padding: const EdgeInsets.symmetric(vertical: 11),
+                            decoration: BoxDecoration(
+                              color: on ? RLTokens.crimson : RLTokens.surface,
+                              border: Border.all(
+                                color: on
+                                    ? RLTokens.crimson
+                                    : RLTokens.hairline,
+                                width: 1.5,
+                              ),
+                              borderRadius: BorderRadius.circular(11),
+                            ),
+                            child: Text(
+                              s,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontFamily: RLTokens.fontSans,
+                                fontSize: 12.5,
+                                fontWeight: RLTokens.semibold,
+                                color: on ? Colors.white : RLTokens.ink,
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
-                );
-              }).toList(),
+                    );
+                  })
+                  .toList(),
             ),
           ],
           const SizedBox(height: 8),
@@ -749,8 +749,7 @@ class _EditCompanySheet extends StatefulWidget {
 class _EditCompanySheetState extends State<_EditCompanySheet> {
   final _descCtrl = TextEditingController();
   final _regCtrl = TextEditingController();
-  final _emailCtrl =
-      TextEditingController(text: 'domeyope@rentloopapp.com');
+  final _emailCtrl = TextEditingController(text: 'domeyope@rentloopapp.com');
   final _phoneCtrl = TextEditingController(text: '20 123 4567');
   final _webCtrl = TextEditingController();
 
@@ -785,8 +784,7 @@ class _EditCompanySheetState extends State<_EditCompanySheet> {
           const SizedBox(height: 16),
           _FormLabel(label: 'Registration number', optional: true),
           const SizedBox(height: 6),
-          _InputField(
-              controller: _regCtrl, placeholder: 'e.g. CS-1234567'),
+          _InputField(controller: _regCtrl, placeholder: 'e.g. CS-1234567'),
           const SizedBox(height: 16),
           const _FormLabel(label: 'Support email'),
           const SizedBox(height: 6),
@@ -799,10 +797,7 @@ class _EditCompanySheetState extends State<_EditCompanySheet> {
           const SizedBox(height: 16),
           const _FormLabel(label: 'Support phone'),
           const SizedBox(height: 6),
-          _PhoneField(
-            controller: _phoneCtrl,
-            placeholder: '20 000 0000',
-          ),
+          _PhoneField(controller: _phoneCtrl, placeholder: '20 000 0000'),
           const SizedBox(height: 16),
           _FormLabel(label: 'Website', optional: true),
           const SizedBox(height: 6),
@@ -862,48 +857,45 @@ class _EditIdentitySheetState extends State<_EditIdentitySheet> {
                     .asMap()
                     .entries
                     .map((e) {
-                  final t = e.value;
-                  final on = t == _idType;
-                  return Expanded(
-                    child: Padding(
-                      padding:
-                          EdgeInsets.only(right: e.key < 2 ? 8 : 0),
-                      child: GestureDetector(
-                        onTap: () {
-                          Haptics.vibrate(HapticsType.selection);
-                          setState(() => _idType = t);
-                        },
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 150),
-                          padding:
-                              const EdgeInsets.symmetric(vertical: 11),
-                          decoration: BoxDecoration(
-                            color: on
-                                ? RLTokens.crimson
-                                : RLTokens.surface,
-                            border: Border.all(
-                              color: on
-                                  ? RLTokens.crimson
-                                  : RLTokens.hairline,
-                              width: 1.5,
-                            ),
-                            borderRadius: BorderRadius.circular(11),
-                          ),
-                          child: Text(
-                            t,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontFamily: RLTokens.fontSans,
-                              fontSize: 12,
-                              fontWeight: RLTokens.semibold,
-                              color: on ? Colors.white : RLTokens.ink,
+                      final t = e.value;
+                      final on = t == _idType;
+                      return Expanded(
+                        child: Padding(
+                          padding: EdgeInsets.only(right: e.key < 2 ? 8 : 0),
+                          child: GestureDetector(
+                            onTap: () {
+                              Haptics.vibrate(HapticsType.selection);
+                              setState(() => _idType = t);
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 150),
+                              padding: const EdgeInsets.symmetric(vertical: 11),
+                              decoration: BoxDecoration(
+                                color: on ? RLTokens.crimson : RLTokens.surface,
+                                border: Border.all(
+                                  color: on
+                                      ? RLTokens.crimson
+                                      : RLTokens.hairline,
+                                  width: 1.5,
+                                ),
+                                borderRadius: BorderRadius.circular(11),
+                              ),
+                              child: Text(
+                                t,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontFamily: RLTokens.fontSans,
+                                  fontSize: 12,
+                                  fontWeight: RLTokens.semibold,
+                                  color: on ? Colors.white : RLTokens.ink,
+                                ),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ),
-                  );
-                }).toList(),
+                      );
+                    })
+                    .toList(),
               ),
               const SizedBox(height: 16),
               const _FormLabel(label: 'ID number'),
@@ -1041,8 +1033,11 @@ class _SwitchAcctDialog extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.warning_amber_rounded,
-                        size: 22, color: RLTokens.crimson),
+                    const Icon(
+                      Icons.warning_amber_rounded,
+                      size: 22,
+                      color: RLTokens.crimson,
+                    ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
@@ -1107,26 +1102,28 @@ class _FormLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     if (optional) {
       return RichText(
-        text: TextSpan(children: [
-          TextSpan(
-            text: label,
-            style: const TextStyle(
-              fontFamily: RLTokens.fontSans,
-              fontSize: 13.5,
-              fontWeight: RLTokens.semibold,
-              color: RLTokens.ink,
+        text: TextSpan(
+          children: [
+            TextSpan(
+              text: label,
+              style: const TextStyle(
+                fontFamily: RLTokens.fontSans,
+                fontSize: 13.5,
+                fontWeight: RLTokens.semibold,
+                color: RLTokens.ink,
+              ),
             ),
-          ),
-          const TextSpan(
-            text: '  Optional',
-            style: TextStyle(
-              fontFamily: RLTokens.fontSans,
-              fontSize: 12.5,
-              fontWeight: FontWeight.w400,
-              color: RLTokens.mutedSoft,
+            const TextSpan(
+              text: '  Optional',
+              style: TextStyle(
+                fontFamily: RLTokens.fontSans,
+                fontSize: 12.5,
+                fontWeight: FontWeight.w400,
+                color: RLTokens.mutedSoft,
+              ),
             ),
-          ),
-        ]),
+          ],
+        ),
       );
     }
     return Row(
@@ -1170,8 +1167,7 @@ class _SelectField extends StatelessWidget {
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        padding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         decoration: BoxDecoration(
           color: RLTokens.surface,
           borderRadius: BorderRadius.circular(RLTokens.rMd),
@@ -1185,15 +1181,16 @@ class _SelectField extends StatelessWidget {
                 style: TextStyle(
                   fontFamily: RLTokens.fontSans,
                   fontSize: 15,
-                  color: value.isEmpty
-                      ? RLTokens.mutedSoft
-                      : RLTokens.ink,
+                  color: value.isEmpty ? RLTokens.mutedSoft : RLTokens.ink,
                 ),
               ),
             ),
             const SizedBox(width: 8),
-            const Icon(Icons.keyboard_arrow_down_rounded,
-                size: 18, color: RLTokens.mutedSoft),
+            const Icon(
+              Icons.keyboard_arrow_down_rounded,
+              size: 18,
+              color: RLTokens.mutedSoft,
+            ),
           ],
         ),
       ),
@@ -1222,8 +1219,7 @@ class _InputField extends StatelessWidget {
         borderRadius: BorderRadius.circular(RLTokens.rMd),
         border: Border.all(color: RLTokens.hairline, width: 1.5),
       ),
-      padding: EdgeInsets.only(
-          left: leadingIcon != null ? 10 : 14, right: 14),
+      padding: EdgeInsets.only(left: leadingIcon != null ? 10 : 14, right: 14),
       child: Row(
         children: [
           if (leadingIcon != null) ...[
@@ -1250,8 +1246,7 @@ class _InputField extends StatelessWidget {
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
                 isDense: true,
-                contentPadding:
-                    const EdgeInsets.symmetric(vertical: 14),
+                contentPadding: const EdgeInsets.symmetric(vertical: 14),
               ),
             ),
           ),
@@ -1262,10 +1257,7 @@ class _InputField extends StatelessWidget {
 }
 
 class _TextAreaField extends StatelessWidget {
-  const _TextAreaField({
-    required this.controller,
-    required this.placeholder,
-  });
+  const _TextAreaField({required this.controller, required this.placeholder});
   final TextEditingController controller;
   final String placeholder;
 
@@ -1308,10 +1300,7 @@ class _TextAreaField extends StatelessWidget {
 }
 
 class _PhoneField extends StatelessWidget {
-  const _PhoneField({
-    required this.controller,
-    required this.placeholder,
-  });
+  const _PhoneField({required this.controller, required this.placeholder});
   final TextEditingController controller;
   final String placeholder;
 
@@ -1331,8 +1320,11 @@ class _PhoneField extends StatelessWidget {
             children: const [
               Text('🇬🇭', style: TextStyle(fontSize: 17)),
               SizedBox(width: 6),
-              Icon(Icons.keyboard_arrow_down_rounded,
-                  size: 13, color: RLTokens.mutedSoft),
+              Icon(
+                Icons.keyboard_arrow_down_rounded,
+                size: 13,
+                color: RLTokens.mutedSoft,
+              ),
             ],
           ),
           Container(
@@ -1371,8 +1363,7 @@ class _PhoneField extends StatelessWidget {
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
                 isDense: true,
-                contentPadding:
-                    const EdgeInsets.symmetric(vertical: 14),
+                contentPadding: const EdgeInsets.symmetric(vertical: 14),
               ),
             ),
           ),
@@ -1399,8 +1390,11 @@ class _UploadTile extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.cloud_upload_outlined,
-              size: 20, color: RLTokens.muted),
+          const Icon(
+            Icons.cloud_upload_outlined,
+            size: 20,
+            color: RLTokens.muted,
+          ),
           const SizedBox(width: 12),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1466,12 +1460,13 @@ class _PickerSheet extends StatelessWidget {
               decoration: const BoxDecoration(
                 color: RLTokens.surface,
                 borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(RLTokens.rXl)),
+                  top: Radius.circular(RLTokens.rXl),
+                ),
                 boxShadow: RLTokens.elevSheet,
               ),
               constraints: BoxConstraints(
-                  maxHeight:
-                      MediaQuery.of(context).size.height * 0.8),
+                maxHeight: MediaQuery.of(context).size.height * 0.8,
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -1510,8 +1505,7 @@ class _PickerSheet extends StatelessWidget {
                   ),
                   Flexible(
                     child: SingleChildScrollView(
-                      padding:
-                          const EdgeInsets.fromLTRB(14, 4, 14, 30),
+                      padding: const EdgeInsets.fromLTRB(14, 4, 14, 30),
                       child: Column(
                         children: options.asMap().entries.map((e) {
                           final o = e.value;
@@ -1525,14 +1519,17 @@ class _PickerSheet extends StatelessWidget {
                             behavior: HitTestBehavior.opaque,
                             child: Container(
                               padding: const EdgeInsets.symmetric(
-                                  vertical: 13, horizontal: 8),
+                                vertical: 13,
+                                horizontal: 8,
+                              ),
                               decoration: BoxDecoration(
                                 border: isLast
                                     ? null
                                     : const Border(
                                         bottom: BorderSide(
-                                            color:
-                                                RLTokens.hairlineSoft)),
+                                          color: RLTokens.hairlineSoft,
+                                        ),
+                                      ),
                               ),
                               child: Row(
                                 children: [
@@ -1550,9 +1547,11 @@ class _PickerSheet extends StatelessWidget {
                                     ),
                                   ),
                                   if (isSel)
-                                    const Icon(Icons.check_rounded,
-                                        size: 18,
-                                        color: RLTokens.crimson),
+                                    const Icon(
+                                      Icons.check_rounded,
+                                      size: 18,
+                                      color: RLTokens.crimson,
+                                    ),
                                 ],
                               ),
                             ),

@@ -138,20 +138,19 @@ class _MoneyScreenState extends State<MoneyScreen> {
   String _seg = 'invoices';
   String _filter = 'All';
 
-  List<_InvData> get _filteredInvoices =>
-      _filter == 'All'
-          ? _kInvoices
-          : _kInvoices.where((inv) {
-            return switch (_filter) {
-              'Outstanding' =>
-                inv.status == 'Overdue' ||
-                    inv.status == 'Partially Paid' ||
-                    inv.status == 'Issued',
-              'Paid' => inv.status == 'Paid',
-              'Draft' => inv.status == 'Draft',
-              _ => true,
-            };
-          }).toList();
+  List<_InvData> get _filteredInvoices => _filter == 'All'
+      ? _kInvoices
+      : _kInvoices.where((inv) {
+          return switch (_filter) {
+            'Outstanding' =>
+              inv.status == 'Overdue' ||
+                  inv.status == 'Partially Paid' ||
+                  inv.status == 'Issued',
+            'Paid' => inv.status == 'Paid',
+            'Draft' => inv.status == 'Draft',
+            _ => true,
+          };
+        }).toList();
 
   @override
   Widget build(BuildContext context) {
@@ -393,38 +392,37 @@ class _InvoicesTab extends StatelessWidget {
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
-            children:
-                ['All', 'Outstanding', 'Paid', 'Draft'].map((f) {
-                  final active = f == filter;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: GestureDetector(
-                      onTap: () => onFilterChanged(f),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 7,
-                        ),
-                        decoration: BoxDecoration(
-                          color: active ? RLTokens.ink : RLTokens.surface,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: active ? RLTokens.ink : RLTokens.hairline,
-                          ),
-                        ),
-                        child: Text(
-                          f,
-                          style: TextStyle(
-                            fontFamily: RLTokens.fontSans,
-                            fontSize: 12.5,
-                            fontWeight: RLTokens.semibold,
-                            color: active ? Colors.white : RLTokens.muted,
-                          ),
-                        ),
+            children: ['All', 'Outstanding', 'Paid', 'Draft'].map((f) {
+              final active = f == filter;
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: GestureDetector(
+                  onTap: () => onFilterChanged(f),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 7,
+                    ),
+                    decoration: BoxDecoration(
+                      color: active ? RLTokens.ink : RLTokens.surface,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: active ? RLTokens.ink : RLTokens.hairline,
                       ),
                     ),
-                  );
-                }).toList(),
+                    child: Text(
+                      f,
+                      style: TextStyle(
+                        fontFamily: RLTokens.fontSans,
+                        fontSize: 12.5,
+                        fontWeight: RLTokens.semibold,
+                        color: active ? Colors.white : RLTokens.muted,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
           ),
         ),
         const SizedBox(height: 14),
@@ -602,12 +600,11 @@ class _ExpensesTab extends StatelessWidget {
                     vertical: 13,
                   ),
                   decoration: BoxDecoration(
-                    border:
-                        isLast
-                            ? null
-                            : const Border(
-                              bottom: BorderSide(color: RLTokens.hairlineSoft),
-                            ),
+                    border: isLast
+                        ? null
+                        : const Border(
+                            bottom: BorderSide(color: RLTokens.hairlineSoft),
+                          ),
                   ),
                   child: Row(
                     children: [

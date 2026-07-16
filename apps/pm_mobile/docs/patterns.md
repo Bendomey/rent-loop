@@ -16,7 +16,7 @@ Confirmed working end-to-end in `api/`, `architecture/`, `repository/`. Replicat
 - One `XxxApi` class per resource, `@riverpod` factory function (`user_api.dart` → `userApiProvider`)
 - Mutations: `ApiState`-based notifier (`pending` → `success`/`failed`), error translated via `translateApiErrorMessage()` (`login_notifier.dart` is the reference example)
 - `@Riverpod(keepAlive: true)` for session-wide state (`CurrentUserNotifier`, `CurrentWorkspaceNotifier`, `AppStartupNotifier`); plain `@riverpod` (non-keepAlive) for one-shot mutation notifiers (`LoginNotifier`)
-- Query data / skeleton loaders / pull-to-refresh: **not yet exercised** — auth has no list/detail screens. Follow `apps/go/docs/patterns.md`'s `hasValue`/`isLoading` guard (NOT `.when()`) the first time a real list-fetching screen is built in this app.
+- Query data / skeleton loaders / pull-to-refresh / infinite scroll: proven end-to-end by `properties/root.dart` + `PropertiesNotifier` — `ScrollController` listener at ~200px from `maxScrollExtent` triggers `loadNextPage()`, `isLoading && items.isEmpty` (not `.when()`) gates the shimmer skeleton, `RefreshIndicator` calls `loadFirstPage()`. Replicate this exact shape for the next paginated list (tenants, activity, money).
 
 ## Auth-Specific Patterns Worth Reusing
 - **Workspace/tolerant-status matching:** when an API status field's exact string format is unconfirmed, match on the last dot-separated segment case-insensitively (`status.split('.').last.toLowerCase() == 'active'`) rather than a substring `contains` check — the latter has real collision risk (`"Inactive".contains("active")` is `true`). See `lib/workspace_resolution.dart`.

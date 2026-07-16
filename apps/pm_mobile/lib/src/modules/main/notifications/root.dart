@@ -15,29 +15,29 @@ class _Notif {
     required this.age,
     required this.unread,
   });
-  final String  id;
+  final String id;
   final IconData icon;
   final _NotifTone tone;
-  final String  title;
-  final String  body;
-  final String  age;
-  final bool    unread;
+  final String title;
+  final String body;
+  final String age;
+  final bool unread;
 }
 
 enum _NotifTone { green, crimson, blue, orange }
 
 extension _NotifToneColors on _NotifTone {
   Color get bg => switch (this) {
-    _NotifTone.green   => RLTokens.successBg,
+    _NotifTone.green => RLTokens.successBg,
     _NotifTone.crimson => RLTokens.dangerBg,
-    _NotifTone.blue    => RLTokens.infoBg,
-    _NotifTone.orange  => RLTokens.warningBg,
+    _NotifTone.blue => RLTokens.infoBg,
+    _NotifTone.orange => RLTokens.warningBg,
   };
   Color get fg => switch (this) {
-    _NotifTone.green   => RLTokens.success,
+    _NotifTone.green => RLTokens.success,
     _NotifTone.crimson => RLTokens.crimson,
-    _NotifTone.blue    => RLTokens.info,
-    _NotifTone.orange  => RLTokens.warning,
+    _NotifTone.blue => RLTokens.info,
+    _NotifTone.orange => RLTokens.warning,
   };
 }
 
@@ -115,7 +115,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   void initState() {
     super.initState();
     _items = List.of(_kNotifications);
-    _read  = _items.map((n) => !n.unread).toList();
+    _read = _items.map((n) => !n.unread).toList();
   }
 
   void _markAllRead() async {
@@ -165,8 +165,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     ),
                     child: Column(
                       children: _items.asMap().entries.map((e) {
-                        final i    = e.key;
-                        final n    = e.value;
+                        final i = e.key;
+                        final n = e.value;
                         final last = i == _items.length - 1;
                         final isRead = _read[i];
                         return _NotifRow(
@@ -202,8 +202,8 @@ class _NotifRow extends StatelessWidget {
   });
 
   final _Notif notif;
-  final bool   unread;
-  final bool   last;
+  final bool unread;
+  final bool last;
   final VoidCallback onTap;
 
   @override

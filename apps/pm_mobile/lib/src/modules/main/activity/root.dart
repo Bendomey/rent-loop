@@ -397,10 +397,9 @@ class _MaintCard extends StatelessWidget {
                     fontFamily: RLTokens.fontSans,
                     fontSize: 12,
                     fontWeight: RLTokens.medium,
-                    color:
-                        m.assigned != null
-                            ? RLTokens.inkSoft
-                            : RLTokens.crimson,
+                    color: m.assigned != null
+                        ? RLTokens.inkSoft
+                        : RLTokens.crimson,
                   ),
                 ),
               ],
@@ -493,11 +492,10 @@ class _AppsList extends StatelessWidget {
         120,
       ),
       itemCount: _kApps.length,
-      itemBuilder:
-          (_, i) => Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: _AppCard(a: _kApps[i]),
-          ),
+      itemBuilder: (_, i) => Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: _AppCard(a: _kApps[i]),
+      ),
     );
   }
 }
@@ -758,18 +756,16 @@ class _WeekStrip extends StatelessWidget {
             children: List.generate(7, (i) {
               final busy = _busyIdx.contains(i);
               final today = i == _todayIdx;
-              final circleBg =
-                  today
-                      ? RLTokens.crimson
-                      : busy
-                      ? RLTokens.crimsonTint
-                      : RLTokens.fill;
-              final textColor =
-                  today
-                      ? Colors.white
-                      : busy
-                      ? RLTokens.crimson
-                      : RLTokens.muted;
+              final circleBg = today
+                  ? RLTokens.crimson
+                  : busy
+                  ? RLTokens.crimsonTint
+                  : RLTokens.fill;
+              final textColor = today
+                  ? Colors.white
+                  : busy
+                  ? RLTokens.crimson
+                  : RLTokens.muted;
               return Expanded(
                 child: Column(
                   children: [

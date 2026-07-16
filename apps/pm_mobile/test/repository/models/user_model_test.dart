@@ -29,15 +29,18 @@ void main() {
     expect(model.clientUsers.first.client?.name, 'Acme Corp');
   });
 
-  test('UserModel.fromJson defaults client_users to an empty list when absent', () {
-    final json = {
-      'id': 'user-1',
-      'name': 'John Doe',
-      'email': 'john@example.com',
-    };
+  test(
+    'UserModel.fromJson defaults client_users to an empty list when absent',
+    () {
+      final json = {
+        'id': 'user-1',
+        'name': 'John Doe',
+        'email': 'john@example.com',
+      };
 
-    final model = UserModel.fromJson(json);
+      final model = UserModel.fromJson(json);
 
-    expect(model.clientUsers, isEmpty);
-  });
+      expect(model.clientUsers, isEmpty);
+    },
+  );
 }

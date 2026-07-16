@@ -73,7 +73,8 @@ class _TopHeader extends ConsumerWidget {
     final workspaceName =
         ref.watch(currentWorkspaceNotifierProvider)?.client?.name ??
         'your workspace';
-    final managerName = ref.watch(currentUserNotifierProvider)?.name ?? 'Manager';
+    final managerName =
+        ref.watch(currentUserNotifierProvider)?.name ?? 'Manager';
 
     return RLTopHeader(
       eyebrow: GestureDetector(
@@ -473,19 +474,18 @@ class _CollectionTrendSection extends StatelessWidget {
                     const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children:
-                          _months
-                              .map(
-                                (m) => Text(
-                                  m,
-                                  style: TextStyle(
-                                    fontFamily: RLTokens.fontMono,
-                                    fontSize: 9.5,
-                                    color: RLTokens.micro,
-                                  ),
-                                ),
-                              )
-                              .toList(),
+                      children: _months
+                          .map(
+                            (m) => Text(
+                              m,
+                              style: TextStyle(
+                                fontFamily: RLTokens.fontMono,
+                                fontSize: 9.5,
+                                color: RLTokens.micro,
+                              ),
+                            ),
+                          )
+                          .toList(),
                     ),
                   ],
                 ),
@@ -539,19 +539,18 @@ class _QuickActionsSection extends StatelessWidget {
           scrollDirection: Axis.horizontal,
           clipBehavior: Clip.none,
           child: Row(
-            children:
-                _actions
-                    .asMap()
-                    .entries
-                    .map(
-                      (e) => Padding(
-                        padding: EdgeInsets.only(
-                          right: e.key < _actions.length - 1 ? 10 : 0,
-                        ),
-                        child: _QuickChip(action: e.value),
-                      ),
-                    )
-                    .toList(),
+            children: _actions
+                .asMap()
+                .entries
+                .map(
+                  (e) => Padding(
+                    padding: EdgeInsets.only(
+                      right: e.key < _actions.length - 1 ? 10 : 0,
+                    ),
+                    child: _QuickChip(action: e.value),
+                  ),
+                )
+                .toList(),
           ),
         ),
       ],

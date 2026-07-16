@@ -18,13 +18,13 @@ PaginationMetaModel _$PaginationMetaModelFromJson(Map<String, dynamic> json) =>
     );
 
 Map<String, dynamic> _$PaginationMetaModelToJson(
-        PaginationMetaModel instance) =>
-    <String, dynamic>{
-      'total': instance.total,
-      'page': instance.page,
-      'page_size': instance.pageSize,
-      'has_next_page': instance.hasNextPage,
-      'has_previous_page': instance.hasPreviousPage,
-      'order': instance.order,
-      'order_by': instance.orderBy,
-    };
+  PaginationMetaModel instance,
+) => <String, dynamic>{
+  'total': instance.total,
+  'page': instance.page,
+  'page_size': instance.pageSize,
+  'has_next_page': instance.hasNextPage,
+  'has_previous_page': instance.hasPreviousPage,
+  'order': instance.order,
+  'order_by': instance.orderBy,
+};

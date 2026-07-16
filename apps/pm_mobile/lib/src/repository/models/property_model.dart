@@ -2,14 +2,27 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'property_model.g.dart';
 
-/// Deliberately minimal — only what the onboarding checklist needs right
-/// now. A future properties-module integration pass extends this class
-/// with the rest of the property fields, not a new class.
 @JsonSerializable()
 class PropertyModel {
   final String id;
+  final String name;
+  final String type;
+  final String status;
+  final String? address;
+  final String? city;
+  final String? region;
+  final List<String>? images;
 
-  PropertyModel({required this.id});
+  PropertyModel({
+    required this.id,
+    required this.name,
+    required this.type,
+    required this.status,
+    this.address,
+    this.city,
+    this.region,
+    this.images,
+  });
 
   factory PropertyModel.fromJson(Map<String, dynamic> json) =>
       _$PropertyModelFromJson(json);

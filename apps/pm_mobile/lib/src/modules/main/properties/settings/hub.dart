@@ -17,7 +17,12 @@ class PropertySettingsHubScreen extends StatelessWidget {
           const RLBackHeader(title: 'Property settings'),
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(RLTokens.gutter, 10, RLTokens.gutter, 24),
+              padding: const EdgeInsets.fromLTRB(
+                RLTokens.gutter,
+                10,
+                RLTokens.gutter,
+                24,
+              ),
               children: [
                 // Property identity card
                 Container(
@@ -35,7 +40,11 @@ class PropertySettingsHubScreen extends StatelessWidget {
                           width: 46,
                           height: 46,
                           color: RLTokens.fill,
-                          child: const Icon(Icons.apartment_outlined, size: 22, color: RLTokens.mutedSoft),
+                          child: const Icon(
+                            Icons.apartment_outlined,
+                            size: 22,
+                            color: RLTokens.mutedSoft,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 13),
@@ -93,7 +102,8 @@ class PropertySettingsHubScreen extends StatelessWidget {
                         icon: Icons.group_outlined,
                         title: 'Members',
                         sub: '5 people have access',
-                        onTap: () => context.push('/properties/$id/settings/members'),
+                        onTap: () =>
+                            context.push('/properties/$id/settings/members'),
                         showDivider: true,
                       ),
                       _TileRowInCard(
@@ -102,7 +112,8 @@ class PropertySettingsHubScreen extends StatelessWidget {
                         icon: Icons.description_outlined,
                         title: 'Documents',
                         sub: '3 templates',
-                        onTap: () => context.push('/properties/$id/settings/documents'),
+                        onTap: () =>
+                            context.push('/properties/$id/settings/documents'),
                         showDivider: false,
                       ),
                     ],
@@ -150,25 +161,42 @@ class PropertySettingsHubScreen extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text(
           'Archive property?',
-          style: TextStyle(fontFamily: RLTokens.fontSerif, fontSize: 21, color: RLTokens.ink),
+          style: TextStyle(
+            fontFamily: RLTokens.fontSerif,
+            fontSize: 21,
+            color: RLTokens.ink,
+          ),
         ),
         content: const Text(
           'The property will be hidden from your active portfolio. You can restore it at any time.',
-          style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 14, color: RLTokens.muted, height: 1.5),
+          style: TextStyle(
+            fontFamily: RLTokens.fontSans,
+            fontSize: 14,
+            color: RLTokens.muted,
+            height: 1.5,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
             child: const Text(
               'Cancel',
-              style: TextStyle(fontFamily: RLTokens.fontSans, fontWeight: RLTokens.semibold, color: RLTokens.ink),
+              style: TextStyle(
+                fontFamily: RLTokens.fontSans,
+                fontWeight: RLTokens.semibold,
+                color: RLTokens.ink,
+              ),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
             child: const Text(
               'Archive',
-              style: TextStyle(fontFamily: RLTokens.fontSans, fontWeight: RLTokens.semibold, color: RLTokens.danger),
+              style: TextStyle(
+                fontFamily: RLTokens.fontSans,
+                fontWeight: RLTokens.semibold,
+                color: RLTokens.danger,
+              ),
             ),
           ),
         ],
@@ -242,7 +270,11 @@ class _TileRowInCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: showDivider
-            ? const BoxDecoration(border: Border(bottom: BorderSide(color: RLTokens.hairlineSoft)))
+            ? const BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(color: RLTokens.hairlineSoft),
+                ),
+              )
             : null,
         child: _rowContent(iconBg, iconColor, icon, title, sub),
       ),
@@ -250,13 +282,22 @@ class _TileRowInCard extends StatelessWidget {
   }
 }
 
-Widget _rowContent(Color iconBg, Color iconColor, IconData icon, String title, String sub) {
+Widget _rowContent(
+  Color iconBg,
+  Color iconColor,
+  IconData icon,
+  String title,
+  String sub,
+) {
   return Row(
     children: [
       Container(
         width: 38,
         height: 38,
-        decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(11)),
+        decoration: BoxDecoration(
+          color: iconBg,
+          borderRadius: BorderRadius.circular(11),
+        ),
         child: Icon(icon, size: 18, color: iconColor),
       ),
       const SizedBox(width: 13),
@@ -264,9 +305,24 @@ Widget _rowContent(Color iconBg, Color iconColor, IconData icon, String title, S
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 15, fontWeight: RLTokens.semibold, color: RLTokens.ink)),
+            Text(
+              title,
+              style: const TextStyle(
+                fontFamily: RLTokens.fontSans,
+                fontSize: 15,
+                fontWeight: RLTokens.semibold,
+                color: RLTokens.ink,
+              ),
+            ),
             const SizedBox(height: 2),
-            Text(sub, style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 12.5, color: RLTokens.muted)),
+            Text(
+              sub,
+              style: const TextStyle(
+                fontFamily: RLTokens.fontSans,
+                fontSize: 12.5,
+                color: RLTokens.muted,
+              ),
+            ),
           ],
         ),
       ),

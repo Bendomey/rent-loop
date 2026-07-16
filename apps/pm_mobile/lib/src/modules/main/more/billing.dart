@@ -19,11 +19,36 @@ class _Invoice {
 }
 
 const _kInvoices = [
-  _Invoice(id: 'BILL-2606-014', status: 'Paid',    property: 'Emirate Hotel',        amount: 240),
-  _Invoice(id: 'BILL-2606-013', status: 'Issued',  property: 'Cantonments Court',    amount: 480),
-  _Invoice(id: 'BILL-2605-009', status: 'Paid',    property: 'Spintex Heights',      amount: 360),
-  _Invoice(id: 'BILL-2605-008', status: 'Overdue', property: 'Labadi Beach Suites',  amount: 240),
-  _Invoice(id: 'BILL-2604-006', status: 'Paid',    property: 'East Legon Villa',     amount: 120),
+  _Invoice(
+    id: 'BILL-2606-014',
+    status: 'Paid',
+    property: 'Emirate Hotel',
+    amount: 240,
+  ),
+  _Invoice(
+    id: 'BILL-2606-013',
+    status: 'Issued',
+    property: 'Cantonments Court',
+    amount: 480,
+  ),
+  _Invoice(
+    id: 'BILL-2605-009',
+    status: 'Paid',
+    property: 'Spintex Heights',
+    amount: 360,
+  ),
+  _Invoice(
+    id: 'BILL-2605-008',
+    status: 'Overdue',
+    property: 'Labadi Beach Suites',
+    amount: 240,
+  ),
+  _Invoice(
+    id: 'BILL-2604-006',
+    status: 'Paid',
+    property: 'East Legon Villa',
+    amount: 120,
+  ),
 ];
 
 const _kFilters = ['All', 'Paid', 'Issued', 'Overdue'];
@@ -60,8 +85,7 @@ class _BillingScreenState extends State<BillingScreen> {
               onTap: () => Haptics.vibrate(HapticsType.selection),
               child: const Padding(
                 padding: EdgeInsets.all(9),
-                child: Icon(Icons.tune_rounded,
-                    size: 20, color: RLTokens.ink),
+                child: Icon(Icons.tune_rounded, size: 20, color: RLTokens.ink),
               ),
             ),
           ),
@@ -125,8 +149,11 @@ class _BillingScreenState extends State<BillingScreen> {
                                 ),
                               ],
                             ),
-                            const RLPill('Active',
-                                tone: RLTone.success, large: true),
+                            const RLPill(
+                              'Active',
+                              tone: RLTone.success,
+                              large: true,
+                            ),
                           ],
                         ),
                         const SizedBox(height: 16),
@@ -173,17 +200,21 @@ class _BillingScreenState extends State<BillingScreen> {
                   ),
 
                   // ── Invoices ───────────────────────────────────────────────
-                  RLLabel('${_filtered.length} invoice${_filtered.length == 1 ? '' : 's'}'),
+                  RLLabel(
+                    '${_filtered.length} invoice${_filtered.length == 1 ? '' : 's'}',
+                  ),
 
                   if (_filtered.isEmpty)
                     _EmptyState()
                   else
                     Column(
                       children: _filtered
-                          .map((inv) => Padding(
-                                padding: const EdgeInsets.only(bottom: 10),
-                                child: _InvoiceCard(invoice: inv),
-                              ))
+                          .map(
+                            (inv) => Padding(
+                              padding: const EdgeInsets.only(bottom: 10),
+                              child: _InvoiceCard(invoice: inv),
+                            ),
+                          )
                           .toList(),
                     ),
                 ],
@@ -240,8 +271,7 @@ class _InvoiceCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    RLPill(invoice.status,
-                        tone: statusTone(invoice.status)),
+                    RLPill(invoice.status, tone: statusTone(invoice.status)),
                   ],
                 ),
                 const SizedBox(height: 4),
@@ -291,8 +321,11 @@ class _EmptyState extends StatelessWidget {
               color: RLTokens.fill,
               borderRadius: BorderRadius.circular(15),
             ),
-            child: const Icon(Icons.receipt_long_outlined,
-                size: 26, color: RLTokens.mutedSoft),
+            child: const Icon(
+              Icons.receipt_long_outlined,
+              size: 26,
+              color: RLTokens.mutedSoft,
+            ),
           ),
           const SizedBox(height: 12),
           const Text(

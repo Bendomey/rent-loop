@@ -15,8 +15,18 @@ const _kUnits = [
 const _kGenders = ['Male', 'Female', 'Other', 'Prefer not to say'];
 
 const _kMonths = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ];
 
 const _kDow = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
@@ -66,10 +76,9 @@ class _AddBookingScreenState extends State<AddBookingScreen> {
 
   int get _nights {
     if (_start == null || _end == null) return 0;
-    return DateTime.parse(_end!)
-        .difference(DateTime.parse(_start!))
-        .inDays
-        .clamp(1, 999);
+    return DateTime.parse(
+      _end!,
+    ).difference(DateTime.parse(_start!)).inDays.clamp(1, 999);
   }
 
   double get _total => _nights * (double.tryParse(_rateCtrl.text) ?? 0);
@@ -87,8 +96,13 @@ class _AddBookingScreenState extends State<AddBookingScreen> {
   String _weekday(String? k) {
     if (k == null) return '';
     const days = [
-      'Sunday', 'Monday', 'Tuesday', 'Wednesday',
-      'Thursday', 'Friday', 'Saturday',
+      'Sunday',
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
     ];
     return days[DateTime.parse(k).weekday % 7];
   }
@@ -119,7 +133,12 @@ class _AddBookingScreenState extends State<AddBookingScreen> {
   }
 
   void _useGuest(
-      String first, String last, String phone, String email, String gender) {
+    String first,
+    String last,
+    String phone,
+    String email,
+    String gender,
+  ) {
     setState(() {
       _gFirstCtrl.text = first;
       _gLastCtrl.text = last;
@@ -135,10 +154,8 @@ class _AddBookingScreenState extends State<AddBookingScreen> {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).padding.bottom;
-    final unitName =
-        _unit.contains(' · ') ? _unit.split(' · ')[0] : _unit;
-    final location =
-        _unit.contains(' · ') ? _unit.split(' · ')[1] : '';
+    final unitName = _unit.contains(' · ') ? _unit.split(' · ')[0] : _unit;
+    final location = _unit.contains(' · ') ? _unit.split(' · ')[1] : '';
     final nights = _nights;
     final total = _total;
     final hasGuest = _hasGuest;
@@ -225,21 +242,33 @@ class _AddBookingScreenState extends State<AddBookingScreen> {
                               ),
                             ],
                             const SizedBox(height: 14),
-                            const Divider(height: 1, color: RLTokens.hairlineSoft),
+                            const Divider(
+                              height: 1,
+                              color: RLTokens.hairlineSoft,
+                            ),
                             const SizedBox(height: 14),
                             Row(
                               children: [
                                 Expanded(
-                                    child: _StayStat(
-                                        k: 'Check-in', v: _fmtDate(_start))),
+                                  child: _StayStat(
+                                    k: 'Check-in',
+                                    v: _fmtDate(_start),
+                                  ),
+                                ),
                                 const SizedBox(width: 14),
                                 Expanded(
-                                    child: _StayStat(
-                                        k: 'Check-out', v: _fmtDate(_end))),
+                                  child: _StayStat(
+                                    k: 'Check-out',
+                                    v: _fmtDate(_end),
+                                  ),
+                                ),
                               ],
                             ),
                             const SizedBox(height: 14),
-                            const Divider(height: 1, color: RLTokens.hairlineSoft),
+                            const Divider(
+                              height: 1,
+                              color: RLTokens.hairlineSoft,
+                            ),
                             const SizedBox(height: 12),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -281,7 +310,10 @@ class _AddBookingScreenState extends State<AddBookingScreen> {
                               ],
                             ),
                             const SizedBox(height: 14),
-                            const Divider(height: 1, color: RLTokens.hairlineSoft),
+                            const Divider(
+                              height: 1,
+                              color: RLTokens.hairlineSoft,
+                            ),
                             const SizedBox(height: 12),
                             const Text(
                               'GUEST',
@@ -447,9 +479,10 @@ class _AddBookingScreenState extends State<AddBookingScreen> {
                                 ),
                               ),
                               const VerticalDivider(
-                                  width: 1,
-                                  thickness: 1,
-                                  color: RLTokens.hairlineSoft),
+                                width: 1,
+                                thickness: 1,
+                                color: RLTokens.hairlineSoft,
+                              ),
                               Expanded(
                                 child: Padding(
                                   padding: const EdgeInsets.all(12),
@@ -461,14 +494,18 @@ class _AddBookingScreenState extends State<AddBookingScreen> {
                                 ),
                               ),
                               const VerticalDivider(
-                                  width: 1,
-                                  thickness: 1,
-                                  color: RLTokens.hairlineSoft),
+                                width: 1,
+                                thickness: 1,
+                                color: RLTokens.hairlineSoft,
+                              ),
                               SizedBox(
                                 width: 76,
                                 child: Padding(
                                   padding: const EdgeInsets.all(12),
-                                  child: _StayStat(k: 'Duration', v: '${nights}d'),
+                                  child: _StayStat(
+                                    k: 'Duration',
+                                    v: '${nights}d',
+                                  ),
                                 ),
                               ),
                             ],
@@ -519,8 +556,11 @@ class _AddBookingScreenState extends State<AddBookingScreen> {
                             },
                             child: Row(
                               children: const [
-                                Icon(Icons.search_rounded,
-                                    size: 14, color: RLTokens.crimson),
+                                Icon(
+                                  Icons.search_rounded,
+                                  size: 14,
+                                  color: RLTokens.crimson,
+                                ),
                                 SizedBox(width: 5),
                                 Text(
                                   'Find existing',
@@ -579,8 +619,9 @@ class _AddBookingScreenState extends State<AddBookingScreen> {
                       _FormLabel(label: 'Phone'),
                       const SizedBox(height: 8),
                       _PhoneField(
-                          controller: _gPhoneCtrl,
-                          placeholder: '24 000 0000'),
+                        controller: _gPhoneCtrl,
+                        placeholder: '24 000 0000',
+                      ),
 
                       // Email
                       const SizedBox(height: 16),
@@ -623,8 +664,9 @@ class _AddBookingScreenState extends State<AddBookingScreen> {
                                 _FormLabel(label: 'ID number', optional: true),
                                 const SizedBox(height: 8),
                                 _InputField(
-                                    controller: _gIdCtrl,
-                                    placeholder: 'GHA-XXXXX-X'),
+                                  controller: _gIdCtrl,
+                                  placeholder: 'GHA-XXXXX-X',
+                                ),
                               ],
                             ),
                           ),
@@ -653,12 +695,10 @@ class _AddBookingScreenState extends State<AddBookingScreen> {
             right: 0,
             bottom: 0,
             child: Container(
-              padding:
-                  EdgeInsets.fromLTRB(20, 12, 20, 12 + bottomInset),
+              padding: EdgeInsets.fromLTRB(20, 12, 20, 12 + bottomInset),
               decoration: BoxDecoration(
                 color: RLTokens.surface,
-                border:
-                    const Border(top: BorderSide(color: RLTokens.hairline)),
+                border: const Border(top: BorderSide(color: RLTokens.hairline)),
                 boxShadow: RLTokens.elevBar,
               ),
               child: Row(
@@ -845,8 +885,7 @@ class _CalGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final firstWeekday =
-        DateTime(year, month + 1, 1).weekday % 7; // 0=Sun
+    final firstWeekday = DateTime(year, month + 1, 1).weekday % 7; // 0=Sun
     final daysInMonth = DateTime(year, month + 2, 0).day;
     final todayDay = (today.year == year && today.month == month + 1)
         ? today.day
@@ -856,7 +895,9 @@ class _CalGrid extends StatelessWidget {
       for (var i = 0; i < firstWeekday; i++) null,
       for (var d = 1; d <= daysInMonth; d++) d,
     ];
-    while (cells.length % 7 != 0) { cells.add(null); }
+    while (cells.length % 7 != 0) {
+      cells.add(null);
+    }
     final rowCount = cells.length ~/ 7;
 
     return Column(
@@ -864,18 +905,20 @@ class _CalGrid extends StatelessWidget {
         // Day-of-week header
         Row(
           children: _kDow
-              .map((d) => Expanded(
-                    child: Center(
-                      child: Text(
-                        d,
-                        style: const TextStyle(
-                          fontFamily: RLTokens.fontMono,
-                          fontSize: 10.5,
-                          color: RLTokens.mutedSoft,
-                        ),
+              .map(
+                (d) => Expanded(
+                  child: Center(
+                    child: Text(
+                      d,
+                      style: const TextStyle(
+                        fontFamily: RLTokens.fontMono,
+                        fontSize: 10.5,
+                        color: RLTokens.mutedSoft,
                       ),
                     ),
-                  ))
+                  ),
+                ),
+              )
               .toList(),
         ),
         const SizedBox(height: 6),
@@ -892,7 +935,8 @@ class _CalGrid extends StatelessWidget {
               final isPast = todayDay > 0 && d < todayDay;
               final isStart = start == k;
               final isEnd = end == k;
-              final between = start != null &&
+              final between =
+                  start != null &&
                   end != null &&
                   k.compareTo(start!) > 0 &&
                   k.compareTo(end!) < 0;
@@ -919,8 +963,8 @@ class _CalGrid extends StatelessWidget {
                             color: isSel
                                 ? RLTokens.crimson
                                 : isToday
-                                    ? RLTokens.fill
-                                    : Colors.transparent,
+                                ? RLTokens.fill
+                                : Colors.transparent,
                           ),
                           child: Center(
                             child: Text(
@@ -931,13 +975,13 @@ class _CalGrid extends StatelessWidget {
                                 fontWeight: isSel
                                     ? RLTokens.bold
                                     : isToday
-                                        ? RLTokens.bold
-                                        : RLTokens.medium,
+                                    ? RLTokens.bold
+                                    : RLTokens.medium,
                                 color: isSel
                                     ? Colors.white
                                     : isPast
-                                        ? RLTokens.micro
-                                        : RLTokens.ink,
+                                    ? RLTokens.micro
+                                    : RLTokens.ink,
                               ),
                             ),
                           ),
@@ -1018,8 +1062,11 @@ class _FormLabel extends StatelessWidget {
 // ── Select field ──────────────────────────────────────────────────────────────
 
 class _SelectField extends StatelessWidget {
-  const _SelectField(
-      {required this.value, required this.placeholder, required this.onTap});
+  const _SelectField({
+    required this.value,
+    required this.placeholder,
+    required this.onTap,
+  });
   final String value;
   final String placeholder;
   final VoidCallback onTap;
@@ -1050,8 +1097,11 @@ class _SelectField extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            const Icon(Icons.keyboard_arrow_down_rounded,
-                size: 18, color: RLTokens.mutedSoft),
+            const Icon(
+              Icons.keyboard_arrow_down_rounded,
+              size: 18,
+              color: RLTokens.mutedSoft,
+            ),
           ],
         ),
       ),
@@ -1148,8 +1198,7 @@ class _TextAreaField extends StatelessWidget {
           height: 1.5,
         ),
         decoration: const InputDecoration(
-          hintText:
-              'e.g. Guest arrives late — share gate code by SMS.',
+          hintText: 'e.g. Guest arrives late — share gate code by SMS.',
           hintStyle: TextStyle(
             fontFamily: RLTokens.fontSans,
             fontSize: 14.5,
@@ -1190,16 +1239,20 @@ class _PhoneField extends StatelessWidget {
               children: const [
                 Text('🇬🇭', style: TextStyle(fontSize: 17)),
                 SizedBox(width: 6),
-                Icon(Icons.keyboard_arrow_down_rounded,
-                    size: 13, color: RLTokens.mutedSoft),
+                Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  size: 13,
+                  color: RLTokens.mutedSoft,
+                ),
               ],
             ),
           ),
           Container(
-              width: 1,
-              height: 26,
-              color: RLTokens.hairline,
-              margin: const EdgeInsets.only(right: 11)),
+            width: 1,
+            height: 26,
+            color: RLTokens.hairline,
+            margin: const EdgeInsets.only(right: 11),
+          ),
           const Text(
             '+233',
             style: TextStyle(
@@ -1245,8 +1298,13 @@ class _PhoneField extends StatelessWidget {
 class _FindGuestSheet extends StatefulWidget {
   const _FindGuestSheet({required this.onUse, required this.onClose});
   final void Function(
-      String first, String last, String phone, String email, String gender)
-      onUse;
+    String first,
+    String last,
+    String phone,
+    String email,
+    String gender,
+  )
+  onUse;
   final VoidCallback onClose;
 
   @override
@@ -1278,7 +1336,8 @@ class _FindGuestSheetState extends State<_FindGuestSheet> {
               decoration: const BoxDecoration(
                 color: RLTokens.surface,
                 borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(RLTokens.rXl)),
+                  top: Radius.circular(RLTokens.rXl),
+                ),
                 boxShadow: RLTokens.elevSheet,
               ),
               child: SingleChildScrollView(
@@ -1329,36 +1388,38 @@ class _FindGuestSheetState extends State<_FindGuestSheet> {
                           Container(
                             decoration: BoxDecoration(
                               color: RLTokens.surface,
-                              borderRadius:
-                                  BorderRadius.circular(RLTokens.rMd),
+                              borderRadius: BorderRadius.circular(RLTokens.rMd),
                               border: Border.all(
-                                  color: RLTokens.hairline, width: 1.5),
+                                color: RLTokens.hairline,
+                                width: 1.5,
+                              ),
                             ),
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 14),
+                            padding: const EdgeInsets.symmetric(horizontal: 14),
                             child: Row(
                               children: [
                                 Padding(
-                                  padding:
-                                      const EdgeInsets.only(right: 11),
+                                  padding: const EdgeInsets.only(right: 11),
                                   child: Row(
                                     children: const [
-                                      Text('🇬🇭',
-                                          style: TextStyle(fontSize: 17)),
+                                      Text(
+                                        '🇬🇭',
+                                        style: TextStyle(fontSize: 17),
+                                      ),
                                       SizedBox(width: 6),
                                       Icon(
-                                          Icons.keyboard_arrow_down_rounded,
-                                          size: 13,
-                                          color: RLTokens.mutedSoft),
+                                        Icons.keyboard_arrow_down_rounded,
+                                        size: 13,
+                                        color: RLTokens.mutedSoft,
+                                      ),
                                     ],
                                   ),
                                 ),
                                 Container(
-                                    width: 1,
-                                    height: 26,
-                                    color: RLTokens.hairline,
-                                    margin:
-                                        const EdgeInsets.only(right: 11)),
+                                  width: 1,
+                                  height: 26,
+                                  color: RLTokens.hairline,
+                                  margin: const EdgeInsets.only(right: 11),
+                                ),
                                 const Text(
                                   '+233',
                                   style: TextStyle(
@@ -1391,12 +1452,16 @@ class _FindGuestSheetState extends State<_FindGuestSheet> {
                                       focusedBorder: InputBorder.none,
                                       isDense: true,
                                       contentPadding: EdgeInsets.symmetric(
-                                          vertical: 14),
+                                        vertical: 14,
+                                      ),
                                     ),
                                   ),
                                 ),
-                                const Icon(Icons.search_rounded,
-                                    size: 18, color: RLTokens.mutedSoft),
+                                const Icon(
+                                  Icons.search_rounded,
+                                  size: 18,
+                                  color: RLTokens.mutedSoft,
+                                ),
                               ],
                             ),
                           ),
@@ -1408,12 +1473,10 @@ class _FindGuestSheetState extends State<_FindGuestSheet> {
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(14),
-                                border:
-                                    Border.all(color: RLTokens.hairline),
+                                border: Border.all(color: RLTokens.hairline),
                               ),
                               child: Column(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   const Text(
                                     'Benjamin Domey',
@@ -1449,8 +1512,7 @@ class _FindGuestSheetState extends State<_FindGuestSheet> {
                                     full: true,
                                     icon: Icons.check_rounded,
                                     onPressed: () {
-                                      Haptics.vibrate(
-                                          HapticsType.selection);
+                                      Haptics.vibrate(HapticsType.selection);
                                       widget.onUse(
                                         'Benjamin',
                                         'Domey',
@@ -1545,7 +1607,11 @@ class _NewBookingTypeSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            const Icon(Icons.chevron_right_rounded, size: 18, color: RLTokens.micro),
+            const Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: RLTokens.micro,
+            ),
           ],
         ),
       ),
@@ -1566,8 +1632,9 @@ class _NewBookingTypeSheet extends StatelessWidget {
             child: Container(
               decoration: const BoxDecoration(
                 color: RLTokens.surface,
-                borderRadius:
-                    BorderRadius.vertical(top: Radius.circular(RLTokens.rXl)),
+                borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(RLTokens.rXl),
+                ),
                 boxShadow: RLTokens.elevSheet,
               ),
               child: Column(
@@ -1671,7 +1738,8 @@ class _GuestLinkSheet extends StatelessWidget {
                   decoration: const BoxDecoration(
                     color: RLTokens.surface,
                     borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(RLTokens.rXl)),
+                      top: Radius.circular(RLTokens.rXl),
+                    ),
                     boxShadow: RLTokens.elevSheet,
                   ),
                   constraints: BoxConstraints(
@@ -1697,8 +1765,11 @@ class _GuestLinkSheet extends StatelessWidget {
                           padding: const EdgeInsets.fromLTRB(20, 10, 14, 6),
                           child: Row(
                             children: [
-                              const Icon(Icons.bolt_outlined,
-                                  size: 22, color: RLTokens.crimson),
+                              const Icon(
+                                Icons.bolt_outlined,
+                                size: 22,
+                                color: RLTokens.crimson,
+                              ),
                               const SizedBox(width: 9),
                               const Expanded(
                                 child: Text(
@@ -1722,7 +1793,11 @@ class _GuestLinkSheet extends StatelessWidget {
                         ),
                         Padding(
                           padding: EdgeInsets.fromLTRB(
-                              20, 4, 20, 28 + bottomInset),
+                            20,
+                            4,
+                            20,
+                            28 + bottomInset,
+                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -1755,8 +1830,9 @@ class _GuestLinkSheet extends StatelessWidget {
                                 padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
                                   color: RLTokens.fill,
-                                  borderRadius:
-                                      BorderRadius.circular(RLTokens.rMd),
+                                  borderRadius: BorderRadius.circular(
+                                    RLTokens.rMd,
+                                  ),
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1799,7 +1875,8 @@ class _GuestLinkSheet extends StatelessWidget {
                                         GestureDetector(
                                           onTap: () async {
                                             await Haptics.vibrate(
-                                                HapticsType.selection);
+                                              HapticsType.selection,
+                                            );
                                           },
                                           child: Container(
                                             width: 46,
@@ -1809,7 +1886,8 @@ class _GuestLinkSheet extends StatelessWidget {
                                               borderRadius:
                                                   BorderRadius.circular(12),
                                               border: Border.all(
-                                                  color: RLTokens.hairline),
+                                                color: RLTokens.hairline,
+                                              ),
                                             ),
                                             child: const Icon(
                                               Icons.ios_share_rounded,
@@ -1884,11 +1962,13 @@ class _PickerSheet extends StatelessWidget {
               decoration: const BoxDecoration(
                 color: RLTokens.surface,
                 borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(RLTokens.rXl)),
+                  top: Radius.circular(RLTokens.rXl),
+                ),
                 boxShadow: RLTokens.elevSheet,
               ),
               constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.8),
+                maxHeight: MediaQuery.of(context).size.height * 0.8,
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -1927,8 +2007,7 @@ class _PickerSheet extends StatelessWidget {
                   ),
                   Flexible(
                     child: SingleChildScrollView(
-                      padding:
-                          const EdgeInsets.fromLTRB(14, 4, 14, 30),
+                      padding: const EdgeInsets.fromLTRB(14, 4, 14, 30),
                       child: Column(
                         children: options.asMap().entries.map((e) {
                           final i = e.key;
@@ -1940,14 +2019,17 @@ class _PickerSheet extends StatelessWidget {
                             behavior: HitTestBehavior.opaque,
                             child: Container(
                               padding: const EdgeInsets.symmetric(
-                                  vertical: 13, horizontal: 8),
+                                vertical: 13,
+                                horizontal: 8,
+                              ),
                               decoration: BoxDecoration(
                                 border: isLast
                                     ? null
                                     : const Border(
                                         bottom: BorderSide(
-                                            color:
-                                                RLTokens.hairlineSoft)),
+                                          color: RLTokens.hairlineSoft,
+                                        ),
+                                      ),
                               ),
                               child: Row(
                                 children: [
@@ -1965,9 +2047,11 @@ class _PickerSheet extends StatelessWidget {
                                     ),
                                   ),
                                   if (isSelected)
-                                    const Icon(Icons.check_rounded,
-                                        size: 18,
-                                        color: RLTokens.crimson),
+                                    const Icon(
+                                      Icons.check_rounded,
+                                      size: 18,
+                                      color: RLTokens.crimson,
+                                    ),
                                 ],
                               ),
                             ),

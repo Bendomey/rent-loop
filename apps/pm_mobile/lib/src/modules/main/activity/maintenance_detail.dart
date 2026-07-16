@@ -17,25 +17,95 @@ class _MaintData {
     required this.age,
     this.assigned,
   });
-  final String  id;
-  final String  title;
-  final String  unit;
-  final String  cat;
-  final String  priority;
-  final String  status;
-  final String  tenant;
-  final String  age;
+  final String id;
+  final String title;
+  final String unit;
+  final String cat;
+  final String priority;
+  final String status;
+  final String tenant;
+  final String age;
   final String? assigned;
 }
 
 const _kMaint = [
-  _MaintData(id: 'm1', title: 'Leaking kitchen tap',  unit: 'Unit 4B · Cantonments Court', cat: 'Plumbing',   priority: 'High',   status: 'New',         tenant: 'Kwame Mensah', age: '2h ago',  assigned: null),
-  _MaintData(id: 'm2', title: 'AC not cooling',        unit: 'Unit 5A · Cantonments Court', cat: 'HVAC',       priority: 'Medium', status: 'In Progress', tenant: 'Ama Boateng',  age: '1d ago',  assigned: 'Ben (Tech)'),
-  _MaintData(id: 'm3', title: 'Broken window latch',   unit: 'Unit 7 · Spintex Heights',    cat: 'General',    priority: 'Low',    status: 'In Progress', tenant: 'Efua Sarpong', age: '2d ago',  assigned: 'Ben (Tech)'),
-  _MaintData(id: 'm4', title: 'Hallway lights out',    unit: 'Block A · Spintex Heights',   cat: 'Electrical', priority: 'High',   status: 'In Review',   tenant: 'Front desk',   age: '3d ago',  assigned: 'Mensah Electric'),
-  _MaintData(id: 'm5', title: 'Repaint guest bath',    unit: 'Suite 3 · Labadi Beach',      cat: 'General',    priority: 'Low',    status: 'Resolved',    tenant: 'Housekeeping', age: '5d ago',  assigned: 'Ben (Tech)'),
-  _MaintData(id: 'm6', title: 'Gate motor jammed',     unit: 'Cantonments Court',           cat: 'General',    priority: 'High',   status: 'New',         tenant: 'Security',     age: '4h ago',  assigned: null),
-  _MaintData(id: 'm7', title: 'Water heater fault',    unit: 'Unit 3B · Cantonments Court', cat: 'Plumbing',   priority: 'Medium', status: 'New',         tenant: 'Yaw Asante',   age: '6h ago',  assigned: null),
+  _MaintData(
+    id: 'm1',
+    title: 'Leaking kitchen tap',
+    unit: 'Unit 4B · Cantonments Court',
+    cat: 'Plumbing',
+    priority: 'High',
+    status: 'New',
+    tenant: 'Kwame Mensah',
+    age: '2h ago',
+    assigned: null,
+  ),
+  _MaintData(
+    id: 'm2',
+    title: 'AC not cooling',
+    unit: 'Unit 5A · Cantonments Court',
+    cat: 'HVAC',
+    priority: 'Medium',
+    status: 'In Progress',
+    tenant: 'Ama Boateng',
+    age: '1d ago',
+    assigned: 'Ben (Tech)',
+  ),
+  _MaintData(
+    id: 'm3',
+    title: 'Broken window latch',
+    unit: 'Unit 7 · Spintex Heights',
+    cat: 'General',
+    priority: 'Low',
+    status: 'In Progress',
+    tenant: 'Efua Sarpong',
+    age: '2d ago',
+    assigned: 'Ben (Tech)',
+  ),
+  _MaintData(
+    id: 'm4',
+    title: 'Hallway lights out',
+    unit: 'Block A · Spintex Heights',
+    cat: 'Electrical',
+    priority: 'High',
+    status: 'In Review',
+    tenant: 'Front desk',
+    age: '3d ago',
+    assigned: 'Mensah Electric',
+  ),
+  _MaintData(
+    id: 'm5',
+    title: 'Repaint guest bath',
+    unit: 'Suite 3 · Labadi Beach',
+    cat: 'General',
+    priority: 'Low',
+    status: 'Resolved',
+    tenant: 'Housekeeping',
+    age: '5d ago',
+    assigned: 'Ben (Tech)',
+  ),
+  _MaintData(
+    id: 'm6',
+    title: 'Gate motor jammed',
+    unit: 'Cantonments Court',
+    cat: 'General',
+    priority: 'High',
+    status: 'New',
+    tenant: 'Security',
+    age: '4h ago',
+    assigned: null,
+  ),
+  _MaintData(
+    id: 'm7',
+    title: 'Water heater fault',
+    unit: 'Unit 3B · Cantonments Court',
+    cat: 'Plumbing',
+    priority: 'Medium',
+    status: 'New',
+    tenant: 'Yaw Asante',
+    age: '6h ago',
+    assigned: null,
+  ),
 ];
 
 // ── Screen ────────────────────────────────────────────────────────────────────
@@ -48,7 +118,10 @@ class MaintenanceDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final m   = _kMaint.firstWhere((x) => x.id == id, orElse: () => _kMaint.first);
+    final m = _kMaint.firstWhere(
+      (x) => x.id == id,
+      orElse: () => _kMaint.first,
+    );
     final cur = _steps.indexOf(m.status).clamp(0, _steps.length - 1);
 
     return Scaffold(
@@ -79,7 +152,11 @@ class MaintenanceDetailScreen extends StatelessWidget {
                   // Priority + category pills
                   Row(
                     children: [
-                      RLPill('${m.priority} priority', tone: statusTone(m.priority), large: true),
+                      RLPill(
+                        '${m.priority} priority',
+                        tone: statusTone(m.priority),
+                        large: true,
+                      ),
                       const SizedBox(width: 8),
                       RLPill(m.cat, tone: RLTone.neutral, large: true),
                     ],
@@ -150,9 +227,9 @@ class _Stepper extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: steps.asMap().entries.map((e) {
-        final i      = e.key;
-        final label  = e.value;
-        final done   = i < current;
+        final i = e.key;
+        final label = e.value;
+        final done = i < current;
         final active = i == current;
         final isLast = i == steps.length - 1;
 
@@ -170,8 +247,8 @@ class _Stepper extends StatelessWidget {
                       color: i == 0
                           ? Colors.transparent
                           : (done || active)
-                              ? RLTokens.crimson
-                              : RLTokens.hairline,
+                          ? RLTokens.crimson
+                          : RLTokens.hairline,
                     ),
                   ),
                   // Circle
@@ -183,8 +260,8 @@ class _Stepper extends StatelessWidget {
                       color: isLast
                           ? Colors.transparent
                           : done
-                              ? RLTokens.crimson
-                              : RLTokens.hairline,
+                          ? RLTokens.crimson
+                          : RLTokens.hairline,
                     ),
                   ),
                 ],
@@ -225,8 +302,8 @@ class _StepCircle extends StatelessWidget {
         color: done
             ? RLTokens.crimson
             : active
-                ? RLTokens.surface
-                : RLTokens.fill,
+            ? RLTokens.surface
+            : RLTokens.fill,
         border: Border.all(
           color: (done || active) ? RLTokens.crimson : RLTokens.hairline,
           width: 2,
@@ -268,13 +345,21 @@ class _PhotosRow extends StatelessWidget {
             child: Container(
               height: 96,
               decoration: BoxDecoration(
-                border: Border.all(color: RLTokens.hairline, width: 1.5, style: BorderStyle.solid),
+                border: Border.all(
+                  color: RLTokens.hairline,
+                  width: 1.5,
+                  style: BorderStyle.solid,
+                ),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.camera_alt_outlined, size: 20, color: RLTokens.mutedSoft),
+                  Icon(
+                    Icons.camera_alt_outlined,
+                    size: 20,
+                    color: RLTokens.mutedSoft,
+                  ),
                   const SizedBox(height: 4),
                   Text(
                     'Add',
@@ -426,13 +511,16 @@ class _DiscussionCard extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: RLTokens.fill,
                     borderRadius: const BorderRadius.only(
-                      topLeft:     Radius.circular(4),
-                      topRight:    Radius.circular(14),
-                      bottomLeft:  Radius.circular(14),
+                      topLeft: Radius.circular(4),
+                      topRight: Radius.circular(14),
+                      bottomLeft: Radius.circular(14),
                       bottomRight: Radius.circular(14),
                     ),
                   ),
@@ -470,13 +558,16 @@ class _DiscussionCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: RLTokens.crimsonTint,
                     borderRadius: const BorderRadius.only(
-                      topLeft:     Radius.circular(14),
-                      topRight:    Radius.circular(4),
-                      bottomLeft:  Radius.circular(14),
+                      topLeft: Radius.circular(14),
+                      topRight: Radius.circular(4),
+                      bottomLeft: Radius.circular(14),
                       bottomRight: Radius.circular(14),
                     ),
                   ),
@@ -524,7 +615,12 @@ class _ActionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.fromLTRB(20, 12, 20, 12 + MediaQuery.of(context).padding.bottom),
+      padding: EdgeInsets.fromLTRB(
+        20,
+        12,
+        20,
+        12 + MediaQuery.of(context).padding.bottom,
+      ),
       decoration: BoxDecoration(
         color: RLTokens.surface,
         border: const Border(top: BorderSide(color: RLTokens.hairline)),

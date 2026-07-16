@@ -5,7 +5,10 @@ import 'package:rentloop_manager/src/api/root.dart';
 void main() {
   group('ApiException', () {
     test('parses message from a well-formed error body', () {
-      final e = ApiException(400, '{"errors":{"message":"Invalid credentials"}}');
+      final e = ApiException(
+        400,
+        '{"errors":{"message":"Invalid credentials"}}',
+      );
       expect(e.message, 'Invalid credentials');
     });
 

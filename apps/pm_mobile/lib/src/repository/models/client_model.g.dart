@@ -7,22 +7,22 @@ part of 'client_model.dart';
 // **************************************************************************
 
 ClientModel _$ClientModelFromJson(Map<String, dynamic> json) => ClientModel(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      type: json['type'] as String?,
-      subType: json['sub_type'] as String?,
-      address: json['address'] as String?,
-      city: json['city'] as String?,
-      region: json['region'] as String?,
-      country: json['country'] as String?,
-      supportEmail: json['support_email'] as String?,
-      supportPhone: json['support_phone'] as String?,
-      websiteUrl: json['website_url'] as String?,
-      idType: json['id_type'] as String?,
-      idNumber: json['id_number'] as String?,
-      createdAt: json['created_at'] as String?,
-      updatedAt: json['updated_at'] as String?,
-    );
+  id: json['id'] as String,
+  name: json['name'] as String,
+  type: json['type'] as String?,
+  subType: json['sub_type'] as String?,
+  address: json['address'] as String?,
+  city: json['city'] as String?,
+  region: json['region'] as String?,
+  country: json['country'] as String?,
+  supportEmail: json['support_email'] as String?,
+  supportPhone: json['support_phone'] as String?,
+  websiteUrl: json['website_url'] as String?,
+  idType: json['id_type'] as String?,
+  idNumber: json['id_number'] as String?,
+  createdAt: json['created_at'] as String?,
+  updatedAt: json['updated_at'] as String?,
+);
 
 Map<String, dynamic> _$ClientModelToJson(ClientModel instance) =>
     <String, dynamic>{

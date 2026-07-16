@@ -31,13 +31,17 @@ class PropertyApi extends AbstractApi {
     List<String>? ids,
     String? order,
     String? orderBy,
+    String? status,
+    String? search,
   }) async {
-    final query = <String, String>{
-      'page': '$page',
-      'page_size': '$pageSize',
-    };
+    final query = <String, String>{'page': '$page', 'page_size': '$pageSize'};
     if (order != null) query['order'] = order;
     if (orderBy != null) query['order_by'] = orderBy;
+    if (status != null) query['status'] = status;
+    if (search != null && search.isNotEmpty) {
+      query['query'] = search;
+      query['search_fields'] = 'name';
+    }
 
     final queryString = Uri(
       queryParameters: {

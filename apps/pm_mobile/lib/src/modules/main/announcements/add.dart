@@ -14,11 +14,27 @@ const _kPriorityTones = {
   'Urgent': RLTone.danger,
 };
 
-const _kStartDates = ['Jun 6, 2026', 'Jun 7, 2026', 'Jun 8, 2026', 'Jun 10, 2026'];
+const _kStartDates = [
+  'Jun 6, 2026',
+  'Jun 7, 2026',
+  'Jun 8, 2026',
+  'Jun 10, 2026',
+];
 const _kStartTimes = ['9:00 AM', '12:00 PM', '6:00 PM', '11:01 PM'];
-const _kEndDates   = ['No expiry', 'Jun 13, 2026', 'Jun 30, 2026', 'Jul 31, 2026'];
-const _kEndTimes   = ['9:00 AM', '12:00 PM', '6:00 PM', '11:59 PM'];
-const _kAudience   = ['Block A', 'Block B', 'Unit 4B', 'Unit 5A', 'Specific tenants'];
+const _kEndDates = [
+  'No expiry',
+  'Jun 13, 2026',
+  'Jun 30, 2026',
+  'Jul 31, 2026',
+];
+const _kEndTimes = ['9:00 AM', '12:00 PM', '6:00 PM', '11:59 PM'];
+const _kAudience = [
+  'Block A',
+  'Block B',
+  'Unit 4B',
+  'Unit 5A',
+  'Specific tenants',
+];
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
@@ -30,16 +46,16 @@ class AddAnnouncementScreen extends StatefulWidget {
 }
 
 class _AddAnnouncementScreenState extends State<AddAnnouncementScreen> {
-  final _titleCtrl   = TextEditingController();
+  final _titleCtrl = TextEditingController();
   final _contentCtrl = TextEditingController();
-  String _type        = 'Community';
-  String _priority    = 'Normal';
-  bool   _entire      = true;
-  String _audience    = '';
-  String _startDate   = 'Jun 6, 2026';
-  String _startTime   = '11:01 PM';
-  String _endDate     = 'No expiry';
-  String _endTime     = '';
+  String _type = 'Community';
+  String _priority = 'Normal';
+  bool _entire = true;
+  String _audience = '';
+  String _startDate = 'Jun 6, 2026';
+  String _startTime = '11:01 PM';
+  String _endDate = 'No expiry';
+  String _endTime = '';
   String? _activePicker;
 
   @override
@@ -60,13 +76,20 @@ class _AddAnnouncementScreenState extends State<AddAnnouncementScreen> {
     Haptics.vibrate(HapticsType.selection);
     setState(() {
       switch (key) {
-        case 'type':      _type = value;
-        case 'priority':  _priority = value;
-        case 'startDate': _startDate = value;
-        case 'startTime': _startTime = value;
-        case 'endDate':   _endDate = value;
-        case 'endTime':   _endTime = value;
-        case 'audience':  _audience = value;
+        case 'type':
+          _type = value;
+        case 'priority':
+          _priority = value;
+        case 'startDate':
+          _startDate = value;
+        case 'startTime':
+          _startTime = value;
+        case 'endDate':
+          _endDate = value;
+        case 'endTime':
+          _endTime = value;
+        case 'audience':
+          _audience = value;
       }
       _activePicker = null;
     });
@@ -75,7 +98,7 @@ class _AddAnnouncementScreenState extends State<AddAnnouncementScreen> {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).padding.bottom;
-    final titleLen   = _titleCtrl.text.length;
+    final titleLen = _titleCtrl.text.length;
     final contentLen = _contentCtrl.text.length;
 
     return Scaffold(
@@ -288,8 +311,7 @@ class _AddAnnouncementScreenState extends State<AddAnnouncementScreen> {
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     const Text(
                                       'Entire property',
@@ -310,8 +332,7 @@ class _AddAnnouncementScreenState extends State<AddAnnouncementScreen> {
                                           height: 1.4,
                                         ),
                                         children: [
-                                          TextSpan(
-                                              text: 'All tenants in '),
+                                          TextSpan(text: 'All tenants in '),
                                           TextSpan(
                                             text: "Domey's Residence",
                                             style: TextStyle(
@@ -319,8 +340,7 @@ class _AddAnnouncementScreenState extends State<AddAnnouncementScreen> {
                                               color: RLTokens.inkSoft,
                                             ),
                                           ),
-                                          TextSpan(
-                                              text: ' will be notified.'),
+                                          TextSpan(text: ' will be notified.'),
                                         ],
                                       ),
                                     ),
@@ -431,8 +451,11 @@ class _AddAnnouncementScreenState extends State<AddAnnouncementScreen> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: const [
-                                Icon(Icons.delete_outline_rounded,
-                                    size: 16, color: RLTokens.crimson),
+                                Icon(
+                                  Icons.delete_outline_rounded,
+                                  size: 16,
+                                  color: RLTokens.crimson,
+                                ),
                                 SizedBox(width: 7),
                                 Text(
                                   'Discard',
@@ -461,12 +484,10 @@ class _AddAnnouncementScreenState extends State<AddAnnouncementScreen> {
             right: 0,
             bottom: 0,
             child: Container(
-              padding: EdgeInsets.fromLTRB(
-                  20, 12, 20, 12 + bottomInset),
+              padding: EdgeInsets.fromLTRB(20, 12, 20, 12 + bottomInset),
               decoration: BoxDecoration(
                 color: RLTokens.surface,
-                border: const Border(
-                    top: BorderSide(color: RLTokens.hairline)),
+                border: const Border(top: BorderSide(color: RLTokens.hairline)),
                 boxShadow: RLTokens.elevBar,
               ),
               child: Row(
@@ -496,9 +517,7 @@ class _AddAnnouncementScreenState extends State<AddAnnouncementScreen> {
           if (_activePicker == 'type')
             _PickerSheet(
               title: 'Type',
-              options: _kTypes
-                  .map((l) => _PickerOption(label: l))
-                  .toList(),
+              options: _kTypes.map((l) => _PickerOption(label: l)).toList(),
               selected: _type,
               onPick: (v) => _pick('type', v),
               onClose: _closePicker,
@@ -536,9 +555,7 @@ class _AddAnnouncementScreenState extends State<AddAnnouncementScreen> {
           if (_activePicker == 'endDate')
             _PickerSheet(
               title: 'End date',
-              options: _kEndDates
-                  .map((l) => _PickerOption(label: l))
-                  .toList(),
+              options: _kEndDates.map((l) => _PickerOption(label: l)).toList(),
               selected: _endDate,
               onPick: (v) => _pick('endDate', v),
               onClose: _closePicker,
@@ -546,9 +563,7 @@ class _AddAnnouncementScreenState extends State<AddAnnouncementScreen> {
           if (_activePicker == 'endTime')
             _PickerSheet(
               title: 'End time',
-              options: _kEndTimes
-                  .map((l) => _PickerOption(label: l))
-                  .toList(),
+              options: _kEndTimes.map((l) => _PickerOption(label: l)).toList(),
               selected: _endTime,
               onPick: (v) => _pick('endTime', v),
               onClose: _closePicker,
@@ -556,9 +571,7 @@ class _AddAnnouncementScreenState extends State<AddAnnouncementScreen> {
           if (_activePicker == 'audience')
             _PickerSheet(
               title: 'Audience',
-              options: _kAudience
-                  .map((l) => _PickerOption(label: l))
-                  .toList(),
+              options: _kAudience.map((l) => _PickerOption(label: l)).toList(),
               selected: _audience,
               onPick: (v) => _pick('audience', v),
               onClose: _closePicker,
@@ -683,9 +696,7 @@ class _SelectField extends StatelessWidget {
                 style: TextStyle(
                   fontFamily: RLTokens.fontSans,
                   fontSize: 15,
-                  color: value.isEmpty
-                      ? RLTokens.mutedSoft
-                      : RLTokens.ink,
+                  color: value.isEmpty ? RLTokens.mutedSoft : RLTokens.ink,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -732,7 +743,7 @@ class _InputField extends StatelessWidget {
         onChanged: onChanged,
         buildCounter: maxLength != null
             ? (_, {required currentLength, required isFocused, maxLength}) =>
-                const SizedBox.shrink()
+                  const SizedBox.shrink()
             : null,
         style: const TextStyle(
           fontFamily: RLTokens.fontSans,
@@ -845,12 +856,13 @@ class _PickerSheet extends StatelessWidget {
               decoration: const BoxDecoration(
                 color: RLTokens.surface,
                 borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(RLTokens.rXl)),
+                  top: Radius.circular(RLTokens.rXl),
+                ),
                 boxShadow: RLTokens.elevSheet,
               ),
               constraints: BoxConstraints(
-                  maxHeight:
-                      MediaQuery.of(context).size.height * 0.8),
+                maxHeight: MediaQuery.of(context).size.height * 0.8,
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -889,8 +901,7 @@ class _PickerSheet extends StatelessWidget {
                   ),
                   Flexible(
                     child: SingleChildScrollView(
-                      padding:
-                          const EdgeInsets.fromLTRB(14, 4, 14, 30),
+                      padding: const EdgeInsets.fromLTRB(14, 4, 14, 30),
                       child: Column(
                         children: options.asMap().entries.map((e) {
                           final i = e.key;
@@ -902,14 +913,17 @@ class _PickerSheet extends StatelessWidget {
                             behavior: HitTestBehavior.opaque,
                             child: Container(
                               padding: const EdgeInsets.symmetric(
-                                  vertical: 13, horizontal: 8),
+                                vertical: 13,
+                                horizontal: 8,
+                              ),
                               decoration: BoxDecoration(
                                 border: isLast
                                     ? null
                                     : const Border(
                                         bottom: BorderSide(
-                                            color:
-                                                RLTokens.hairlineSoft)),
+                                          color: RLTokens.hairlineSoft,
+                                        ),
+                                      ),
                               ),
                               child: Row(
                                 children: [
@@ -931,9 +945,11 @@ class _PickerSheet extends StatelessWidget {
                                     ),
                                   ),
                                   if (isSelected)
-                                    const Icon(Icons.check_rounded,
-                                        size: 18,
-                                        color: RLTokens.crimson),
+                                    const Icon(
+                                      Icons.check_rounded,
+                                      size: 18,
+                                      color: RLTokens.crimson,
+                                    ),
                                 ],
                               ),
                             ),

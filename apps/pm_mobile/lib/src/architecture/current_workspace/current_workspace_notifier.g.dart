@@ -13,14 +13,14 @@ String _$currentWorkspaceNotifierHash() =>
 @ProviderFor(CurrentWorkspaceNotifier)
 final currentWorkspaceNotifierProvider =
     NotifierProvider<CurrentWorkspaceNotifier, ClientUserModel?>.internal(
-  CurrentWorkspaceNotifier.new,
-  name: r'currentWorkspaceNotifierProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$currentWorkspaceNotifierHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+      CurrentWorkspaceNotifier.new,
+      name: r'currentWorkspaceNotifierProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$currentWorkspaceNotifierHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
 
 typedef _$CurrentWorkspaceNotifier = Notifier<ClientUserModel?>;
 // ignore_for_file: type=lint

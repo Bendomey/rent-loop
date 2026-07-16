@@ -22,17 +22,62 @@ class _TenantData {
   final String unit;
   final String phone;
   final String status;
-  final int    balance;
+  final int balance;
   final String since;
-  final int    rent;
+  final int rent;
 }
 
 const _kTenants = [
-  _TenantData(id: 't1', name: 'Kwame Mensah', unit: 'Unit 4B · Cantonments Court', phone: '+233 24 558 1190', status: 'Active',  balance: 0,    since: 'Mar 2024', rent: 4200),
-  _TenantData(id: 't2', name: 'Ama Boateng',  unit: 'Unit 5A · Cantonments Court', phone: '+233 20 771 4402', status: 'Active',  balance: 4200, since: 'Jan 2025', rent: 4200),
-  _TenantData(id: 't3', name: 'Yaw Asante',   unit: 'Unit 3B · Cantonments Court', phone: '+233 55 309 8821', status: 'Active',  balance: 0,    since: 'Aug 2023', rent: 5500),
-  _TenantData(id: 't4', name: 'Efua Sarpong', unit: 'Unit 7 · Spintex Heights',    phone: '+233 27 644 1180', status: 'Active',  balance: 1500, since: 'Nov 2024', rent: 3500),
-  _TenantData(id: 't5', name: 'Kojo Antwi',   unit: 'Shop 2 · Osu Retail Block',   phone: '+233 24 902 3318', status: 'Expired', balance: 0,    since: 'Feb 2022', rent: 6000),
+  _TenantData(
+    id: 't1',
+    name: 'Kwame Mensah',
+    unit: 'Unit 4B · Cantonments Court',
+    phone: '+233 24 558 1190',
+    status: 'Active',
+    balance: 0,
+    since: 'Mar 2024',
+    rent: 4200,
+  ),
+  _TenantData(
+    id: 't2',
+    name: 'Ama Boateng',
+    unit: 'Unit 5A · Cantonments Court',
+    phone: '+233 20 771 4402',
+    status: 'Active',
+    balance: 4200,
+    since: 'Jan 2025',
+    rent: 4200,
+  ),
+  _TenantData(
+    id: 't3',
+    name: 'Yaw Asante',
+    unit: 'Unit 3B · Cantonments Court',
+    phone: '+233 55 309 8821',
+    status: 'Active',
+    balance: 0,
+    since: 'Aug 2023',
+    rent: 5500,
+  ),
+  _TenantData(
+    id: 't4',
+    name: 'Efua Sarpong',
+    unit: 'Unit 7 · Spintex Heights',
+    phone: '+233 27 644 1180',
+    status: 'Active',
+    balance: 1500,
+    since: 'Nov 2024',
+    rent: 3500,
+  ),
+  _TenantData(
+    id: 't5',
+    name: 'Kojo Antwi',
+    unit: 'Shop 2 · Osu Retail Block',
+    phone: '+233 24 902 3318',
+    status: 'Expired',
+    balance: 0,
+    since: 'Feb 2022',
+    rent: 6000,
+  ),
 ];
 
 // ── Screen ────────────────────────────────────────────────────────────────────
@@ -75,13 +120,21 @@ class _TenantsScreenState extends State<TenantsScreen> {
           ),
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(RLTokens.gutter, 0, RLTokens.gutter, 40),
+              padding: const EdgeInsets.fromLTRB(
+                RLTokens.gutter,
+                0,
+                RLTokens.gutter,
+                40,
+              ),
               children: [
                 const SizedBox(height: 10),
 
                 // Search bar
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 11,
+                  ),
                   decoration: BoxDecoration(
                     color: RLTokens.fill,
                     borderRadius: BorderRadius.circular(12),
@@ -89,7 +142,11 @@ class _TenantsScreenState extends State<TenantsScreen> {
                   ),
                   child: const Row(
                     children: [
-                      Icon(Icons.search_rounded, size: 18, color: RLTokens.mutedSoft),
+                      Icon(
+                        Icons.search_rounded,
+                        size: 18,
+                        color: RLTokens.mutedSoft,
+                      ),
                       SizedBox(width: 10),
                       Text(
                         'Search by name, phone, email',
@@ -119,11 +176,18 @@ class _TenantsScreenState extends State<TenantsScreen> {
                             setState(() => _filter = f);
                           },
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 7,
+                            ),
                             decoration: BoxDecoration(
                               color: active ? RLTokens.ink : RLTokens.fill,
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: active ? RLTokens.ink : RLTokens.hairline),
+                              border: Border.all(
+                                color: active
+                                    ? RLTokens.ink
+                                    : RLTokens.hairline,
+                              ),
                             ),
                             child: Text(
                               f,
@@ -142,7 +206,9 @@ class _TenantsScreenState extends State<TenantsScreen> {
                 ),
 
                 // Count label
-                RLLabel('${tenants.length} tenant${tenants.length == 1 ? '' : 's'}'),
+                RLLabel(
+                  '${tenants.length} tenant${tenants.length == 1 ? '' : 's'}',
+                ),
 
                 // Tenant list card
                 Container(
@@ -154,7 +220,7 @@ class _TenantsScreenState extends State<TenantsScreen> {
                   ),
                   child: Column(
                     children: List.generate(tenants.length, (i) {
-                      final t      = tenants[i];
+                      final t = tenants[i];
                       final isLast = i == tenants.length - 1;
                       return RLRow(
                         leading: RLAvatar(t.name, size: 44),
@@ -175,7 +241,8 @@ class _TenantsScreenState extends State<TenantsScreen> {
                             : RLPill(t.status, tone: statusTone(t.status)),
                         onTap: () async {
                           await Haptics.vibrate(HapticsType.selection);
-                          if (context.mounted) context.push('/more/tenants/${t.id}');
+                          if (context.mounted)
+                            context.push('/more/tenants/${t.id}');
                         },
                       );
                     }),

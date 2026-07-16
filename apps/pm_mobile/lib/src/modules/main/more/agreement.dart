@@ -14,40 +14,53 @@ class _Section {
 const _kLegalBody = [
   _Section(p: 'Effective Date: April 3, 2026 · Version: 1.0'),
   _Section(
-      p: 'This Property Owner Agreement ("Agreement") is entered into between RentLoop ("RentLoop", "we", "our", "us") and the property owner, property manager, or agent registering on the RentLoop platform ("User", "Landlord", "you").'),
+    p: 'This Property Owner Agreement ("Agreement") is entered into between RentLoop ("RentLoop", "we", "our", "us") and the property owner, property manager, or agent registering on the RentLoop platform ("User", "Landlord", "you").',
+  ),
   _Section(
-      p: 'By creating an account, clicking "I Agree", or using the RentLoop platform, you agree to be bound by this Agreement.'),
+    p: 'By creating an account, clicking "I Agree", or using the RentLoop platform, you agree to be bound by this Agreement.',
+  ),
   _Section(
-      h2: '1. About RentLoop',
-      p: 'RentLoop is a software platform that provides tools for property owners and managers to manage rental properties, tenants, leases, invoices, maintenance, and related rental operations.'),
+    h2: '1. About RentLoop',
+    p: 'RentLoop is a software platform that provides tools for property owners and managers to manage rental properties, tenants, leases, invoices, maintenance, and related rental operations.',
+  ),
   _Section(
-      p: 'RentLoop is not a real-estate broker, landlord, property manager, or party to any lease or tenancy agreement between you and your tenants. We provide software only.'),
+    p: 'RentLoop is not a real-estate broker, landlord, property manager, or party to any lease or tenancy agreement between you and your tenants. We provide software only.',
+  ),
   _Section(
-      h2: '2. Your Account',
-      p: 'You are responsible for the accuracy of the information you provide, for maintaining the confidentiality of your login credentials, and for all activity that occurs under your account.'),
+    h2: '2. Your Account',
+    p: 'You are responsible for the accuracy of the information you provide, for maintaining the confidentiality of your login credentials, and for all activity that occurs under your account.',
+  ),
   _Section(
-      h2: '3. Your Responsibilities',
-      p: 'You are solely responsible for your compliance with all applicable laws, including tenancy, housing, tax, and data-protection laws in your jurisdiction. You are responsible for the lawfulness of every lease, invoice, and notice you create using RentLoop.'),
+    h2: '3. Your Responsibilities',
+    p: 'You are solely responsible for your compliance with all applicable laws, including tenancy, housing, tax, and data-protection laws in your jurisdiction. You are responsible for the lawfulness of every lease, invoice, and notice you create using RentLoop.',
+  ),
   _Section(
-      h2: '4. Fees & Billing',
-      p: 'Use of certain features may require a paid subscription. Fees are billed in advance and are non-refundable except where required by law. We may change our fees with reasonable notice.'),
+    h2: '4. Fees & Billing',
+    p: 'Use of certain features may require a paid subscription. Fees are billed in advance and are non-refundable except where required by law. We may change our fees with reasonable notice.',
+  ),
   _Section(
-      h2: '5. Data & Privacy',
-      p: 'We process personal data in line with our Privacy Policy. You confirm you have the right to upload any tenant or third-party information you add to the platform.'),
+    h2: '5. Data & Privacy',
+    p: 'We process personal data in line with our Privacy Policy. You confirm you have the right to upload any tenant or third-party information you add to the platform.',
+  ),
   _Section(
-      h2: '6. Limitation of Liability',
-      p: 'To the maximum extent permitted by law, RentLoop is not liable for any indirect, incidental, or consequential damages, or for any loss of profits, revenue, or data arising from your use of the platform.'),
+    h2: '6. Limitation of Liability',
+    p: 'To the maximum extent permitted by law, RentLoop is not liable for any indirect, incidental, or consequential damages, or for any loss of profits, revenue, or data arising from your use of the platform.',
+  ),
   _Section(
-      h2: '7. Termination',
-      p: 'You may stop using RentLoop at any time. We may suspend or terminate your access if you breach this Agreement or use the platform unlawfully. You may export your data before termination.'),
+    h2: '7. Termination',
+    p: 'You may stop using RentLoop at any time. We may suspend or terminate your access if you breach this Agreement or use the platform unlawfully. You may export your data before termination.',
+  ),
   _Section(
-      h2: '8. Changes to this Agreement',
-      p: 'We may publish new or updated versions of this Agreement. When we do, you will be asked to review and accept the new version before continuing to use the platform.'),
+    h2: '8. Changes to this Agreement',
+    p: 'We may publish new or updated versions of this Agreement. When we do, you will be asked to review and accept the new version before continuing to use the platform.',
+  ),
   _Section(
-      h2: '9. Contact',
-      p: 'Questions about this Agreement can be sent to legal@rentloopapp.com.'),
+    h2: '9. Contact',
+    p: 'Questions about this Agreement can be sent to legal@rentloopapp.com.',
+  ),
   _Section(
-      p: 'By clicking "I Agree" you confirm that you have read, understood, and agree to be bound by this Agreement.'),
+    p: 'By clicking "I Agree" you confirm that you have read, understood, and agree to be bound by this Agreement.',
+  ),
 ];
 
 // ── Screen ────────────────────────────────────────────────────────────────────
@@ -107,8 +120,7 @@ class _AgreementScreenState extends State<AgreementScreen> {
                     version: 'v1.0',
                     effective: 'April 3, 2026',
                     accepted: _landlordAccepted,
-                    onAccept: () =>
-                        setState(() => _landlordAccepted = true),
+                    onAccept: () => setState(() => _landlordAccepted = true),
                   ),
                   const SizedBox(height: 12),
                   _AgreementCard(
@@ -233,10 +245,11 @@ class _AgreementCardState extends State<_AgreementCard> {
                             const SizedBox(width: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 1),
+                                horizontal: 6,
+                                vertical: 1,
+                              ),
                               decoration: BoxDecoration(
-                                border: Border.all(
-                                    color: RLTokens.hairline),
+                                border: Border.all(color: RLTokens.hairline),
                                 borderRadius: BorderRadius.circular(5),
                               ),
                               child: Text(
@@ -266,8 +279,11 @@ class _AgreementCardState extends State<_AgreementCard> {
                   const SizedBox(width: 10),
                   // Accepted pill or chevron
                   if (widget.accepted)
-                    const RLPill('✓ Accepted',
-                        tone: RLTone.success, large: true)
+                    const RLPill(
+                      '✓ Accepted',
+                      tone: RLTone.success,
+                      large: true,
+                    )
                   else
                     Icon(
                       _open
@@ -290,7 +306,8 @@ class _AgreementCardState extends State<_AgreementCard> {
                 color: RLTokens.fill,
                 borderRadius: BorderRadius.circular(RLTokens.rMd),
                 border: const Border(
-                    top: BorderSide(color: RLTokens.hairlineSoft)),
+                  top: BorderSide(color: RLTokens.hairlineSoft),
+                ),
               ),
               constraints: const BoxConstraints(maxHeight: 320),
               child: SingleChildScrollView(
@@ -341,35 +358,37 @@ class _AgreementBody extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 14),
-        ..._kLegalBody.map((s) => Padding(
-              padding: const EdgeInsets.only(bottom: 14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (s.h2 != null) ...[
-                    Text(
-                      s.h2!,
-                      style: const TextStyle(
-                        fontFamily: RLTokens.fontSans,
-                        fontSize: 15,
-                        fontWeight: RLTokens.bold,
-                        color: RLTokens.ink,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                  ],
+        ..._kLegalBody.map(
+          (s) => Padding(
+            padding: const EdgeInsets.only(bottom: 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (s.h2 != null) ...[
                   Text(
-                    s.p,
+                    s.h2!,
                     style: const TextStyle(
                       fontFamily: RLTokens.fontSans,
-                      fontSize: 13.5,
-                      color: RLTokens.inkSoft,
-                      height: 1.6,
+                      fontSize: 15,
+                      fontWeight: RLTokens.bold,
+                      color: RLTokens.ink,
                     ),
                   ),
+                  const SizedBox(height: 6),
                 ],
-              ),
-            )),
+                Text(
+                  s.p,
+                  style: const TextStyle(
+                    fontFamily: RLTokens.fontSans,
+                    fontSize: 13.5,
+                    color: RLTokens.inkSoft,
+                    height: 1.6,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -383,8 +402,7 @@ class _AcceptedStamp extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: const [
-        Icon(Icons.push_pin_outlined,
-            size: 16, color: RLTokens.success),
+        Icon(Icons.push_pin_outlined, size: 16, color: RLTokens.success),
         SizedBox(width: 8),
         Text(
           'Accepted on Apr 3, 2026',
@@ -415,8 +433,11 @@ class _AcceptZone extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: const [
-              Icon(Icons.keyboard_arrow_down_rounded,
-                  size: 14, color: RLTokens.mutedSoft),
+              Icon(
+                Icons.keyboard_arrow_down_rounded,
+                size: 14,
+                color: RLTokens.mutedSoft,
+              ),
               SizedBox(width: 7),
               Text(
                 'Scroll to the end to continue',
@@ -444,8 +465,11 @@ class _AcceptZone extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (reachedEnd) ...[
-                  const Icon(Icons.check_rounded,
-                      size: 18, color: Colors.white),
+                  const Icon(
+                    Icons.check_rounded,
+                    size: 18,
+                    color: Colors.white,
+                  ),
                   const SizedBox(width: 8),
                 ],
                 Text(
@@ -454,8 +478,7 @@ class _AcceptZone extends StatelessWidget {
                     fontFamily: RLTokens.fontSans,
                     fontSize: 15,
                     fontWeight: RLTokens.semibold,
-                    color:
-                        reachedEnd ? Colors.white : RLTokens.mutedSoft,
+                    color: reachedEnd ? Colors.white : RLTokens.mutedSoft,
                   ),
                 ),
               ],

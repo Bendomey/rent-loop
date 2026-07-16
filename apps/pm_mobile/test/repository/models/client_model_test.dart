@@ -34,12 +34,15 @@ void main() {
     expect(model.toJson()['id_type'], 'NATIONAL_ID');
   });
 
-  test('ClientModel.fromJson defaults id_type/id_number to null when absent', () {
-    final json = {'id': 'client-1', 'name': 'Acme Corp'};
+  test(
+    'ClientModel.fromJson defaults id_type/id_number to null when absent',
+    () {
+      final json = {'id': 'client-1', 'name': 'Acme Corp'};
 
-    final model = ClientModel.fromJson(json);
+      final model = ClientModel.fromJson(json);
 
-    expect(model.idType, isNull);
-    expect(model.idNumber, isNull);
-  });
+      expect(model.idType, isNull);
+      expect(model.idNumber, isNull);
+    },
+  );
 }

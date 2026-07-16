@@ -11,6 +11,7 @@
 - **Entry point:** `lib/src/api/root.dart` — `AbstractApi` base class
 - **Key classes:** `AbstractApi` (`execute()`: GET/POST/PATCH/DELETE, attaches `Authorization: Bearer <token>` unless `authRequired: false`, throws `ApiException` on ≥400), `ApiException` (parses `json['errors']['message']`, `null`-safe on malformed bodies)
 - `user_api.dart` — `UserApi extends AbstractApi`: `login({email, password})` (unauthenticated, `POST /api/v1/admin/users/login`, returns `UserLoginResult{token, user}`), `getMe()` (authenticated, `GET /api/v1/admin/users/me`, returns `UserModel`)
+- `property_api.dart` — `PropertyApi extends AbstractApi`: `getProperties({clientId, page, pageSize, ids, order, orderBy, status, search})` (`GET /api/v1/admin/clients/{client_id}/properties`, returns `PropertiesPage{rows: List<PropertyModel>, meta: PaginationMetaModel}`); `status` is the full dotted enum value (e.g. `Property.Status.Active`), `search` maps to `query`+`search_fields=name`
 
 ### architecture/
 - **Entry point:** `lib/src/architecture/app_startup/app_startup_notifier.dart` (replaced the old hand-written mock at `architecture/app_startup.dart`, now deleted)
@@ -33,6 +34,7 @@
 - `workspace_id_manager.dart` — `WorkspaceIdManager`: same shape, key `rentloop_manager.current_client_id`
 - `workspace_resolution.dart` — `isActiveClientUser(ClientUserModel)` (last-dot-segment case-insensitive match against `"active"`, e.g. `"ClientUser.Status.Active"` → `"active"` — deliberately not a substring `contains` check, which would misclassify `"Inactive"`), `resolveWorkspace(clientUsers, {storedClientId})` (auto-selects on exactly one active membership, or a stored id matching an active one; else `null`)
 - `api_error_messages.dart` — `translateApiErrorMessage({errorMessage, defaultErrorMessage})`; currently default-case-only (no confirmed API error codes yet), mirrors `apps/go`'s pattern of adding specific cases as they're discovered
+- `property_status.dart` — `propertyStatusLabel(status)` (last-dot-segment, mirrors `workspace_resolution.dart`'s convention), `propertyTypeLabel(type)` (`SINGLE`/`MULTI` → display label)
 
 ### navigation/
 - `routes.dart` — `buildRoutes(ref)`: internal `_RouterNotifier` (`ChangeNotifier`) listens to `appStartupNotifierProvider` (renamed from the old `appStartupProvider`) and calls `notifyListeners()` on change, wired as GoRouter's `refreshListenable`. Redirect `switch` on `AppStartupStatus`: `loading`/`error` → `/splash`, `unauthenticated` → `/auth/welcome`, `workspaceSelect` → `/auth/workspace-select`, `ready` → `/` (main shell)
@@ -48,6 +50,7 @@
 - `api_state.dart` — `ApiStatus { idle, pending, success, failed }` (with `isLoading()`/`isSuccess()`/`isFailed()`), `ApiState { status, errorMessage }`
 - `models/user_model.dart`, `client_user_model.dart`, `client_model.dart` — `@JsonSerializable` DTOs matching the confirmed live API schema (`UserModel.clientUsers` defaults to `[]` when the `client_users` key is absent, not throw)
 - `notifiers/auth/login_notifier.dart` — `LoginNotifier` (`LoginState extends ApiState`): `submit({email, password})` runs `UserApi.login()` → `TokenManager.save()` → `AppStartupNotifier.completeLogin()` → success, all in one try/catch (`ApiException` → translated message, other errors → default message); `reset()` returns to a clean idle state, called only from the login screen's error-dismiss handler
+- `notifiers/properties/properties_notifier.dart` — `PropertiesNotifier` (`PropertiesState{items, total, hasNextPage, currentPage, isLoadingMore, isLoading, error}`): `loadFirstPage(PropertiesQuery{search, status})` resets to page 1, `loadNextPage()` appends page N+1 (pageSize 10) — the first paginated-list notifier in this app, modeled on `apps/go`'s `MaintenanceRequestsNotifier`
 
 ### modules/main/
 Five `StatefulShellRoute` tab branches — `home`, `properties`, `activity`, `money`, `more` — each with a `root.dart` plus feature-specific add/detail/settings files. `tenants/` and `announcements/` are reachable via nested routes off `more/` and the main shell respectively.
@@ -56,13 +59,14 @@ Real (wired to `currentUserNotifierProvider`/`currentWorkspaceNotifierProvider`)
 - `home/root.dart` — `_TopHeader`'s workspace-name eyebrow and manager avatar. The rest of the screen (revenue card, stat grid, needs-attention, collection trend, quick actions) is still mocked.
 - `more/root.dart` — `_ProfileCard` (name/email) and `_WorkspaceCard` (workspace name/role — the previously-fabricated `properties · units` stat was dropped, since that data isn't in the API response). Logout button calls `appStartupNotifierProvider.notifier.logout()`.
 - `workspace_sheet.dart` — the in-shell workspace switcher (`showWorkspaceSheet(context)`, opened from Home's eyebrow and More's workspace card — note the signature dropped its old `activeId` param, since the sheet now reads the active workspace off the provider itself). Lists `client_users`; tapping an active one calls `currentWorkspaceNotifierProvider.notifier.select()`; inactive ones are dimmed/non-tappable, same convention as `workspace_select/root.dart`.
+- `properties/root.dart` — the list screen is real: `propertiesNotifierProvider`-backed infinite scroll (10/page), pull-to-refresh, debounced search, status filter chips. `detail.dart`/`add.dart`/`edit_sheets.dart`/`settings/` remain mocked (independent private mock data, not shared with `root.dart`).
 
-Still fully mocked: `properties/`, `tenants/`, `activity/`, `money/`, `announcements/`, and everything else under `more/` (members, payment accounts, documents, agreement, billing, settings).
+Still fully mocked: `properties/detail.dart`/`add.dart`/`edit_sheets.dart`/`settings/`, `tenants/`, `activity/`, `money/`, `announcements/`, and everything else under `more/` (members, payment accounts, documents, agreement, billing, settings).
 
 ### shared/
 - `theme.dart` — Material3 `ThemeData` builder
 - `tokens.dart` — `RLTokens` design constants (colors, fonts, weights) used across splash/auth/screens; also `statusTone(String)` (maps a display status string to an `RLTone`) and `RLTone` enum, reused by both `workspace_select/root.dart` and `workspace_sheet.dart` for the active/inactive membership treatment
-- `widgets.dart`, `dialogs.dart`, `toast.dart` — reusable UI primitives
+- `widgets.dart`, `dialogs.dart`, `toast.dart` — reusable UI primitives. `RLSearchBar` now optionally takes `controller`/`onChanged` to become a real editable search field (`properties/root.dart` is the first consumer) — omitting `controller` keeps the original tap-only rendering (`more/members.dart`'s usage is unaffected)
 - `coming_soon.dart` — placeholder screen for unbuilt features
 
 ## Configuration

@@ -29,7 +29,9 @@ class _WorkspaceSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final clientUsers =
         ref.watch(currentUserNotifierProvider)?.clientUsers ?? const [];
-    final activeClientId = ref.watch(currentWorkspaceNotifierProvider)?.clientId;
+    final activeClientId = ref
+        .watch(currentWorkspaceNotifierProvider)
+        ?.clientId;
 
     return Container(
       decoration: const BoxDecoration(
@@ -80,7 +82,11 @@ class _WorkspaceSheet extends ConsumerWidget {
                         color: RLTokens.fill,
                         borderRadius: BorderRadius.circular(RLTokens.rSm),
                       ),
-                      child: const Icon(Icons.close, size: 17, color: RLTokens.inkSoft),
+                      child: const Icon(
+                        Icons.close,
+                        size: 17,
+                        color: RLTokens.inkSoft,
+                      ),
                     ),
                   ),
                 ],
@@ -106,19 +112,30 @@ class _WorkspaceSheet extends ConsumerWidget {
                           ? () async {
                               await Haptics.vibrate(HapticsType.selection);
                               await ref
-                                  .read(currentWorkspaceNotifierProvider.notifier)
+                                  .read(
+                                    currentWorkspaceNotifierProvider.notifier,
+                                  )
                                   .select(cu);
-                              await Future.delayed(const Duration(milliseconds: 180));
+                              await Future.delayed(
+                                const Duration(milliseconds: 180),
+                              );
                               if (context.mounted) Navigator.of(context).pop();
                             }
                           : null,
                       behavior: HitTestBehavior.opaque,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 12,
+                        ),
                         decoration: BoxDecoration(
-                          border: last ? null : Border(
-                            bottom: BorderSide(color: RLTokens.hairlineSoft),
-                          ),
+                          border: last
+                              ? null
+                              : Border(
+                                  bottom: BorderSide(
+                                    color: RLTokens.hairlineSoft,
+                                  ),
+                                ),
                         ),
                         child: Row(
                           children: [
@@ -161,14 +178,21 @@ class _WorkspaceSheet extends ConsumerWidget {
                                       color: RLTokens.crimson,
                                       shape: BoxShape.circle,
                                     ),
-                                    child: const Icon(Icons.check, size: 14, color: Colors.white),
+                                    child: const Icon(
+                                      Icons.check,
+                                      size: 14,
+                                      color: Colors.white,
+                                    ),
                                   )
                                 : Container(
                                     width: 24,
                                     height: 24,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      border: Border.all(color: RLTokens.hairline, width: 1.5),
+                                      border: Border.all(
+                                        color: RLTokens.hairline,
+                                        width: 1.5,
+                                      ),
                                     ),
                                   ),
                           ],
@@ -186,8 +210,12 @@ class _WorkspaceSheet extends ConsumerWidget {
               child: GestureDetector(
                 onTap: () async {
                   await Haptics.vibrate(HapticsType.selection);
-                  final url = applyUrl(campaign: 'workspace_sheet', content: 'create_workspace');
-                  if (await canLaunchUrl(url)) await launchUrl(url, mode: LaunchMode.externalApplication);
+                  final url = applyUrl(
+                    campaign: 'workspace_sheet',
+                    content: 'create_workspace',
+                  );
+                  if (await canLaunchUrl(url))
+                    await launchUrl(url, mode: LaunchMode.externalApplication);
                 },
                 child: Container(
                   width: double.infinity,

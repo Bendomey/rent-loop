@@ -13,14 +13,14 @@ String _$workspaceIdManagerHash() =>
 @ProviderFor(workspaceIdManager)
 final workspaceIdManagerProvider =
     AutoDisposeProvider<WorkspaceIdManager>.internal(
-  workspaceIdManager,
-  name: r'workspaceIdManagerProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$workspaceIdManagerHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+      workspaceIdManager,
+      name: r'workspaceIdManagerProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$workspaceIdManagerHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
 
 typedef WorkspaceIdManagerRef = AutoDisposeProviderRef<WorkspaceIdManager>;
 // ignore_for_file: type=lint
