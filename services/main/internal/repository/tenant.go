@@ -92,8 +92,8 @@ func (r *tenantRepository) GetOneByProperty(
 	db := r.DB.WithContext(ctx).
 		Scopes(propertyTenantsWithStatusScope(&propertyIDs, nil, nil)).
 		Where("tenants.id = ?", query.ID).
-		Preload("Leases", recentLeasePreloadScope(query.PropertyID)).
-		Preload("Bookings", recentBookingPreloadScope(query.PropertyID))
+		Preload("Leases", recentLeasePreloadScope(&propertyIDs, nil)).
+		Preload("Bookings", recentBookingPreloadScope(&propertyIDs, nil))
 
 	if query.Populate != nil {
 		for _, field := range *query.Populate {
@@ -175,12 +175,9 @@ func (r *tenantRepository) ListTenantsByProperty(
 		OrderScope("tenants", filterQuery.OrderBy, filterQuery.Order),
 	)
 
-	if filterQuery.PropertyIDs != nil && len(*filterQuery.PropertyIDs) == 1 {
-		propertyID := (*filterQuery.PropertyIDs)[0]
-		db = db.
-			Preload("Leases", recentLeasePreloadScope(propertyID)).
-			Preload("Bookings", recentBookingPreloadScope(propertyID))
-	}
+	db = db.
+		Preload("Leases", recentLeasePreloadScope(filterQuery.PropertyIDs, filterQuery.ClientID)).
+		Preload("Bookings", recentBookingPreloadScope(filterQuery.PropertyIDs, filterQuery.ClientID))
 
 	if filterQuery.Populate != nil {
 		for _, field := range *filterQuery.Populate {
@@ -292,38 +289,43 @@ func propertyTenantsWithStatusScope(
 	}
 }
 
-// recentLeasePreloadScope preloads at most one lease per tenant for a given
-// property: the tenant's Active lease if one exists, otherwise their most
-// recently moved-in lease. GORM's Preload doesn't support a per-parent LIMIT
-// natively (a plain .Limit(1) caps the whole batch, not each tenant), so this
-// uses a ROW_NUMBER() window function over a derived table, filtered to the
-// first row per tenant, wrapped so GORM's own tenant_id-matching still works.
-func recentLeasePreloadScope(propertyID string) func(db *gorm.DB) *gorm.DB {
+// recentLeasePreloadScope preloads at most one lease per tenant within the
+// resolved property scope (an explicit set of properties, or every property
+// under a client — see propertyMatchCondition): the tenant's Active lease if
+// one exists, otherwise their most recently moved-in lease. GORM's Preload
+// doesn't support a per-parent LIMIT natively (a plain .Limit(1) caps the
+// whole batch, not each tenant), so this uses a ROW_NUMBER() window function
+// over a derived table, filtered to the first row per tenant, wrapped so
+// GORM's own tenant_id-matching still works.
+func recentLeasePreloadScope(propertyIDs *[]string, clientID *string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
+		cond, args := propertyMatchCondition("units.property_id", propertyIDs, clientID)
 		sub := db.Session(&gorm.Session{NewDB: true}).
 			Table("leases").
 			Select(
 				"leases.*, ROW_NUMBER() OVER (PARTITION BY leases.tenant_id ORDER BY (leases.status IN ('Lease.Status.Active', 'Lease.Status.Pending')) DESC, leases.move_in_date DESC) AS rn",
 			).
 			Joins("JOIN units ON units.id = leases.unit_id").
-			Where("units.property_id = ? AND leases.deleted_at IS NULL", propertyID)
+			Where(fmt.Sprintf("%s AND leases.deleted_at IS NULL", cond), args...)
 
 		return db.Table("(?) AS leases", sub).Where("leases.rn = 1")
 	}
 }
 
-// recentBookingPreloadScope preloads at most one booking per tenant for a
-// given property: a CONFIRMED/CHECKED_IN booking if one exists, otherwise the
-// booking with the most recent check-in date. See recentLeasePreloadScope for
-// why the ROW_NUMBER derived-table technique is needed.
-func recentBookingPreloadScope(propertyID string) func(db *gorm.DB) *gorm.DB {
+// recentBookingPreloadScope preloads at most one booking per tenant within
+// the resolved property scope: a CONFIRMED/CHECKED_IN booking if one exists,
+// otherwise the booking with the most recent check-in date. See
+// recentLeasePreloadScope for why the ROW_NUMBER derived-table technique is
+// needed.
+func recentBookingPreloadScope(propertyIDs *[]string, clientID *string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
+		cond, args := propertyMatchCondition("bookings.property_id", propertyIDs, clientID)
 		sub := db.Session(&gorm.Session{NewDB: true}).
 			Table("bookings").
 			Select(
 				"bookings.*, ROW_NUMBER() OVER (PARTITION BY bookings.tenant_id ORDER BY (bookings.status IN ('CONFIRMED', 'CHECKED_IN')) DESC, bookings.check_in_date DESC) AS rn",
 			).
-			Where("bookings.property_id = ? AND bookings.deleted_at IS NULL", propertyID)
+			Where(fmt.Sprintf("%s AND bookings.deleted_at IS NULL", cond), args...)
 
 		return db.Table("(?) AS bookings", sub).Where("bookings.rn = 1")
 	}
