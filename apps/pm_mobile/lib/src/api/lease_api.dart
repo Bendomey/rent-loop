@@ -65,6 +65,67 @@ class LeaseApi extends AbstractApi {
       meta: PaginationMetaModel.fromJson(data['meta'] as Map<String, dynamic>),
     );
   }
+
+  /// Single-lease fetch — property-scoped in the URL (unlike `getLeases()`),
+  /// since `GET .../leases/{lease_id}` needs a `property_id` path segment.
+  /// `populate` mirrors the web lease detail page's loader exactly
+  /// (`apps/property-manager/app/api/leases/server.ts`) so every field the
+  /// detail screen shows (tenant/unit, and the tenant application the
+  /// Financial Terms card reads rent/deposit figures and the invoice link
+  /// from) is present in one request.
+  Future<LeaseModel> getLease({
+    required String clientId,
+    required String propertyId,
+    required String leaseId,
+  }) async {
+    final response = await execute(
+      method: 'GET',
+      path:
+          '/api/v1/admin/clients/$clientId/properties/$propertyId/leases/$leaseId'
+          '?populate=Tenant,Unit,TenantApplication,TenantApplication.ApplicationPaymentInvoice',
+    );
+    final json = jsonDecode(response.body) as Map<String, dynamic>;
+    return LeaseModel.fromJson(json['data'] as Map<String, dynamic>);
+  }
+
+  /// `PATCH .../leases/{lease_id}` — every param optional and only sent when
+  /// non-null (same convention as `UnitApi.updateUnit()`), since the backend
+  /// distinguishes "field omitted" from "field explicitly cleared" via
+  /// `lib.Optional[T]`. Currently only used by the Start Lease flow to set
+  /// `utility_transfers_date` before activating.
+  Future<void> updateLease({
+    required String clientId,
+    required String propertyId,
+    required String leaseId,
+    DateTime? utilityTransfersDate,
+  }) async {
+    final body = <String, dynamic>{
+      if (utilityTransfersDate != null)
+        'utility_transfers_date': utilityTransfersDate.toIso8601String(),
+    };
+    await execute(
+      method: 'PATCH',
+      path:
+          '/api/v1/admin/clients/$clientId/properties/$propertyId/leases/$leaseId',
+      body: body,
+    );
+  }
+
+  /// `PATCH .../leases/{lease_id}/status:active`, no body, 204 — moves a
+  /// Pending lease to Active. Only valid once `utility_transfers_date` has
+  /// been set (the Start Lease sheet enforces this client-side, mirroring
+  /// the web `StartLeaseDialog`).
+  Future<void> activateLease({
+    required String clientId,
+    required String propertyId,
+    required String leaseId,
+  }) async {
+    await execute(
+      method: 'PATCH',
+      path:
+          '/api/v1/admin/clients/$clientId/properties/$propertyId/leases/$leaseId/status:active',
+    );
+  }
 }
 
 @riverpod

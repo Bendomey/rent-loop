@@ -265,7 +265,11 @@ class _LeasesScreenState extends ConsumerState<LeasesScreen> {
                                 onTap: () async {
                                   await Haptics.vibrate(HapticsType.selection);
                                   if (context.mounted) {
-                                    context.push('/more/leases/${e.value.id}');
+                                    final propertyId = e.value.unit?.propertyId;
+                                    context.push(
+                                      '/more/leases/${e.value.id}'
+                                      '${propertyId != null ? '?property_id=$propertyId' : ''}',
+                                    );
                                   }
                                 },
                               );

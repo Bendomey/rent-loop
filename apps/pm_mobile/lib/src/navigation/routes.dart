@@ -366,8 +366,10 @@ GoRouter buildRoutes(WidgetRef ref) {
         routes: [
           GoRoute(
             path: ':id',
-            builder: (_, state) =>
-                LeaseDetailScreen(id: state.pathParameters['id']!),
+            builder: (_, state) => LeaseDetailScreen(
+              id: state.pathParameters['id']!,
+              propertyId: state.uri.queryParameters['property_id'],
+            ),
           ),
         ],
       ),
