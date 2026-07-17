@@ -625,6 +625,10 @@ class _ManageGrid extends StatelessWidget {
         icon: Icons.description_outlined,
         label: 'Leases',
         count: _count((s) => s.activeLeases),
+        onTap: (context) => context.push(
+          '/more/leases'
+          '?property_id=${property.id}&property_name=${Uri.encodeComponent(property.name)}',
+        ),
       ),
       _ManageAction(
         icon: Icons.assignment_outlined,

@@ -34,6 +34,8 @@ import 'package:rentloop_manager/src/modules/main/more/members.dart';
 import 'package:rentloop_manager/src/modules/main/more/payment_accounts.dart';
 import 'package:rentloop_manager/src/modules/main/more/root.dart';
 import 'package:rentloop_manager/src/modules/main/more/settings.dart';
+import 'package:rentloop_manager/src/modules/main/leases/detail.dart';
+import 'package:rentloop_manager/src/modules/main/leases/root.dart';
 import 'package:rentloop_manager/src/modules/main/tenants/detail.dart';
 import 'package:rentloop_manager/src/modules/main/tenants/root.dart';
 import 'package:rentloop_manager/src/modules/main/properties/add_block.dart';
@@ -352,6 +354,20 @@ GoRouter buildRoutes(WidgetRef ref) {
             path: ':id',
             builder: (_, state) =>
                 TenantDetailScreen(id: state.pathParameters['id']!),
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/more/leases',
+        builder: (_, state) => LeasesScreen(
+          propertyId: state.uri.queryParameters['property_id'],
+          propertyName: state.uri.queryParameters['property_name'],
+        ),
+        routes: [
+          GoRoute(
+            path: ':id',
+            builder: (_, state) =>
+                LeaseDetailScreen(id: state.pathParameters['id']!),
           ),
         ],
       ),

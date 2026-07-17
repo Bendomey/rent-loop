@@ -54,6 +54,14 @@ class MoreScreen extends ConsumerWidget {
         route: '/more/tenants',
       ),
       const _RowItem(
+        label: 'Leases',
+        sub: 'Rental agreements',
+        icon: Icons.description_outlined,
+        bg: RLTokens.successBg,
+        fg: RLTokens.success,
+        route: '/more/leases',
+      ),
+      const _RowItem(
         label: 'Announcements',
         sub: 'Notices & polls',
         icon: Icons.campaign_outlined,

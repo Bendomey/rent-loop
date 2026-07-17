@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-07-17 — Global leases list (real) + property filter
+- `LeasesScreen` (`/more/leases`) is new — real from the start, mirrors `TenantsScreen`'s design exactly. New `LeaseApi`/`LeaseModel`/`LeasesNotifier` (paginated, search by code + 5-way status filter, mirrors `TenantsNotifier`).
+- Backend endpoint already existed, no new work needed: `GET /api/v1/admin/clients/{client_id}/leases` (`ListLeasesAcrossProperties`, shipped in the same #374 PR as the tenants endpoint, likewise unconsumed by any frontend until now). `status` here is the full dotted `Lease.Status.*` enum (`Pending`/`Active`/`Completed`/`Cancelled`/`Terminated`) — confirmed against the web's property-scoped leases table (`apps/property-manager/.../occupancy/leases/`) to keep the same 5 values and labels. Search maps to `query`+`search_fields=code`.
+- `unit`/`tenant` on each lease reuse `UnitModel`/`TenantModel` directly (same backend transforms as elsewhere) — request always sends `populate=Unit,Tenant` so they're present.
+- **One leases page, multiple entry points**, same pattern as tenants: the property detail page's "Leases" Manage-grid tile now pushes `/more/leases?property_id=...&property_name=...` with a removable "Property: {name}" chip.
+- Lease detail (`/more/leases/:id`) is a coming-soon placeholder (`RLComingSoon`, mirrors `more/documents.dart`) — no lease detail page exists yet to build a real one against.
+- Modules affected: `api/lease_api.dart` (new), `repository/models/lease_model.dart` (new), `repository/notifiers/leases/leases_notifier.dart` (new), `modules/main/leases/root.dart` (new), `modules/main/leases/detail.dart` (new), `modules/main/properties/detail.dart`, `modules/main/more/root.dart`, `navigation/routes.dart`.
+
+## 2026-07-17 — Fix `recent_lease` always null on cross-property tenant queries (backend)
+- User noticed every tenant row on the new global tenants list showed "No lease" even for tenants that should have one. Traced to `services/main/internal/repository/tenant.go`: the `Leases`/`Bookings` preload that populates `recent_lease` was gated behind `len(*filterQuery.PropertyIDs) == 1` — so it silently never ran for an unfiltered cross-property call (`PropertyIDs` is `nil` there) or a multi-property-scoped one.
+- Fixed by changing `recentLeasePreloadScope`/`recentBookingPreloadScope` to accept the same `(propertyIDs, clientID)` pair as the existing `propertyTenantsWithStatusScope`, reusing its `propertyMatchCondition` helper for an `IN (...)`/client-wide condition instead of a single `= ?` match — the preload now always runs, correctly scoped regardless of how many properties are in play. `services/main`, not `pm_mobile`; not committed (outside this repo's/branch's normal scope, left for separate review).
+
+## 2026-07-17 — Tenant lease-status pill fixes
+- `statusTone()` (`shared/tokens.dart`) now maps `'Terminated'` to the danger/red tone (was falling through to neutral) — used by both the tenants and leases lists.
+- The tenants list's no-lease fallback label changed from `'No lease'` to `'Inactive'`, and its pill now always runs through `statusTone()` instead of a hardcoded neutral tone (works out the same, since `'Inactive'` isn't explicitly mapped either — but keeps the logic in one place).
+
 ## 2026-07-17 — Global tenants list (real) + property filter
 - `TenantsScreen` (`/more/tenants`) is now real — replaced the fully mocked static-seed-data screen. New `TenantApi`/`TenantModel`/`TenantsNotifier` (paginated, search + status filter, mirrors `BlocksNotifier`/`UnitsNotifier`).
 - Discovered the backend endpoint already existed and needed no new work: `GET /api/v1/admin/clients/{client_id}/tenants` (`ListTenantsAcrossProperties`, shipped in #374 but never consumed by any frontend — confirmed via `git show --stat` that the commit was backend-only). Supports a repeatable `property_id` filter, `status` (`ACTIVE`/`EXPIRED` — has vs. doesn't have an active lease), search (`query`+`search_fields=first_name,last_name,phone`), and standard pagination. Access-scoped server-side (`ResolvePropertyScopeFilter` — OWNER sees everything, ADMIN/STAFF only assigned properties; a disallowed `property_id` 403s the whole request rather than being silently dropped).

@@ -161,6 +161,7 @@ RLTone statusTone(String status) => switch (status) {
   'Overdue' => RLTone.danger,
   'Expired' => RLTone.danger,
   'Cancelled' => RLTone.danger,
+  'Terminated' => RLTone.danger,
   'High' => RLTone.danger,
   _ => RLTone.neutral, // New, Draft, Pending, Low, etc.
 };

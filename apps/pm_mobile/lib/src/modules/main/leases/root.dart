@@ -7,38 +7,43 @@ import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:shimmer/shimmer.dart';
 
 import 'package:rentloop_manager/src/lib/property_status.dart';
-import 'package:rentloop_manager/src/repository/models/tenant_model.dart';
-import 'package:rentloop_manager/src/repository/notifiers/tenants/tenants_notifier.dart';
+import 'package:rentloop_manager/src/repository/models/lease_model.dart';
+import 'package:rentloop_manager/src/repository/notifiers/leases/leases_notifier.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
-const _kTenantStatusFilters = ['All', 'Active', 'Expired'];
+const _kLeaseStatusFilters = [
+  'All',
+  'Pending',
+  'Active',
+  'Completed',
+  'Cancelled',
+  'Terminated',
+];
 
-String? _tenantStatusApiValue(String label) => switch (label) {
-  'Active' => 'ACTIVE',
-  'Expired' => 'EXPIRED',
-  _ => null,
-};
+String? _leaseStatusApiValue(String label) =>
+    label == 'All' ? null : 'Lease.Status.$label';
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
-class TenantsScreen extends ConsumerStatefulWidget {
-  const TenantsScreen({super.key, this.propertyId, this.propertyName});
+class LeasesScreen extends ConsumerStatefulWidget {
+  const LeasesScreen({super.key, this.propertyId, this.propertyName});
 
   /// Pre-applied property filter — set when arriving from a property's
-  /// detail page (Manage-grid "Tenants" tile), via GoRouter query params.
-  /// This is the same global tenants list either way; the filter is just
-  /// pre-seeded rather than the screen being a different one.
+  /// detail page (Manage-grid "Leases" tile), via GoRouter query params.
+  /// This is the same global leases list either way; the filter is just
+  /// pre-seeded rather than the screen being a different one — mirrors
+  /// `tenants/root.dart`.
   final String? propertyId;
   final String? propertyName;
 
   @override
-  ConsumerState<TenantsScreen> createState() => _TenantsScreenState();
+  ConsumerState<LeasesScreen> createState() => _LeasesScreenState();
 }
 
-class _TenantsScreenState extends ConsumerState<TenantsScreen> {
+class _LeasesScreenState extends ConsumerState<LeasesScreen> {
   String _statusFilter = 'All';
-  late TenantsQuery _query;
+  late LeasesQuery _query;
   late final TextEditingController _searchController;
   late final ScrollController _scrollController;
   Timer? _searchDebounce;
@@ -46,11 +51,11 @@ class _TenantsScreenState extends ConsumerState<TenantsScreen> {
   @override
   void initState() {
     super.initState();
-    _query = TenantsQuery(propertyId: widget.propertyId);
+    _query = LeasesQuery(propertyId: widget.propertyId);
     _searchController = TextEditingController();
     _scrollController = ScrollController()..addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(tenantsNotifierProvider.notifier).loadFirstPage(_query);
+      ref.read(leasesNotifierProvider.notifier).loadFirstPage(_query);
     });
   }
 
@@ -65,7 +70,7 @@ class _TenantsScreenState extends ConsumerState<TenantsScreen> {
   void _onScroll() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
-      ref.read(tenantsNotifierProvider.notifier).loadNextPage();
+      ref.read(leasesNotifierProvider.notifier).loadNextPage();
     }
   }
 
@@ -75,29 +80,29 @@ class _TenantsScreenState extends ConsumerState<TenantsScreen> {
       setState(() {
         _query = _query.copyWith(search: value, clearSearch: value.isEmpty);
       });
-      ref.read(tenantsNotifierProvider.notifier).loadFirstPage(_query);
+      ref.read(leasesNotifierProvider.notifier).loadFirstPage(_query);
     });
   }
 
   Future<void> _onSelectStatus(String label) async {
     await Haptics.vibrate(HapticsType.selection);
-    final apiValue = _tenantStatusApiValue(label);
+    final apiValue = _leaseStatusApiValue(label);
     setState(() {
       _statusFilter = label;
       _query = _query.copyWith(status: apiValue, clearStatus: apiValue == null);
     });
-    ref.read(tenantsNotifierProvider.notifier).loadFirstPage(_query);
+    ref.read(leasesNotifierProvider.notifier).loadFirstPage(_query);
   }
 
   Future<void> _clearPropertyFilter() async {
     await Haptics.vibrate(HapticsType.selection);
     setState(() => _query = _query.copyWith(clearPropertyId: true));
-    ref.read(tenantsNotifierProvider.notifier).loadFirstPage(_query);
+    ref.read(leasesNotifierProvider.notifier).loadFirstPage(_query);
   }
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(tenantsNotifierProvider);
+    final state = ref.watch(leasesNotifierProvider);
     final showSkeleton = state.isLoading && state.items.isEmpty;
     final showError = state.error != null && state.items.isEmpty;
     final showEmpty =
@@ -108,7 +113,7 @@ class _TenantsScreenState extends ConsumerState<TenantsScreen> {
       body: Column(
         children: [
           RLBackHeader(
-            title: 'Tenants',
+            title: 'Leases',
             onBack: () async {
               await Haptics.vibrate(HapticsType.selection);
               if (context.mounted) Navigator.of(context).pop();
@@ -118,7 +123,7 @@ class _TenantsScreenState extends ConsumerState<TenantsScreen> {
             child: RefreshIndicator(
               color: RLTokens.crimson,
               onRefresh: () => ref
-                  .read(tenantsNotifierProvider.notifier)
+                  .read(leasesNotifierProvider.notifier)
                   .loadFirstPage(_query),
               child: CustomScrollView(
                 controller: _scrollController,
@@ -133,7 +138,7 @@ class _TenantsScreenState extends ConsumerState<TenantsScreen> {
                         0,
                       ),
                       child: RLSearchBar(
-                        hint: 'Search by name or phone',
+                        hint: 'Search by lease code',
                         controller: _searchController,
                         onChanged: _onSearchChanged,
                       ),
@@ -194,14 +199,14 @@ class _TenantsScreenState extends ConsumerState<TenantsScreen> {
                         0,
                       ),
                       child: RLFilterChips(
-                        options: _kTenantStatusFilters,
+                        options: _kLeaseStatusFilters,
                         selected: _statusFilter,
                         onSelect: _onSelectStatus,
                       ),
                     ),
                   ),
                   if (showSkeleton)
-                    const SliverToBoxAdapter(child: _TenantsListSkeleton())
+                    const SliverToBoxAdapter(child: _LeasesListSkeleton())
                   else if (showError)
                     SliverFillRemaining(
                       hasScrollBody: false,
@@ -209,7 +214,7 @@ class _TenantsScreenState extends ConsumerState<TenantsScreen> {
                         padding: const EdgeInsets.all(RLTokens.gutter),
                         child: RLSectionError(
                           onRetry: () => ref
-                              .read(tenantsNotifierProvider.notifier)
+                              .read(leasesNotifierProvider.notifier)
                               .loadFirstPage(_query),
                         ),
                       ),
@@ -217,7 +222,7 @@ class _TenantsScreenState extends ConsumerState<TenantsScreen> {
                   else if (showEmpty)
                     const SliverFillRemaining(
                       hasScrollBody: false,
-                      child: _EmptyTenantsList(),
+                      child: _EmptyLeasesList(),
                     )
                   else ...[
                     SliverToBoxAdapter(
@@ -229,7 +234,7 @@ class _TenantsScreenState extends ConsumerState<TenantsScreen> {
                           10,
                         ),
                         child: Text(
-                          '${state.items.length} of ${state.total} ${state.total == 1 ? 'tenant' : 'tenants'}',
+                          '${state.items.length} of ${state.total} ${state.total == 1 ? 'lease' : 'leases'}',
                           style: TextStyle(
                             fontFamily: RLTokens.fontMono,
                             fontSize: 11,
@@ -254,13 +259,13 @@ class _TenantsScreenState extends ConsumerState<TenantsScreen> {
                           child: Column(
                             children: state.items.asMap().entries.map((e) {
                               final last = e.key == state.items.length - 1;
-                              return _TenantRow(
-                                tenant: e.value,
+                              return _LeaseRow(
+                                lease: e.value,
                                 last: last,
                                 onTap: () async {
                                   await Haptics.vibrate(HapticsType.selection);
                                   if (context.mounted) {
-                                    context.push('/more/tenants/${e.value.id}');
+                                    context.push('/more/leases/${e.value.id}');
                                   }
                                 },
                               );
@@ -299,33 +304,31 @@ class _TenantsScreenState extends ConsumerState<TenantsScreen> {
 
 // ── Row ───────────────────────────────────────────────────────────────────────
 
-class _TenantRow extends StatelessWidget {
-  const _TenantRow({
-    required this.tenant,
+class _LeaseRow extends StatelessWidget {
+  const _LeaseRow({
+    required this.lease,
     required this.last,
     required this.onTap,
   });
-  final TenantModel tenant;
+  final LeaseModel lease;
   final bool last;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final lease = tenant.recentLease;
-    final unit = lease?.unit;
+    final tenant = lease.tenant;
+    final unit = lease.unit;
     final subtitle = unit != null
         ? [
             unit.name,
             unit.property?.name,
           ].whereType<String>().where((v) => v.isNotEmpty).join(' · ')
-        : tenant.phone;
-    final statusLabel = lease != null
-        ? propertyStatusLabel(lease.status)
-        : 'Inactive';
+        : lease.code;
+    final statusLabel = propertyStatusLabel(lease.status);
 
     return RLRow(
-      leading: _TenantAvatar(tenant: tenant),
-      title: tenant.fullName,
+      leading: _LeaseIcon(),
+      title: tenant?.fullName ?? lease.code,
       subtitle: subtitle,
       last: last,
       showChevron: false,
@@ -335,25 +338,22 @@ class _TenantRow extends StatelessWidget {
   }
 }
 
-class _TenantAvatar extends StatelessWidget {
-  const _TenantAvatar({required this.tenant});
-  final TenantModel tenant;
+class _LeaseIcon extends StatelessWidget {
+  const _LeaseIcon();
 
   @override
   Widget build(BuildContext context) {
-    final photo = tenant.profilePhotoUrl;
-    if (photo == null || photo.isEmpty) {
-      return RLAvatar(tenant.fullName, size: 44);
-    }
-    return ClipOval(
-      child: Image.network(
-        photo,
-        width: 44,
-        height: 44,
-        fit: BoxFit.cover,
-        errorBuilder: (_, _, _) => RLAvatar(tenant.fullName, size: 44),
-        loadingBuilder: (_, child, progress) =>
-            progress == null ? child : RLAvatar(tenant.fullName, size: 44),
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        color: RLTokens.fill,
+        borderRadius: BorderRadius.circular(RLTokens.rSm),
+      ),
+      child: const Icon(
+        Icons.description_outlined,
+        size: 20,
+        color: RLTokens.muted,
       ),
     );
   }
@@ -361,8 +361,8 @@ class _TenantAvatar extends StatelessWidget {
 
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 
-class _TenantsListSkeleton extends StatelessWidget {
-  const _TenantsListSkeleton();
+class _LeasesListSkeleton extends StatelessWidget {
+  const _LeasesListSkeleton();
 
   @override
   Widget build(BuildContext context) {
@@ -393,8 +393,8 @@ class _TenantsListSkeleton extends StatelessWidget {
 
 // ── Empty state ───────────────────────────────────────────────────────────────
 
-class _EmptyTenantsList extends StatelessWidget {
-  const _EmptyTenantsList();
+class _EmptyLeasesList extends StatelessWidget {
+  const _EmptyLeasesList();
 
   @override
   Widget build(BuildContext context) {
@@ -412,14 +412,14 @@ class _EmptyTenantsList extends StatelessWidget {
                 borderRadius: BorderRadius.circular(13),
               ),
               child: const Icon(
-                Icons.people_outline_rounded,
+                Icons.description_outlined,
                 size: 22,
                 color: RLTokens.mutedSoft,
               ),
             ),
             const SizedBox(height: 11),
             Text(
-              'No tenants found',
+              'No leases found',
               style: TextStyle(
                 fontFamily: RLTokens.fontSans,
                 fontSize: 15,
