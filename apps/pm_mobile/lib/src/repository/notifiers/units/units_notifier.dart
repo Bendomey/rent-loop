@@ -8,6 +8,34 @@ import 'package:rentloop_manager/src/repository/models/unit_model.dart';
 
 part 'units_notifier.g.dart';
 
+/// Filters carried across loadFirstPage/loadNextPage calls. Pagination
+/// (page/pageSize/currentPage) is tracked separately in [UnitsState],
+/// not here — this class is only the user-controlled filter set.
+/// Mirrors PropertiesQuery in properties_notifier.dart.
+class UnitsQuery {
+  final String? search;
+  final String?
+  status; // full dotted API value (e.g. Unit.Status.Available), or null for "all"
+  final String? blockId;
+
+  const UnitsQuery({this.search, this.status, this.blockId});
+
+  UnitsQuery copyWith({
+    String? search,
+    String? status,
+    String? blockId,
+    bool clearSearch = false,
+    bool clearStatus = false,
+    bool clearBlockId = false,
+  }) {
+    return UnitsQuery(
+      search: clearSearch ? null : (search ?? this.search),
+      status: clearStatus ? null : (status ?? this.status),
+      blockId: clearBlockId ? null : (blockId ?? this.blockId),
+    );
+  }
+}
+
 class UnitsState {
   const UnitsState({
     this.items = const [],
@@ -54,15 +82,21 @@ class UnitsNotifier extends _$UnitsNotifier {
   static const int _pageSize = 10;
 
   String? _propertyId;
+  UnitsQuery _currentQuery = const UnitsQuery();
 
   @override
   UnitsState build() => const UnitsState();
 
   String? get _clientId => ref.read(currentWorkspaceNotifierProvider)?.clientId;
 
-  /// Load page 1 of [propertyId]'s units. Resets pagination state.
-  Future<void> loadFirstPage(String propertyId) async {
+  /// Load page 1 of [propertyId]'s units filtered by [query]. Resets
+  /// pagination state.
+  Future<void> loadFirstPage(
+    String propertyId, [
+    UnitsQuery query = const UnitsQuery(),
+  ]) async {
     _propertyId = propertyId;
+    _currentQuery = query;
     final clientId = _clientId;
     if (clientId == null) {
       state = state.copyWith(isLoading: false, items: []);
@@ -78,6 +112,9 @@ class UnitsNotifier extends _$UnitsNotifier {
             propertyId: propertyId,
             page: 1,
             pageSize: _pageSize,
+            search: query.search,
+            status: query.status,
+            blockId: query.blockId,
           );
       state = UnitsState(
         items: result.rows,
@@ -99,8 +136,8 @@ class UnitsNotifier extends _$UnitsNotifier {
     }
   }
 
-  /// Append the next page for the property passed to the last
-  /// [loadFirstPage] call.
+  /// Append the next page using the filters from the last [loadFirstPage]
+  /// call, for the property passed to that call.
   Future<void> loadNextPage() async {
     if (!state.hasNextPage || state.isLoadingMore) return;
 
@@ -118,6 +155,9 @@ class UnitsNotifier extends _$UnitsNotifier {
             propertyId: propertyId,
             page: nextPage,
             pageSize: _pageSize,
+            search: _currentQuery.search,
+            status: _currentQuery.status,
+            blockId: _currentQuery.blockId,
           );
       state = state.copyWith(
         items: [...state.items, ...result.rows],

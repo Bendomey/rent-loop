@@ -102,11 +102,22 @@ class RLDot extends StatelessWidget {
 // ── Section label ────────────────────────────────────────────────────────────
 
 class RLLabel extends StatelessWidget {
-  const RLLabel(this.text, {super.key, this.action, this.onAction});
+  const RLLabel(
+    this.text, {
+    super.key,
+    this.action,
+    this.onAction,
+    this.trailing,
+  });
 
   final String text;
   final String? action;
   final VoidCallback? onAction;
+
+  /// A fully custom trailing widget — takes over from [action]/[onAction]
+  /// when a section needs more than one action (e.g. an icon button
+  /// alongside a text link). Ignored if null.
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -131,7 +142,9 @@ class RLLabel extends StatelessWidget {
               ),
             ),
           ),
-          if (action != null)
+          if (trailing != null)
+            trailing!
+          else if (action != null)
             GestureDetector(
               onTap: onAction,
               child: Text(

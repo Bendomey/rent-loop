@@ -1,104 +1,107 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:shimmer/shimmer.dart';
+
+import 'package:rentloop_manager/src/lib/property_status.dart';
+import 'package:rentloop_manager/src/repository/models/tenant_model.dart';
+import 'package:rentloop_manager/src/repository/notifiers/tenants/tenants_notifier.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
-// ── Seed data ─────────────────────────────────────────────────────────────────
+const _kTenantStatusFilters = ['All', 'Active', 'Expired'];
 
-class _TenantData {
-  const _TenantData({
-    required this.id,
-    required this.name,
-    required this.unit,
-    required this.phone,
-    required this.status,
-    required this.balance,
-    required this.since,
-    required this.rent,
-  });
-  final String id;
-  final String name;
-  final String unit;
-  final String phone;
-  final String status;
-  final int balance;
-  final String since;
-  final int rent;
-}
-
-const _kTenants = [
-  _TenantData(
-    id: 't1',
-    name: 'Kwame Mensah',
-    unit: 'Unit 4B · Cantonments Court',
-    phone: '+233 24 558 1190',
-    status: 'Active',
-    balance: 0,
-    since: 'Mar 2024',
-    rent: 4200,
-  ),
-  _TenantData(
-    id: 't2',
-    name: 'Ama Boateng',
-    unit: 'Unit 5A · Cantonments Court',
-    phone: '+233 20 771 4402',
-    status: 'Active',
-    balance: 4200,
-    since: 'Jan 2025',
-    rent: 4200,
-  ),
-  _TenantData(
-    id: 't3',
-    name: 'Yaw Asante',
-    unit: 'Unit 3B · Cantonments Court',
-    phone: '+233 55 309 8821',
-    status: 'Active',
-    balance: 0,
-    since: 'Aug 2023',
-    rent: 5500,
-  ),
-  _TenantData(
-    id: 't4',
-    name: 'Efua Sarpong',
-    unit: 'Unit 7 · Spintex Heights',
-    phone: '+233 27 644 1180',
-    status: 'Active',
-    balance: 1500,
-    since: 'Nov 2024',
-    rent: 3500,
-  ),
-  _TenantData(
-    id: 't5',
-    name: 'Kojo Antwi',
-    unit: 'Shop 2 · Osu Retail Block',
-    phone: '+233 24 902 3318',
-    status: 'Expired',
-    balance: 0,
-    since: 'Feb 2022',
-    rent: 6000,
-  ),
-];
+String? _tenantStatusApiValue(String label) => switch (label) {
+  'Active' => 'ACTIVE',
+  'Expired' => 'EXPIRED',
+  _ => null,
+};
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
-class TenantsScreen extends StatefulWidget {
-  const TenantsScreen({super.key});
+class TenantsScreen extends ConsumerStatefulWidget {
+  const TenantsScreen({super.key, this.propertyId, this.propertyName});
+
+  /// Pre-applied property filter — set when arriving from a property's
+  /// detail page (Manage-grid "Tenants" tile), via GoRouter query params.
+  /// This is the same global tenants list either way; the filter is just
+  /// pre-seeded rather than the screen being a different one.
+  final String? propertyId;
+  final String? propertyName;
 
   @override
-  State<TenantsScreen> createState() => _TenantsScreenState();
+  ConsumerState<TenantsScreen> createState() => _TenantsScreenState();
 }
 
-class _TenantsScreenState extends State<TenantsScreen> {
-  String _filter = 'All';
+class _TenantsScreenState extends ConsumerState<TenantsScreen> {
+  String _statusFilter = 'All';
+  late TenantsQuery _query;
+  late final TextEditingController _searchController;
+  late final ScrollController _scrollController;
+  Timer? _searchDebounce;
 
-  List<_TenantData> get _filtered => _filter == 'All'
-      ? _kTenants
-      : _kTenants.where((t) => t.status == _filter).toList();
+  @override
+  void initState() {
+    super.initState();
+    _query = TenantsQuery(propertyId: widget.propertyId);
+    _searchController = TextEditingController();
+    _scrollController = ScrollController()..addListener(_onScroll);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(tenantsNotifierProvider.notifier).loadFirstPage(_query);
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _scrollController.dispose();
+    _searchDebounce?.cancel();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      ref.read(tenantsNotifierProvider.notifier).loadNextPage();
+    }
+  }
+
+  void _onSearchChanged(String value) {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 400), () {
+      setState(() {
+        _query = _query.copyWith(search: value, clearSearch: value.isEmpty);
+      });
+      ref.read(tenantsNotifierProvider.notifier).loadFirstPage(_query);
+    });
+  }
+
+  Future<void> _onSelectStatus(String label) async {
+    await Haptics.vibrate(HapticsType.selection);
+    final apiValue = _tenantStatusApiValue(label);
+    setState(() {
+      _statusFilter = label;
+      _query = _query.copyWith(status: apiValue, clearStatus: apiValue == null);
+    });
+    ref.read(tenantsNotifierProvider.notifier).loadFirstPage(_query);
+  }
+
+  Future<void> _clearPropertyFilter() async {
+    await Haptics.vibrate(HapticsType.selection);
+    setState(() => _query = _query.copyWith(clearPropertyId: true));
+    ref.read(tenantsNotifierProvider.notifier).loadFirstPage(_query);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final tenants = _filtered;
+    final state = ref.watch(tenantsNotifierProvider);
+    final showSkeleton = state.isLoading && state.items.isEmpty;
+    final showError = state.error != null && state.items.isEmpty;
+    final showEmpty =
+        !state.isLoading && state.error == null && state.items.isEmpty;
 
     return Scaffold(
       backgroundColor: RLTokens.surface,
@@ -110,145 +113,182 @@ class _TenantsScreenState extends State<TenantsScreen> {
               await Haptics.vibrate(HapticsType.selection);
               if (context.mounted) Navigator.of(context).pop();
             },
-            trailing: GestureDetector(
-              onTap: () async => Haptics.vibrate(HapticsType.selection),
-              child: const Padding(
-                padding: EdgeInsets.all(10),
-                child: Icon(Icons.add_rounded, size: 22, color: RLTokens.ink),
-              ),
-            ),
           ),
           Expanded(
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(
-                RLTokens.gutter,
-                0,
-                RLTokens.gutter,
-                40,
-              ),
-              children: [
-                const SizedBox(height: 10),
-
-                // Search bar
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 11,
-                  ),
-                  decoration: BoxDecoration(
-                    color: RLTokens.fill,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: RLTokens.hairline),
-                  ),
-                  child: const Row(
-                    children: [
-                      Icon(
-                        Icons.search_rounded,
-                        size: 18,
-                        color: RLTokens.mutedSoft,
+            child: RefreshIndicator(
+              color: RLTokens.crimson,
+              onRefresh: () => ref
+                  .read(tenantsNotifierProvider.notifier)
+                  .loadFirstPage(_query),
+              child: CustomScrollView(
+                controller: _scrollController,
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        RLTokens.gutter,
+                        12,
+                        RLTokens.gutter,
+                        0,
                       ),
-                      SizedBox(width: 10),
-                      Text(
-                        'Search by name, phone, email',
-                        style: TextStyle(
-                          fontFamily: RLTokens.fontSans,
-                          fontSize: 14,
-                          color: RLTokens.mutedSoft,
+                      child: RLSearchBar(
+                        hint: 'Search by name or phone',
+                        controller: _searchController,
+                        onChanged: _onSearchChanged,
+                      ),
+                    ),
+                  ),
+                  if (_query.propertyId != null && widget.propertyName != null)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          RLTokens.gutter,
+                          12,
+                          RLTokens.gutter,
+                          0,
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 14),
-
-                // Filter pills
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: ['All', 'Active', 'Expired'].map((f) {
-                      final active = f == _filter;
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 8),
                         child: GestureDetector(
-                          onTap: () async {
-                            await Haptics.vibrate(HapticsType.selection);
-                            setState(() => _filter = f);
-                          },
+                          onTap: _clearPropertyFilter,
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
+                              horizontal: 12,
                               vertical: 7,
                             ),
                             decoration: BoxDecoration(
-                              color: active ? RLTokens.ink : RLTokens.fill,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: active
-                                    ? RLTokens.ink
-                                    : RLTokens.hairline,
+                              color: RLTokens.crimsonTint,
+                              borderRadius: BorderRadius.circular(
+                                RLTokens.rPill,
                               ),
                             ),
-                            child: Text(
-                              f,
-                              style: TextStyle(
-                                fontFamily: RLTokens.fontSans,
-                                fontSize: 12.5,
-                                fontWeight: RLTokens.semibold,
-                                color: active ? Colors.white : RLTokens.muted,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'Property: ${widget.propertyName}',
+                                  style: TextStyle(
+                                    fontFamily: RLTokens.fontSans,
+                                    fontSize: 12.5,
+                                    fontWeight: RLTokens.semibold,
+                                    color: RLTokens.crimson,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                const Icon(
+                                  Icons.close_rounded,
+                                  size: 14,
+                                  color: RLTokens.crimson,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        RLTokens.gutter,
+                        14,
+                        0,
+                        0,
+                      ),
+                      child: RLFilterChips(
+                        options: _kTenantStatusFilters,
+                        selected: _statusFilter,
+                        onSelect: _onSelectStatus,
+                      ),
+                    ),
+                  ),
+                  if (showSkeleton)
+                    const SliverToBoxAdapter(child: _TenantsListSkeleton())
+                  else if (showError)
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Padding(
+                        padding: const EdgeInsets.all(RLTokens.gutter),
+                        child: RLSectionError(
+                          onRetry: () => ref
+                              .read(tenantsNotifierProvider.notifier)
+                              .loadFirstPage(_query),
+                        ),
+                      ),
+                    )
+                  else if (showEmpty)
+                    const SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: _EmptyTenantsList(),
+                    )
+                  else ...[
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          RLTokens.gutter,
+                          16,
+                          RLTokens.gutter,
+                          10,
+                        ),
+                        child: Text(
+                          '${state.items.length} of ${state.total} ${state.total == 1 ? 'tenant' : 'tenants'}',
+                          style: TextStyle(
+                            fontFamily: RLTokens.fontMono,
+                            fontSize: 11,
+                            letterSpacing: 0.5,
+                            color: RLTokens.mutedSoft,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SliverPadding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: RLTokens.gutter,
+                      ),
+                      sliver: SliverToBoxAdapter(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          decoration: BoxDecoration(
+                            color: RLTokens.surface,
+                            borderRadius: BorderRadius.circular(RLTokens.rLg),
+                            border: Border.all(color: RLTokens.hairline),
+                          ),
+                          child: Column(
+                            children: state.items.asMap().entries.map((e) {
+                              final last = e.key == state.items.length - 1;
+                              return _TenantRow(
+                                tenant: e.value,
+                                last: last,
+                                onTap: () async {
+                                  await Haptics.vibrate(HapticsType.selection);
+                                  if (context.mounted) {
+                                    context.push('/more/tenants/${e.value.id}');
+                                  }
+                                },
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (state.isLoadingMore)
+                      const SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          child: Center(
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                                color: RLTokens.crimson,
                               ),
                             ),
                           ),
                         ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-
-                // Count label
-                RLLabel(
-                  '${tenants.length} tenant${tenants.length == 1 ? '' : 's'}',
-                ),
-
-                // Tenant list card
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                  decoration: BoxDecoration(
-                    color: RLTokens.surface,
-                    borderRadius: BorderRadius.circular(RLTokens.rLg),
-                    border: Border.all(color: RLTokens.hairline),
-                  ),
-                  child: Column(
-                    children: List.generate(tenants.length, (i) {
-                      final t = tenants[i];
-                      final isLast = i == tenants.length - 1;
-                      return RLRow(
-                        leading: RLAvatar(t.name, size: 44),
-                        title: t.name,
-                        subtitle: t.unit,
-                        last: isLast,
-                        showChevron: false,
-                        trailing: t.balance > 0
-                            ? Text(
-                                '₵${_fmt(t.balance)}',
-                                style: const TextStyle(
-                                  fontFamily: RLTokens.fontSans,
-                                  fontSize: 12.5,
-                                  fontWeight: RLTokens.bold,
-                                  color: RLTokens.crimson,
-                                ),
-                              )
-                            : RLPill(t.status, tone: statusTone(t.status)),
-                        onTap: () async {
-                          await Haptics.vibrate(HapticsType.selection);
-                          if (context.mounted)
-                            context.push('/more/tenants/${t.id}');
-                        },
-                      );
-                    }),
-                  ),
-                ),
-              ],
+                      ),
+                  ],
+                  const SliverToBoxAdapter(child: SizedBox(height: 32)),
+                ],
+              ),
             ),
           ),
         ],
@@ -257,7 +297,154 @@ class _TenantsScreenState extends State<TenantsScreen> {
   }
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Row ───────────────────────────────────────────────────────────────────────
 
-String _fmt(int n) =>
-    n.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => ',');
+class _TenantRow extends StatelessWidget {
+  const _TenantRow({
+    required this.tenant,
+    required this.last,
+    required this.onTap,
+  });
+  final TenantModel tenant;
+  final bool last;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final lease = tenant.recentLease;
+    final unit = lease?.unit;
+    final subtitle = unit != null
+        ? [
+            unit.name,
+            unit.property?.name,
+          ].whereType<String>().where((v) => v.isNotEmpty).join(' · ')
+        : tenant.phone;
+    final statusLabel = lease != null
+        ? propertyStatusLabel(lease.status)
+        : 'No lease';
+
+    return RLRow(
+      leading: _TenantAvatar(tenant: tenant),
+      title: tenant.fullName,
+      subtitle: subtitle,
+      last: last,
+      showChevron: false,
+      trailing: RLPill(
+        statusLabel,
+        tone: lease != null ? statusTone(statusLabel) : RLTone.neutral,
+      ),
+      onTap: onTap,
+    );
+  }
+}
+
+class _TenantAvatar extends StatelessWidget {
+  const _TenantAvatar({required this.tenant});
+  final TenantModel tenant;
+
+  @override
+  Widget build(BuildContext context) {
+    final photo = tenant.profilePhotoUrl;
+    if (photo == null || photo.isEmpty) {
+      return RLAvatar(tenant.fullName, size: 44);
+    }
+    return ClipOval(
+      child: Image.network(
+        photo,
+        width: 44,
+        height: 44,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => RLAvatar(tenant.fullName, size: 44),
+        loadingBuilder: (_, child, progress) =>
+            progress == null ? child : RLAvatar(tenant.fullName, size: 44),
+      ),
+    );
+  }
+}
+
+// ── Skeleton ──────────────────────────────────────────────────────────────────
+
+class _TenantsListSkeleton extends StatelessWidget {
+  const _TenantsListSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Shimmer.fromColors(
+      baseColor: RLTokens.fill,
+      highlightColor: RLTokens.paper,
+      child: Column(
+        children: List.generate(
+          6,
+          (_) => Container(
+            margin: const EdgeInsets.fromLTRB(
+              RLTokens.gutter,
+              16,
+              RLTokens.gutter,
+              0,
+            ),
+            height: 64,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(RLTokens.rLg),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Empty state ───────────────────────────────────────────────────────────────
+
+class _EmptyTenantsList extends StatelessWidget {
+  const _EmptyTenantsList();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(RLTokens.gutter),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: RLTokens.fill,
+                borderRadius: BorderRadius.circular(13),
+              ),
+              child: const Icon(
+                Icons.people_outline_rounded,
+                size: 22,
+                color: RLTokens.mutedSoft,
+              ),
+            ),
+            const SizedBox(height: 11),
+            Text(
+              'No tenants found',
+              style: TextStyle(
+                fontFamily: RLTokens.fontSans,
+                fontSize: 15,
+                fontWeight: RLTokens.semibold,
+                color: RLTokens.ink,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 3),
+            Text(
+              'Try a different search or filter.',
+              style: TextStyle(
+                fontFamily: RLTokens.fontSans,
+                fontSize: 12.5,
+                color: RLTokens.muted,
+                height: 1.45,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

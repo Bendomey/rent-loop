@@ -3,6 +3,12 @@ const String kApiBaseUrl = 'https://api.rentloopapp.com';
 
 const String kCubeApiUrl = 'https://rentloop-cube.fly.dev';
 
+// R2 image upload proxy — hosted by the property-manager web app (not
+// services/main), same endpoint apps/go's tenant app already uploads
+// through. Unauthenticated by design (trusts objectKey/file blindly); this
+// mirrors a pattern already shipped in two other apps, not a new surface.
+const String kR2UploadUrl = 'https://pm.rentloopapp.com/api/r2/upload';
+
 // ── External web destinations ─────────────────────────────────────────────────
 // All deep links from the mobile app carry UTM parameters so analytics can
 // attribute which screen and CTA drove the traffic.
