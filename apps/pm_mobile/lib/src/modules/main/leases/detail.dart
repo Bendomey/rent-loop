@@ -12,6 +12,7 @@ import 'package:rentloop_manager/src/lib/property_status.dart';
 import 'package:rentloop_manager/src/lib/unit_status.dart';
 import 'package:rentloop_manager/src/modules/main/leases/checklist_detail.dart';
 import 'package:rentloop_manager/src/modules/main/leases/create_checklist_dialog.dart';
+import 'package:rentloop_manager/src/modules/main/leases/documents_tab.dart';
 import 'package:rentloop_manager/src/modules/main/leases/start_lease_sheet.dart';
 import 'package:rentloop_manager/src/repository/models/lease_checklist_model.dart';
 import 'package:rentloop_manager/src/repository/models/lease_model.dart';
@@ -276,7 +277,7 @@ class _LeaseDetailContentState extends ConsumerState<_LeaseDetailContent> {
       case 'Tenant Profile':
         return _buildTenantProfile(lease.tenant);
       case 'Documents':
-        return _buildDocuments(lease);
+        return buildDocumentsTab(widget.propertyId, lease);
       case 'Expenses':
         return [const _ComingSoonTab(title: 'Expenses')];
       default:
@@ -551,79 +552,6 @@ List<Widget> _buildTenantProfile(TenantModel? tenant) {
 String _titleCase(String s) {
   if (s.isEmpty) return s;
   return '${s[0].toUpperCase()}${s.substring(1).toLowerCase()}';
-}
-
-List<Widget> _buildDocuments(LeaseModel lease) {
-  return [
-    Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: RLTokens.surface,
-        borderRadius: BorderRadius.circular(RLTokens.rLg),
-        border: Border.all(color: RLTokens.hairline),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _SectionHeading('Lease Agreement'),
-          if (lease.leaseAgreementDocumentUrl != null)
-            _DocumentLinkRow(
-              url: lease.leaseAgreementDocumentUrl!,
-              label: 'View Document',
-            )
-          else
-            Text(
-              'Not set up yet.',
-              style: TextStyle(
-                fontFamily: RLTokens.fontSans,
-                fontSize: 13,
-                color: RLTokens.muted,
-              ),
-            ),
-          if (lease.terminationAgreementDocumentUrl != null) ...[
-            const SizedBox(height: 20),
-            _SectionHeading('Termination Agreement'),
-            _DocumentLinkRow(
-              url: lease.terminationAgreementDocumentUrl!,
-              label: 'View Document',
-            ),
-          ],
-        ],
-      ),
-    ),
-  ];
-}
-
-class _DocumentLinkRow extends StatelessWidget {
-  const _DocumentLinkRow({required this.url, required this.label});
-  final String url;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () async {
-        await Haptics.vibrate(HapticsType.selection);
-        await _openUrl(url);
-      },
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.open_in_new_rounded, size: 14, color: RLTokens.info),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: TextStyle(
-              fontFamily: RLTokens.fontSans,
-              fontSize: 13.5,
-              fontWeight: RLTokens.semibold,
-              color: RLTokens.info,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 // ── Alerts ────────────────────────────────────────────────────────────────────

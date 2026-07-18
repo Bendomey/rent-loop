@@ -7,6 +7,7 @@ import 'package:rentloop_manager/src/modules/main/properties/unit_form_widgets.d
 import 'package:rentloop_manager/src/repository/models/lease_checklist_model.dart';
 import 'package:rentloop_manager/src/repository/notifiers/leases/create_checklist_item_notifier.dart';
 import 'package:rentloop_manager/src/repository/notifiers/leases/update_checklist_item_notifier.dart';
+import 'package:rentloop_manager/src/shared/toast.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
@@ -107,6 +108,7 @@ class _ChecklistItemSheetState extends ConsumerState<_ChecklistItemSheet> {
           );
       if (!mounted) return;
       if (ref.read(updateChecklistItemNotifierProvider).status.isSuccess()) {
+        showRLToast(ref, tone: RLToastTone.success, title: 'Item updated');
         Navigator.of(context).pop(true);
       }
     } else {
@@ -122,6 +124,7 @@ class _ChecklistItemSheetState extends ConsumerState<_ChecklistItemSheet> {
           );
       if (!mounted) return;
       if (ref.read(createChecklistItemNotifierProvider).status.isSuccess()) {
+        showRLToast(ref, tone: RLToastTone.success, title: 'Item added');
         Navigator.of(context).pop(true);
       }
     }

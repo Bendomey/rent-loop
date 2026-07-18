@@ -13,6 +13,7 @@ import 'package:rentloop_manager/src/repository/notifiers/blocks/blocks_notifier
 import 'package:rentloop_manager/src/repository/notifiers/blocks/delete_block_notifier.dart';
 import 'package:rentloop_manager/src/repository/providers/properties/property_blocks_provider.dart';
 import 'package:rentloop_manager/src/repository/providers/properties/property_detail_provider.dart';
+import 'package:rentloop_manager/src/shared/toast.dart';
 import 'package:rentloop_manager/src/repository/providers/properties/property_stats_provider.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
@@ -186,6 +187,9 @@ class _BlocksListScreenState extends ConsumerState<BlocksListScreen> {
       await ref
           .read(blocksNotifierProvider.notifier)
           .loadFirstPage(widget.propertyId, _query);
+      if (mounted) {
+        showRLToast(ref, tone: RLToastTone.success, title: 'Block deleted');
+      }
     } else {
       await Haptics.vibrate(HapticsType.error);
       if (mounted) {

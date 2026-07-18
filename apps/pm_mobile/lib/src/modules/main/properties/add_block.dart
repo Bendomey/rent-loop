@@ -8,6 +8,7 @@ import 'package:rentloop_manager/src/repository/notifiers/blocks/blocks_notifier
 import 'package:rentloop_manager/src/repository/notifiers/blocks/create_block_notifier.dart';
 import 'package:rentloop_manager/src/repository/providers/properties/property_blocks_provider.dart';
 import 'package:rentloop_manager/src/repository/providers/properties/property_stats_provider.dart';
+import 'package:rentloop_manager/src/shared/toast.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
@@ -106,7 +107,10 @@ class _AddBlockScreenState extends ConsumerState<AddBlockScreen> {
       await ref
           .read(blocksNotifierProvider.notifier)
           .loadFirstPage(widget.propertyId);
-      if (mounted) context.pop();
+      if (mounted) {
+        showRLToast(ref, tone: RLToastTone.success, title: 'Block created');
+        context.pop();
+      }
     } else {
       await Haptics.vibrate(HapticsType.error);
       _scrollToTop();

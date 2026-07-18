@@ -12,6 +12,7 @@ import 'package:rentloop_manager/src/repository/providers/properties/property_de
 import 'package:rentloop_manager/src/repository/providers/properties/property_stats_provider.dart';
 import 'package:rentloop_manager/src/repository/providers/properties/property_units_preview_provider.dart';
 import 'package:rentloop_manager/src/repository/providers/properties/unit_detail_provider.dart';
+import 'package:rentloop_manager/src/shared/toast.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
@@ -230,7 +231,10 @@ class UnitSettingsHubScreen extends ConsumerWidget {
       ref.invalidate(propertyStatsProvider(propertyId));
       ref.invalidate(propertyBlocksProvider(propertyId));
       await ref.read(unitsNotifierProvider.notifier).loadFirstPage(propertyId);
-      if (context.mounted) context.go('/properties/$propertyId/units');
+      if (context.mounted) {
+        showRLToast(ref, tone: RLToastTone.success, title: 'Unit deleted');
+        context.go('/properties/$propertyId/units');
+      }
     } else {
       await Haptics.vibrate(HapticsType.error);
       if (context.mounted) {

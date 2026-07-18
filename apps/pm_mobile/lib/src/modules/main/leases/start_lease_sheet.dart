@@ -7,6 +7,7 @@ import 'package:rentloop_manager/src/lib/money.dart';
 import 'package:rentloop_manager/src/lib/unit_status.dart';
 import 'package:rentloop_manager/src/repository/models/lease_model.dart';
 import 'package:rentloop_manager/src/repository/notifiers/leases/start_lease_notifier.dart';
+import 'package:rentloop_manager/src/shared/toast.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
@@ -91,6 +92,11 @@ class _StartLeaseSheetState extends ConsumerState<_StartLeaseSheet> {
         );
     if (!mounted) return;
     if (ref.read(startLeaseNotifierProvider).status.isSuccess()) {
+      showRLToast(
+        ref,
+        tone: RLToastTone.success,
+        title: 'Utility transfer date saved',
+      );
       Navigator.of(context).pop(false);
     }
   }
@@ -107,6 +113,7 @@ class _StartLeaseSheetState extends ConsumerState<_StartLeaseSheet> {
         );
     if (!mounted) return;
     if (ref.read(startLeaseNotifierProvider).status.isSuccess()) {
+      showRLToast(ref, tone: RLToastTone.success, title: 'Lease activated');
       Navigator.of(context).pop(true);
     }
   }

@@ -12,6 +12,7 @@ import 'package:rentloop_manager/src/repository/providers/properties/property_bl
 import 'package:rentloop_manager/src/repository/providers/properties/property_detail_provider.dart';
 import 'package:rentloop_manager/src/repository/providers/properties/property_stats_provider.dart';
 import 'package:rentloop_manager/src/repository/providers/properties/property_units_preview_provider.dart';
+import 'package:rentloop_manager/src/shared/toast.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
@@ -145,7 +146,10 @@ class _AddUnitScreenState extends ConsumerState<AddUnitScreen> {
       await ref
           .read(unitsNotifierProvider.notifier)
           .loadFirstPage(widget.propertyId);
-      if (mounted) context.pop();
+      if (mounted) {
+        showRLToast(ref, tone: RLToastTone.success, title: 'Unit created');
+        context.pop();
+      }
     } else {
       await Haptics.vibrate(HapticsType.error);
       _scrollToTop();

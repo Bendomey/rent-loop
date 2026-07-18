@@ -11,6 +11,7 @@ import 'package:rentloop_manager/src/repository/notifiers/units/units_notifier.d
 import 'package:rentloop_manager/src/repository/providers/properties/property_detail_provider.dart';
 import 'package:rentloop_manager/src/repository/providers/properties/property_units_preview_provider.dart';
 import 'package:rentloop_manager/src/repository/providers/properties/unit_detail_provider.dart';
+import 'package:rentloop_manager/src/shared/toast.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
@@ -125,7 +126,10 @@ class _EditUnitScreenState extends ConsumerState<EditUnitScreen> {
       await ref
           .read(unitsNotifierProvider.notifier)
           .loadFirstPage(widget.propertyId);
-      if (mounted) context.pop();
+      if (mounted) {
+        showRLToast(ref, tone: RLToastTone.success, title: 'Unit updated');
+        context.pop();
+      }
     } else {
       await Haptics.vibrate(HapticsType.error);
       _scrollToTop();

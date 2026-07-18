@@ -9,6 +9,7 @@ import 'package:rentloop_manager/src/repository/notifiers/blocks/blocks_notifier
 import 'package:rentloop_manager/src/repository/notifiers/blocks/update_block_notifier.dart';
 import 'package:rentloop_manager/src/repository/providers/properties/block_detail_provider.dart';
 import 'package:rentloop_manager/src/repository/providers/properties/property_blocks_provider.dart';
+import 'package:rentloop_manager/src/shared/toast.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
@@ -122,7 +123,10 @@ class _EditBlockScreenState extends ConsumerState<EditBlockScreen> {
       await ref
           .read(blocksNotifierProvider.notifier)
           .loadFirstPage(widget.propertyId);
-      if (mounted) context.pop();
+      if (mounted) {
+        showRLToast(ref, tone: RLToastTone.success, title: 'Block updated');
+        context.pop();
+      }
     } else {
       await Haptics.vibrate(HapticsType.error);
       _scrollToTop();

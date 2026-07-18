@@ -91,17 +91,22 @@ class LeaseApi extends AbstractApi {
   /// `PATCH .../leases/{lease_id}` — every param optional and only sent when
   /// non-null (same convention as `UnitApi.updateUnit()`), since the backend
   /// distinguishes "field omitted" from "field explicitly cleared" via
-  /// `lib.Optional[T]`. Currently only used by the Start Lease flow to set
-  /// `utility_transfers_date` before activating.
+  /// `lib.Optional[T]`. Used by the Start Lease flow to set
+  /// `utility_transfers_date` before activating, and by the Documents tab's
+  /// MANUAL-mode "Done" step to copy the uploaded file's URL onto the lease
+  /// record (`leaseAgreementDocumentUrl`).
   Future<void> updateLease({
     required String clientId,
     required String propertyId,
     required String leaseId,
     DateTime? utilityTransfersDate,
+    String? leaseAgreementDocumentUrl,
   }) async {
     final body = <String, dynamic>{
       if (utilityTransfersDate != null)
         'utility_transfers_date': utilityTransfersDate.toIso8601String(),
+      if (leaseAgreementDocumentUrl != null)
+        'lease_agreement_document_url': leaseAgreementDocumentUrl,
     };
     await execute(
       method: 'PATCH',

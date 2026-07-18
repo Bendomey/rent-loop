@@ -34,7 +34,34 @@ class R2UploadService {
 
     final streamed = await request.send();
     final response = await http.Response.fromStream(streamed);
+    return _extractUrl(response);
+  }
 
+  /// Same proxy, for in-memory bytes rather than a picked file — used by
+  /// the signature pad (`SignatureCaptureScreen`), which produces a PNG via
+  /// `RenderRepaintBoundary` and never touches disk.
+  Future<String> uploadBytes(
+    List<int> bytes, {
+    required String objectKeyPrefix,
+    String ext = 'png',
+  }) async {
+    final uniqueName =
+        '${DateTime.now().millisecondsSinceEpoch}-${_generateKey()}.$ext';
+    final objectKey = '$objectKeyPrefix/$uniqueName';
+
+    final uri = Uri.parse(kR2UploadUrl);
+    final request = http.MultipartRequest('POST', uri)
+      ..fields['objectKey'] = objectKey
+      ..files.add(
+        http.MultipartFile.fromBytes('file', bytes, filename: uniqueName),
+      );
+
+    final streamed = await request.send();
+    final response = await http.Response.fromStream(streamed);
+    return _extractUrl(response);
+  }
+
+  String _extractUrl(http.Response response) {
     if (response.statusCode >= 400) {
       throw Exception(
         'Upload failed (${response.statusCode}): ${response.body}',

@@ -32,3 +32,60 @@ Uri applyUrl({required String campaign, required String content}) =>
 
 Uri forgotPasswordUrl({required String campaign, required String content}) =>
     pmUrl('/forgot-your-password', campaign: campaign, content: content);
+
+/// A lease's web occupancy page — used as the "use web" deep link for
+/// actions mobile deliberately doesn't build a native flow for (starting a
+/// new document, editing one in the Lexical editor). Landing there rather
+/// than a deeper document-specific route since "start a new document" is a
+/// dialog on this same page, not its own URL.
+Uri leaseOccupancyUrl(
+  String propertyId,
+  String leaseId, {
+  required String campaign,
+  required String content,
+}) => pmUrl(
+  '/properties/$propertyId/occupancy/leases/$leaseId',
+  campaign: campaign,
+  content: content,
+);
+
+/// The Lexical document editor — used only as a "use web" deep link, never
+/// rendered natively (rich-text editing with embedded signature nodes is a
+/// rendering-engine-scale sub-system, out of scope for mobile).
+Uri leaseDocumentEditorUrl(
+  String propertyId,
+  String documentId,
+  String leaseId, {
+  required String campaign,
+  required String content,
+}) =>
+    Uri.https(kPmHost, '/properties/$propertyId/documents/$documentId/editor', {
+      'utm_source': _kUtmSource,
+      'utm_medium': _kUtmMedium,
+      'utm_campaign': campaign,
+      'utm_content': content,
+      'leaseId': leaseId,
+      'returnUrl': '/properties/$propertyId/occupancy/leases/$leaseId',
+    });
+
+/// The document's signing page — where the manager (or tenant, via their
+/// own token link) reviews the full rendered document before signing.
+/// Offered as a "review before you sign" link alongside mobile's native
+/// signature pad, since mobile can't render the document content itself.
+Uri leaseDocumentSigningUrl(
+  String propertyId,
+  String documentId,
+  String leaseId, {
+  required String campaign,
+  required String content,
+}) => Uri.https(
+  kPmHost,
+  '/properties/$propertyId/documents/$documentId/signing',
+  {
+    'utm_source': _kUtmSource,
+    'utm_medium': _kUtmMedium,
+    'utm_campaign': campaign,
+    'utm_content': content,
+    'leaseId': leaseId,
+  },
+);

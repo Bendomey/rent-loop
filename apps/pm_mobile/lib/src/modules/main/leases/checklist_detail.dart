@@ -10,6 +10,7 @@ import 'package:rentloop_manager/src/repository/models/lease_checklist_model.dar
 import 'package:rentloop_manager/src/repository/notifiers/leases/delete_checklist_item_notifier.dart';
 import 'package:rentloop_manager/src/repository/notifiers/leases/submit_checklist_notifier.dart';
 import 'package:rentloop_manager/src/repository/providers/leases/lease_checklists_provider.dart';
+import 'package:rentloop_manager/src/shared/toast.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
@@ -491,6 +492,7 @@ class _ItemRow extends ConsumerWidget {
     if (!context.mounted) return;
     if (ref.read(deleteChecklistItemNotifierProvider).status.isSuccess()) {
       ref.invalidate(leaseChecklistsProvider(propertyId, leaseId));
+      showRLToast(ref, tone: RLToastTone.success, title: 'Item deleted');
     }
   }
 
@@ -740,6 +742,7 @@ class _SubmitButton extends ConsumerWidget {
     if (state.status.isSuccess()) {
       await Haptics.vibrate(HapticsType.success);
       ref.invalidate(leaseChecklistsProvider(propertyId, leaseId));
+      showRLToast(ref, tone: RLToastTone.success, title: 'Report submitted');
     } else if (state.status.isFailed() && context.mounted) {
       await Haptics.vibrate(HapticsType.error);
       if (!context.mounted) return;

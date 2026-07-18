@@ -4,6 +4,7 @@ import 'package:haptic_feedback/haptic_feedback.dart';
 
 import 'package:rentloop_manager/src/lib/lease_status.dart';
 import 'package:rentloop_manager/src/repository/notifiers/leases/create_checklist_notifier.dart';
+import 'package:rentloop_manager/src/shared/toast.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 
 /// Ports the web `CreateChecklistDialog` — a confirm step before creating a
@@ -61,6 +62,7 @@ class _CreateChecklistDialogState
         );
     if (!mounted) return;
     if (ref.read(createChecklistNotifierProvider).status.isSuccess()) {
+      showRLToast(ref, tone: RLToastTone.success, title: 'Checklist created');
       Navigator.of(context).pop(true);
     }
   }
