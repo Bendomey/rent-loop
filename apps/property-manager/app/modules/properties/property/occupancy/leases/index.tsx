@@ -9,13 +9,32 @@ import { DataTable } from '~/components/datatable'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent } from '~/components/ui/card'
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from '~/components/ui/tooltip'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
+import { localizedDayjs } from '~/lib/date'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 import { getPaymentFrequencyPeriodLabel } from '~/lib/properties.utils'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
+
+// Mirrors the Insights risk-summary "leases expiring" window.
+const EXPIRING_SOON_WINDOW_DAYS = 60
+
+function isLeaseExpiringSoon(lease: Lease) {
+	if (!lease.move_out_date) {
+		return false
+	}
+	return (
+		localizedDayjs(lease.move_out_date).diff(localizedDayjs(), 'day') <=
+		EXPIRING_SOON_WINDOW_DAYS
+	)
+}
 
 function getLeaseStatusLabel(status: Lease['status']) {
 	switch (status) {
@@ -147,15 +166,32 @@ export function PropertyTenantLeasesModule() {
 			{
 				accessorKey: 'status',
 				header: 'Status',
-				cell: ({ getValue }) => {
-					const status = getValue<Lease['status']>()
-					return (
+				cell: ({ row }) => {
+					const lease = row.original
+					const expiringSoon = isLeaseExpiringSoon(lease)
+
+					const badge = (
 						<Badge
 							variant="outline"
-							className={`px-1.5 ${getLeaseStatusClass(status)}`}
+							className={`px-1.5 ${
+								expiringSoon
+									? 'bg-amber-500 text-white dark:bg-amber-600'
+									: getLeaseStatusClass(lease.status)
+							}`}
 						>
-							{getLeaseStatusLabel(status)}
+							{expiringSoon ? 'Expiring' : getLeaseStatusLabel(lease.status)}
 						</Badge>
+					)
+
+					if (!lease.move_out_date) return badge
+
+					return (
+						<Tooltip>
+							<TooltipTrigger>{badge}</TooltipTrigger>
+							<TooltipContent>
+								Move-out: {localizedDayjs(lease.move_out_date).format('MMM D, YYYY')}
+							</TooltipContent>
+						</Tooltip>
 					)
 				},
 			},
