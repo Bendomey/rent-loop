@@ -1,4 +1,4 @@
-import { Trash2 } from 'lucide-react'
+import { Building2, LayoutGrid, TriangleAlert, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { BlockedDeletionModal } from './blocked-modal'
 import { ConfirmDeletionModal } from './confirm-modal'
@@ -64,9 +64,9 @@ export function PropertyDangerZoneModule() {
 				<Separator />
 
 				<div className="border-destructive/30 overflow-hidden rounded-xl border">
-					<div className="flex flex-col items-start gap-4 p-6 sm:flex-row sm:items-center">
+					<div className="flex flex-col items-start gap-4 p-6 sm:flex-row">
 						<div className="flex-1">
-							<h4 className="text-foreground text-lg font-semibold">
+							<h4 className="font-serif text-2xl font-normal">
 								Delete this property
 							</h4>
 							<p className="text-muted-foreground mt-2 max-w-xl text-sm leading-relaxed">
@@ -78,6 +78,22 @@ export function PropertyDangerZoneModule() {
 								and application history — from your active portfolio. It’s
 								archived rather than erased, so it can be restored later.
 							</p>
+							<div className="mt-4 flex flex-wrap items-center gap-2">
+								<span className="bg-muted flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm">
+									<LayoutGrid className="text-muted-foreground size-4" />
+									<span className="font-semibold">
+										{property.blocks_count}
+									</span>{' '}
+									blocks
+								</span>
+								<span className="bg-muted flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm">
+									<Building2 className="text-muted-foreground size-4" />
+									<span className="font-semibold">
+										{property.units_count}
+									</span>{' '}
+									units
+								</span>
+							</div>
 						</div>
 						<Button
 							type="button"
@@ -90,7 +106,7 @@ export function PropertyDangerZoneModule() {
 						</Button>
 					</div>
 					<div className="bg-destructive/5 border-destructive/30 flex items-center gap-2 border-t px-6 py-3">
-						<Trash2 className="text-destructive size-4 shrink-0" />
+						<TriangleAlert className="text-destructive size-4 shrink-0" />
 						<span className="text-destructive text-sm font-medium">
 							A property with active leases, bookings or pending applications
 							can’t be deleted until those are resolved.

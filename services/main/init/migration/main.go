@@ -122,6 +122,7 @@ func ServiceAutoMigration(db *gorm.DB) error {
 		jobs.AddLeaseMoveOutDate(),
 		jobs.AddLeaseRemindersSent(),
 		jobs.FixLeaseMoveOutDateFrequencyMismatch(),
+		jobs.AddPropertyArchiveFields(),
 	})
 	if err := m.Migrate(); err != nil {
 		return fmt.Errorf("[Migration.Migrate]: %v", err)

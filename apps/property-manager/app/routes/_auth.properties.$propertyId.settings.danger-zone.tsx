@@ -18,12 +18,12 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 }
 
 export const handle = {
-	breadcrumb: 'Danger Zone',
+	breadcrumb: 'Delete Property',
 }
 
 export function meta({ loaderData, location, params }: Route.MetaArgs) {
 	const meta = getSocialMetas({
-		title: `Danger Zone | ${loaderData?.clientUserProperty?.property?.name ?? params.propertyId}`,
+		title: `Delete Property | ${loaderData?.clientUserProperty?.property?.name ?? params.propertyId}`,
 		url: getDisplayUrl({
 			origin: loaderData.origin,
 			path: location.pathname,

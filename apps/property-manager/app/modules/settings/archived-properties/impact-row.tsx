@@ -1,27 +1,20 @@
-import { ArrowRight, type LucideIcon } from 'lucide-react'
-import { Button } from '~/components/ui/button'
+import { type LucideIcon } from 'lucide-react'
 import { cn } from '~/lib/utils'
 
 interface ImpactRowProps {
 	icon: LucideIcon
 	label: string
 	count: number
-	note?: string
 	tone?: 'default' | 'destructive'
 	dim?: boolean
-	actionLabel?: string
-	onAction?: () => void
 }
 
 export function ImpactRow({
 	icon: Icon,
 	label,
 	count,
-	note,
 	tone = 'default',
 	dim = false,
-	actionLabel,
-	onAction,
 }: ImpactRowProps) {
 	return (
 		<div
@@ -54,24 +47,7 @@ export function ImpactRow({
 						{count}
 					</span>
 				</div>
-				{note ? (
-					<p className="text-muted-foreground mt-0.5 truncate text-xs">
-						{note}
-					</p>
-				) : null}
 			</div>
-			{actionLabel ? (
-				<Button
-					type="button"
-					size="sm"
-					variant="outline"
-					className="border-destructive text-destructive hover:bg-destructive/10 hover:text-destructive shrink-0 gap-1"
-					onClick={onAction}
-				>
-					{actionLabel}
-					<ArrowRight className="size-3.5" />
-				</Button>
-			) : null}
 		</div>
 	)
 }

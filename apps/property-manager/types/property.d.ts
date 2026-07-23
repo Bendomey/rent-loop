@@ -20,6 +20,11 @@ interface Property {
 	tags: string[]
 	modes: Array<'LEASE' | 'BOOKING'>
 	booking_requires_upfront_payment: boolean
+	deleted_by_id: Nullable<string>
+	deleted_by: Nullable<ClientUser>
+	blocks_count: number
+	units_count: number
+	deleted_at: Nullable<Date>
 	created_at: Date
 	updated_at: Date
 }
@@ -29,4 +34,5 @@ interface FetchPropertyFilter {
 	status?: string
 	tags?: Array<string>
 	ids?: Array<string>
+	archived?: boolean
 }

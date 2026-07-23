@@ -37,6 +37,12 @@ type Property struct {
 	CreatedByID string `gorm:"not null;"`
 	CreatedBy   ClientUser
 
+	DeletedByID *string
+	DeletedBy   *ClientUser
+
+	BlocksCount int `gorm:"not null;default:0"`
+	UnitsCount  int `gorm:"not null;default:0"`
+
 	Units []Unit
 }
 
