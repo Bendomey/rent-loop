@@ -55,7 +55,7 @@ export default function SettingsDashboard({ params }: Route.ComponentProps) {
 
 	const dangerZoneMenus = useMemo(() => {
 		if (hasOwnerAccess !== 'AUTHORIZED') return []
-		return [{ title: 'Danger Zone', url: '/danger-zone', icon: Trash2 }]
+		return [{ title: 'Delete Property', url: '/danger-zone', icon: Trash2 }]
 	}, [hasOwnerAccess])
 
 	const allMenus = [...generalMenus, ...workspaceMenus, ...dangerZoneMenus]

@@ -27,6 +27,11 @@ type OutputProperty struct {
 	Client      OutputClient     `json:"client"`
 	CreatedByID string           `json:"created_by_id"         example:"1e81fea0-5e8b-4535-b449-1a2133e94a7a"                    description:"The ID of the client user that created the property"`
 	CreatedBy   OutputClientUser `json:"created_by"`
+	DeletedByID *string          `json:"deleted_by_id"         example:"1e81fea0-5e8b-4535-b449-1a2133e94a7a"                    description:"The ID of the client user that deleted (archived) the property, if any"`
+	DeletedBy   OutputClientUser `json:"deleted_by"`
+	BlocksCount int              `json:"blocks_count"          example:"2"                                                       description:"Current number of blocks under this property"`
+	UnitsCount  int              `json:"units_count"           example:"6"                                                       description:"Current number of units under this property"`
+	DeletedAt   *time.Time       `json:"deleted_at"            example:"2026-07-01T00:00:00Z"                 format:"date-time" description:"When the property was archived, if it has been"`
 	CreatedAt   time.Time        `json:"created_at"            example:"2023-01-01T00:00:00Z"                 format:"date-time" description:"Timestamp when the property was created"`
 	UpdatedAt   time.Time        `json:"updated_at"            example:"2023-01-01T00:00:00Z"                 format:"date-time" description:"Timestamp when the property was last updated"`
 }
@@ -34,6 +39,11 @@ type OutputProperty struct {
 func DBPropertyToRest(i *models.Property) interface{} {
 	if i == nil || i.ID == uuid.Nil {
 		return nil
+	}
+
+	var deletedAt *time.Time
+	if i.DeletedAt.Valid {
+		deletedAt = &i.DeletedAt.Time
 	}
 
 	data := map[string]interface{}{
@@ -57,6 +67,11 @@ func DBPropertyToRest(i *models.Property) interface{} {
 		"client":        DBClientToRestClient(&i.Client),
 		"created_by_id": i.CreatedByID,
 		"created_by":    DBClientUserToRest(&i.CreatedBy),
+		"deleted_by_id": i.DeletedByID,
+		"deleted_by":    DBClientUserToRest(i.DeletedBy),
+		"blocks_count":  i.BlocksCount,
+		"units_count":   i.UnitsCount,
+		"deleted_at":    deletedAt,
 		"modes":         i.Modes,
 		"created_at":    i.CreatedAt,
 		"updated_at":    i.UpdatedAt,

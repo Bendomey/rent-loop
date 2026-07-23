@@ -2470,6 +2470,19 @@ definitions:
       units:
         type: integer
     type: object
+  services.PropertyRestorePreview:
+    properties:
+      blocks:
+        type: integer
+      bookings:
+        type: integer
+      leases:
+        type: integer
+      tenant_applications:
+        type: integer
+      units:
+        type: integer
+    type: object
   transformations.AdminOutputAnnouncement:
     properties:
       client_id:
@@ -4442,6 +4455,9 @@ definitions:
       address:
         example: 123 Main St
         type: string
+      blocks_count:
+        example: 2
+        type: integer
       city:
         example: Accra
         type: string
@@ -4460,6 +4476,15 @@ definitions:
       created_by:
         $ref: '#/definitions/transformations.OutputClientUser'
       created_by_id:
+        example: 1e81fea0-5e8b-4535-b449-1a2133e94a7a
+        type: string
+      deleted_at:
+        example: "2026-07-01T00:00:00Z"
+        format: date-time
+        type: string
+      deleted_by:
+        $ref: '#/definitions/transformations.OutputClientUser'
+      deleted_by_id:
         example: 1e81fea0-5e8b-4535-b449-1a2133e94a7a
         type: string
       description:
@@ -4506,6 +4531,9 @@ definitions:
       type:
         example: SINGLE
         type: string
+      units_count:
+        example: 6
+        type: integer
       updated_at:
         example: "2023-01-01T00:00:00Z"
         format: date-time
@@ -7972,6 +8000,9 @@ paths:
       - application/json
       description: Get all properties (Admin)
       parameters:
+      - in: query
+        name: archived
+        type: boolean
       - in: query
         name: end_date
         type: string
@@ -12857,6 +12888,49 @@ paths:
       summary: Verify an offline payment (Admin)
       tags:
       - Payments
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/restore:preview:
+    get:
+      consumes:
+      - application/json
+      description: 'Returns what a restore would bring back into the active portfolio:
+        block/unit counts and kept (non-blocking) lease/booking/application counts'
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Restore preview computed successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/services.PropertyRestorePreview'
+            type: object
+        "400":
+          description: Property is not archived
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Property not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Preview restoring an archived property (Admin)
+      tags:
+      - Properties
   /api/v1/admin/clients/{client_id}/properties/{property_id}/signing:
     post:
       consumes:
@@ -14792,6 +14866,45 @@ paths:
       summary: Update unit (Admin) status to maintenance
       tags:
       - Units
+  /api/v1/admin/clients/{client_id}/properties/{property_id}:restore:
+    post:
+      consumes:
+      - application/json
+      description: Un-archives a soft-deleted property. Units, blocks, leases, bookings
+        and applications were never removed (see DeleteProperty), so nothing else
+        needs restoring.
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Property restored successfully
+        "400":
+          description: Property is not archived
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Property not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Restore an archived property (Admin)
+      tags:
+      - Properties
   /api/v1/admin/clients/{client_id}/properties/me:
     get:
       consumes:

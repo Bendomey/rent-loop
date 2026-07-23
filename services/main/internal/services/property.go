@@ -36,6 +36,11 @@ type PropertyService interface {
 		context context.Context,
 		query repository.GetPropertyBySlugQuery,
 	) (*models.Property, error)
+	GetPropertyRestorePreview(
+		context context.Context,
+		input GetPropertyRestorePreviewInput,
+	) (*PropertyRestorePreview, error)
+	RestoreProperty(context context.Context, input RestorePropertyInput) error
 }
 
 type propertyService struct {
@@ -663,8 +668,9 @@ func (s *propertyService) GetPropertyDeletionEligibility(
 }
 
 type DeletePropertyInput struct {
-	PropertyID string
-	ClientID   string
+	PropertyID  string
+	ClientID    string
+	DeletedByID string
 }
 
 func (s *propertyService) DeleteProperty(context context.Context, input DeletePropertyInput) error {
@@ -705,47 +711,35 @@ func (s *propertyService) DeleteProperty(context context.Context, input DeletePr
 		return pkg.BadRequestError("PropertyHasActiveOccupancy", nil)
 	}
 
-	if err := s.leaseRepo.DeleteNonBlockingByPropertyID(transCtx, property.ID.String()); err != nil {
-		tx.Rollback()
-		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err:      err,
-			Metadata: map[string]string{"function": "DeleteProperty", "action": "deleting non-blocking leases"},
-		})
-	}
-
-	if err := s.bookingRepo.DeleteNonBlockingByPropertyID(transCtx, property.ID.String()); err != nil {
-		tx.Rollback()
-		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err:      err,
-			Metadata: map[string]string{"function": "DeleteProperty", "action": "deleting non-blocking bookings"},
-		})
-	}
-
-	if err := s.tenantApplicationRepo.DeleteNonBlockingByPropertyID(transCtx, property.ID.String()); err != nil {
-		tx.Rollback()
-		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
-			Metadata: map[string]string{
-				"function": "DeleteProperty",
-				"action":   "deleting non-blocking tenant applications",
-			},
-		})
-	}
-
-	if err := s.unitService.DeleteAllByPropertyID(transCtx, property.ID.String()); err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	if err := s.propertyBlockService.DeleteAllByPropertyID(transCtx, property.ID.String()); err != nil {
-		tx.Rollback()
-		return err
-	}
-
+	// Only the ClientUserProperty links get removed alongside the property —
+	// this gates MANAGER/STAFF workspace access, not tenant-facing data, and
+	// isn't restored when the property is restored (a workspace-access
+	// detail, distinct from the tenant-facing entities below).
 	unlinkPropertyErr := s.clientUserPropertyService.UnlinkByPropertyID(transCtx, input.PropertyID)
 	if unlinkPropertyErr != nil {
 		tx.Rollback()
 		return unlinkPropertyErr
+	}
+
+	// Units, blocks, leases, bookings and tenant applications are NOT
+	// soft-deleted here. A tenant's past lease or application belongs to
+	// their own account history, independent of the property — deleting it
+	// would hide it from the tenant, not just from the property manager.
+	// Since every PM-side path to this data goes through fetching the
+	// Property row first (default-scoped to exclude soft-deleted rows) or
+	// joins against `properties.deleted_at IS NULL`, soft-deleting only the
+	// property already makes all of it unreachable from the PM portal —
+	// without touching the child rows.
+	property.DeletedByID = &input.DeletedByID
+	if updateErr := s.repo.Update(transCtx, property); updateErr != nil {
+		tx.Rollback()
+		return pkg.InternalServerError(updateErr.Error(), &pkg.RentLoopErrorParams{
+			Err: updateErr,
+			Metadata: map[string]string{
+				"function": "DeleteProperty",
+				"action":   "recording who deleted the property",
+			},
+		})
 	}
 
 	deletePropertyErr := s.repo.Delete(transCtx, input.PropertyID)
@@ -791,4 +785,190 @@ func (s *propertyService) GetPropertyBySlug(
 	}
 
 	return property, nil
+}
+
+type PropertyRestorePreview struct {
+	Blocks             int64 `json:"blocks"`
+	Units              int64 `json:"units"`
+	Leases             int64 `json:"leases"`
+	Bookings           int64 `json:"bookings"`
+	TenantApplications int64 `json:"tenant_applications"`
+}
+
+type GetPropertyRestorePreviewInput struct {
+	PropertyID string
+	ClientID   string
+}
+
+func (s *propertyService) GetPropertyRestorePreview(
+	ctx context.Context,
+	input GetPropertyRestorePreviewInput,
+) (*PropertyRestorePreview, error) {
+	property, propertyErr := s.repo.GetByQueryUnscoped(
+		ctx,
+		map[string]any{"id": input.PropertyID, "client_id": input.ClientID},
+	)
+	if propertyErr != nil {
+		if errors.Is(propertyErr, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("PropertyNotFound", &pkg.RentLoopErrorParams{
+				Err: propertyErr,
+			})
+		}
+		return nil, pkg.InternalServerError(propertyErr.Error(), &pkg.RentLoopErrorParams{
+			Err: propertyErr,
+			Metadata: map[string]string{
+				"function": "GetPropertyRestorePreview",
+				"action":   "fetching property by ID",
+			},
+		})
+	}
+
+	if !property.DeletedAt.Valid {
+		return nil, pkg.BadRequestError("PropertyNotArchived", nil)
+	}
+
+	leasesCount, leasesErr := s.leaseRepo.CountNonBlockingByPropertyID(ctx, property.ID.String())
+	if leasesErr != nil {
+		return nil, pkg.InternalServerError(leasesErr.Error(), &pkg.RentLoopErrorParams{
+			Err: leasesErr,
+			Metadata: map[string]string{
+				"function": "GetPropertyRestorePreview",
+				"action":   "counting leases",
+			},
+		})
+	}
+
+	bookingsCount, bookingsErr := s.bookingRepo.CountNonBlockingByPropertyID(ctx, property.ID.String())
+	if bookingsErr != nil {
+		return nil, pkg.InternalServerError(bookingsErr.Error(), &pkg.RentLoopErrorParams{
+			Err: bookingsErr,
+			Metadata: map[string]string{
+				"function": "GetPropertyRestorePreview",
+				"action":   "counting bookings",
+			},
+		})
+	}
+
+	applicationsCount, applicationsErr := s.tenantApplicationRepo.CountNonBlockingByPropertyID(
+		ctx,
+		property.ID.String(),
+	)
+	if applicationsErr != nil {
+		return nil, pkg.InternalServerError(applicationsErr.Error(), &pkg.RentLoopErrorParams{
+			Err: applicationsErr,
+			Metadata: map[string]string{
+				"function": "GetPropertyRestorePreview",
+				"action":   "counting tenant applications",
+			},
+		})
+	}
+
+	return &PropertyRestorePreview{
+		Blocks:             int64(property.BlocksCount),
+		Units:              int64(property.UnitsCount),
+		Leases:             leasesCount,
+		Bookings:           bookingsCount,
+		TenantApplications: applicationsCount,
+	}, nil
+}
+
+type RestorePropertyInput struct {
+	PropertyID   string
+	ClientID     string
+	RestoredByID string
+}
+
+func (s *propertyService) RestoreProperty(ctx context.Context, input RestorePropertyInput) error {
+	property, propertyErr := s.repo.GetByQueryUnscoped(
+		ctx,
+		map[string]any{"id": input.PropertyID, "client_id": input.ClientID},
+	)
+	if propertyErr != nil {
+		if errors.Is(propertyErr, gorm.ErrRecordNotFound) {
+			return pkg.NotFoundError("PropertyNotFound", &pkg.RentLoopErrorParams{
+				Err: propertyErr,
+			})
+		}
+		return pkg.InternalServerError(propertyErr.Error(), &pkg.RentLoopErrorParams{
+			Err: propertyErr,
+			Metadata: map[string]string{
+				"function": "RestoreProperty",
+				"action":   "fetching property by ID",
+			},
+		})
+	}
+
+	if !property.DeletedAt.Valid {
+		return pkg.BadRequestError("PropertyNotArchived", nil)
+	}
+
+	tx := s.appCtx.DB.Begin()
+	transCtx := lib.WithTransaction(ctx, tx)
+
+	if restoreErr := s.repo.RestoreByID(transCtx, property.ID.String()); restoreErr != nil {
+		tx.Rollback()
+		return pkg.InternalServerError(restoreErr.Error(), &pkg.RentLoopErrorParams{
+			Err: restoreErr,
+			Metadata: map[string]string{
+				"function": "RestoreProperty",
+				"action":   "restoring property",
+			},
+		})
+	}
+
+	// The property lost its ClientUserProperty links when it was deleted
+	// (see DeleteProperty). Restore access for the client's OWNER — and,
+	// if a different ADMIN is the one restoring it, for that ADMIN too —
+	// so at least someone can manage the property again. Other previously
+	// assigned MANAGERs/STAFF are not automatically re-linked; an
+	// OWNER/ADMIN can re-invite them manually.
+	clientUserOwner, clientUserErr := s.clientUserService.GetClientUserByQuery(
+		transCtx,
+		map[string]any{"client_id": input.ClientID, "role": "OWNER"},
+	)
+	if clientUserErr != nil {
+		tx.Rollback()
+		return clientUserErr
+	}
+
+	ownerClientUserProperty := CreateClientUserPropertyInput{
+		PropertyID:   property.ID.String(),
+		ClientUserID: clientUserOwner.ID.String(),
+		Role:         "MANAGER",
+		CreatedByID:  &input.RestoredByID,
+	}
+
+	_, linkOwnerErr := s.clientUserPropertyService.LinkClientUserProperty(
+		transCtx,
+		ownerClientUserProperty,
+	)
+	if linkOwnerErr != nil {
+		tx.Rollback()
+		return linkOwnerErr
+	}
+
+	if clientUserOwner.ID.String() != input.RestoredByID {
+		restorerClientUserProperty := CreateClientUserPropertyInput{
+			PropertyID:   property.ID.String(),
+			ClientUserID: input.RestoredByID,
+			Role:         "MANAGER",
+			CreatedByID:  &input.RestoredByID,
+		}
+
+		_, linkRestorerErr := s.clientUserPropertyService.LinkClientUserProperty(
+			transCtx,
+			restorerClientUserProperty,
+		)
+		if linkRestorerErr != nil {
+			tx.Rollback()
+			return linkRestorerErr
+		}
+	}
+
+	if commitErr := tx.Commit().Error; commitErr != nil {
+		tx.Rollback()
+		return commitErr
+	}
+
+	return nil
 }

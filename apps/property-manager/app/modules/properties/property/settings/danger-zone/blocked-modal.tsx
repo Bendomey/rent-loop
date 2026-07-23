@@ -1,21 +1,20 @@
-import { AlertTriangle } from 'lucide-react'
+import { Trash2, TriangleAlert } from 'lucide-react'
 import { useNavigate } from 'react-router'
 import { ImpactRow } from './impact-row'
 import {
 	blockingReasonIcon,
+	blockingReasonNote,
 	blockingReasonResolvePath,
 	willBeDeletedRows,
 } from './lib'
-import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
+import { DeleteModalHeader } from './modal-header'
 import {
 	AlertDialog,
 	AlertDialogAction,
 	AlertDialogCancel,
 	AlertDialogContent,
-	AlertDialogDescription,
 	AlertDialogFooter,
 	AlertDialogHeader,
-	AlertDialogTitle,
 } from '~/components/ui/alert-dialog'
 
 interface Props {
@@ -46,19 +45,27 @@ export function BlockedDeletionModal({
 		<AlertDialog open={opened} onOpenChange={setOpened}>
 			<AlertDialogContent className="sm:max-w-lg">
 				<AlertDialogHeader>
-					<AlertDialogTitle>Delete property</AlertDialogTitle>
-					<AlertDialogDescription>{propertyName}</AlertDialogDescription>
+					<DeleteModalHeader
+						propertyName={propertyName}
+						onClose={() => setOpened(false)}
+					/>
 				</AlertDialogHeader>
 
 				<div className="max-h-[55vh] space-y-5 overflow-y-auto">
-					<Alert variant="destructive">
-						<AlertTriangle className="size-4" />
-						<AlertTitle>This property can’t be deleted yet</AlertTitle>
-						<AlertDescription>
-							It still has active occupancy. End or resolve everything below,
-							and the Delete button will unlock.
-						</AlertDescription>
-					</Alert>
+					<div className="bg-destructive/5 border-destructive/20 flex items-start gap-3 rounded-xl border p-4">
+						<div className="bg-background border-destructive/20 flex size-9 shrink-0 items-center justify-center rounded-lg border">
+							<TriangleAlert className="text-destructive size-4" />
+						</div>
+						<div>
+							<p className="text-foreground text-sm font-semibold">
+								This property can't be deleted yet
+							</p>
+							<p className="text-muted-foreground mt-1 text-sm leading-relaxed">
+								It still has active occupancy. End or resolve everything below,
+								and the Delete button will unlock.
+							</p>
+						</div>
+					</div>
 
 					<div>
 						<p className="text-muted-foreground mb-2 text-xs font-medium tracking-wide uppercase">
@@ -73,6 +80,7 @@ export function BlockedDeletionModal({
 									icon={blockingReasonIcon(reason.type)}
 									label={reason.label}
 									count={reason.count}
+									note={blockingReasonNote(reason.type)}
 									tone="destructive"
 									actionLabel="Resolve"
 									onAction={() => resolve(reason)}
@@ -93,6 +101,7 @@ export function BlockedDeletionModal({
 										icon={row.icon}
 										label={row.label}
 										count={row.count}
+										note={row.note}
 										dim
 									/>
 								))}
@@ -110,7 +119,10 @@ export function BlockedDeletionModal({
 						<AlertDialogCancel onClick={() => setOpened(false)}>
 							Close
 						</AlertDialogCancel>
-						<AlertDialogAction disabled>Delete property</AlertDialogAction>
+						<AlertDialogAction disabled className="gap-2">
+							<Trash2 className="size-4" />
+							Delete property
+						</AlertDialogAction>
 					</div>
 				</AlertDialogFooter>
 			</AlertDialogContent>

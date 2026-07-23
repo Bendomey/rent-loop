@@ -105,6 +105,11 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 					r.Get("/me", handlers.ClientUserPropertyHandler.ListClientUserProperties)
 					r.Get("/slug/{slug}", handlers.PropertyHandler.GetPropertyBySlug)
 
+					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+						Get("/{property_id}/restore:preview", handlers.PropertyHandler.GetPropertyRestorePreview)
+					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+						Post("/{property_id}:restore", handlers.PropertyHandler.RestoreProperty)
+
 					r.Route("/{property_id}", func(r chi.Router) {
 						r.Use(middlewares.ValidatePropertyAccessMiddleware(appCtx))
 

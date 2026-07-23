@@ -26,7 +26,6 @@ type UnitService interface {
 	UpdateUnitStatus(ctx context.Context, input UpdateUnitStatusInput) error
 	SetSystemUnitStatus(ctx context.Context, input UpdateUnitStatusInput) error
 	DeleteUnit(ctx context.Context, input repository.DeleteUnitInput) error
-	DeleteAllByPropertyID(context context.Context, propertyID string) error
 	updateUnitCount(ctx context.Context, input UpdateUnitCountInput) error
 	resolveUnitCurrency(ctx context.Context, currency, propertyID string) string
 }
@@ -517,19 +516,6 @@ func (s *unitService) DeleteUnit(ctx context.Context, input repository.DeleteUni
 	return nil
 }
 
-func (s *unitService) DeleteAllByPropertyID(ctx context.Context, propertyID string) error {
-	if err := s.repo.DeleteByPropertyID(ctx, propertyID); err != nil {
-		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
-			Metadata: map[string]string{
-				"function": "DeleteAllByPropertyID",
-				"action":   "deleting all units for property",
-			},
-		})
-	}
-	return nil
-}
-
 func (s *unitService) ListUnits(ctx context.Context, filterQuery repository.ListUnitsFilter) ([]models.Unit, error) {
 	units, listUnitsErr := s.repo.List(ctx, filterQuery)
 	if listUnitsErr != nil {
@@ -598,6 +584,41 @@ func (s *unitService) updateUnitCount(ctx context.Context, input UpdateUnitCount
 			Metadata: map[string]string{
 				"function": "CreateUnit",
 				"action":   "updating property block unit count",
+			},
+		})
+	}
+
+	propertyUnitsCount, countPropertyUnitsErr := s.CountUnits(ctx, repository.ListUnitsFilter{
+		PropertyID: input.PropertyID,
+	})
+	if countPropertyUnitsErr != nil {
+		return pkg.InternalServerError(countPropertyUnitsErr.Error(), &pkg.RentLoopErrorParams{
+			Err: countPropertyUnitsErr,
+			Metadata: map[string]string{
+				"function": "CreateUnit",
+				"action":   "counting property units",
+			},
+		})
+	}
+
+	property, getPropertyErr := s.propertyRepo.GetByID(ctx, repository.GetPropertyQuery{ID: input.PropertyID})
+	if getPropertyErr != nil {
+		return pkg.InternalServerError(getPropertyErr.Error(), &pkg.RentLoopErrorParams{
+			Err: getPropertyErr,
+			Metadata: map[string]string{
+				"function": "CreateUnit",
+				"action":   "fetching property to update units count",
+			},
+		})
+	}
+
+	property.UnitsCount = int(propertyUnitsCount)
+	if updatePropertyErr := s.propertyRepo.Update(ctx, property); updatePropertyErr != nil {
+		return pkg.InternalServerError(updatePropertyErr.Error(), &pkg.RentLoopErrorParams{
+			Err: updatePropertyErr,
+			Metadata: map[string]string{
+				"function": "CreateUnit",
+				"action":   "updating property units count",
 			},
 		})
 	}

@@ -106,8 +106,9 @@ func (h *PropertyHandler) CreateProperty(w http.ResponseWriter, r *http.Request)
 
 type ListPropertiesFilterRequest struct {
 	lib.FilterQueryInput
-	Status string `json:"status" validate:"oneof=Property.Status.Active Property.Status.Maintenance Property.Status.Inactive"`
-	Type   string `json:"type"   validate:"oneof=SINGLE MULTI"`
+	Status   string `json:"status"   validate:"oneof=Property.Status.Active Property.Status.Maintenance Property.Status.Inactive"`
+	Type     string `json:"type"     validate:"oneof=SINGLE MULTI"`
+	Archived bool   `json:"archived"`
 }
 
 // GetProperties godoc
@@ -148,6 +149,7 @@ func (h *PropertyHandler) ListProperties(w http.ResponseWriter, r *http.Request)
 		ClientID:    clientUser.ClientID,
 		Status:      lib.NullOrString(r.URL.Query().Get("status")),
 		Type:        lib.NullOrString(r.URL.Query().Get("type")),
+		Archived:    lib.NullOrBool(r.URL.Query().Get("archived")),
 	}
 
 	properties, propertiesErr := h.service.ListProperties(r.Context(), input)
@@ -388,8 +390,9 @@ func (h *PropertyHandler) DeleteProperty(w http.ResponseWriter, r *http.Request)
 	propertyID := chi.URLParam(r, "property_id")
 
 	input := services.DeletePropertyInput{
-		PropertyID: propertyID,
-		ClientID:   currentClientUser.ClientID,
+		PropertyID:  propertyID,
+		ClientID:    currentClientUser.ClientID,
+		DeletedByID: currentClientUser.ID,
 	}
 
 	deleteErr := h.service.DeleteProperty(r.Context(), input)
@@ -440,4 +443,82 @@ func (h *PropertyHandler) GetPropertyDeletionPreview(w http.ResponseWriter, r *h
 	json.NewEncoder(w).Encode(map[string]any{
 		"data": eligibility,
 	})
+}
+
+// GetPropertyRestorePreview godoc
+//
+//	@Summary		Preview restoring an archived property (Admin)
+//	@Description	Returns what a restore would bring back into the active portfolio: block/unit counts and kept (non-blocking) lease/booking/application counts
+//	@Tags			Properties
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			property_id	path		string											true	"Property ID"
+//	@Success		200			{object}	object{data=services.PropertyRestorePreview}	"Restore preview computed successfully"
+//	@Failure		400			{object}	lib.HTTPError									"Property is not archived"
+//	@Failure		401			{object}	string											"Invalid or absent authentication token"
+//	@Failure		404			{object}	lib.HTTPError									"Property not found"
+//	@Failure		500			{object}	string											"An unexpected error occurred"
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/restore:preview [get]
+func (h *PropertyHandler) GetPropertyRestorePreview(w http.ResponseWriter, r *http.Request) {
+	currentClientUser, currentClientUserOk := lib.ClientUserFromContext(r.Context())
+	if !currentClientUserOk {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	propertyID := chi.URLParam(r, "property_id")
+
+	preview, previewErr := h.service.GetPropertyRestorePreview(
+		r.Context(),
+		services.GetPropertyRestorePreviewInput{
+			PropertyID: propertyID,
+			ClientID:   currentClientUser.ClientID,
+		},
+	)
+	if previewErr != nil {
+		HandleErrorResponse(w, previewErr)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": preview,
+	})
+}
+
+// RestoreProperty godoc
+//
+//	@Summary		Restore an archived property (Admin)
+//	@Description	Un-archives a soft-deleted property. Units, blocks, leases, bookings and applications were never removed (see DeleteProperty), so nothing else needs restoring.
+//	@Tags			Properties
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			property_id	path	string	true	"Property ID"
+//	@Success		204			"Property restored successfully"
+//	@Failure		400			{object}	lib.HTTPError	"Property is not archived"
+//	@Failure		401			{object}	string			"Invalid or absent authentication token"
+//	@Failure		404			{object}	lib.HTTPError	"Property not found"
+//	@Failure		500			{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}:restore [post]
+func (h *PropertyHandler) RestoreProperty(w http.ResponseWriter, r *http.Request) {
+	currentClientUser, currentClientUserOk := lib.ClientUserFromContext(r.Context())
+	if !currentClientUserOk {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	propertyID := chi.URLParam(r, "property_id")
+
+	restoreErr := h.service.RestoreProperty(r.Context(), services.RestorePropertyInput{
+		PropertyID:   propertyID,
+		ClientID:     currentClientUser.ClientID,
+		RestoredByID: currentClientUser.ID,
+	})
+	if restoreErr != nil {
+		HandleErrorResponse(w, restoreErr)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

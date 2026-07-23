@@ -1,23 +1,23 @@
-import { CheckCircle2 } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
+import { CheckCircle2, Clock, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { ImpactRow } from './impact-row'
 import { willBeDeletedRows, willBeDeletedTotal } from './lib'
+import { DeleteModalHeader } from './modal-header'
 import { useDeleteProperty } from '~/api/properties'
-import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
 import {
 	AlertDialog,
 	AlertDialogCancel,
 	AlertDialogContent,
-	AlertDialogDescription,
 	AlertDialogFooter,
 	AlertDialogHeader,
-	AlertDialogTitle,
 } from '~/components/ui/alert-dialog'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
 import { Spinner } from '~/components/ui/spinner'
+import { QUERY_KEYS } from '~/lib/constants'
 import { convertToSlug } from '~/lib/misc'
 
 interface Props {
@@ -43,6 +43,7 @@ export function ConfirmDeletionModal({
 }: Props) {
 	const [typed, setTyped] = useState('')
 	const { mutate, isPending } = useDeleteProperty()
+	const queryClient = useQueryClient()
 
 	const confirmed = convertToSlug(typed) === convertToSlug(propertyName)
 	const rows = willBeDeletedRows(preview.will_be_deleted)
@@ -65,6 +66,15 @@ export function ConfirmDeletionModal({
 					toast.error('Failed to delete property. Try again later.')
 				},
 				onSuccess: () => {
+					void queryClient.invalidateQueries({
+						queryKey: [QUERY_KEYS.PROPERTIES],
+					})
+					void queryClient.invalidateQueries({
+						queryKey: [QUERY_KEYS.CURRENT_USER, QUERY_KEYS.PROPERTIES],
+					})
+					void queryClient.invalidateQueries({
+						queryKey: [QUERY_KEYS.CLIENT_USER_PROPERTIES],
+					})
 					onDeleted()
 				},
 			},
@@ -75,18 +85,27 @@ export function ConfirmDeletionModal({
 		<AlertDialog open={opened} onOpenChange={setOpened}>
 			<AlertDialogContent className="sm:max-w-lg">
 				<AlertDialogHeader>
-					<AlertDialogTitle>Delete property</AlertDialogTitle>
-					<AlertDialogDescription>{propertyName}</AlertDialogDescription>
+					<DeleteModalHeader
+						propertyName={propertyName}
+						onClose={() => setOpened(false)}
+					/>
 				</AlertDialogHeader>
 
 				<div className="max-h-[50vh] space-y-5 overflow-y-auto">
-					<Alert>
-						<AlertTitle>You can undo this</AlertTitle>
-						<AlertDescription>
-							The property is archived, not permanently erased. Restore it
-							anytime from Settings › Archived properties.
-						</AlertDescription>
-					</Alert>
+					<div className="flex items-start gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-900/40 dark:bg-blue-950/20">
+						<div className="bg-background flex size-9 shrink-0 items-center justify-center rounded-lg border border-blue-200 dark:border-blue-900/40">
+							<Clock className="size-4 text-blue-600 dark:text-blue-400" />
+						</div>
+						<div>
+							<p className="text-foreground text-sm font-semibold">
+								You can undo this
+							</p>
+							<p className="text-muted-foreground mt-1 text-sm leading-relaxed">
+								The property is archived, not permanently erased. Restore it
+								anytime from Settings › Archived properties.
+							</p>
+						</div>
+					</div>
 
 					{empty ? (
 						<div className="flex items-start gap-3 rounded-lg border p-4">
@@ -109,6 +128,7 @@ export function ConfirmDeletionModal({
 										icon={row.icon}
 										label={row.label}
 										count={row.count}
+										note={row.note}
 										tone={i < 2 ? 'destructive' : 'default'}
 									/>
 								))}
@@ -158,7 +178,8 @@ export function ConfirmDeletionModal({
 						disabled={!confirmed || isPending}
 						onClick={handleDelete}
 					>
-						{isPending ? <Spinner /> : null} Delete property
+						{isPending ? <Spinner /> : <Trash2 className="size-4" />}
+						Delete property
 					</Button>
 				</AlertDialogFooter>
 			</AlertDialogContent>

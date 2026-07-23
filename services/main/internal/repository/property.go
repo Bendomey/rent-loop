@@ -17,7 +17,9 @@ type PropertyRepository interface {
 	Update(context context.Context, property *models.Property) error
 	Delete(context context.Context, propertyID string) error
 	GetByQuery(context context.Context, query map[string]any) (*models.Property, error)
+	GetByQueryUnscoped(context context.Context, query map[string]any) (*models.Property, error)
 	GetBySlug(context context.Context, query GetPropertyBySlugQuery) (*models.Property, error)
+	RestoreByID(context context.Context, propertyID string) error
 }
 
 type propertyRepository struct {
@@ -66,6 +68,7 @@ type ListPropertiesFilter struct {
 	ClientID string
 	Status   *string
 	Type     *string
+	Archived *bool
 }
 
 func (r *propertyRepository) List(
@@ -79,6 +82,7 @@ func (r *propertyRepository) List(
 		ClientFilterScope("properties", filterQuery.ClientID),
 		propertyStatusScope("properties", filterQuery.Status),
 		propertyTypeScope("properties", filterQuery.Type),
+		propertyArchivedScope(filterQuery.Archived),
 		DateRangeScope("properties", filterQuery.DateRange),
 		SearchScope("properties", filterQuery.Search),
 
@@ -112,6 +116,7 @@ func (r *propertyRepository) Count(
 			ClientFilterScope("properties", filterQuery.ClientID),
 			propertyStatusScope("properties", filterQuery.Status),
 			propertyTypeScope("properties", filterQuery.Type),
+			propertyArchivedScope(filterQuery.Archived),
 			DateRangeScope("properties", filterQuery.DateRange),
 			SearchScope("properties", filterQuery.Search),
 		).Count(&count)
@@ -141,6 +146,15 @@ func propertyTypeScope(tableName string, propertyType *string) func(db *gorm.DB)
 	}
 }
 
+func propertyArchivedScope(archived *bool) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if archived == nil || !*archived {
+			return db // default GORM scope already excludes soft-deleted rows
+		}
+		return db.Unscoped().Where("properties.deleted_at IS NOT NULL")
+	}
+}
+
 func (r *propertyRepository) Update(ctx context.Context, property *models.Property) error {
 	db := lib.ResolveDB(ctx, r.DB)
 
@@ -165,6 +179,31 @@ func (r *propertyRepository) GetByQuery(
 	}
 
 	return &property, nil
+}
+
+func (r *propertyRepository) GetByQueryUnscoped(
+	ctx context.Context,
+	query map[string]any,
+) (*models.Property, error) {
+	var property models.Property
+
+	result := r.DB.WithContext(ctx).Unscoped().Where(query).First(&property)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return &property, nil
+}
+
+func (r *propertyRepository) RestoreByID(ctx context.Context, propertyID string) error {
+	db := lib.ResolveDB(ctx, r.DB)
+
+	return db.WithContext(ctx).
+		Unscoped().
+		Model(&models.Property{}).
+		Where("id = ?", propertyID).
+		Updates(map[string]any{"deleted_at": nil, "deleted_by_id": nil}).
+		Error
 }
 
 type GetPropertyBySlugQuery struct {

@@ -4502,6 +4502,11 @@
                 "summary": "Get all properties (Admin)",
                 "parameters": [
                     {
+                        "type": "boolean",
+                        "name": "archived",
+                        "in": "query"
+                    },
+                    {
                         "type": "string",
                         "name": "end_date",
                         "in": "query"
@@ -12218,6 +12223,72 @@
                 }
             }
         },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/restore:preview": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns what a restore would bring back into the active portfolio: block/unit counts and kept (non-blocking) lease/booking/application counts",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Properties"
+                ],
+                "summary": "Preview restoring an archived property (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Restore preview computed successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/services.PropertyRestorePreview"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Property is not archived",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Property not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/clients/{client_id}/properties/{property_id}/signing": {
             "post": {
                 "security": [
@@ -15143,6 +15214,64 @@
                     },
                     "404": {
                         "description": "Unit not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}:restore": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Un-archives a soft-deleted property. Units, blocks, leases, bookings and applications were never removed (see DeleteProperty), so nothing else needs restoring.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Properties"
+                ],
+                "summary": "Restore an archived property (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Property restored successfully"
+                    },
+                    "400": {
+                        "description": "Property is not archived",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Property not found",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -22910,6 +23039,26 @@
                 }
             }
         },
+        "services.PropertyRestorePreview": {
+            "type": "object",
+            "properties": {
+                "blocks": {
+                    "type": "integer"
+                },
+                "bookings": {
+                    "type": "integer"
+                },
+                "leases": {
+                    "type": "integer"
+                },
+                "tenant_applications": {
+                    "type": "integer"
+                },
+                "units": {
+                    "type": "integer"
+                }
+            }
+        },
         "transformations.AdminOutputAnnouncement": {
             "type": "object",
             "properties": {
@@ -25644,6 +25793,10 @@
                     "type": "string",
                     "example": "123 Main St"
                 },
+                "blocks_count": {
+                    "type": "integer",
+                    "example": 2
+                },
                 "city": {
                     "type": "string",
                     "example": "Accra"
@@ -25668,6 +25821,18 @@
                     "$ref": "#/definitions/transformations.OutputClientUser"
                 },
                 "created_by_id": {
+                    "type": "string",
+                    "example": "1e81fea0-5e8b-4535-b449-1a2133e94a7a"
+                },
+                "deleted_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2026-07-01T00:00:00Z"
+                },
+                "deleted_by": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
+                },
+                "deleted_by_id": {
                     "type": "string",
                     "example": "1e81fea0-5e8b-4535-b449-1a2133e94a7a"
                 },
@@ -25730,6 +25895,10 @@
                 "type": {
                     "type": "string",
                     "example": "SINGLE"
+                },
+                "units_count": {
+                    "type": "integer",
+                    "example": 6
                 },
                 "updated_at": {
                     "type": "string",

@@ -90,7 +90,11 @@ func NewServices(params INewServicesParams) Services {
 		UserService:       userService,
 	})
 
-	propertyBlockService := NewPropertyBlockService(params.AppCtx, params.Repository.PropertyBlockRepository)
+	propertyBlockService := NewPropertyBlockService(
+		params.AppCtx,
+		params.Repository.PropertyBlockRepository,
+		params.Repository.PropertyRepository,
+	)
 
 	unitService := NewUnitService(UnitServiceDependencies{
 		AppCtx:               params.AppCtx,

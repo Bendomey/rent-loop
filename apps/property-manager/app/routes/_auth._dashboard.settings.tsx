@@ -1,4 +1,5 @@
 import {
+	Archive,
 	FileText,
 	Globe,
 	LifeBuoy,
@@ -8,9 +9,11 @@ import {
 	Wrench,
 	type LucideIcon,
 } from 'lucide-react'
+import { useMemo } from 'react'
 import { Link, Outlet, useLocation } from 'react-router'
 import type { Route } from './+types/_auth._dashboard.settings'
 import { NavMain } from '~/components/nav-main'
+import { useHasPermissions } from '~/components/permissions/use-has-role'
 import { Separator } from '~/components/ui/separator'
 import { TypographyH4 } from '~/components/ui/typography'
 import { cn } from '~/lib/utils'
@@ -25,7 +28,7 @@ const generalMenus: { title: string; url: string; icon: LucideIcon }[] = [
 	{ title: 'Agreements', url: '/agreements', icon: FileText },
 ]
 
-const workspaceMenus: { title: string; url: string; icon: LucideIcon }[] = [
+const baseWorkspaceMenus: { title: string; url: string; icon: LucideIcon }[] = [
 	{ title: 'Members', url: '/members', icon: Users },
 	{ title: 'Payment Accounts', url: '/payment-accounts', icon: Wallet },
 	{ title: 'Billing', url: '/billing', icon: Globe },
@@ -37,10 +40,23 @@ const workspaceMenus: { title: string; url: string; icon: LucideIcon }[] = [
 	},
 ]
 
-const allMenus = [...generalMenus, ...workspaceMenus]
-
 export default function SettingsDashboard({}: Route.ComponentProps) {
 	const { pathname } = useLocation()
+	const { hasPermissions } = useHasPermissions({ roles: ['OWNER', 'ADMIN'] })
+
+	const workspaceMenus = useMemo(() => {
+		if (hasPermissions !== 'AUTHORIZED') return baseWorkspaceMenus
+		return [
+			...baseWorkspaceMenus,
+			{
+				title: 'Archived Properties',
+				url: '/archived-properties',
+				icon: Archive,
+			},
+		]
+	}, [hasPermissions])
+
+	const allMenus = [...generalMenus, ...workspaceMenus]
 
 	return (
 		<main className="min-h-[calc(100vh-64px)]">

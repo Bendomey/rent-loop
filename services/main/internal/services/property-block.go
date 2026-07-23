@@ -21,16 +21,20 @@ type PropertyBlockService interface {
 	CountPropertyBlocks(context context.Context, filterQuery repository.ListPropertyBlocksFilter) (int64, error)
 	UpdatePropertyBlock(context context.Context, input UpdatePropertyBlockInput) (*models.PropertyBlock, error)
 	DeletePropertyBlock(context context.Context, input repository.DeletePropertyBlockInput) error
-	DeleteAllByPropertyID(context context.Context, propertyID string) error
 }
 
 type propertyBlockService struct {
-	appCtx pkg.AppContext
-	repo   repository.PropertyBlockRepository
+	appCtx       pkg.AppContext
+	repo         repository.PropertyBlockRepository
+	propertyRepo repository.PropertyRepository
 }
 
-func NewPropertyBlockService(appCtx pkg.AppContext, repo repository.PropertyBlockRepository) PropertyBlockService {
-	return &propertyBlockService{appCtx, repo}
+func NewPropertyBlockService(
+	appCtx pkg.AppContext,
+	repo repository.PropertyBlockRepository,
+	propertyRepo repository.PropertyRepository,
+) PropertyBlockService {
+	return &propertyBlockService{appCtx, repo, propertyRepo}
 }
 
 type CreatePropertyBlockInput struct {
@@ -71,7 +75,49 @@ func (s *propertyBlockService) CreatePropertyBlock(
 			},
 		})
 	}
+
+	if countErr := s.updateBlocksCount(ctx, input.PropertyID); countErr != nil {
+		return nil, countErr
+	}
+
 	return &propertyBlock, nil
+}
+
+func (s *propertyBlockService) updateBlocksCount(ctx context.Context, propertyID string) error {
+	blocksCount, countErr := s.CountPropertyBlocks(ctx, repository.ListPropertyBlocksFilter{PropertyID: propertyID})
+	if countErr != nil {
+		return pkg.InternalServerError(countErr.Error(), &pkg.RentLoopErrorParams{
+			Err: countErr,
+			Metadata: map[string]string{
+				"function": "updateBlocksCount",
+				"action":   "counting property blocks",
+			},
+		})
+	}
+
+	property, getPropertyErr := s.propertyRepo.GetByID(ctx, repository.GetPropertyQuery{ID: propertyID})
+	if getPropertyErr != nil {
+		return pkg.InternalServerError(getPropertyErr.Error(), &pkg.RentLoopErrorParams{
+			Err: getPropertyErr,
+			Metadata: map[string]string{
+				"function": "updateBlocksCount",
+				"action":   "fetching property to update blocks count",
+			},
+		})
+	}
+
+	property.BlocksCount = int(blocksCount)
+	if updateErr := s.propertyRepo.Update(ctx, property); updateErr != nil {
+		return pkg.InternalServerError(updateErr.Error(), &pkg.RentLoopErrorParams{
+			Err: updateErr,
+			Metadata: map[string]string{
+				"function": "updateBlocksCount",
+				"action":   "updating property blocks count",
+			},
+		})
+	}
+
+	return nil
 }
 
 func (s *propertyBlockService) GetPropertyBlock(
@@ -177,19 +223,11 @@ func (s *propertyBlockService) DeletePropertyBlock(
 			},
 		})
 	}
-	return nil
-}
 
-func (s *propertyBlockService) DeleteAllByPropertyID(ctx context.Context, propertyID string) error {
-	if err := s.repo.DeleteByPropertyID(ctx, propertyID); err != nil {
-		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
-			Metadata: map[string]string{
-				"function": "DeleteAllByPropertyID",
-				"action":   "deleting all blocks for property",
-			},
-		})
+	if countErr := s.updateBlocksCount(ctx, input.PropertyID); countErr != nil {
+		return countErr
 	}
+
 	return nil
 }
 

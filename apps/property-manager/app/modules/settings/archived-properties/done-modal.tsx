@@ -12,22 +12,23 @@ import {
 } from '~/components/ui/alert-dialog'
 
 interface Props {
+	propertyId: string
 	propertyName: string
 	opened: boolean
 	setOpened: (v: boolean) => void
 }
 
-export function DeletionDoneModal({ propertyName, opened, setOpened }: Props) {
+export function RestoreDoneModal({
+	propertyId,
+	propertyName,
+	opened,
+	setOpened,
+}: Props) {
 	const navigate = useNavigate()
 
-	const backToPortfolio = () => {
+	const openProperty = () => {
 		setOpened(false)
-		void navigate('/properties')
-	}
-
-	const viewArchived = () => {
-		setOpened(false)
-		void navigate('/settings/archived-properties')
+		void navigate(`/properties/${propertyId}`)
 	}
 
 	return (
@@ -39,22 +40,22 @@ export function DeletionDoneModal({ propertyName, opened, setOpened }: Props) {
 					</div>
 					<AlertDialogHeader className="mt-5 items-center">
 						<AlertDialogTitle className="font-serif text-2xl font-normal">
-							Property deleted
+							Property restored
 						</AlertDialogTitle>
 						<AlertDialogDescription className="text-center">
 							<span className="text-foreground font-medium">
 								{propertyName}
 							</span>{' '}
-							and its records were archived. Nothing was permanently erased —
-							restore it anytime from Archived properties.
+							is back in your active portfolio. It's inactive until you add
+							leases or bookings.
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter className="mt-6 flex-row justify-center gap-2">
-						<AlertDialogCancel onClick={viewArchived}>
-							View archived
+						<AlertDialogCancel onClick={() => setOpened(false)}>
+							Back to archive
 						</AlertDialogCancel>
-						<AlertDialogAction onClick={backToPortfolio}>
-							Back to portfolio
+						<AlertDialogAction onClick={openProperty}>
+							Open property
 						</AlertDialogAction>
 					</AlertDialogFooter>
 				</div>

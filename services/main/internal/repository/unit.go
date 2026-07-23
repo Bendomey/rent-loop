@@ -17,7 +17,6 @@ type UnitRepository interface {
 	GetOne(context context.Context, query map[string]any) (*models.Unit, error)
 	Update(context context.Context, unit *models.Unit) error
 	Delete(context context.Context, input DeleteUnitInput) error
-	DeleteByPropertyID(context context.Context, propertyID string) error
 }
 
 type unitRepository struct {
@@ -115,15 +114,6 @@ func (r *unitRepository) Delete(ctx context.Context, input DeleteUnitInput) erro
 
 	return db.WithContext(ctx).
 		Where("id = ? AND property_id = ?", input.UnitID, input.PropertyID).
-		Delete(&models.Unit{}).
-		Error
-}
-
-func (r *unitRepository) DeleteByPropertyID(ctx context.Context, propertyID string) error {
-	db := lib.ResolveDB(ctx, r.DB)
-
-	return db.WithContext(ctx).
-		Where("property_id = ?", propertyID).
 		Delete(&models.Unit{}).
 		Error
 }

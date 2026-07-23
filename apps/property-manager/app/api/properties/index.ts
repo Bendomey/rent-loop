@@ -266,6 +266,72 @@ export const useGetPropertyDeletionPreview = (
 		enabled: enabled && !!clientId && !!propertyId,
 	})
 
+/**
+ * Preview what restoring an archived property would bring back.
+ */
+const getPropertyRestorePreview = async (clientId: string, id: string) => {
+	try {
+		const response = await fetchClient<ApiResponse<PropertyRestorePreview>>(
+			`/v1/admin/clients/${clientId}/properties/${id}/restore:preview`,
+		)
+		return response.parsedBody.data
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+
+export const useGetPropertyRestorePreview = (
+	clientId: string,
+	propertyId: string,
+	enabled: boolean,
+) =>
+	useQuery({
+		queryKey: [QUERY_KEYS.PROPERTIES, clientId, propertyId, 'restore-preview'],
+		queryFn: () => getPropertyRestorePreview(clientId, propertyId),
+		enabled: enabled && !!clientId && !!propertyId,
+	})
+
+/**
+ * Restore an archived property.
+ */
+const restoreProperty = async ({
+	clientId,
+	id,
+}: {
+	clientId: string
+	id: string
+}) => {
+	try {
+		await fetchClient(
+			`/v1/admin/clients/${clientId}/properties/${id}:restore`,
+			{
+				method: 'POST',
+			},
+		)
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+
+export const useRestoreProperty = () =>
+	useMutation({
+		mutationFn: restoreProperty,
+	})
+
 export const getClientUserProperties = async (
 	clientId: string,
 	props: FetchMultipleDataInputParams<FetchClientUserPropertyFilter>,
