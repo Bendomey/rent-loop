@@ -21,6 +21,7 @@ export const useGetNotifications = (page = 1, pageSize = 20) =>
 	useQuery({
 		queryKey: [QUERY_KEYS.NOTIFICATIONS, page, pageSize],
 		queryFn: () => getNotifications(page, pageSize),
+		// TODO: fix notifications after working integrating the new notification backend
 		enabled: false,
 	})
 
