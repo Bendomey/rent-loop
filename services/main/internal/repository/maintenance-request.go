@@ -58,6 +58,11 @@ type MaintenanceRequestRepository interface {
 	UpdateComment(ctx context.Context, comment *models.MaintenanceRequestComment) error
 	DeleteComment(ctx context.Context, id string) error
 	CountByStatus(ctx context.Context, filters ListMaintenanceRequestsFilter) (map[string]int64, error)
+	GroupOpenByProperty(
+		ctx context.Context,
+		propertyIDs *[]string,
+		clientID *string,
+	) ([]PropertyAggregate, error)
 }
 
 type maintenanceRequestRepository struct {
@@ -604,4 +609,41 @@ func (r *maintenanceRequestRepository) CountByStatus(
 		out[sc.Status] = sc.Count
 	}
 	return out, nil
+}
+
+// GroupOpenByProperty counts unresolved (NEW/IN_PROGRESS/IN_REVIEW)
+// maintenance requests per property, for the Insights risk-summary "open
+// maintenance requests" breakdown. propertyIDs narrows to an exact set
+// (cross-property mobile scope); clientID (used when propertyIDs is nil)
+// scopes to every property under the client. Only properties with at least
+// one open request are returned, sorted by count descending.
+func (r *maintenanceRequestRepository) GroupOpenByProperty(
+	ctx context.Context,
+	propertyIDs *[]string,
+	clientID *string,
+) ([]PropertyAggregate, error) {
+	db := lib.ResolveDB(ctx, r.DB).WithContext(ctx).
+		Model(&models.MaintenanceRequest{}).
+		Select(
+			"properties.id AS property_id, properties.name AS property_name, "+
+				"properties.address AS property_address, COUNT(*) AS value",
+		).
+		Joins("INNER JOIN units ON maintenance_requests.unit_id = units.id AND units.deleted_at IS NULL").
+		Joins("INNER JOIN properties ON units.property_id = properties.id AND properties.deleted_at IS NULL").
+		Where("maintenance_requests.status IN ?", []string{"NEW", "IN_PROGRESS", "IN_REVIEW"})
+
+	if propertyIDs != nil {
+		db = db.Where("units.property_id IN (?)", *propertyIDs)
+	} else if clientID != nil {
+		db = db.Where("properties.client_id = ?", *clientID)
+	}
+
+	var rows []PropertyAggregate
+	err := db.Group("properties.id, properties.name, properties.address").
+		Order("value DESC").
+		Find(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+	return rows, nil
 }

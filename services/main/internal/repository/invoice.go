@@ -29,6 +29,11 @@ type InvoiceRepository interface {
 	UpdateLineItem(context context.Context, lineItem *models.InvoiceLineItem) error
 	DeleteLineItem(context context.Context, lineItemID string) error
 	ListForReminders(ctx context.Context) (*[]models.Invoice, error)
+	GroupOutstandingByProperty(
+		ctx context.Context,
+		propertyIDs *[]string,
+		clientID *string,
+	) ([]PropertyAggregate, error)
 }
 
 // InvoiceStatusStat holds the count and total amount for a single invoice status.
@@ -517,4 +522,41 @@ func (r *invoiceRepository) ListForReminders(ctx context.Context) (*[]models.Inv
 		return nil, result.Error
 	}
 	return &invoices, nil
+}
+
+// GroupOutstandingByProperty sums outstanding (ISSUED/PARTIALLY_PAID) invoice
+// amounts per property, for the Insights risk-summary "outstanding rent"
+// breakdown. propertyIDs narrows to an exact set (cross-property mobile
+// scope); clientID (used when propertyIDs is nil) scopes to every property
+// under the client. Only properties with a non-zero balance are returned,
+// sorted by amount descending.
+func (r *invoiceRepository) GroupOutstandingByProperty(
+	ctx context.Context,
+	propertyIDs *[]string,
+	clientID *string,
+) ([]PropertyAggregate, error) {
+	db := lib.ResolveDB(ctx, r.DB).WithContext(ctx).
+		Model(&models.Invoice{}).
+		Select(
+			"properties.id AS property_id, properties.name AS property_name, "+
+				"properties.address AS property_address, SUM(invoices.total_amount) AS value",
+		).
+		Joins("INNER JOIN properties ON properties.id = invoices.property_id AND properties.deleted_at IS NULL").
+		Where("invoices.payee_type = ?", "PROPERTY_OWNER").
+		Where("invoices.status IN ?", []string{"ISSUED", "PARTIALLY_PAID"})
+
+	if propertyIDs != nil {
+		db = db.Where("invoices.property_id IN (?)", *propertyIDs)
+	} else if clientID != nil {
+		db = db.Where("properties.client_id = ?", *clientID)
+	}
+
+	var rows []PropertyAggregate
+	err := db.Group("properties.id, properties.name, properties.address").
+		Order("value DESC").
+		Find(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+	return rows, nil
 }

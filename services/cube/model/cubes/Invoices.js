@@ -47,6 +47,18 @@ cube(`Invoices`, {
         },
       ],
     },
+
+    // Distinct properties with at least one outstanding invoice
+    outstandingPropertyCount: {
+      sql: `${propertyId}`,
+      type: `countDistinct`,
+      title: `Properties With Outstanding Balance`,
+      filters: [
+        {
+          sql: `${CUBE}.status IN ('ISSUED', 'PARTIALLY_PAID')`,
+        },
+      ],
+    },
   },
 
   dimensions: {

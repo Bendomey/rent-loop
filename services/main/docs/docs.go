@@ -3435,6 +3435,87 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/admin/clients/{client_id}/insights/risk-properties": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Per-property breakdown backing an Insights risk-summary modal: outstanding rent, leases expiring in the next 60 days, or open maintenance requests. Only properties with a non-zero value are returned, sorted descending.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Insights"
+                ],
+                "summary": "List properties affected by an Insights risk category (Admin)",
+                "parameters": [
+                    {
+                        "enum": [
+                            "outstanding_rent",
+                            "expiring_leases",
+                            "maintenance"
+                        ],
+                        "type": "string",
+                        "description": "Risk category",
+                        "name": "type",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "Property ID(s) to narrow results to; omit to see every property the caller can access",
+                        "name": "property_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Affected properties",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/handlers.InsightsRiskPropertiesOutput"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Missing or invalid type",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Requested property_id is outside the caller's access scope",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/clients/{client_id}/invoices": {
             "get": {
                 "security": [
@@ -21500,6 +21581,37 @@ const docTemplate = `{
                 },
                 "tenant_application_id": {
                     "type": "string"
+                }
+            }
+        },
+        "handlers.InsightsRiskPropertiesOutput": {
+            "type": "object",
+            "properties": {
+                "properties": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.InsightsRiskPropertyOutput"
+                    }
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.InsightsRiskPropertyOutput": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "property_id": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "integer"
                 }
             }
         },

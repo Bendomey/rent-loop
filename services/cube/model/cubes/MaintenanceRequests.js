@@ -48,6 +48,14 @@ cube(`MaintenanceRequests`, {
       title: `Canceled`,
       filters: [{ sql: `${CUBE}.status = 'CANCELED'` }],
     },
+
+    // Distinct properties with at least one open (unresolved) request
+    openPropertyCount: {
+      sql: `${propertyId}`,
+      type: `countDistinct`,
+      title: `Properties With Open Requests`,
+      filters: [{ sql: `${CUBE}.status IN ('NEW', 'IN_PROGRESS', 'IN_REVIEW')` }],
+    },
   },
 
   dimensions: {

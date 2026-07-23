@@ -30,6 +30,15 @@ cube(`Leases`, {
       title: `Pending Leases`,
       filters: [{ sql: `${CUBE}.status = 'Lease.Status.Pending'` }],
     },
+
+    // Distinct properties with at least one active lease (combine with a
+    // moveOutDate timeDimension at query time to scope to an expiry window)
+    expiringPropertyCount: {
+      sql: `${propertyId}`,
+      type: `countDistinct`,
+      title: `Properties With Leases Expiring`,
+      filters: [{ sql: `${CUBE}.status = 'Lease.Status.Active'` }],
+    },
   },
 
   dimensions: {

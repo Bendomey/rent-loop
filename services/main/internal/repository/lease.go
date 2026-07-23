@@ -25,6 +25,13 @@ type LeaseRepository interface {
 	ListDueForBilling(ctx context.Context) (*[]models.Lease, error)
 	ListForMoveOutReminders(ctx context.Context) (*[]models.Lease, error)
 	ListDueForCompletion(ctx context.Context) (*[]models.Lease, error)
+	GroupExpiringByProperty(
+		ctx context.Context,
+		propertyIDs *[]string,
+		clientID *string,
+		from time.Time,
+		to time.Time,
+	) ([]PropertyAggregate, error)
 }
 
 type leaseRepository struct {
@@ -353,4 +360,44 @@ func (r *leaseRepository) ListDueForCompletion(ctx context.Context) (*[]models.L
 		return nil, result.Error
 	}
 	return &leases, nil
+}
+
+// GroupExpiringByProperty counts active leases whose MoveOutDate falls within
+// [from, to] per property, for the Insights risk-summary "leases expiring"
+// breakdown. propertyIDs narrows to an exact set (cross-property mobile
+// scope); clientID (used when propertyIDs is nil) scopes to every property
+// under the client. Only properties with at least one expiring lease are
+// returned, sorted by count descending.
+func (r *leaseRepository) GroupExpiringByProperty(
+	ctx context.Context,
+	propertyIDs *[]string,
+	clientID *string,
+	from time.Time,
+	to time.Time,
+) ([]PropertyAggregate, error) {
+	db := lib.ResolveDB(ctx, r.DB).WithContext(ctx).
+		Model(&models.Lease{}).
+		Select(
+			"properties.id AS property_id, properties.name AS property_name, "+
+				"properties.address AS property_address, COUNT(*) AS value",
+		).
+		Joins("INNER JOIN units ON leases.unit_id = units.id AND units.deleted_at IS NULL").
+		Joins("INNER JOIN properties ON units.property_id = properties.id AND properties.deleted_at IS NULL").
+		Where("leases.status = ?", "Lease.Status.Active").
+		Where("leases.move_out_date BETWEEN ? AND ?", from, to)
+
+	if propertyIDs != nil {
+		db = db.Where("units.property_id IN (?)", *propertyIDs)
+	} else if clientID != nil {
+		db = db.Where("properties.client_id = ?", *clientID)
+	}
+
+	var rows []PropertyAggregate
+	err := db.Group("properties.id, properties.name, properties.address").
+		Order("value DESC").
+		Find(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+	return rows, nil
 }

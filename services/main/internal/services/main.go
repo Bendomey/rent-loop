@@ -39,6 +39,7 @@ type Services struct {
 	ExchangeRateService           ExchangeRateService
 	LeaseTerminationService       LeaseTerminationService
 	LeaseAgreementDocumentService LeaseAgreementDocumentService
+	InsightsService               InsightsService
 }
 
 type INewServicesParams struct {
@@ -160,6 +161,12 @@ func NewServices(params INewServicesParams) Services {
 		params.Repository.LeaseAgreementDocumentRepository,
 	)
 
+	insightsService := NewInsightsService(
+		params.Repository.InvoiceRepository,
+		params.Repository.LeaseRepository,
+		params.Repository.MaintenanceRequestRepository,
+	)
+
 	paymentService := NewPaymentService(PaymentServiceDeps{
 		AppCtx:                   params.AppCtx,
 		Repo:                     params.Repository.PaymentRepository,
@@ -271,5 +278,6 @@ func NewServices(params INewServicesParams) Services {
 		ExchangeRateService:           exchangeRateService,
 		LeaseTerminationService:       leaseTerminationService,
 		LeaseAgreementDocumentService: leaseAgreementDocumentService,
+		InsightsService:               insightsService,
 	}
 }

@@ -1364,6 +1364,26 @@ definitions:
     - document_id
     - role
     type: object
+  handlers.InsightsRiskPropertiesOutput:
+    properties:
+      properties:
+        items:
+          $ref: '#/definitions/handlers.InsightsRiskPropertyOutput'
+        type: array
+      type:
+        type: string
+    type: object
+  handlers.InsightsRiskPropertyOutput:
+    properties:
+      address:
+        type: string
+      name:
+        type: string
+      property_id:
+        type: string
+      value:
+        type: integer
+    type: object
   handlers.LinkClientUserToPropertiesRequest:
     properties:
       property_ids:
@@ -7305,6 +7325,62 @@ paths:
       summary: List expenses across properties (Admin, mobile)
       tags:
       - Expenses
+  /api/v1/admin/clients/{client_id}/insights/risk-properties:
+    get:
+      consumes:
+      - application/json
+      description: 'Per-property breakdown backing an Insights risk-summary modal:
+        outstanding rent, leases expiring in the next 60 days, or open maintenance
+        requests. Only properties with a non-zero value are returned, sorted descending.'
+      parameters:
+      - description: Risk category
+        enum:
+        - outstanding_rent
+        - expiring_leases
+        - maintenance
+        in: query
+        name: type
+        required: true
+        type: string
+      - collectionFormat: multi
+        description: Property ID(s) to narrow results to; omit to see every property
+          the caller can access
+        in: query
+        items:
+          type: string
+        name: property_id
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Affected properties
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/handlers.InsightsRiskPropertiesOutput'
+            type: object
+        "400":
+          description: Missing or invalid type
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "403":
+          description: Requested property_id is outside the caller's access scope
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List properties affected by an Insights risk category (Admin)
+      tags:
+      - Insights
   /api/v1/admin/clients/{client_id}/invoices:
     get:
       consumes:
