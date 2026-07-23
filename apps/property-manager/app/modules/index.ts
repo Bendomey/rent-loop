@@ -12,6 +12,8 @@ export * from './apply/success'
 
 export * from './dashboard'
 
+export * from './insights'
+
 export * from './properties'
 export * from './properties/new'
 

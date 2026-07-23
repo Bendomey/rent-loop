@@ -4,7 +4,7 @@ import type { DriveStep } from 'driver.js'
  * Storage keys — bump the version suffix to reset a tour for all users.
  */
 export const TOUR_KEYS = {
-	DASHBOARD: 'rent-loop:tour-v1',
+	DASHBOARD: 'rent-loop:tour-v2',
 	PROPERTY_OVERVIEW: 'rent-loop:tour-property-overview-v1',
 	TENANT_APPLICATION: 'rent-loop:tour-tenant-application-v1',
 	MAINTENANCE_LIST: 'rent-loop:tour-maintenance-list-v1',
@@ -27,11 +27,21 @@ export const DASHBOARD_TOUR_STEPS: DriveStep[] = [
 		},
 	},
 	{
+		element: '#tour-nav-overview',
+		popover: {
+			title: 'Overview',
+			description:
+				'Your daily command center. See key numbers at a glance plus what needs your attention: overdue rent, expiring leases, and open maintenance requests.',
+			side: 'right',
+			align: 'start',
+		},
+	},
+	{
 		element: '#tour-nav-insights',
 		popover: {
 			title: 'Insights',
 			description:
-				'Your command center. Get a real-time overview of rent collection, occupancy rates, and recent activity across all your properties.',
+				'Analytics for your portfolio. Explore revenue, occupancy, rent collection, and more — filter by date range or property, and compare against previous periods.',
 			side: 'right',
 			align: 'start',
 		},

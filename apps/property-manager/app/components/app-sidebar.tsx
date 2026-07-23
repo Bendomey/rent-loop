@@ -6,6 +6,7 @@ import {
 	PieChart,
 	House,
 	BookOpenText,
+	LayoutDashboard,
 } from 'lucide-react'
 import * as React from 'react'
 
@@ -27,11 +28,27 @@ import { APP_NAME } from '~/lib/constants'
 const data = {
 	navMain: [
 		{
-			title: 'Insights',
+			title: 'Overview',
 			isHome: true,
 			url: '/',
+			icon: LayoutDashboard,
+			id: 'tour-nav-overview',
+		},
+		{
+			title: 'Insights',
+			url: '/insights',
 			icon: PieChart,
 			id: 'tour-nav-insights',
+			items: [
+				{ title: 'Overview', url: '' },
+				{ title: 'Revenue', url: '/revenue', isComingSoon: true },
+				{ title: 'Occupancy', url: '/occupancy', isComingSoon: true },
+				{ title: 'Rent Collection', url: '/rent-collection', isComingSoon: true },
+				{ title: 'Leases', url: '/leases', isComingSoon: true },
+				{ title: 'Tenants', url: '/tenants', isComingSoon: true },
+				{ title: 'Maintenance', url: '/maintenance', isComingSoon: true },
+				{ title: 'Expenses', url: '/expenses', isComingSoon: true },
+			],
 		},
 		{
 			title: 'My Properties',
