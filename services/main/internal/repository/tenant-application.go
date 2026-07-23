@@ -16,6 +16,8 @@ type TenantApplicationRepository interface {
 	GetOneWithQuery(context context.Context, query GetTenantApplicationQuery) (*models.TenantApplication, error)
 	Update(context context.Context, tenantApplication models.TenantApplication) error
 	Delete(context context.Context, tenantApplicationID string) error
+	CountNonBlockingByPropertyID(context context.Context, propertyID string) (int64, error)
+	DeleteNonBlockingByPropertyID(context context.Context, propertyID string) error
 }
 
 type tenantApplicationRepository struct {
@@ -194,4 +196,30 @@ func (r *tenantApplicationRepository) Delete(ctx context.Context, tenantApplicat
 	db := lib.ResolveDB(ctx, r.DB)
 
 	return db.WithContext(ctx).Where("id = ?", tenantApplicationID).Delete(&models.TenantApplication{}).Error
+}
+
+func (r *tenantApplicationRepository) CountNonBlockingByPropertyID(
+	ctx context.Context,
+	propertyID string,
+) (int64, error) {
+	var count int64
+	err := lib.ResolveDB(ctx, r.DB).WithContext(ctx).
+		Model(&models.TenantApplication{}).
+		Where("property_id = ?", propertyID).
+		Where("status != ?", "TenantApplication.Status.InProgress").
+		Count(&count).Error
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+func (r *tenantApplicationRepository) DeleteNonBlockingByPropertyID(
+	ctx context.Context,
+	propertyID string,
+) error {
+	return lib.ResolveDB(ctx, r.DB).WithContext(ctx).
+		Where("property_id = ?", propertyID).
+		Where("status != ?", "TenantApplication.Status.InProgress").
+		Delete(&models.TenantApplication{}).Error
 }

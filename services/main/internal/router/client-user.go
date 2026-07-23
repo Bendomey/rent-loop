@@ -116,6 +116,8 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 						r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
 							Delete("/", handlers.PropertyHandler.DeleteProperty)
 						r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+							Get("/deletion:preview", handlers.PropertyHandler.GetPropertyDeletionPreview)
+						r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
 							Post("/client-users:link", handlers.ClientUserPropertyHandler.LinkPropertyToClientUsers)
 						r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
 							Delete("/client-users:unlink", handlers.ClientUserPropertyHandler.UnlinkPropertyFromClientUsers)

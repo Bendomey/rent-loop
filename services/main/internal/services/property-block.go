@@ -21,6 +21,7 @@ type PropertyBlockService interface {
 	CountPropertyBlocks(context context.Context, filterQuery repository.ListPropertyBlocksFilter) (int64, error)
 	UpdatePropertyBlock(context context.Context, input UpdatePropertyBlockInput) (*models.PropertyBlock, error)
 	DeletePropertyBlock(context context.Context, input repository.DeletePropertyBlockInput) error
+	DeleteAllByPropertyID(context context.Context, propertyID string) error
 }
 
 type propertyBlockService struct {
@@ -173,6 +174,19 @@ func (s *propertyBlockService) DeletePropertyBlock(
 			Metadata: map[string]string{
 				"function": "DeletePropertyBlock",
 				"action":   "deleting property block",
+			},
+		})
+	}
+	return nil
+}
+
+func (s *propertyBlockService) DeleteAllByPropertyID(ctx context.Context, propertyID string) error {
+	if err := s.repo.DeleteByPropertyID(ctx, propertyID); err != nil {
+		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "DeleteAllByPropertyID",
+				"action":   "deleting all blocks for property",
 			},
 		})
 	}

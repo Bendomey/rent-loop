@@ -15,6 +15,7 @@ type PropertyBlockRepository interface {
 	Count(context context.Context, filterQuery ListPropertyBlocksFilter) (int64, error)
 	Update(context context.Context, propertyBlock *models.PropertyBlock) error
 	Delete(context context.Context, input DeletePropertyBlockInput) error
+	DeleteByPropertyID(context context.Context, propertyID string) error
 }
 
 type propertyBlockRepository struct {
@@ -74,6 +75,15 @@ func (r *propertyBlockRepository) Delete(ctx context.Context, input DeleteProper
 
 	return db.WithContext(ctx).
 		Where("id = ? AND property_id = ?", input.PropertyBlockID, input.PropertyID).
+		Delete(&models.PropertyBlock{}).
+		Error
+}
+
+func (r *propertyBlockRepository) DeleteByPropertyID(ctx context.Context, propertyID string) error {
+	db := lib.ResolveDB(ctx, r.DB)
+
+	return db.WithContext(ctx).
+		Where("property_id = ?", propertyID).
 		Delete(&models.PropertyBlock{}).
 		Error
 }

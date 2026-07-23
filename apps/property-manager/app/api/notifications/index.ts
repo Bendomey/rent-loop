@@ -21,6 +21,7 @@ export const useGetNotifications = (page = 1, pageSize = 20) =>
 	useQuery({
 		queryKey: [QUERY_KEYS.NOTIFICATIONS, page, pageSize],
 		queryFn: () => getNotifications(page, pageSize),
+		enabled: false,
 	})
 
 const getNotificationUnreadCount = async () => {
@@ -43,7 +44,8 @@ export const useGetNotificationUnreadCount = () =>
 	useQuery({
 		queryKey: [QUERY_KEYS.NOTIFICATION_UNREAD_COUNT],
 		queryFn: getNotificationUnreadCount,
-		refetchInterval: 60_000,
+		enabled: false,
+		// refetchInterval: 60_000,
 	})
 
 const markNotificationRead = async (notificationId: string) => {

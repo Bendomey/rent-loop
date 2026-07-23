@@ -7,7 +7,6 @@ import { useRevalidator } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { SwitchPropertyType } from './component/switch-type'
-import ConfirmDeletePropertyModule from './delete'
 import { useUpdateProperty } from '~/api/properties'
 import {
 	AddressInput,
@@ -500,7 +499,6 @@ export function PropertyGeneralSettingsModule() {
 	const queryClient = useQueryClient()
 	const revalidator = useRevalidator()
 
-	const [openDeletePropertyModal, setOpenDeletePropertyModal] = useState(false)
 	const [showEditBasic, setShowEditBasic] = useState(false)
 	const [showEditLocation, setShowEditLocation] = useState(false)
 	const [showEditModes, setShowEditModes] = useState(false)
@@ -673,45 +671,6 @@ export function PropertyGeneralSettingsModule() {
 				</div>
 			</section>
 
-			{/* Support Access */}
-			{/* <section className="bg-card grid gap-6 rounded-xl border p-4 shadow-sm md:p-6">
-				<TypographyH3>Support Access</TypographyH3>
-				<Separator />
-
-				<div className="flex items-center justify-between">
-					<Field>
-						<FieldLabel htmlFor="support_access">Support Access</FieldLabel>
-						<FieldDescription>
-							Allow support agents to access this property to help troubleshoot
-							issues.
-						</FieldDescription>
-					</Field>
-					<PropertyPermissionGuard roles={['MANAGER']}>
-						<Switch id="support_access" />
-					</PropertyPermissionGuard>
-				</div>
-
-				<PermissionGuard roles={['OWNER']}>
-					<div className="flex items-center justify-between">
-						<Field>
-							<FieldLabel htmlFor="delete_property" className="text-rose-600">
-								Delete Property
-							</FieldLabel>
-							<FieldDescription>
-								Permanently delete this property and all associated data.
-							</FieldDescription>
-						</Field>
-						<Button
-							size="sm"
-							variant="secondary"
-							onClick={() => setOpenDeletePropertyModal(true)}
-						>
-							Delete Property
-						</Button>
-					</div>
-				</PermissionGuard>
-			</section> */}
-
 			{/* ------------------------------------------------------------------ */}
 			{/* Dialogs                                                              */}
 			{/* ------------------------------------------------------------------ */}
@@ -754,12 +713,6 @@ export function PropertyGeneralSettingsModule() {
 					}}
 				/>
 			)}
-
-			<ConfirmDeletePropertyModule
-				opened={openDeletePropertyModal}
-				setOpened={setOpenDeletePropertyModal}
-				data={clientUserProperty?.property ?? undefined}
-			/>
 		</div>
 	)
 }

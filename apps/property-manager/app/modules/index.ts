@@ -95,6 +95,7 @@ export * from './properties/property/settings/members'
 export * from './properties/property/settings/general'
 export * from './properties/property/settings/billing'
 export * from './properties/property/settings/documents'
+export * from './properties/property/settings/danger-zone'
 
 export * from './properties/property/occupancy/bookings'
 export * from './properties/property/occupancy/bookings/new'

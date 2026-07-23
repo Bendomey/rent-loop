@@ -26,6 +26,7 @@ type UnitService interface {
 	UpdateUnitStatus(ctx context.Context, input UpdateUnitStatusInput) error
 	SetSystemUnitStatus(ctx context.Context, input UpdateUnitStatusInput) error
 	DeleteUnit(ctx context.Context, input repository.DeleteUnitInput) error
+	DeleteAllByPropertyID(context context.Context, propertyID string) error
 	updateUnitCount(ctx context.Context, input UpdateUnitCountInput) error
 	resolveUnitCurrency(ctx context.Context, currency, propertyID string) string
 }
@@ -513,6 +514,19 @@ func (s *unitService) DeleteUnit(ctx context.Context, input repository.DeleteUni
 		})
 	}
 
+	return nil
+}
+
+func (s *unitService) DeleteAllByPropertyID(ctx context.Context, propertyID string) error {
+	if err := s.repo.DeleteByPropertyID(ctx, propertyID); err != nil {
+		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "DeleteAllByPropertyID",
+				"action":   "deleting all units for property",
+			},
+		})
+	}
 	return nil
 }
 

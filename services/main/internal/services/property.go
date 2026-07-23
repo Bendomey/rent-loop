@@ -28,6 +28,10 @@ type PropertyService interface {
 	) (*models.Property, error)
 	UpdateProperty(context context.Context, input UpdatePropertyInput) (*models.Property, error)
 	DeleteProperty(context context.Context, input DeletePropertyInput) error
+	GetPropertyDeletionEligibility(
+		context context.Context,
+		input GetPropertyDeletionEligibilityInput,
+	) (*PropertyDeletionEligibility, error)
 	GetPropertyBySlug(
 		context context.Context,
 		query repository.GetPropertyBySlugQuery,
@@ -43,6 +47,8 @@ type propertyService struct {
 	unitService               UnitService
 	propertyBlockService      PropertyBlockService
 	leaseRepo                 repository.LeaseRepository
+	bookingRepo               repository.BookingRepository
+	tenantApplicationRepo     repository.TenantApplicationRepository
 }
 
 type PropertyServiceDependencies struct {
@@ -54,6 +60,8 @@ type PropertyServiceDependencies struct {
 	UnitService               UnitService
 	PropertyBlockService      PropertyBlockService
 	LeaseRepo                 repository.LeaseRepository
+	BookingRepo               repository.BookingRepository
+	TenantApplicationRepo     repository.TenantApplicationRepository
 }
 
 func NewPropertyService(deps PropertyServiceDependencies) PropertyService {
@@ -66,6 +74,8 @@ func NewPropertyService(deps PropertyServiceDependencies) PropertyService {
 		unitService:               deps.UnitService,
 		propertyBlockService:      deps.PropertyBlockService,
 		leaseRepo:                 deps.LeaseRepo,
+		bookingRepo:               deps.BookingRepo,
+		tenantApplicationRepo:     deps.TenantApplicationRepo,
 	}
 }
 
@@ -464,6 +474,194 @@ func (s *propertyService) UpdateProperty(
 	return property, nil
 }
 
+type PropertyDeletionBlockingReason struct {
+	Type   string `json:"type"`
+	Status string `json:"status"`
+	Count  int64  `json:"count"`
+	Label  string `json:"label"`
+}
+
+type PropertyDeletionSummary struct {
+	Blocks             int64 `json:"blocks"`
+	Units              int64 `json:"units"`
+	Leases             int64 `json:"leases"`
+	Bookings           int64 `json:"bookings"`
+	TenantApplications int64 `json:"tenant_applications"`
+}
+
+type PropertyDeletionEligibility struct {
+	CanDelete       bool                             `json:"can_delete"`
+	BlockingReasons []PropertyDeletionBlockingReason `json:"blocking_reasons"`
+	WillBeDeleted   PropertyDeletionSummary          `json:"will_be_deleted"`
+}
+
+type GetPropertyDeletionEligibilityInput struct {
+	PropertyID string
+	ClientID   string
+}
+
+func (s *propertyService) GetPropertyDeletionEligibility(
+	ctx context.Context,
+	input GetPropertyDeletionEligibilityInput,
+) (*PropertyDeletionEligibility, error) {
+	property, propertyErr := s.repo.GetByQuery(
+		ctx,
+		map[string]any{"id": input.PropertyID, "client_id": input.ClientID},
+	)
+	if propertyErr != nil {
+		if !errors.Is(propertyErr, gorm.ErrRecordNotFound) {
+			return nil, pkg.InternalServerError(propertyErr.Error(), &pkg.RentLoopErrorParams{
+				Err: propertyErr,
+				Metadata: map[string]string{
+					"function": "GetPropertyDeletionEligibility",
+					"action":   "fetching property by ID",
+				},
+			})
+		}
+
+		return nil, pkg.NotFoundError("PropertyNotFound", &pkg.RentLoopErrorParams{
+			Err: propertyErr,
+		})
+	}
+
+	blockingReasons := []PropertyDeletionBlockingReason{}
+
+	leaseStatuses := []struct{ status, label string }{
+		{"Lease.Status.Pending", "Pending leases"},
+		{"Lease.Status.Active", "Active leases"},
+	}
+	for _, ls := range leaseStatuses {
+		count, countErr := s.leaseRepo.CountByPropertyIDAndStatus(ctx, property.ID.String(), ls.status)
+		if countErr != nil {
+			return nil, pkg.InternalServerError(countErr.Error(), &pkg.RentLoopErrorParams{
+				Err: countErr,
+				Metadata: map[string]string{
+					"function": "GetPropertyDeletionEligibility",
+					"action":   "counting leases by status",
+				},
+			})
+		}
+		if count > 0 {
+			blockingReasons = append(blockingReasons, PropertyDeletionBlockingReason{
+				Type: "LEASE", Status: ls.status, Count: count, Label: ls.label,
+			})
+		}
+	}
+
+	bookingStatuses := []struct{ status, label string }{
+		{"PENDING", "Pending bookings"},
+		{"CONFIRMED", "Confirmed bookings"},
+		{"CHECKED_IN", "Checked-in bookings"},
+	}
+	for _, bs := range bookingStatuses {
+		status := bs.status
+		count, countErr := s.bookingRepo.Count(
+			ctx,
+			lib.FilterQuery{},
+			repository.ListBookingsFilter{PropertyID: &input.PropertyID, Status: &status},
+		)
+		if countErr != nil {
+			return nil, pkg.InternalServerError(countErr.Error(), &pkg.RentLoopErrorParams{
+				Err: countErr,
+				Metadata: map[string]string{
+					"function": "GetPropertyDeletionEligibility",
+					"action":   "counting bookings by status",
+				},
+			})
+		}
+		if count > 0 {
+			blockingReasons = append(blockingReasons, PropertyDeletionBlockingReason{
+				Type: "BOOKING", Status: bs.status, Count: count, Label: bs.label,
+			})
+		}
+	}
+
+	applicationStatus := "TenantApplication.Status.InProgress"
+	applicationCount, applicationCountErr := s.tenantApplicationRepo.Count(
+		ctx,
+		repository.ListTenantApplicationsQuery{PropertyId: &input.PropertyID, Status: &applicationStatus},
+	)
+	if applicationCountErr != nil {
+		return nil, pkg.InternalServerError(applicationCountErr.Error(), &pkg.RentLoopErrorParams{
+			Err: applicationCountErr,
+			Metadata: map[string]string{
+				"function": "GetPropertyDeletionEligibility",
+				"action":   "counting in-progress tenant applications",
+			},
+		})
+	}
+	if applicationCount > 0 {
+		blockingReasons = append(blockingReasons, PropertyDeletionBlockingReason{
+			Type:   "TENANT_APPLICATION",
+			Status: applicationStatus,
+			Count:  applicationCount,
+			Label:  "Pending lease applications",
+		})
+	}
+
+	blocksCount, blocksCountErr := s.propertyBlockService.CountPropertyBlocks(
+		ctx, repository.ListPropertyBlocksFilter{PropertyID: property.ID.String()},
+	)
+	if blocksCountErr != nil {
+		return nil, blocksCountErr
+	}
+
+	unitsCount, unitsCountErr := s.unitService.CountUnits(
+		ctx, repository.ListUnitsFilter{PropertyID: property.ID.String()},
+	)
+	if unitsCountErr != nil {
+		return nil, unitsCountErr
+	}
+
+	nonBlockingLeases, leasesErr := s.leaseRepo.CountNonBlockingByPropertyID(ctx, property.ID.String())
+	if leasesErr != nil {
+		return nil, pkg.InternalServerError(leasesErr.Error(), &pkg.RentLoopErrorParams{
+			Err: leasesErr,
+			Metadata: map[string]string{
+				"function": "GetPropertyDeletionEligibility",
+				"action":   "counting non-blocking leases",
+			},
+		})
+	}
+
+	nonBlockingBookings, bookingsErr := s.bookingRepo.CountNonBlockingByPropertyID(ctx, property.ID.String())
+	if bookingsErr != nil {
+		return nil, pkg.InternalServerError(bookingsErr.Error(), &pkg.RentLoopErrorParams{
+			Err: bookingsErr,
+			Metadata: map[string]string{
+				"function": "GetPropertyDeletionEligibility",
+				"action":   "counting non-blocking bookings",
+			},
+		})
+	}
+
+	nonBlockingApplications, applicationsErr := s.tenantApplicationRepo.CountNonBlockingByPropertyID(
+		ctx,
+		property.ID.String(),
+	)
+	if applicationsErr != nil {
+		return nil, pkg.InternalServerError(applicationsErr.Error(), &pkg.RentLoopErrorParams{
+			Err: applicationsErr,
+			Metadata: map[string]string{
+				"function": "GetPropertyDeletionEligibility",
+				"action":   "counting non-blocking tenant applications",
+			},
+		})
+	}
+
+	return &PropertyDeletionEligibility{
+		CanDelete:       len(blockingReasons) == 0,
+		BlockingReasons: blockingReasons,
+		WillBeDeleted: PropertyDeletionSummary{
+			Blocks:             blocksCount,
+			Units:              unitsCount,
+			Leases:             nonBlockingLeases,
+			Bookings:           nonBlockingBookings,
+			TenantApplications: nonBlockingApplications,
+		},
+	}, nil
+}
+
 type DeletePropertyInput struct {
 	PropertyID string
 	ClientID   string
@@ -490,21 +688,59 @@ func (s *propertyService) DeleteProperty(context context.Context, input DeletePr
 		})
 	}
 
-	unitsCount, unitErr := s.unitService.CountUnits(
-		context,
-		repository.ListUnitsFilter{PropertyID: property.ID.String()},
-	)
-	if unitErr != nil {
-		return unitErr
-	}
-
-	if unitsCount > 0 {
-		return pkg.BadRequestError("property is linked to a unit", nil)
-	}
-
 	tx := s.appCtx.DB.Begin()
-
 	transCtx := lib.WithTransaction(context, tx)
+
+	eligibility, eligibilityErr := s.GetPropertyDeletionEligibility(transCtx, GetPropertyDeletionEligibilityInput{
+		PropertyID: input.PropertyID,
+		ClientID:   input.ClientID,
+	})
+	if eligibilityErr != nil {
+		tx.Rollback()
+		return eligibilityErr
+	}
+
+	if !eligibility.CanDelete {
+		tx.Rollback()
+		return pkg.BadRequestError("PropertyHasActiveOccupancy", nil)
+	}
+
+	if err := s.leaseRepo.DeleteNonBlockingByPropertyID(transCtx, property.ID.String()); err != nil {
+		tx.Rollback()
+		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err:      err,
+			Metadata: map[string]string{"function": "DeleteProperty", "action": "deleting non-blocking leases"},
+		})
+	}
+
+	if err := s.bookingRepo.DeleteNonBlockingByPropertyID(transCtx, property.ID.String()); err != nil {
+		tx.Rollback()
+		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err:      err,
+			Metadata: map[string]string{"function": "DeleteProperty", "action": "deleting non-blocking bookings"},
+		})
+	}
+
+	if err := s.tenantApplicationRepo.DeleteNonBlockingByPropertyID(transCtx, property.ID.String()); err != nil {
+		tx.Rollback()
+		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "DeleteProperty",
+				"action":   "deleting non-blocking tenant applications",
+			},
+		})
+	}
+
+	if err := s.unitService.DeleteAllByPropertyID(transCtx, property.ID.String()); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err := s.propertyBlockService.DeleteAllByPropertyID(transCtx, property.ID.String()); err != nil {
+		tx.Rollback()
+		return err
+	}
 
 	unlinkPropertyErr := s.clientUserPropertyService.UnlinkByPropertyID(transCtx, input.PropertyID)
 	if unlinkPropertyErr != nil {

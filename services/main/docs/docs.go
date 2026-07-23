@@ -5030,7 +5030,7 @@ const docTemplate = `{
                         "description": "Property deleted successfully"
                     },
                     "400": {
-                        "description": "Error occurred when updating a property",
+                        "description": "Property has active leases, bookings or pending applications and cannot be deleted",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -5039,6 +5039,12 @@ const docTemplate = `{
                         "description": "Invalid or absent authentication token",
                         "schema": {
                             "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Property not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
                         }
                     },
                     "500": {
@@ -6484,6 +6490,72 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/deletion:preview": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns whether a property is eligible for deletion, why not if blocked, and what would be archived if it proceeds",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Properties"
+                ],
+                "summary": "Preview a property's deletion impact (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deletion eligibility computed successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/services.PropertyDeletionEligibility"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when computing deletion eligibility",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Property not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occured",
                         "schema": {
                             "type": "string"
                         }
@@ -22789,6 +22861,60 @@ const docTemplate = `{
                 "total": {
                     "type": "integer",
                     "example": 100
+                }
+            }
+        },
+        "services.PropertyDeletionBlockingReason": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "services.PropertyDeletionEligibility": {
+            "type": "object",
+            "properties": {
+                "blocking_reasons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/services.PropertyDeletionBlockingReason"
+                    }
+                },
+                "can_delete": {
+                    "type": "boolean"
+                },
+                "will_be_deleted": {
+                    "$ref": "#/definitions/services.PropertyDeletionSummary"
+                }
+            }
+        },
+        "services.PropertyDeletionSummary": {
+            "type": "object",
+            "properties": {
+                "blocks": {
+                    "type": "integer"
+                },
+                "bookings": {
+                    "type": "integer"
+                },
+                "leases": {
+                    "type": "integer"
+                },
+                "tenant_applications": {
+                    "type": "integer"
+                },
+                "units": {
+                    "type": "integer"
                 }
             }
         },

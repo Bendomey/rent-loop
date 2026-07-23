@@ -19,6 +19,9 @@ type LeaseRepository interface {
 	Count(context context.Context, filterQuery ListLeasesFilter) (int64, error)
 	CountActiveByUnitID(context context.Context, unitID string) (int64, error)
 	CountActiveByPropertyID(context context.Context, propertyID string) (int64, error)
+	CountByPropertyIDAndStatus(context context.Context, propertyID string, status string) (int64, error)
+	CountNonBlockingByPropertyID(context context.Context, propertyID string) (int64, error)
+	DeleteNonBlockingByPropertyID(context context.Context, propertyID string) error
 	ListDueForBilling(ctx context.Context) (*[]models.Lease, error)
 	ListForMoveOutReminders(ctx context.Context) (*[]models.Lease, error)
 	ListDueForCompletion(ctx context.Context) (*[]models.Lease, error)
@@ -245,6 +248,51 @@ func (r *leaseRepository) CountActiveByPropertyID(ctx context.Context, propertyI
 		return 0, err
 	}
 	return count, nil
+}
+
+func (r *leaseRepository) CountByPropertyIDAndStatus(
+	ctx context.Context,
+	propertyID string,
+	status string,
+) (int64, error) {
+	var count int64
+	err := lib.ResolveDB(ctx, r.DB).WithContext(ctx).
+		Model(&models.Lease{}).
+		Joins("INNER JOIN units ON leases.unit_id = units.id").
+		Where("units.property_id = ?", propertyID).
+		Where("leases.status = ?", status).
+		Count(&count).Error
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+func (r *leaseRepository) CountNonBlockingByPropertyID(ctx context.Context, propertyID string) (int64, error) {
+	var count int64
+	err := lib.ResolveDB(ctx, r.DB).WithContext(ctx).
+		Model(&models.Lease{}).
+		Joins("INNER JOIN units ON leases.unit_id = units.id").
+		Where("units.property_id = ?", propertyID).
+		Where("leases.status NOT IN ?", []string{
+			"Lease.Status.Pending",
+			"Lease.Status.Active",
+		}).
+		Count(&count).Error
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+func (r *leaseRepository) DeleteNonBlockingByPropertyID(ctx context.Context, propertyID string) error {
+	return lib.ResolveDB(ctx, r.DB).WithContext(ctx).
+		Where(
+			"unit_id IN (SELECT id FROM units WHERE property_id = ?) AND status NOT IN ?",
+			propertyID,
+			[]string{"Lease.Status.Pending", "Lease.Status.Active"},
+		).
+		Delete(&models.Lease{}).Error
 }
 
 func (r *leaseRepository) ListDueForBilling(ctx context.Context) (*[]models.Lease, error) {
