@@ -31,17 +31,7 @@ export const DASHBOARD_TOUR_STEPS: DriveStep[] = [
 		popover: {
 			title: 'Overview',
 			description:
-				'Your daily command center. See key numbers at a glance plus what needs your attention: overdue rent, expiring leases, and open maintenance requests.',
-			side: 'right',
-			align: 'start',
-		},
-	},
-	{
-		element: '#tour-nav-insights',
-		popover: {
-			title: 'Insights',
-			description:
-				'Analytics for your portfolio. Explore revenue, occupancy, rent collection, and more — filter by date range or property, and compare against previous periods.',
+				'Your portfolio at a glance: KPIs, a risk summary, revenue trends, property rankings, and unit distribution. Filter by date range or property, and compare against previous periods.',
 			side: 'right',
 			align: 'start',
 		},

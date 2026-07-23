@@ -1,58 +1,66 @@
-import { RiskSummaryCard, type RiskStat } from '../components/risk-summary-card'
-import { useInsightsFilters } from '../use-insights-filters'
+import type { CubeFilter } from '~/api/analytics'
 import { useCubeQuery, useGetAnalyticsToken } from '~/api/analytics'
 import { localizedDayjs } from '~/lib/date'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 import { safeString } from '~/lib/strings'
+import {
+	RiskSummaryCard,
+	type RiskStat,
+} from '~/modules/insights/components/risk-summary-card'
 import { useClient } from '~/providers/client-provider'
 
 interface OutstandingRow {
 	'Invoices.outstandingAmount': string | null
-	'Invoices.outstandingPropertyCount': string | null
 }
 interface ExpiringRow {
 	'Leases.activeCount': string | null
-	'Leases.expiringPropertyCount': string | null
 }
 interface MaintenanceRow {
 	'MaintenanceRequests.newCount': string | null
 	'MaintenanceRequests.inProgressCount': string | null
 	'MaintenanceRequests.inReviewCount': string | null
-	'MaintenanceRequests.openPropertyCount': string | null
 }
 
 function parseNum(value: string | null | undefined): number {
 	return value ? Number(value) : 0
 }
 
-export function RiskSummary() {
+interface Props {
+	propertyId: string
+}
+
+/**
+ * Single-property Risk Summary — same card/modal as the portfolio-wide
+ * Insights Overview (app/modules/insights/overview/risk-summary.tsx), just
+ * scoped to one property instead of the Insights filter bar's selection.
+ */
+export function PropertyRiskSummary({ propertyId }: Props) {
 	const { clientUser } = useClient()
 	const { data: token } = useGetAnalyticsToken(
 		safeString(clientUser?.client_id),
 	)
-	const { propertyIds, propertyFilter } = useInsightsFilters()
+
+	const propertyFilter = (member: string): CubeFilter[] => [
+		{ member, operator: 'equals', values: [propertyId] },
+	]
 
 	const today = localizedDayjs().format('YYYY-MM-DD')
 	const in60Days = localizedDayjs().add(60, 'day').format('YYYY-MM-DD')
-	const scopeKey = propertyIds.join(',') || 'all'
 
 	const outstandingQuery = useCubeQuery<OutstandingRow>(
 		token,
-		['ins-ov-risk-outstanding', scopeKey],
+		['prop-risk-outstanding', propertyId],
 		{
-			measures: [
-				'Invoices.outstandingAmount',
-				'Invoices.outstandingPropertyCount',
-			],
+			measures: ['Invoices.outstandingAmount'],
 			filters: propertyFilter('Invoices.propertyId'),
 		},
 	)
 
 	const expiringQuery = useCubeQuery<ExpiringRow>(
 		token,
-		['ins-ov-risk-expiring', scopeKey],
+		['prop-risk-expiring', propertyId],
 		{
-			measures: ['Leases.activeCount', 'Leases.expiringPropertyCount'],
+			measures: ['Leases.activeCount'],
 			timeDimensions: [
 				{ dimension: 'Leases.moveOutDate', dateRange: [today, in60Days] },
 			],
@@ -62,38 +70,26 @@ export function RiskSummary() {
 
 	const maintenanceQuery = useCubeQuery<MaintenanceRow>(
 		token,
-		['ins-ov-risk-maintenance', scopeKey],
+		['prop-risk-maintenance', propertyId],
 		{
 			measures: [
 				'MaintenanceRequests.newCount',
 				'MaintenanceRequests.inProgressCount',
 				'MaintenanceRequests.inReviewCount',
-				'MaintenanceRequests.openPropertyCount',
 			],
 			filters: propertyFilter('MaintenanceRequests.propertyId'),
 		},
 	)
 
-	const outstandingRow = outstandingQuery.data?.[0]
-	const outstanding = parseNum(outstandingRow?.['Invoices.outstandingAmount'])
-	const outstandingProperties = parseNum(
-		outstandingRow?.['Invoices.outstandingPropertyCount'],
+	const outstanding = parseNum(
+		outstandingQuery.data?.[0]?.['Invoices.outstandingAmount'],
 	)
-
-	const expiringRow = expiringQuery.data?.[0]
-	const expiring = parseNum(expiringRow?.['Leases.activeCount'])
-	const expiringProperties = parseNum(
-		expiringRow?.['Leases.expiringPropertyCount'],
-	)
-
+	const expiring = parseNum(expiringQuery.data?.[0]?.['Leases.activeCount'])
 	const maintenanceRow = maintenanceQuery.data?.[0]
 	const openMaintenance =
 		parseNum(maintenanceRow?.['MaintenanceRequests.newCount']) +
 		parseNum(maintenanceRow?.['MaintenanceRequests.inProgressCount']) +
 		parseNum(maintenanceRow?.['MaintenanceRequests.inReviewCount'])
-	const maintenanceProperties = parseNum(
-		maintenanceRow?.['MaintenanceRequests.openPropertyCount'],
-	)
 
 	const stats: RiskStat[] = [
 		{
@@ -101,32 +97,36 @@ export function RiskSummary() {
 			label: 'Outstanding Invoices',
 			value: formatAmount(convertPesewasToCedis(outstanding)),
 			isPending: outstandingQuery.isPending,
-			propertyCount: outstandingProperties,
+			propertyCount: outstanding > 0 ? 1 : 0,
 			emptyText: 'No outstanding balances',
 			modalDescription:
-				'Tenants with overdue balances. Open a property to review the ledger and record payment.',
+				'Tenants with overdue balances. Open the ledger to review and record payment.',
 		},
 		{
 			type: 'expiring_leases',
 			label: 'Leases expiring',
 			value: expiring.toLocaleString(),
 			isPending: expiringQuery.isPending,
-			propertyCount: expiringProperties,
+			propertyCount: expiring > 0 ? 1 : 0,
 			emptyText: 'Nothing expiring soon',
-			modalDescription:
-				'Leases ending within 60 days. Open a property to review the lease table.',
+			modalDescription: 'Leases ending within 60 days.',
 		},
 		{
 			type: 'maintenance',
 			label: 'Open maintenance requests',
 			value: openMaintenance.toLocaleString(),
 			isPending: maintenanceQuery.isPending,
-			propertyCount: maintenanceProperties,
+			propertyCount: openMaintenance > 0 ? 1 : 0,
 			emptyText: 'No open requests',
-			modalDescription:
-				'Unresolved requests grouped by property. Open a property to triage and assign.',
+			modalDescription: 'Unresolved requests for this property.',
 		},
 	]
 
-	return <RiskSummaryCard stats={stats} scopedPropertyIds={propertyIds} />
+	return (
+		<RiskSummaryCard
+			stats={stats}
+			scopedPropertyIds={[propertyId]}
+			showPropertyCount={false}
+		/>
+	)
 }

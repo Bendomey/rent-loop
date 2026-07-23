@@ -10,8 +10,6 @@ export * from './auth-middleware'
 export * from './apply'
 export * from './apply/success'
 
-export * from './dashboard'
-
 export * from './insights'
 
 export * from './properties'

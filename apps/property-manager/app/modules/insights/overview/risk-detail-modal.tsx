@@ -1,5 +1,6 @@
 import { ChevronRight } from 'lucide-react'
 import { Link } from 'react-router'
+import { getRiskLinkPath } from '../lib/risk-link'
 import { useGetRiskProperties } from '~/api/insights'
 import { Button } from '~/components/ui/button'
 import {
@@ -22,18 +23,6 @@ function getInitials(name: string): string {
 		.map((part) => part[0]?.toUpperCase())
 		.join('')
 	return initials || '?'
-}
-
-// Where clicking a property row in a risk modal should send the manager —
-// the table where they can actually act on that risk category.
-function getRiskLinkPath(type: InsightsRiskType, propertyId: string): string {
-	switch (type) {
-		case 'maintenance':
-			return `/properties/${propertyId}/activities/maintenance-requests`
-		case 'expiring_leases':
-		case 'outstanding_rent':
-			return `/properties/${propertyId}/occupancy/leases`
-	}
 }
 
 function formatRowValue(type: InsightsRiskType, value: number): string {

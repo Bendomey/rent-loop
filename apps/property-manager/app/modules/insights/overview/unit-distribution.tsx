@@ -100,7 +100,7 @@ export function UnitDistribution({ className }: { className?: string }) {
 	const hasData = chartData.length > 0
 
 	return (
-		<Card className={cn('shadow-none self-start', className)}>
+		<Card className={cn('self-start shadow-none', className)}>
 			<CardHeader>
 				<CardTitle>Unit Distribution</CardTitle>
 				<CardDescription>
