@@ -9,9 +9,9 @@ export function InsightsOverviewModule() {
 	return (
 		<div className="flex flex-col gap-4 md:gap-6">
 			<InsightsKpiRow />
+			<RiskSummary />
 			<InsightsTrends />
 			{!propertyId ? <PropertyRankings /> : null}
-			<RiskSummary />
 		</div>
 	)
 }

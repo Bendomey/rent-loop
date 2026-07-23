@@ -43,7 +43,11 @@ const data = {
 				{ title: 'Overview', url: '' },
 				{ title: 'Revenue', url: '/revenue', isComingSoon: true },
 				{ title: 'Occupancy', url: '/occupancy', isComingSoon: true },
-				{ title: 'Rent Collection', url: '/rent-collection', isComingSoon: true },
+				{
+					title: 'Rent Collection',
+					url: '/rent-collection',
+					isComingSoon: true,
+				},
 				{ title: 'Leases', url: '/leases', isComingSoon: true },
 				{ title: 'Tenants', url: '/tenants', isComingSoon: true },
 				{ title: 'Maintenance', url: '/maintenance', isComingSoon: true },

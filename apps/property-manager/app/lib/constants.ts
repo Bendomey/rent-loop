@@ -37,6 +37,7 @@ export const QUERY_KEYS = {
 	LEASE_AGREEMENT_DOCUMENT: 'lease-agreement-document',
 	NOTIFICATIONS: 'notifications',
 	NOTIFICATION_UNREAD_COUNT: 'notification-unread-count',
+	INSIGHTS_RISK_PROPERTIES: 'insights-risk-properties',
 } as const
 
 export const PermissionState = {
