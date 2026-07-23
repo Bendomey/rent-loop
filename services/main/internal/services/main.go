@@ -109,6 +109,8 @@ func NewServices(params INewServicesParams) Services {
 			UnitService:               unitService,
 			PropertyBlockService:      propertyBlockService,
 			LeaseRepo:                 params.Repository.LeaseRepository,
+			BookingRepo:               params.Repository.BookingRepository,
+			TenantApplicationRepo:     params.Repository.TenantApplicationRepository,
 		},
 	)
 

@@ -373,8 +373,9 @@ func (h *PropertyHandler) UpdateProperty(w http.ResponseWriter, r *http.Request)
 //	@Produce		json
 //	@Param			property_id	path		string			true	"Property ID"
 //	@Success		204			{object}	nil				"Property deleted successfully"
-//	@Failure		400			{object}	lib.HTTPError	"Error occurred when updating a property"
+//	@Failure		400			{object}	lib.HTTPError	"Property has active leases, bookings or pending applications and cannot be deleted"
 //	@Failure		401			{object}	string			"Invalid or absent authentication token"
+//	@Failure		404			{object}	lib.HTTPError	"Property not found"
 //	@Failure		500			{object}	string			"An unexpected error occured"
 //	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id} [delete]
 func (h *PropertyHandler) DeleteProperty(w http.ResponseWriter, r *http.Request) {
@@ -398,4 +399,45 @@ func (h *PropertyHandler) DeleteProperty(w http.ResponseWriter, r *http.Request)
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// GetPropertyDeletionPreview godoc
+//
+//	@Summary		Preview a property's deletion impact (Admin)
+//	@Description	Returns whether a property is eligible for deletion, why not if blocked, and what would be archived if it proceeds
+//	@Tags			Properties
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			property_id	path		string												true	"Property ID"
+//	@Success		200			{object}	object{data=services.PropertyDeletionEligibility}	"Deletion eligibility computed successfully"
+//	@Failure		400			{object}	lib.HTTPError										"Error occurred when computing deletion eligibility"
+//	@Failure		401			{object}	string												"Invalid or absent authentication token"
+//	@Failure		404			{object}	lib.HTTPError										"Property not found"
+//	@Failure		500			{object}	string												"An unexpected error occured"
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/deletion:preview [get]
+func (h *PropertyHandler) GetPropertyDeletionPreview(w http.ResponseWriter, r *http.Request) {
+	currentClientUser, currentClientUserOk := lib.ClientUserFromContext(r.Context())
+	if !currentClientUserOk {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	propertyID := chi.URLParam(r, "property_id")
+
+	eligibility, eligibilityErr := h.service.GetPropertyDeletionEligibility(
+		r.Context(),
+		services.GetPropertyDeletionEligibilityInput{
+			PropertyID: propertyID,
+			ClientID:   currentClientUser.ClientID,
+		},
+	)
+	if eligibilityErr != nil {
+		HandleErrorResponse(w, eligibilityErr)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": eligibility,
+	})
 }

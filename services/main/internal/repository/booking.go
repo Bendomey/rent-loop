@@ -15,6 +15,8 @@ type BookingRepository interface {
 	GetByTrackingCode(ctx context.Context, trackingCode string, populate []string) (*models.Booking, error)
 	List(ctx context.Context, filterQuery lib.FilterQuery, filters ListBookingsFilter) (*[]models.Booking, error)
 	Count(ctx context.Context, filterQuery lib.FilterQuery, filter ListBookingsFilter) (int64, error)
+	CountNonBlockingByPropertyID(ctx context.Context, propertyID string) (int64, error)
+	DeleteNonBlockingByPropertyID(ctx context.Context, propertyID string) error
 	HasOverlappingBlock(ctx context.Context, unitID string, startDate, endDate interface{}) (bool, error)
 }
 
@@ -138,6 +140,26 @@ func (r *bookingRepository) Count(
 	}
 
 	return count, nil
+}
+
+func (r *bookingRepository) CountNonBlockingByPropertyID(ctx context.Context, propertyID string) (int64, error) {
+	var count int64
+	err := lib.ResolveDB(ctx, r.DB).WithContext(ctx).
+		Model(&models.Booking{}).
+		Where("property_id = ?", propertyID).
+		Where("status NOT IN ?", []string{"PENDING", "CONFIRMED", "CHECKED_IN"}).
+		Count(&count).Error
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+func (r *bookingRepository) DeleteNonBlockingByPropertyID(ctx context.Context, propertyID string) error {
+	return lib.ResolveDB(ctx, r.DB).WithContext(ctx).
+		Where("property_id = ?", propertyID).
+		Where("status NOT IN ?", []string{"PENDING", "CONFIRMED", "CHECKED_IN"}).
+		Delete(&models.Booking{}).Error
 }
 
 // HasOverlappingBlock checks if any UnitDateBlock overlaps with [startDate, endDate) for the given unit.

@@ -1,5 +1,6 @@
 import {
 	FileText,
+	Trash2,
 	UserCircle,
 	Users,
 	Wrench,
@@ -9,7 +10,10 @@ import { useMemo } from 'react'
 import { Link, Outlet, useLocation } from 'react-router'
 import type { Route } from './+types/_auth.properties.$propertyId.settings'
 import { NavMain } from '~/components/nav-main'
-import { useHasPropertyPermissions } from '~/components/permissions/use-has-role'
+import {
+	useHasPermissions,
+	useHasPropertyPermissions,
+} from '~/components/permissions/use-has-role'
 import { Separator } from '~/components/ui/separator'
 import { TypographyH4 } from '~/components/ui/typography'
 import { cn } from '~/lib/utils'
@@ -45,7 +49,16 @@ export default function SettingsDashboard({ params }: Route.ComponentProps) {
 		return menus
 	}, [hasPermissions])
 
-	const allMenus = [...generalMenus, ...workspaceMenus]
+	const { hasPermissions: hasOwnerAccess } = useHasPermissions({
+		roles: ['OWNER', 'ADMIN'],
+	})
+
+	const dangerZoneMenus = useMemo(() => {
+		if (hasOwnerAccess !== 'AUTHORIZED') return []
+		return [{ title: 'Danger Zone', url: '/danger-zone', icon: Trash2 }]
+	}, [hasOwnerAccess])
+
+	const allMenus = [...generalMenus, ...workspaceMenus, ...dangerZoneMenus]
 
 	return (
 		<main className="min-h-[calc(100vh-64px)]">
@@ -92,6 +105,17 @@ export default function SettingsDashboard({ params }: Route.ComponentProps) {
 						title="Property Settings"
 						titleClassName="text-zinc-500"
 					/>
+					{dangerZoneMenus.length > 0 ? (
+						<>
+							<Separator className="my-2" />
+							<NavMain
+								items={dangerZoneMenus}
+								baseRoute={baseRoute}
+								title="Danger Zone"
+								titleClassName="text-zinc-500"
+							/>
+						</>
+					) : null}
 				</div>
 				<div className="w-full overflow-auto p-5">
 					<Outlet />

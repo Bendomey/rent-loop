@@ -2435,6 +2435,41 @@ definitions:
         example: 100
         type: integer
     type: object
+  services.PropertyDeletionBlockingReason:
+    properties:
+      count:
+        type: integer
+      label:
+        type: string
+      status:
+        type: string
+      type:
+        type: string
+    type: object
+  services.PropertyDeletionEligibility:
+    properties:
+      blocking_reasons:
+        items:
+          $ref: '#/definitions/services.PropertyDeletionBlockingReason'
+        type: array
+      can_delete:
+        type: boolean
+      will_be_deleted:
+        $ref: '#/definitions/services.PropertyDeletionSummary'
+    type: object
+  services.PropertyDeletionSummary:
+    properties:
+      blocks:
+        type: integer
+      bookings:
+        type: integer
+      leases:
+        type: integer
+      tenant_applications:
+        type: integer
+      units:
+        type: integer
+    type: object
   transformations.AdminOutputAnnouncement:
     properties:
       client_id:
@@ -8086,13 +8121,18 @@ paths:
         "204":
           description: Property deleted successfully
         "400":
-          description: Error occurred when updating a property
+          description: Property has active leases, bookings or pending applications
+            and cannot be deleted
           schema:
             $ref: '#/definitions/lib.HTTPError'
         "401":
           description: Invalid or absent authentication token
           schema:
             type: string
+        "404":
+          description: Property not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
         "500":
           description: An unexpected error occured
           schema:
@@ -9086,6 +9126,49 @@ paths:
       summary: Unlink property from client users (Admin)
       tags:
       - ClientUserProperties
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/deletion:preview:
+    get:
+      consumes:
+      - application/json
+      description: Returns whether a property is eligible for deletion, why not if
+        blocked, and what would be archived if it proceeds
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Deletion eligibility computed successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/services.PropertyDeletionEligibility'
+            type: object
+        "400":
+          description: Error occurred when computing deletion eligibility
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Property not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occured
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Preview a property's deletion impact (Admin)
+      tags:
+      - Properties
   /api/v1/admin/clients/{client_id}/properties/{property_id}/expenses:
     get:
       consumes:
