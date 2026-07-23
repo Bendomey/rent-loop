@@ -128,15 +128,16 @@ export function RiskSummary() {
 	const { data: token } = useGetAnalyticsToken(
 		safeString(clientUser?.client_id),
 	)
-	const { propertyId, propertyFilter } = useInsightsFilters()
+	const { propertyIds, propertyFilter } = useInsightsFilters()
 	const [openType, setOpenType] = useState<InsightsRiskType | null>(null)
 
 	const today = localizedDayjs().format('YYYY-MM-DD')
 	const in60Days = localizedDayjs().add(60, 'day').format('YYYY-MM-DD')
+	const scopeKey = propertyIds.join(',') || 'all'
 
 	const outstandingQuery = useCubeQuery<OutstandingRow>(
 		token,
-		['ins-ov-risk-outstanding', propertyId ?? 'all'],
+		['ins-ov-risk-outstanding', scopeKey],
 		{
 			measures: [
 				'Invoices.outstandingAmount',
@@ -148,7 +149,7 @@ export function RiskSummary() {
 
 	const expiringQuery = useCubeQuery<ExpiringRow>(
 		token,
-		['ins-ov-risk-expiring', propertyId ?? 'all'],
+		['ins-ov-risk-expiring', scopeKey],
 		{
 			measures: ['Leases.activeCount', 'Leases.expiringPropertyCount'],
 			timeDimensions: [
@@ -160,7 +161,7 @@ export function RiskSummary() {
 
 	const maintenanceQuery = useCubeQuery<MaintenanceRow>(
 		token,
-		['ins-ov-risk-maintenance', propertyId ?? 'all'],
+		['ins-ov-risk-maintenance', scopeKey],
 		{
 			measures: [
 				'MaintenanceRequests.newCount',
@@ -196,7 +197,7 @@ export function RiskSummary() {
 	const stats: RiskStat[] = [
 		{
 			type: 'outstanding_rent',
-			label: 'Outstanding rent',
+			label: 'Outstanding Invoices',
 			value: formatAmount(convertPesewasToCedis(outstanding)),
 			isPending: outstandingQuery.isPending,
 			propertyCount: outstandingProperties,
@@ -285,7 +286,7 @@ export function RiskSummary() {
 					propertyCount={openStat.propertyCount}
 					open={openType !== null}
 					onOpenChange={(open) => setOpenType(open ? openStat.type : null)}
-					scopedPropertyId={propertyId}
+					scopedPropertyIds={propertyIds}
 				/>
 			) : null}
 		</>

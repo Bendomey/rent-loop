@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { RankingTable, type RankingRow } from '../components/ranking-table'
 import { useInsightsFilters } from '../use-insights-filters'
+import { UnitDistribution } from './unit-distribution'
 import { useCubeQuery, useGetAnalyticsToken } from '~/api/analytics'
 import { useGetClientUserProperties } from '~/api/client-user-properties'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
@@ -13,15 +14,17 @@ interface RevenueByPropertyRow {
 }
 
 /**
- * Top/bottom properties by paid revenue. Rendered only in portfolio scope
- * (the parent hides this section when a single property is selected).
+ * Property rankings (portfolio scope only) plus the unit distribution card,
+ * which stays visible regardless of scope — grouped together since they
+ * share this section of the Overview page.
  */
 export function PropertyRankings() {
 	const { clientUser } = useClient()
 	const { data: token } = useGetAnalyticsToken(
 		safeString(clientUser?.client_id),
 	)
-	const { from, to, timeDimension } = useInsightsFilters()
+	const { propertyIds, from, to, timeDimension } = useInsightsFilters()
+	const isPortfolioScope = propertyIds.length === 0
 
 	const revenueByPropertyQuery = useCubeQuery<RevenueByPropertyRow>(
 		token,
@@ -32,6 +35,7 @@ export function PropertyRankings() {
 			timeDimensions: [timeDimension('Invoices.paidAt')],
 			order: { 'Invoices.paidAmount': 'desc' },
 		},
+		{ enabled: isPortfolioScope },
 	)
 
 	const { data: propertiesData } = useGetClientUserProperties(
@@ -74,24 +78,31 @@ export function PropertyRankings() {
 
 	return (
 		<div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-			<RankingTable
-				title="Top Properties by Revenue"
-				description="Highest paid revenue in the selected period"
-				rows={top}
-				isPending={revenueByPropertyQuery.isPending}
-				valueLabel="Revenue"
-				valueFormatter={(value) => formatAmount(value)}
-			/>
-			{bottom.length > 0 ? (
-				<RankingTable
-					title="Lowest Revenue Properties"
-					description="Lowest paid revenue in the selected period"
-					rows={bottom}
-					isPending={revenueByPropertyQuery.isPending}
-					valueLabel="Revenue"
-					valueFormatter={(value) => formatAmount(value)}
-				/>
+			{isPortfolioScope ? (
+				<div className="flex flex-col gap-4">
+					<RankingTable
+						title="Top Properties by Revenue"
+						description="Highest paid revenue in the selected period"
+						rows={top}
+						isPending={revenueByPropertyQuery.isPending}
+						valueLabel="Revenue"
+						valueFormatter={(value) => formatAmount(value)}
+					/>
+					{bottom.length > 0 ? (
+						<RankingTable
+							title="Lowest Revenue Properties"
+							description="Lowest paid revenue in the selected period"
+							rows={bottom}
+							isPending={revenueByPropertyQuery.isPending}
+							valueLabel="Revenue"
+							valueFormatter={(value) => formatAmount(value)}
+						/>
+					) : null}
+				</div>
 			) : null}
+			<UnitDistribution
+				className={!isPortfolioScope ? 'lg:col-span-2' : undefined}
+			/>
 		</div>
 	)
 }

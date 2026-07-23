@@ -8,11 +8,11 @@ import { fetchClient } from '~/lib/transport'
 const getRiskProperties = async (
 	clientId: string,
 	type: InsightsRiskType,
-	propertyId?: string,
+	propertyIds?: string[],
 ) => {
 	try {
 		const params = new URLSearchParams({ type })
-		if (propertyId) params.set('property_id', propertyId)
+		for (const id of propertyIds ?? []) params.append('property_id', id)
 
 		const response = await fetchClient<
 			ApiResponse<InsightsRiskPropertiesResponse>
@@ -33,11 +33,16 @@ const getRiskProperties = async (
 export const useGetRiskProperties = (
 	clientId: string,
 	type: InsightsRiskType,
-	propertyId?: string,
+	propertyIds?: string[],
 	enabled = true,
 ) =>
 	useQuery({
-		queryKey: [QUERY_KEYS.INSIGHTS_RISK_PROPERTIES, clientId, type, propertyId],
-		queryFn: () => getRiskProperties(clientId, type, propertyId),
+		queryKey: [
+			QUERY_KEYS.INSIGHTS_RISK_PROPERTIES,
+			clientId,
+			type,
+			propertyIds,
+		],
+		queryFn: () => getRiskProperties(clientId, type, propertyIds),
 		enabled: enabled && !!clientId,
 	})

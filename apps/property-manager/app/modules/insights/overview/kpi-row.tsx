@@ -35,14 +35,14 @@ export function InsightsKpiRow() {
 	const {
 		from,
 		to,
-		propertyId,
+		propertyIds,
 		compare,
 		previousRange,
 		timeDimension,
 		propertyFilter,
 	} = useInsightsFilters()
 
-	const scopeKey = [from, to, propertyId ?? 'all']
+	const scopeKey = [from, to, propertyIds.join(',') || 'all']
 
 	const revenueQuery = useCubeQuery<RevenueRow>(
 		token,
@@ -90,7 +90,7 @@ export function InsightsKpiRow() {
 
 	const outstandingQuery = useCubeQuery<OutstandingRow>(
 		token,
-		['ins-ov-outstanding', propertyId ?? 'all'],
+		['ins-ov-outstanding', propertyIds.join(',') || 'all'],
 		{
 			measures: ['Invoices.outstandingAmount'],
 			filters: propertyFilter('Invoices.propertyId'),
@@ -99,7 +99,7 @@ export function InsightsKpiRow() {
 
 	const leasesQuery = useCubeQuery<LeaseRow>(
 		token,
-		['ins-ov-active-leases', propertyId ?? 'all'],
+		['ins-ov-active-leases', propertyIds.join(',') || 'all'],
 		{
 			measures: ['Leases.activeCount'],
 			filters: propertyFilter('Leases.propertyId'),
@@ -108,7 +108,7 @@ export function InsightsKpiRow() {
 
 	const unitsQuery = useCubeQuery<UnitRow>(
 		token,
-		['ins-ov-units', propertyId ?? 'all'],
+		['ins-ov-units', propertyIds.join(',') || 'all'],
 		{
 			measures: ['Units.count', 'Units.occupiedCount'],
 			filters: propertyFilter('Units.propertyId'),

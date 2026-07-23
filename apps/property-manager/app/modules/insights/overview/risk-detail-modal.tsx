@@ -10,7 +10,6 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from '~/components/ui/dialog'
-import { ScrollArea } from '~/components/ui/scroll-area'
 import { Skeleton } from '~/components/ui/skeleton'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 import { safeString } from '~/lib/strings'
@@ -51,8 +50,8 @@ interface RiskDetailModalProps {
 	propertyCount: number
 	open: boolean
 	onOpenChange: (open: boolean) => void
-	/** Set when the Insights filter bar has a single property selected. */
-	scopedPropertyId?: string
+	/** Set when the Insights filter bar has one or more properties selected. */
+	scopedPropertyIds?: string[]
 }
 
 export function RiskDetailModal({
@@ -63,7 +62,7 @@ export function RiskDetailModal({
 	propertyCount,
 	open,
 	onOpenChange,
-	scopedPropertyId,
+	scopedPropertyIds,
 }: RiskDetailModalProps) {
 	const { clientUser } = useClient()
 	const {
@@ -74,7 +73,7 @@ export function RiskDetailModal({
 	} = useGetRiskProperties(
 		safeString(clientUser?.client_id),
 		type,
-		scopedPropertyId,
+		scopedPropertyIds,
 		open,
 	)
 
@@ -100,7 +99,7 @@ export function RiskDetailModal({
 					</span>
 				</div>
 
-				<ScrollArea className="-mx-6 max-h-[50vh] border-t">
+				<div className="-mx-6 max-h-[50vh] overflow-y-auto border-t">
 					<div className="px-6">
 						{isPending ? (
 							<div className="divide-y">
@@ -162,7 +161,7 @@ export function RiskDetailModal({
 							</div>
 						)}
 					</div>
-				</ScrollArea>
+				</div>
 
 				<DialogFooter className="sm:justify-between">
 					<p className="text-muted-foreground text-sm">

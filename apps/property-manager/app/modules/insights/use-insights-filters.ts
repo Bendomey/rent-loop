@@ -8,15 +8,16 @@ const DATE_FORMAT = 'YYYY-MM-DD'
 export interface InsightsFilters {
 	from: string
 	to: string
-	propertyId?: string
+	propertyIds: string[]
 	compare: boolean
 }
 
 /**
  * Shared filter state for all /insights pages, backed by URL search params
- * (?from=&to=&property=&compare=1) so filters persist across insights pages,
- * survive refresh, and are shareable. Defaults: last 12 months, all
- * properties, compare off.
+ * (?from=&to=&property=&property=&compare=1 — one repeated `property` param
+ * per selected property) so filters persist across insights pages, survive
+ * refresh, and are shareable. Defaults: last 12 months, all properties,
+ * compare off.
  */
 export function useInsightsFilters() {
 	const [searchParams, setSearchParams] = useSearchParams()
@@ -25,7 +26,7 @@ export function useInsightsFilters() {
 		searchParams.get('from') ??
 		localizedDayjs().subtract(12, 'month').format(DATE_FORMAT)
 	const to = searchParams.get('to') ?? localizedDayjs().format(DATE_FORMAT)
-	const propertyId = searchParams.get('property') ?? undefined
+	const propertyIds = searchParams.getAll('property')
 	const compare = searchParams.get('compare') === '1'
 
 	const setFilters = useCallback(
@@ -35,9 +36,9 @@ export function useInsightsFilters() {
 					const next = new URLSearchParams(prev)
 					if (updates.from !== undefined) next.set('from', updates.from)
 					if (updates.to !== undefined) next.set('to', updates.to)
-					if ('propertyId' in updates) {
-						if (updates.propertyId) next.set('property', updates.propertyId)
-						else next.delete('property')
+					if (updates.propertyIds !== undefined) {
+						next.delete('property')
+						for (const id of updates.propertyIds) next.append('property', id)
 					}
 					if (updates.compare !== undefined) {
 						if (updates.compare) next.set('compare', '1')
@@ -75,14 +76,16 @@ export function useInsightsFilters() {
 
 	const propertyFilter = useCallback(
 		(member: string): CubeFilter[] =>
-			propertyId ? [{ member, operator: 'equals', values: [propertyId] }] : [],
-		[propertyId],
+			propertyIds.length > 0
+				? [{ member, operator: 'equals', values: propertyIds }]
+				: [],
+		[propertyIds],
 	)
 
 	return {
 		from,
 		to,
-		propertyId,
+		propertyIds,
 		compare,
 		setFilters,
 		previousRange,

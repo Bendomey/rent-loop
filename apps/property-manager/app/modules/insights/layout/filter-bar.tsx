@@ -1,24 +1,16 @@
 import { useMemo } from 'react'
 import { useInsightsFilters } from '../use-insights-filters'
 import { useGetClientUserProperties } from '~/api/client-user-properties'
+import { MultiSelect } from '~/components/multi-select'
 import { DateRangePicker } from '~/components/ui/date-ranger-picker'
 import { Label } from '~/components/ui/label'
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from '~/components/ui/select'
 import { Switch } from '~/components/ui/switch'
 import { localizedDayjs } from '~/lib/date'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
 
-const ALL_PROPERTIES = 'all'
-
 export function InsightsFilterBar() {
-	const { from, to, propertyId, compare, setFilters } = useInsightsFilters()
+	const { from, to, propertyIds, compare, setFilters } = useInsightsFilters()
 	const { clientUser } = useClient()
 
 	const { data: propertiesData } = useGetClientUserProperties(
@@ -32,10 +24,12 @@ export function InsightsFilterBar() {
 		},
 	)
 
-	const properties = useMemo(
+	const propertyOptions = useMemo(
 		() =>
 			(propertiesData?.rows ?? []).flatMap((row) =>
-				row.property ? [{ id: row.property.id, name: row.property.name }] : [],
+				row.property
+					? [{ value: row.property.id, label: row.property.name }]
+					: [],
 			),
 		[propertiesData],
 	)
@@ -55,26 +49,15 @@ export function InsightsFilterBar() {
 					})
 				}}
 			/>
-			<Select
-				value={propertyId ?? ALL_PROPERTIES}
-				onValueChange={(value) =>
-					setFilters({
-						propertyId: value === ALL_PROPERTIES ? undefined : value,
-					})
-				}
-			>
-				<SelectTrigger className="w-full md:w-56">
-					<SelectValue placeholder="All properties" />
-				</SelectTrigger>
-				<SelectContent>
-					<SelectItem value={ALL_PROPERTIES}>All properties</SelectItem>
-					{properties.map((property) => (
-						<SelectItem key={property.id} value={property.id}>
-							{property.name}
-						</SelectItem>
-					))}
-				</SelectContent>
-			</Select>
+			<MultiSelect
+				options={propertyOptions}
+				defaultValue={propertyIds}
+				onValueChange={(values) => setFilters({ propertyIds: values })}
+				placeholder="All properties"
+				maxCount={1}
+				minWidth="200px"
+				maxWidth="16rem"
+			/>
 			<div className="flex items-center gap-2">
 				<Switch
 					id="insights-compare"

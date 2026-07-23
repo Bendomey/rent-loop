@@ -26,10 +26,10 @@ export function InsightsTrends() {
 	const { data: token } = useGetAnalyticsToken(
 		safeString(clientUser?.client_id),
 	)
-	const { from, to, propertyId, timeDimension, propertyFilter } =
+	const { from, to, propertyIds, timeDimension, propertyFilter } =
 		useInsightsFilters()
 
-	const scopeKey = [from, to, propertyId ?? 'all']
+	const scopeKey = [from, to, propertyIds.join(',') || 'all']
 
 	const revenueTrendQuery = useCubeQuery<RevenueTrendRow>(
 		token,
