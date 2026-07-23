@@ -857,11 +857,6 @@ definitions:
           type: string
         type: array
       category:
-        enum:
-        - PLUMBING
-        - ELECTRICAL
-        - HVAC
-        - OTHER
         type: string
       description:
         type: string
@@ -1631,11 +1626,6 @@ definitions:
           type: string
         type: array
       category:
-        enum:
-        - PLUMBING
-        - ELECTRICAL
-        - HVAC
-        - OTHER
         type: string
       description:
         type: string
@@ -1953,11 +1943,6 @@ definitions:
           type: string
         type: array
       category:
-        enum:
-        - PLUMBING
-        - ELECTRICAL
-        - HVAC
-        - OTHER
         type: string
       description:
         type: string
@@ -16544,12 +16529,7 @@ paths:
         name: lease_id
         required: true
         type: string
-      - enum:
-        - PLUMBING
-        - ELECTRICAL
-        - HVAC
-        - OTHER
-        in: query
+      - in: query
         name: category
         type: string
       - in: query

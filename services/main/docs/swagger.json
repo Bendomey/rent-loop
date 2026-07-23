@@ -17505,12 +17505,6 @@
                         "required": true
                     },
                     {
-                        "enum": [
-                            "PLUMBING",
-                            "ELECTRICAL",
-                            "HVAC",
-                            "OTHER"
-                        ],
                         "type": "string",
                         "name": "category",
                         "in": "query"
@@ -20901,13 +20895,7 @@
                     }
                 },
                 "category": {
-                    "type": "string",
-                    "enum": [
-                        "PLUMBING",
-                        "ELECTRICAL",
-                        "HVAC",
-                        "OTHER"
-                    ]
+                    "type": "string"
                 },
                 "description": {
                     "type": "string"
@@ -21962,13 +21950,7 @@
                     }
                 },
                 "category": {
-                    "type": "string",
-                    "enum": [
-                        "PLUMBING",
-                        "ELECTRICAL",
-                        "HVAC",
-                        "OTHER"
-                    ]
+                    "type": "string"
                 },
                 "description": {
                     "type": "string"
@@ -22408,13 +22390,7 @@
                     }
                 },
                 "category": {
-                    "type": "string",
-                    "enum": [
-                        "PLUMBING",
-                        "ELECTRICAL",
-                        "HVAC",
-                        "OTHER"
-                    ]
+                    "type": "string"
                 },
                 "description": {
                     "type": "string"

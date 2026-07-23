@@ -32,6 +32,7 @@ import { Textarea } from '~/components/ui/textarea'
 import { TypographyMuted } from '~/components/ui/typography'
 import { QUERY_KEYS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
+import { CATEGORY_LABELS } from '~/lib/maintenance-request.utils'
 import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
 import { useClient } from '~/providers/client-provider'
@@ -52,13 +53,6 @@ const PRIORITY_COLORS: Record<MaintenanceRequestPriority, string> = {
 		'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
 	HIGH: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300',
 	EMERGENCY: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
-}
-
-const CATEGORY_LABELS: Record<MaintenanceRequestCategory, string> = {
-	PLUMBING: 'Plumbing',
-	ELECTRICAL: 'Electrical',
-	HVAC: 'HVAC',
-	OTHER: 'Other',
 }
 
 function SidebarSection({ children }: { children: React.ReactNode }) {
@@ -475,13 +469,13 @@ export function MaintenanceRequestSidebar({ mr, propertyId }: SidebarProps) {
 									<SelectValue>{CATEGORY_LABELS[mr.category]}</SelectValue>
 								</SelectTrigger>
 								<SelectContent>
-									{(['PLUMBING', 'ELECTRICAL', 'HVAC', 'OTHER'] as const).map(
-										(c) => (
-											<SelectItem key={c} value={c}>
-												{CATEGORY_LABELS[c]}
-											</SelectItem>
-										),
-									)}
+									{(
+										Object.keys(CATEGORY_LABELS) as MaintenanceRequestCategory[]
+									).map((c) => (
+										<SelectItem key={c} value={c}>
+											{CATEGORY_LABELS[c]}
+										</SelectItem>
+									))}
 								</SelectContent>
 							</Select>
 						</SidebarRow>

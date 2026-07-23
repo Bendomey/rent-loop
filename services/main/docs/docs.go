@@ -17513,12 +17513,6 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "enum": [
-                            "PLUMBING",
-                            "ELECTRICAL",
-                            "HVAC",
-                            "OTHER"
-                        ],
                         "type": "string",
                         "name": "category",
                         "in": "query"
@@ -20909,13 +20903,7 @@ const docTemplate = `{
                     }
                 },
                 "category": {
-                    "type": "string",
-                    "enum": [
-                        "PLUMBING",
-                        "ELECTRICAL",
-                        "HVAC",
-                        "OTHER"
-                    ]
+                    "type": "string"
                 },
                 "description": {
                     "type": "string"
@@ -21970,13 +21958,7 @@ const docTemplate = `{
                     }
                 },
                 "category": {
-                    "type": "string",
-                    "enum": [
-                        "PLUMBING",
-                        "ELECTRICAL",
-                        "HVAC",
-                        "OTHER"
-                    ]
+                    "type": "string"
                 },
                 "description": {
                     "type": "string"
@@ -22416,13 +22398,7 @@ const docTemplate = `{
                     }
                 },
                 "category": {
-                    "type": "string",
-                    "enum": [
-                        "PLUMBING",
-                        "ELECTRICAL",
-                        "HVAC",
-                        "OTHER"
-                    ]
+                    "type": "string"
                 },
                 "description": {
                     "type": "string"

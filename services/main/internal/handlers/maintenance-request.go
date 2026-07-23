@@ -33,7 +33,7 @@ type CreateMaintenanceRequestBody struct {
 	Title       string   `json:"title"       validate:"required"`
 	Description string   `json:"description" validate:"required"`
 	Priority    string   `json:"priority"    validate:"required,oneof=LOW MEDIUM HIGH EMERGENCY"`
-	Category    string   `json:"category"    validate:"required,oneof=PLUMBING ELECTRICAL HVAC OTHER"`
+	Category    string   `json:"category"    validate:"required"`
 	Visibility  string   `json:"visibility"  validate:"required,oneof=TENANT_VISIBLE INTERNAL_ONLY"`
 	Attachments []string `json:"attachments" validate:"omitempty"`
 }
@@ -42,7 +42,7 @@ type UpdateMaintenanceRequestBody struct {
 	Title       *string   `json:"title"       validate:"omitempty"`
 	Description *string   `json:"description" validate:"omitempty"`
 	Priority    *string   `json:"priority"    validate:"omitempty,oneof=LOW MEDIUM HIGH EMERGENCY"`
-	Category    *string   `json:"category"    validate:"omitempty,oneof=PLUMBING ELECTRICAL HVAC OTHER"`
+	Category    *string   `json:"category"    validate:"omitempty"`
 	Visibility  *string   `json:"visibility"  validate:"omitempty,oneof=TENANT_VISIBLE INTERNAL_ONLY"`
 	Attachments *[]string `json:"attachments" validate:"omitempty"`
 }
@@ -78,7 +78,7 @@ type TenantCreateMaintenanceRequestBody struct {
 	Title       string   `json:"title"       validate:"required"`
 	Description string   `json:"description" validate:"required"`
 	Priority    string   `json:"priority"    validate:"required,oneof=LOW MEDIUM HIGH EMERGENCY"`
-	Category    string   `json:"category"    validate:"required,oneof=PLUMBING ELECTRICAL HVAC OTHER"`
+	Category    string   `json:"category"    validate:"required"`
 	Attachments []string `json:"attachments" validate:"omitempty"`
 }
 
@@ -141,7 +141,7 @@ type ListMaintenanceRequestsQuery struct {
 	lib.FilterQueryInput
 	Status            []string `json:"status"              query:"status"              description:"Filter by status (NEW, IN_PROGRESS, IN_REVIEW, RESOLVED, CANCELED)"`
 	Priority          *string  `json:"priority"            query:"priority"            description:"Filter by priority (LOW, MEDIUM, HIGH, EMERGENCY)"`
-	Category          *string  `json:"category"            query:"category"            description:"Filter by category (PLUMBING, ELECTRICAL, HVAC, OTHER)"`
+	Category          *string  `json:"category"            query:"category"            description:"Filter by category (free text)"`
 	AssignedWorkerID  *string  `json:"assigned_worker_id"  query:"assigned_worker_id"  description:"Filter by assigned worker UUID"`
 	AssignedManagerID *string  `json:"assigned_manager_id" query:"assigned_manager_id" description:"Filter by assigned manager UUID"`
 	UnitID            *string  `json:"unit_id"             query:"unit_id"             description:"Filter by unit UUID"                                                validate:"omitempty,uuid4"`
@@ -819,7 +819,7 @@ type TenantListMaintenanceRequestsQuery struct {
 	lib.FilterQueryInput
 	Status   []string `json:"status"   query:"status"   validate:"omitempty,dive,oneof=NEW IN_PROGRESS IN_REVIEW RESOLVED CANCELED"`
 	Priority *string  `json:"priority" query:"priority" validate:"omitempty,oneof=LOW MEDIUM HIGH EMERGENCY"`
-	Category *string  `json:"category" query:"category" validate:"omitempty,oneof=PLUMBING ELECTRICAL HVAC OTHER"`
+	Category *string  `json:"category" query:"category" validate:"omitempty"`
 }
 
 // TenantList godoc

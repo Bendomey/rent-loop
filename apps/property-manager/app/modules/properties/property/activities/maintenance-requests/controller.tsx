@@ -3,6 +3,7 @@ import { getClientUserProperties } from '~/api/client-user-properties'
 import { getPropertyUnits } from '~/api/units'
 import { FilterSet } from '~/components/filter-set'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
+import { CATEGORY_LABELS } from '~/lib/maintenance-request.utils'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
@@ -38,12 +39,10 @@ export function PropertyActivitiesMaintenanceRequestsController() {
 			selectType: 'single',
 			label: 'Category',
 			value: {
-				options: [
-					{ label: 'Plumbing', value: 'PLUMBING' },
-					{ label: 'Electrical', value: 'ELECTRICAL' },
-					{ label: 'HVAC', value: 'HVAC' },
-					{ label: 'Other', value: 'OTHER' },
-				],
+				options: Object.entries(CATEGORY_LABELS).map(([value, label]) => ({
+					label,
+					value,
+				})),
 				urlParam: 'category',
 				defaultValues: [],
 			},

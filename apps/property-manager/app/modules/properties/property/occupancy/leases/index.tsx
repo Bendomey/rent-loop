@@ -189,7 +189,8 @@ export function PropertyTenantLeasesModule() {
 						<Tooltip>
 							<TooltipTrigger>{badge}</TooltipTrigger>
 							<TooltipContent>
-								Move-out: {localizedDayjs(lease.move_out_date).format('MMM D, YYYY')}
+								Move-out:{' '}
+								{localizedDayjs(lease.move_out_date).format('MMM D, YYYY')}
 							</TooltipContent>
 						</Tooltip>
 					)

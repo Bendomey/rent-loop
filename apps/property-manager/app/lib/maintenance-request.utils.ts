@@ -19,6 +19,18 @@ export const CATEGORY_LABELS: Record<MaintenanceRequestCategory, string> = {
 	PLUMBING: 'Plumbing',
 	ELECTRICAL: 'Electrical',
 	HVAC: 'HVAC',
+	APPLIANCE: 'Appliance',
+	STRUCTURAL: 'Structural',
+	ROOFING: 'Roofing',
+	PEST_CONTROL: 'Pest Control',
+	LANDSCAPING: 'Landscaping & Grounds',
+	LOCKS_SECURITY: 'Locks & Security',
+	PAINTING: 'Painting',
+	FLOORING: 'Flooring',
+	WINDOWS_DOORS: 'Windows & Doors',
+	SAFETY_FIRE: 'Safety & Fire',
+	CLEANING: 'Cleaning',
+	UTILITIES: 'Utilities',
 	OTHER: 'Other',
 }
 

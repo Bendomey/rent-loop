@@ -32,9 +32,15 @@ import { Textarea } from '~/components/ui/textarea'
 import { TypographyH3, TypographyMuted } from '~/components/ui/typography'
 import { useUploadObjectBulk } from '~/hooks/use-upload-object-bulk'
 import { QUERY_KEYS } from '~/lib/constants'
+import { CATEGORY_LABELS } from '~/lib/maintenance-request.utils'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
+
+const CATEGORY_VALUES = Object.keys(CATEGORY_LABELS) as [
+	MaintenanceRequestCategory,
+	...MaintenanceRequestCategory[],
+]
 
 const schema = z.object({
 	title: z.string().min(1, 'Title is required'),
@@ -42,7 +48,7 @@ const schema = z.object({
 	priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'EMERGENCY'], {
 		error: 'Priority is required',
 	}),
-	category: z.enum(['PLUMBING', 'ELECTRICAL', 'HVAC', 'OTHER'], {
+	category: z.enum(CATEGORY_VALUES, {
 		error: 'Category is required',
 	}),
 	unit_id: z.string({ error: 'Unit is required' }).min(1, 'Unit is required'),
@@ -238,10 +244,11 @@ export function NewPropertyActivitiesMaintenanceRequestModule() {
 											</SelectTrigger>
 										</FormControl>
 										<SelectContent>
-											<SelectItem value="PLUMBING">Plumbing</SelectItem>
-											<SelectItem value="ELECTRICAL">Electrical</SelectItem>
-											<SelectItem value="HVAC">HVAC</SelectItem>
-											<SelectItem value="OTHER">Other</SelectItem>
+											{CATEGORY_VALUES.map((category) => (
+												<SelectItem key={category} value={category}>
+													{CATEGORY_LABELS[category]}
+												</SelectItem>
+											))}
 										</SelectContent>
 									</Select>
 									<FormMessage />
