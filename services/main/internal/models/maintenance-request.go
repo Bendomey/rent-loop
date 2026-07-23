@@ -33,7 +33,7 @@ type MaintenanceRequest struct {
 	Attachments pq.StringArray `gorm:"type:text[]"`
 
 	Priority string `gorm:"not null;"` // LOW | MEDIUM | HIGH | EMERGENCY
-	Category string `gorm:"not null;"` // PLUMBING | ELECTRICAL | HVAC | OTHER
+	Category string `gorm:"not null;"` // free text, e.g. PLUMBING | ELECTRICAL | HVAC | ... | OTHER
 
 	Status string `gorm:"not null;"` // NEW | IN_PROGRESS | IN_REVIEW | RESOLVED | CANCELED
 

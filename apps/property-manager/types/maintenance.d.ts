@@ -12,7 +12,23 @@ interface MaintenanceRequest {
 	description: string
 	attachments: string[]
 	priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'EMERGENCY'
-	category: 'PLUMBING' | 'ELECTRICAL' | 'HVAC' | 'OTHER'
+	category:
+		| 'PLUMBING'
+		| 'ELECTRICAL'
+		| 'HVAC'
+		| 'APPLIANCE'
+		| 'STRUCTURAL'
+		| 'ROOFING'
+		| 'PEST_CONTROL'
+		| 'LANDSCAPING'
+		| 'LOCKS_SECURITY'
+		| 'PAINTING'
+		| 'FLOORING'
+		| 'WINDOWS_DOORS'
+		| 'SAFETY_FIRE'
+		| 'CLEANING'
+		| 'UTILITIES'
+		| 'OTHER'
 	status: 'NEW' | 'IN_PROGRESS' | 'IN_REVIEW' | 'RESOLVED' | 'CANCELED'
 	visibility: 'TENANT_VISIBLE' | 'INTERNAL_ONLY'
 	assigned_worker_id: Nullable<string>
