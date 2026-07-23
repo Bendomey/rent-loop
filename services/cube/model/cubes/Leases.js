@@ -78,6 +78,12 @@ cube(`Leases`, {
       title: `Move-in Date`,
     },
 
+    moveOutDate: {
+      sql: `move_out_date`,
+      type: `time`,
+      title: `Move-out Date`,
+    },
+
     createdAt: {
       sql: `created_at`,
       type: `time`,

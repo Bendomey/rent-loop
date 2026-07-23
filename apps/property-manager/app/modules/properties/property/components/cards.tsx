@@ -1,4 +1,3 @@
-import { TrendingDown, TrendingUp } from 'lucide-react'
 import { useCubeQuery, useGetAnalyticsToken } from '~/api/analytics'
 import { Badge } from '~/components/ui/badge'
 import {
@@ -10,19 +9,20 @@ import {
 	CardTitle,
 } from '~/components/ui/card'
 import { Skeleton } from '~/components/ui/skeleton'
-import { localizedDayjs } from '~/lib/date'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
 
-interface RevenueRow {
+interface TotalsRow {
 	'Invoices.paidAmount': string | null
-	'Invoices.paidAt.month'?: string
 }
 
 interface LeaseRow {
-	'Leases.count': string | null
-	'Leases.createdAt.month'?: string
+	'Leases.activeCount': string | null
+}
+
+interface TenantApplicationRow {
+	'TenantApplications.inProgressCount': string | null
 }
 
 interface MaintenanceRow {
@@ -36,11 +36,6 @@ function parseNum(v: string | null | undefined): number {
 	return v ? Number(v) : 0
 }
 
-function momDelta(current: number, previous: number): number {
-	if (previous === 0) return 0
-	return ((current - previous) / previous) * 100
-}
-
 interface Props {
 	propertyId: string
 }
@@ -50,9 +45,6 @@ export function PropertySectionCards({ propertyId }: Props) {
 	const { data: token } = useGetAnalyticsToken(
 		safeString(clientUser?.client_id),
 	)
-
-	const thisMonth = localizedDayjs().format('YYYY-MM')
-	const lastMonth = localizedDayjs().subtract(1, 'month').format('YYYY-MM')
 
 	const invoiceFilter = {
 		member: 'Invoices.propertyId' as const,
@@ -65,44 +57,40 @@ export function PropertySectionCards({ propertyId }: Props) {
 		values: [propertyId],
 	}
 
-	// Revenue for this month and last month — powers Total Rental Income + Growth Rate.
-	// Cube's relative "last N months" range excludes the current, in-progress
-	// month, so an explicit range is used to make sure this month is included.
-	const momDateRange: [string, string] = [
-		localizedDayjs().subtract(1, 'month').startOf('month').format('YYYY-MM-DD'),
-		localizedDayjs().endOf('month').format('YYYY-MM-DD'),
-	]
-
-	const revenueQuery = useCubeQuery<RevenueRow>(
+	// All-time paid invoice total — powers Total Rental Income. Outstanding
+	// balances are already covered by the Risk Summary section below.
+	const totalsQuery = useCubeQuery<TotalsRow>(
 		token,
-		['prop-revenue-mom', propertyId],
+		['prop-invoice-totals', propertyId],
 		{
 			measures: ['Invoices.paidAmount'],
-			timeDimensions: [
-				{
-					dimension: 'Invoices.paidAt',
-					granularity: 'month',
-					dateRange: momDateRange,
-				},
-			],
 			filters: [invoiceFilter],
 		},
 	)
 
-	// New leases created this month and last — powers New Tenants
+	// Active lease count — powers All Tenants
 	const leaseQuery = useCubeQuery<LeaseRow>(
 		token,
-		['prop-new-leases-mom', propertyId],
+		['prop-active-leases', propertyId],
 		{
-			measures: ['Leases.count'],
-			timeDimensions: [
+			measures: ['Leases.activeCount'],
+			filters: [leaseFilter],
+		},
+	)
+
+	// Pending (in-progress) tenant applications
+	const applicationsQuery = useCubeQuery<TenantApplicationRow>(
+		token,
+		['prop-pending-applications', propertyId],
+		{
+			measures: ['TenantApplications.inProgressCount'],
+			filters: [
 				{
-					dimension: 'Leases.createdAt',
-					granularity: 'month',
-					dateRange: momDateRange,
+					member: 'TenantApplications.propertyId',
+					operator: 'equals',
+					values: [propertyId],
 				},
 			],
-			filters: [leaseFilter],
 		},
 	)
 
@@ -128,33 +116,19 @@ export function PropertySectionCards({ propertyId }: Props) {
 	)
 
 	const isLoading =
-		revenueQuery.isPending || leaseQuery.isPending || maintenanceQuery.isPending
+		totalsQuery.isPending ||
+		leaseQuery.isPending ||
+		maintenanceQuery.isPending ||
+		applicationsQuery.isPending
 
-	// Revenue
-	const revenueRows = revenueQuery.data ?? []
-	const thisMonthRevRow = revenueRows.find((r) =>
-		r['Invoices.paidAt.month']?.startsWith(thisMonth),
-	)
-	const lastMonthRevRow = revenueRows.find((r) =>
-		r['Invoices.paidAt.month']?.startsWith(lastMonth),
-	)
-	const thisMonthRev = parseNum(thisMonthRevRow?.['Invoices.paidAmount'])
-	const lastMonthRev = parseNum(lastMonthRevRow?.['Invoices.paidAmount'])
-	const revDelta = momDelta(thisMonthRev, lastMonthRev)
+	const totalsRow = totalsQuery.data?.[0]
+	const totalRevenue = parseNum(totalsRow?.['Invoices.paidAmount'])
 
-	// New tenants (leases created this month vs last)
-	const leaseRows = leaseQuery.data ?? []
-	const thisMonthLeases = parseNum(
-		leaseRows.find((r) => r['Leases.createdAt.month']?.startsWith(thisMonth))?.[
-			'Leases.count'
-		],
+	const activeTenants = parseNum(leaseQuery.data?.[0]?.['Leases.activeCount'])
+
+	const pendingApplications = parseNum(
+		applicationsQuery.data?.[0]?.['TenantApplications.inProgressCount'],
 	)
-	const lastMonthLeases = parseNum(
-		leaseRows.find((r) => r['Leases.createdAt.month']?.startsWith(lastMonth))?.[
-			'Leases.count'
-		],
-	)
-	const leaseDelta = momDelta(thisMonthLeases, lastMonthLeases)
 
 	// Maintenance request counts
 	const maintenanceRow = maintenanceQuery.data?.[0]
@@ -180,64 +154,29 @@ export function PropertySectionCards({ propertyId }: Props) {
 						{isLoading ? (
 							<Skeleton className="h-8 w-32" />
 						) : (
-							formatAmount(convertPesewasToCedis(thisMonthRev))
+							formatAmount(convertPesewasToCedis(totalRevenue))
 						)}
 					</CardTitle>
-					<CardAction>
-						{!isLoading && (
-							<Badge
-								variant="outline"
-								className={`gap-1 ${revDelta >= 0 ? 'text-emerald-600' : 'text-red-600'}`}
-							>
-								{revDelta >= 0 ? (
-									<TrendingUp className="h-4 w-4" />
-								) : (
-									<TrendingDown className="h-4 w-4" />
-								)}
-								{revDelta >= 0 ? '+' : ''}
-								{revDelta.toFixed(1)}%
-							</Badge>
-						)}
-					</CardAction>
 				</CardHeader>
 				<CardFooter className="text-muted-foreground text-xs">
-					Compared to {formatAmount(convertPesewasToCedis(lastMonthRev))} last
-					month
+					All-time paid invoices
 				</CardFooter>
 			</Card>
 
-			{/* New Tenants */}
+			{/* All Tenants */}
 			<Card className="hover:from-primary/10 @container/card gap-3 py-4 transition-all duration-300 ease-out hover:-translate-y-[2px] hover:scale-[1.02] hover:shadow-lg">
 				<CardHeader>
-					<CardDescription>New Tenants</CardDescription>
+					<CardDescription>All Tenants</CardDescription>
 					<CardTitle className="text-3xl font-semibold tabular-nums @[250px]/card:text-4xl">
 						{isLoading ? (
 							<Skeleton className="h-8 w-16" />
 						) : (
-							thisMonthLeases.toLocaleString()
+							activeTenants.toLocaleString()
 						)}
 					</CardTitle>
-					<CardAction>
-						{!isLoading && (
-							<Badge
-								variant="outline"
-								className={`gap-1 ${leaseDelta >= 0 ? 'text-emerald-600' : 'text-red-600'}`}
-							>
-								{leaseDelta >= 0 ? (
-									<TrendingUp className="h-4 w-4" />
-								) : (
-									<TrendingDown className="h-4 w-4" />
-								)}
-								{leaseDelta >= 0 ? '+' : ''}
-								{leaseDelta.toFixed(1)}%
-							</Badge>
-						)}
-					</CardAction>
 				</CardHeader>
 				<CardFooter className="text-muted-foreground text-xs">
-					{leaseDelta >= 0
-						? 'New tenant sign-ups this month'
-						: 'New tenant sign-ups declined this month'}
+					Currently active leases
 				</CardFooter>
 			</Card>
 
@@ -271,36 +210,20 @@ export function PropertySectionCards({ propertyId }: Props) {
 				</CardFooter>
 			</Card>
 
-			{/* Growth Rate */}
+			{/* Pending Tenant Applications */}
 			<Card className="hover:from-primary/10 @container/card gap-3 py-4 transition-all duration-300 ease-out hover:-translate-y-[2px] hover:scale-[1.02] hover:shadow-lg">
 				<CardHeader>
-					<CardDescription>Growth Rate</CardDescription>
+					<CardDescription>Pending Tenant Applications</CardDescription>
 					<CardTitle className="text-3xl font-semibold tabular-nums @[250px]/card:text-4xl">
 						{isLoading ? (
-							<Skeleton className="h-8 w-20" />
+							<Skeleton className="h-8 w-16" />
 						) : (
-							`${revDelta >= 0 ? '+' : ''}${revDelta.toFixed(1)}%`
+							pendingApplications.toLocaleString()
 						)}
 					</CardTitle>
-					<CardAction>
-						{!isLoading && (
-							<Badge
-								variant="outline"
-								className={`gap-1 ${revDelta >= 0 ? 'text-emerald-600' : 'text-red-600'}`}
-							>
-								{revDelta >= 0 ? (
-									<TrendingUp className="h-4 w-4" />
-								) : (
-									<TrendingDown className="h-4 w-4" />
-								)}
-								{revDelta >= 0 ? '+' : ''}
-								{revDelta.toFixed(1)}%
-							</Badge>
-						)}
-					</CardAction>
 				</CardHeader>
 				<CardFooter className="text-muted-foreground text-xs">
-					On track with quarterly projections
+					Awaiting review
 				</CardFooter>
 			</Card>
 		</div>

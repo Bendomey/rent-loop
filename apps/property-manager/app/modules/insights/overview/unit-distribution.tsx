@@ -1,4 +1,5 @@
 import { Cell, Label, Pie, PieChart } from 'recharts'
+import { useInsightsFilters } from '../use-insights-filters'
 import { useCubeQuery, useGetAnalyticsToken } from '~/api/analytics'
 import {
 	Card,
@@ -17,6 +18,7 @@ import {
 } from '~/components/ui/chart'
 import { Skeleton } from '~/components/ui/skeleton'
 import { safeString } from '~/lib/strings'
+import { cn } from '~/lib/utils'
 import { useClient } from '~/providers/client-provider'
 
 interface UnitRow {
@@ -51,22 +53,28 @@ const chartConfig = {
 	},
 } satisfies ChartConfig
 
-export function UnitsChart() {
+export function UnitDistribution({ className }: { className?: string }) {
 	const { clientUser } = useClient()
 	const { data: token } = useGetAnalyticsToken(
 		safeString(clientUser?.client_id),
 	)
+	const { propertyIds, propertyFilter } = useInsightsFilters()
 
-	const unitsQuery = useCubeQuery<UnitRow>(token, ['units-distribution'], {
-		measures: [
-			'Units.occupiedCount',
-			'Units.availableCount',
-			'Units.partiallyOccupiedCount',
-			'Units.maintenanceCount',
-			'Units.draftCount',
-			'Units.count',
-		],
-	})
+	const unitsQuery = useCubeQuery<UnitRow>(
+		token,
+		['ins-ov-unit-distribution', propertyIds.join(',') || 'all'],
+		{
+			measures: [
+				'Units.occupiedCount',
+				'Units.availableCount',
+				'Units.partiallyOccupiedCount',
+				'Units.maintenanceCount',
+				'Units.draftCount',
+				'Units.count',
+			],
+			filters: propertyFilter('Units.propertyId'),
+		},
+	)
 
 	const row = unitsQuery.data?.[0]
 
@@ -92,11 +100,15 @@ export function UnitsChart() {
 	const hasData = chartData.length > 0
 
 	return (
-		<Card className="shadow-none">
+		<Card className={cn('self-start shadow-none', className)}>
 			<CardHeader>
-				<CardTitle>Unit Status Distribution</CardTitle>
+				<CardTitle>Unit Distribution</CardTitle>
 				<CardDescription>
-					Breakdown of all units by current status
+					{propertyIds.length === 0
+						? 'Units across all properties, by status'
+						: propertyIds.length === 1
+							? 'Units in the selected property, by status'
+							: `Units across ${propertyIds.length} selected properties, by status`}
 				</CardDescription>
 			</CardHeader>
 			<CardContent>
@@ -106,12 +118,12 @@ export function UnitsChart() {
 					</div>
 				) : !hasData ? (
 					<div className="text-muted-foreground flex h-[200px] items-center justify-center text-sm">
-						No unit data available
+						No units in the selected scope
 					</div>
 				) : (
 					<ChartContainer
 						config={chartConfig}
-						className="mx-auto aspect-square max-h-[360px]"
+						className="mx-auto aspect-square max-h-[360px] max-w-[360px]"
 					>
 						<PieChart>
 							<ChartTooltip

@@ -1,7 +1,7 @@
 import type { Route } from './+types/_auth._dashboard._index'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
-import { DashboardModule } from '~/modules'
+import { InsightsLayoutModule } from '~/modules'
 
 export async function loader({ request }: Route.LoaderArgs) {
 	return {
@@ -10,7 +10,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export const handle = {
-	breadcrumb: 'Insights',
+	breadcrumb: 'Overview',
 }
 
 export function meta({ loaderData, location }: Route.MetaArgs) {
@@ -25,4 +25,4 @@ export function meta({ loaderData, location }: Route.MetaArgs) {
 	return meta
 }
 
-export default DashboardModule
+export default InsightsLayoutModule
