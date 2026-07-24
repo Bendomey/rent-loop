@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:rentloop_manager/src/architecture/current_user/current_user_notifier.dart';
 import 'package:rentloop_manager/src/architecture/current_workspace/current_workspace_notifier.dart';
+import 'package:rentloop_manager/src/lib/workspace_resolution.dart';
 import 'package:rentloop_manager/src/modules/main/checklist_sheet.dart';
 import 'package:rentloop_manager/src/modules/main/workspace_sheet.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
@@ -75,37 +76,48 @@ class _TopHeader extends ConsumerWidget {
         'your workspace';
     final managerName =
         ref.watch(currentUserNotifierProvider)?.name ?? 'Manager';
+    final hasMultipleWorkspaces =
+        ref
+            .watch(currentUserNotifierProvider)
+            ?.clientUsers
+            .where(isActiveClientUser)
+            .length !=
+        1;
+
+    final nameText = Text(
+      workspaceName,
+      style: TextStyle(
+        fontFamily: RLTokens.fontMono,
+        fontSize: 10.5,
+        fontWeight: RLTokens.semibold,
+        letterSpacing: 1,
+        color: RLTokens.crimson,
+      ),
+    );
 
     return RLTopHeader(
-      eyebrow: GestureDetector(
-        onTap: () async {
-          await Haptics.vibrate(HapticsType.selection);
-          if (context.mounted) {
-            await showWorkspaceSheet(context);
-          }
-        },
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              workspaceName,
-              style: TextStyle(
-                fontFamily: RLTokens.fontMono,
-                fontSize: 10.5,
-                fontWeight: RLTokens.semibold,
-                letterSpacing: 1,
-                color: RLTokens.crimson,
+      eyebrow: hasMultipleWorkspaces
+          ? GestureDetector(
+              onTap: () async {
+                await Haptics.vibrate(HapticsType.selection);
+                if (context.mounted) {
+                  await showWorkspaceSheet(context);
+                }
+              },
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  nameText,
+                  const SizedBox(width: 4),
+                  const Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    size: 14,
+                    color: RLTokens.crimson,
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(width: 4),
-            const Icon(
-              Icons.keyboard_arrow_down_rounded,
-              size: 14,
-              color: RLTokens.crimson,
-            ),
-          ],
-        ),
-      ),
+            )
+          : nameText,
       title: 'Good morning',
       trailing: [
         RLIconBtn(

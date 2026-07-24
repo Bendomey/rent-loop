@@ -40,21 +40,15 @@ class PropertyUnitsPreviewFamily extends Family<AsyncValue<UnitsPage>> {
   const PropertyUnitsPreviewFamily();
 
   /// See also [propertyUnitsPreview].
-  PropertyUnitsPreviewProvider call(
-    String propertyId,
-  ) {
-    return PropertyUnitsPreviewProvider(
-      propertyId,
-    );
+  PropertyUnitsPreviewProvider call(String propertyId) {
+    return PropertyUnitsPreviewProvider(propertyId);
   }
 
   @override
   PropertyUnitsPreviewProvider getProviderOverride(
     covariant PropertyUnitsPreviewProvider provider,
   ) {
-    return call(
-      provider.propertyId,
-    );
+    return call(provider.propertyId);
   }
 
   static const Iterable<ProviderOrFamily>? _dependencies = null;
@@ -76,24 +70,20 @@ class PropertyUnitsPreviewFamily extends Family<AsyncValue<UnitsPage>> {
 class PropertyUnitsPreviewProvider
     extends AutoDisposeFutureProvider<UnitsPage> {
   /// See also [propertyUnitsPreview].
-  PropertyUnitsPreviewProvider(
-    String propertyId,
-  ) : this._internal(
-          (ref) => propertyUnitsPreview(
-            ref as PropertyUnitsPreviewRef,
-            propertyId,
-          ),
-          from: propertyUnitsPreviewProvider,
-          name: r'propertyUnitsPreviewProvider',
-          debugGetCreateSourceHash:
-              const bool.fromEnvironment('dart.vm.product')
-                  ? null
-                  : _$propertyUnitsPreviewHash,
-          dependencies: PropertyUnitsPreviewFamily._dependencies,
-          allTransitiveDependencies:
-              PropertyUnitsPreviewFamily._allTransitiveDependencies,
-          propertyId: propertyId,
-        );
+  PropertyUnitsPreviewProvider(String propertyId)
+    : this._internal(
+        (ref) =>
+            propertyUnitsPreview(ref as PropertyUnitsPreviewRef, propertyId),
+        from: propertyUnitsPreviewProvider,
+        name: r'propertyUnitsPreviewProvider',
+        debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+            ? null
+            : _$propertyUnitsPreviewHash,
+        dependencies: PropertyUnitsPreviewFamily._dependencies,
+        allTransitiveDependencies:
+            PropertyUnitsPreviewFamily._allTransitiveDependencies,
+        propertyId: propertyId,
+      );
 
   PropertyUnitsPreviewProvider._internal(
     super._createNotifier, {
@@ -158,5 +148,6 @@ class _PropertyUnitsPreviewProviderElement
   @override
   String get propertyId => (origin as PropertyUnitsPreviewProvider).propertyId;
 }
+
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

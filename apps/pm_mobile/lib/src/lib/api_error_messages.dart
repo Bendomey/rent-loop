@@ -10,6 +10,8 @@ String translateApiErrorMessage({
     case 'PasswordIncorrect':
     case 'UserNotFound':
       return 'Your credentials are incorrect. Please try again.';
+    case 'UnitIsOccupied':
+      return 'This unit is occupied and can\'t be deleted.';
     // No specific error codes confirmed for the login flow yet — add
     // cases here as they're discovered against the real API (e.g. wrong
     // password, deactivated account).

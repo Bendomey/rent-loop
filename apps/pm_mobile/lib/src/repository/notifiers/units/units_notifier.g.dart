@@ -6,20 +6,20 @@ part of 'units_notifier.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$unitsNotifierHash() => r'bdf59c4e641b413fd3e316030569ef173c051a4f';
+String _$unitsNotifierHash() => r'c2003c324c4b119a08625d08a2ccd7f792252c91';
 
 /// See also [UnitsNotifier].
 @ProviderFor(UnitsNotifier)
 final unitsNotifierProvider =
     AutoDisposeNotifierProvider<UnitsNotifier, UnitsState>.internal(
-  UnitsNotifier.new,
-  name: r'unitsNotifierProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$unitsNotifierHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+      UnitsNotifier.new,
+      name: r'unitsNotifierProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$unitsNotifierHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
 
 typedef _$UnitsNotifier = AutoDisposeNotifier<UnitsState>;
 // ignore_for_file: type=lint

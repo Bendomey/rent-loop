@@ -39,21 +39,15 @@ class PropertyStatsFamily extends Family<AsyncValue<PropertyStats>> {
   const PropertyStatsFamily();
 
   /// See also [propertyStats].
-  PropertyStatsProvider call(
-    String propertyId,
-  ) {
-    return PropertyStatsProvider(
-      propertyId,
-    );
+  PropertyStatsProvider call(String propertyId) {
+    return PropertyStatsProvider(propertyId);
   }
 
   @override
   PropertyStatsProvider getProviderOverride(
     covariant PropertyStatsProvider provider,
   ) {
-    return call(
-      provider.propertyId,
-    );
+    return call(provider.propertyId);
   }
 
   static const Iterable<ProviderOrFamily>? _dependencies = null;
@@ -74,24 +68,19 @@ class PropertyStatsFamily extends Family<AsyncValue<PropertyStats>> {
 /// See also [propertyStats].
 class PropertyStatsProvider extends AutoDisposeFutureProvider<PropertyStats> {
   /// See also [propertyStats].
-  PropertyStatsProvider(
-    String propertyId,
-  ) : this._internal(
-          (ref) => propertyStats(
-            ref as PropertyStatsRef,
-            propertyId,
-          ),
-          from: propertyStatsProvider,
-          name: r'propertyStatsProvider',
-          debugGetCreateSourceHash:
-              const bool.fromEnvironment('dart.vm.product')
-                  ? null
-                  : _$propertyStatsHash,
-          dependencies: PropertyStatsFamily._dependencies,
-          allTransitiveDependencies:
-              PropertyStatsFamily._allTransitiveDependencies,
-          propertyId: propertyId,
-        );
+  PropertyStatsProvider(String propertyId)
+    : this._internal(
+        (ref) => propertyStats(ref as PropertyStatsRef, propertyId),
+        from: propertyStatsProvider,
+        name: r'propertyStatsProvider',
+        debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+            ? null
+            : _$propertyStatsHash,
+        dependencies: PropertyStatsFamily._dependencies,
+        allTransitiveDependencies:
+            PropertyStatsFamily._allTransitiveDependencies,
+        propertyId: propertyId,
+      );
 
   PropertyStatsProvider._internal(
     super._createNotifier, {
@@ -155,5 +144,6 @@ class _PropertyStatsProviderElement
   @override
   String get propertyId => (origin as PropertyStatsProvider).propertyId;
 }
+
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

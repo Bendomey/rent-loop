@@ -13,8 +13,9 @@ String _$unitApiHash() => r'a78cd0f8dc9eaa30c674436d1d007bb82ec732b4';
 final unitApiProvider = AutoDisposeProvider<UnitApi>.internal(
   unitApi,
   name: r'unitApiProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$unitApiHash,
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$unitApiHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );

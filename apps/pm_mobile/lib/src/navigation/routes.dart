@@ -34,10 +34,19 @@ import 'package:rentloop_manager/src/modules/main/more/members.dart';
 import 'package:rentloop_manager/src/modules/main/more/payment_accounts.dart';
 import 'package:rentloop_manager/src/modules/main/more/root.dart';
 import 'package:rentloop_manager/src/modules/main/more/settings.dart';
+import 'package:rentloop_manager/src/modules/main/leases/detail.dart';
+import 'package:rentloop_manager/src/modules/main/leases/root.dart';
 import 'package:rentloop_manager/src/modules/main/tenants/detail.dart';
 import 'package:rentloop_manager/src/modules/main/tenants/root.dart';
+import 'package:rentloop_manager/src/modules/main/properties/add_block.dart';
+import 'package:rentloop_manager/src/modules/main/properties/add_unit.dart';
+import 'package:rentloop_manager/src/modules/main/properties/blocks_list.dart';
 import 'package:rentloop_manager/src/modules/main/properties/detail.dart';
+import 'package:rentloop_manager/src/modules/main/properties/edit_block.dart';
+import 'package:rentloop_manager/src/modules/main/properties/edit_unit.dart';
 import 'package:rentloop_manager/src/modules/main/properties/root.dart';
+import 'package:rentloop_manager/src/modules/main/properties/unit_detail.dart';
+import 'package:rentloop_manager/src/modules/main/properties/unit_settings.dart';
 import 'package:rentloop_manager/src/modules/main/properties/units_list.dart';
 import 'package:rentloop_manager/src/modules/main/shell.dart';
 import 'splash.dart';
@@ -161,8 +170,65 @@ GoRouter buildRoutes(WidgetRef ref) {
         routes: [
           GoRoute(
             path: 'units',
+            builder: (_, state) => UnitsListScreen(
+              propertyId: state.pathParameters['id']!,
+              blockId: state.uri.queryParameters['block_id'],
+              blockName: state.uri.queryParameters['block_name'],
+            ),
+            routes: [
+              // 'add' must come before ':unitId' — GoRouter matches routes
+              // in list order, and ':unitId' would otherwise swallow the
+              // literal segment "add" as a unit id.
+              GoRoute(
+                path: 'add',
+                builder: (_, state) =>
+                    AddUnitScreen(propertyId: state.pathParameters['id']!),
+              ),
+              GoRoute(
+                path: ':unitId',
+                builder: (_, state) => UnitDetailScreen(
+                  propertyId: state.pathParameters['id']!,
+                  unitId: state.pathParameters['unitId']!,
+                ),
+                routes: [
+                  GoRoute(
+                    path: 'settings',
+                    builder: (_, state) => UnitSettingsHubScreen(
+                      propertyId: state.pathParameters['id']!,
+                      unitId: state.pathParameters['unitId']!,
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'edit',
+                    builder: (_, state) => EditUnitScreen(
+                      propertyId: state.pathParameters['id']!,
+                      unitId: state.pathParameters['unitId']!,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          GoRoute(
+            path: 'blocks',
             builder: (_, state) =>
-                UnitsListScreen(propertyId: state.pathParameters['id']!),
+                BlocksListScreen(propertyId: state.pathParameters['id']!),
+            routes: [
+              // 'add' must come before ':blockId' — same GoRouter ordering
+              // gotcha as the units route above.
+              GoRoute(
+                path: 'add',
+                builder: (_, state) =>
+                    AddBlockScreen(propertyId: state.pathParameters['id']!),
+              ),
+              GoRoute(
+                path: ':blockId/edit',
+                builder: (_, state) => EditBlockScreen(
+                  propertyId: state.pathParameters['id']!,
+                  blockId: state.pathParameters['blockId']!,
+                ),
+              ),
+            ],
           ),
           GoRoute(
             path: 'settings',
@@ -279,12 +345,31 @@ GoRouter buildRoutes(WidgetRef ref) {
       ),
       GoRoute(
         path: '/more/tenants',
-        builder: (_, __) => const TenantsScreen(),
+        builder: (_, state) => TenantsScreen(
+          propertyId: state.uri.queryParameters['property_id'],
+          propertyName: state.uri.queryParameters['property_name'],
+        ),
         routes: [
           GoRoute(
             path: ':id',
             builder: (_, state) =>
                 TenantDetailScreen(id: state.pathParameters['id']!),
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/more/leases',
+        builder: (_, state) => LeasesScreen(
+          propertyId: state.uri.queryParameters['property_id'],
+          propertyName: state.uri.queryParameters['property_name'],
+        ),
+        routes: [
+          GoRoute(
+            path: ':id',
+            builder: (_, state) => LeaseDetailScreen(
+              id: state.pathParameters['id']!,
+              propertyId: state.uri.queryParameters['property_id'],
+            ),
           ),
         ],
       ),

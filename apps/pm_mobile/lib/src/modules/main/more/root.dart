@@ -5,6 +5,7 @@ import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:rentloop_manager/src/architecture/app_startup/app_startup_notifier.dart';
 import 'package:rentloop_manager/src/architecture/current_user/current_user_notifier.dart';
 import 'package:rentloop_manager/src/architecture/current_workspace/current_workspace_notifier.dart';
+import 'package:rentloop_manager/src/lib/workspace_resolution.dart';
 import 'package:rentloop_manager/src/modules/main/workspace_sheet.dart';
 import 'package:rentloop_manager/src/shared/dialogs.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
@@ -43,6 +44,13 @@ class MoreScreen extends ConsumerWidget {
     final workspaceName =
         ref.watch(currentWorkspaceNotifierProvider)?.client?.name ??
         'your workspace';
+    final hasMultipleWorkspaces =
+        ref
+            .watch(currentUserNotifierProvider)
+            ?.clientUsers
+            .where(isActiveClientUser)
+            .length !=
+        1;
 
     final manageRows = [
       const _RowItem(
@@ -52,6 +60,14 @@ class MoreScreen extends ConsumerWidget {
         bg: RLTokens.infoBg,
         fg: RLTokens.info,
         route: '/more/tenants',
+      ),
+      const _RowItem(
+        label: 'Leases',
+        sub: 'Rental agreements',
+        icon: Icons.description_outlined,
+        bg: RLTokens.successBg,
+        fg: RLTokens.success,
+        route: '/more/leases',
       ),
       const _RowItem(
         label: 'Announcements',
@@ -162,8 +178,10 @@ class MoreScreen extends ConsumerWidget {
               children: [
                 const SizedBox(height: 10),
                 _ProfileCard(),
-                RLLabel('Workspace'),
-                _WorkspaceCard(),
+                if (hasMultipleWorkspaces) ...[
+                  RLLabel('Workspace'),
+                  _WorkspaceCard(),
+                ],
                 RLLabel('Manage'),
                 _RowGroup(rows: manageRows),
                 RLLabel('Organisation settings'),
