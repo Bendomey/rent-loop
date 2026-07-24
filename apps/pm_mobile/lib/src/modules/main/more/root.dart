@@ -135,6 +135,14 @@ class MoreScreen extends ConsumerWidget {
         fg: RLTokens.warning,
         route: '/more/billing',
       ),
+      const _RowItem(
+        label: 'Archived properties',
+        sub: 'Restore a deleted property',
+        icon: Icons.inventory_2_outlined,
+        bg: RLTokens.neutralBg,
+        fg: RLTokens.neutral,
+        route: '/more/archived-properties',
+      ),
     ];
 
     final accountRows = [

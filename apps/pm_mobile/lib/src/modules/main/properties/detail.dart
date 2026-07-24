@@ -12,7 +12,6 @@ import 'package:rentloop_manager/src/lib/unit_status.dart';
 import 'package:rentloop_manager/src/repository/models/property_model.dart';
 import 'package:rentloop_manager/src/repository/models/property_stats_model.dart';
 import 'package:rentloop_manager/src/repository/models/unit_model.dart';
-import 'package:rentloop_manager/src/repository/providers/properties/property_blocks_provider.dart';
 import 'package:rentloop_manager/src/repository/providers/properties/property_detail_provider.dart';
 import 'package:rentloop_manager/src/repository/providers/properties/property_stats_provider.dart';
 import 'package:rentloop_manager/src/repository/providers/properties/property_units_preview_provider.dart';
@@ -140,7 +139,6 @@ class _DetailContent extends ConsumerWidget {
     final modes = property.modes ?? const [];
     final isLease = modes.contains('LEASE');
     final isBooking = modes.contains('BOOKING');
-    final blocksAsync = ref.watch(propertyBlocksProvider(id));
     final location = [
       property.address,
       property.city,
@@ -204,11 +202,7 @@ class _DetailContent extends ConsumerWidget {
               else if (statsAsync.hasValue)
                 _StatsCard(stats: statsAsync.value!),
               RLLabel('Manage'),
-              _ManageGrid(
-                property: property,
-                stats: statsAsync.valueOrNull,
-                blocksTotal: blocksAsync.valueOrNull?.meta.total,
-              ),
+              _ManageGrid(property: property, stats: statsAsync.valueOrNull),
               ..._buildUnitsSection(context, ref),
               const SizedBox(height: 32),
             ]),
@@ -577,17 +571,9 @@ class _ManageAction {
 }
 
 class _ManageGrid extends StatelessWidget {
-  const _ManageGrid({
-    required this.property,
-    required this.stats,
-    required this.blocksTotal,
-  });
+  const _ManageGrid({required this.property, required this.stats});
   final PropertyModel property;
   final PropertyStats? stats;
-
-  /// Real count from propertyBlocksProvider, null while it's still loading
-  /// or failed — shown as '—' same as the Cube-sourced counts below.
-  final int? blocksTotal;
 
   String _count(int Function(PropertyStats) selector) {
     final s = stats;
@@ -603,13 +589,13 @@ class _ManageGrid extends StatelessWidget {
       _ManageAction(
         icon: Icons.dashboard_outlined,
         label: 'Blocks',
-        count: blocksTotal != null ? '$blocksTotal' : '—',
+        count: '${property.blocksCount}',
         onTap: (context) => context.push('/properties/${property.id}/blocks'),
       ),
       _ManageAction(
         icon: Icons.grid_view_rounded,
         label: 'Units',
-        count: _count((s) => s.unitsTotal),
+        count: '${property.unitsCount}',
         onTap: (context) => context.push('/properties/${property.id}/units'),
       ),
       _ManageAction(

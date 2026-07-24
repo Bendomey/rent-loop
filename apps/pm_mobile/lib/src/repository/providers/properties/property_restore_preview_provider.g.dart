@@ -1,12 +1,13 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'property_detail_provider.dart';
+part of 'property_restore_preview_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$propertyDetailHash() => r'ffc1e39ed659372916717d4e18ca8971523101c7';
+String _$propertyRestorePreviewHash() =>
+    r'9348b04f2ac3cce605b4982ec2bb3c8fe8319db9';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -29,27 +30,28 @@ class _SystemHash {
   }
 }
 
-/// See also [propertyDetail].
-@ProviderFor(propertyDetail)
-const propertyDetailProvider = PropertyDetailFamily();
+/// See also [propertyRestorePreview].
+@ProviderFor(propertyRestorePreview)
+const propertyRestorePreviewProvider = PropertyRestorePreviewFamily();
 
-/// See also [propertyDetail].
-class PropertyDetailFamily extends Family<AsyncValue<PropertyModel>> {
-  /// See also [propertyDetail].
-  const PropertyDetailFamily();
+/// See also [propertyRestorePreview].
+class PropertyRestorePreviewFamily
+    extends Family<AsyncValue<PropertyRestorePreviewModel>> {
+  /// See also [propertyRestorePreview].
+  const PropertyRestorePreviewFamily();
 
-  /// See also [propertyDetail].
-  PropertyDetailProvider call(
+  /// See also [propertyRestorePreview].
+  PropertyRestorePreviewProvider call(
     String propertyId,
   ) {
-    return PropertyDetailProvider(
+    return PropertyRestorePreviewProvider(
       propertyId,
     );
   }
 
   @override
-  PropertyDetailProvider getProviderOverride(
-    covariant PropertyDetailProvider provider,
+  PropertyRestorePreviewProvider getProviderOverride(
+    covariant PropertyRestorePreviewProvider provider,
   ) {
     return call(
       provider.propertyId,
@@ -68,32 +70,33 @@ class PropertyDetailFamily extends Family<AsyncValue<PropertyModel>> {
       _allTransitiveDependencies;
 
   @override
-  String? get name => r'propertyDetailProvider';
+  String? get name => r'propertyRestorePreviewProvider';
 }
 
-/// See also [propertyDetail].
-class PropertyDetailProvider extends AutoDisposeFutureProvider<PropertyModel> {
-  /// See also [propertyDetail].
-  PropertyDetailProvider(
+/// See also [propertyRestorePreview].
+class PropertyRestorePreviewProvider
+    extends AutoDisposeFutureProvider<PropertyRestorePreviewModel> {
+  /// See also [propertyRestorePreview].
+  PropertyRestorePreviewProvider(
     String propertyId,
   ) : this._internal(
-          (ref) => propertyDetail(
-            ref as PropertyDetailRef,
+          (ref) => propertyRestorePreview(
+            ref as PropertyRestorePreviewRef,
             propertyId,
           ),
-          from: propertyDetailProvider,
-          name: r'propertyDetailProvider',
+          from: propertyRestorePreviewProvider,
+          name: r'propertyRestorePreviewProvider',
           debugGetCreateSourceHash:
               const bool.fromEnvironment('dart.vm.product')
                   ? null
-                  : _$propertyDetailHash,
-          dependencies: PropertyDetailFamily._dependencies,
+                  : _$propertyRestorePreviewHash,
+          dependencies: PropertyRestorePreviewFamily._dependencies,
           allTransitiveDependencies:
-              PropertyDetailFamily._allTransitiveDependencies,
+              PropertyRestorePreviewFamily._allTransitiveDependencies,
           propertyId: propertyId,
         );
 
-  PropertyDetailProvider._internal(
+  PropertyRestorePreviewProvider._internal(
     super._createNotifier, {
     required super.name,
     required super.dependencies,
@@ -107,12 +110,14 @@ class PropertyDetailProvider extends AutoDisposeFutureProvider<PropertyModel> {
 
   @override
   Override overrideWith(
-    FutureOr<PropertyModel> Function(PropertyDetailRef provider) create,
+    FutureOr<PropertyRestorePreviewModel> Function(
+            PropertyRestorePreviewRef provider)
+        create,
   ) {
     return ProviderOverride(
       origin: this,
-      override: PropertyDetailProvider._internal(
-        (ref) => create(ref as PropertyDetailRef),
+      override: PropertyRestorePreviewProvider._internal(
+        (ref) => create(ref as PropertyRestorePreviewRef),
         from: from,
         name: null,
         dependencies: null,
@@ -124,13 +129,15 @@ class PropertyDetailProvider extends AutoDisposeFutureProvider<PropertyModel> {
   }
 
   @override
-  AutoDisposeFutureProviderElement<PropertyModel> createElement() {
-    return _PropertyDetailProviderElement(this);
+  AutoDisposeFutureProviderElement<PropertyRestorePreviewModel>
+      createElement() {
+    return _PropertyRestorePreviewProviderElement(this);
   }
 
   @override
   bool operator ==(Object other) {
-    return other is PropertyDetailProvider && other.propertyId == propertyId;
+    return other is PropertyRestorePreviewProvider &&
+        other.propertyId == propertyId;
   }
 
   @override
@@ -142,18 +149,20 @@ class PropertyDetailProvider extends AutoDisposeFutureProvider<PropertyModel> {
   }
 }
 
-mixin PropertyDetailRef on AutoDisposeFutureProviderRef<PropertyModel> {
+mixin PropertyRestorePreviewRef
+    on AutoDisposeFutureProviderRef<PropertyRestorePreviewModel> {
   /// The parameter `propertyId` of this provider.
   String get propertyId;
 }
 
-class _PropertyDetailProviderElement
-    extends AutoDisposeFutureProviderElement<PropertyModel>
-    with PropertyDetailRef {
-  _PropertyDetailProviderElement(super.provider);
+class _PropertyRestorePreviewProviderElement
+    extends AutoDisposeFutureProviderElement<PropertyRestorePreviewModel>
+    with PropertyRestorePreviewRef {
+  _PropertyRestorePreviewProviderElement(super.provider);
 
   @override
-  String get propertyId => (origin as PropertyDetailProvider).propertyId;
+  String get propertyId =>
+      (origin as PropertyRestorePreviewProvider).propertyId;
 }
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

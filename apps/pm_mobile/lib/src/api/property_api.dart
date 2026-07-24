@@ -5,6 +5,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:rentloop_manager/src/api/root.dart';
 import 'package:rentloop_manager/src/architecture/token_manager/token_manager.dart';
 import 'package:rentloop_manager/src/repository/models/pagination_meta_model.dart';
+import 'package:rentloop_manager/src/repository/models/property_deletion_model.dart';
 import 'package:rentloop_manager/src/repository/models/property_model.dart';
 
 part 'property_api.g.dart';
@@ -33,6 +34,9 @@ class PropertyApi extends AbstractApi {
     String? orderBy,
     String? status,
     String? search,
+    // Separate from [status] — the backend filters archived (soft-deleted)
+    // properties via a dedicated `archived` bool param, not `status`.
+    bool? archived,
   }) async {
     final query = <String, String>{'page': '$page', 'page_size': '$pageSize'};
     if (order != null) query['order'] = order;
@@ -42,6 +46,8 @@ class PropertyApi extends AbstractApi {
       query['query'] = search;
       query['search_fields'] = 'name';
     }
+    if (archived != null) query['archived'] = '$archived';
+    if (archived == true) query['populate'] = 'DeletedBy.User';
 
     final queryString = Uri(
       queryParameters: {
@@ -74,6 +80,56 @@ class PropertyApi extends AbstractApi {
     );
     final json = jsonDecode(response.body) as Map<String, dynamic>;
     return PropertyModel.fromJson(json['data'] as Map<String, dynamic>);
+  }
+
+  Future<PropertyDeletionPreviewModel> getPropertyDeletionPreview({
+    required String clientId,
+    required String propertyId,
+  }) async {
+    final response = await execute(
+      method: 'GET',
+      path:
+          '/api/v1/admin/clients/$clientId/properties/$propertyId/deletion:preview',
+    );
+    final json = jsonDecode(response.body) as Map<String, dynamic>;
+    return PropertyDeletionPreviewModel.fromJson(
+      json['data'] as Map<String, dynamic>,
+    );
+  }
+
+  Future<void> deleteProperty({
+    required String clientId,
+    required String propertyId,
+  }) async {
+    await execute(
+      method: 'DELETE',
+      path: '/api/v1/admin/clients/$clientId/properties/$propertyId',
+    );
+  }
+
+  Future<PropertyRestorePreviewModel> getPropertyRestorePreview({
+    required String clientId,
+    required String propertyId,
+  }) async {
+    final response = await execute(
+      method: 'GET',
+      path:
+          '/api/v1/admin/clients/$clientId/properties/$propertyId/restore:preview',
+    );
+    final json = jsonDecode(response.body) as Map<String, dynamic>;
+    return PropertyRestorePreviewModel.fromJson(
+      json['data'] as Map<String, dynamic>,
+    );
+  }
+
+  Future<void> restoreProperty({
+    required String clientId,
+    required String propertyId,
+  }) async {
+    await execute(
+      method: 'POST',
+      path: '/api/v1/admin/clients/$clientId/properties/$propertyId:restore',
+    );
   }
 }
 

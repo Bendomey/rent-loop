@@ -18,6 +18,7 @@ import 'package:rentloop_manager/src/modules/main/money/add_payment.dart';
 import 'package:rentloop_manager/src/modules/main/money/invoice_detail.dart';
 import 'package:rentloop_manager/src/modules/main/money/root.dart';
 import 'package:rentloop_manager/src/modules/main/properties/add.dart';
+import 'package:rentloop_manager/src/modules/main/properties/settings/delete.dart';
 import 'package:rentloop_manager/src/modules/main/properties/settings/hub.dart';
 import 'package:rentloop_manager/src/modules/main/properties/settings/general.dart';
 import 'package:rentloop_manager/src/modules/main/properties/settings/members.dart';
@@ -36,6 +37,7 @@ import 'package:rentloop_manager/src/modules/main/more/root.dart';
 import 'package:rentloop_manager/src/modules/main/more/settings.dart';
 import 'package:rentloop_manager/src/modules/main/leases/detail.dart';
 import 'package:rentloop_manager/src/modules/main/leases/root.dart';
+import 'package:rentloop_manager/src/modules/main/more/archived_properties.dart';
 import 'package:rentloop_manager/src/modules/main/tenants/detail.dart';
 import 'package:rentloop_manager/src/modules/main/tenants/root.dart';
 import 'package:rentloop_manager/src/modules/main/properties/add_block.dart';
@@ -259,6 +261,12 @@ GoRouter buildRoutes(WidgetRef ref) {
                 builder: (_, state) =>
                     PropertyDocumentsScreen(id: state.pathParameters['id']!),
               ),
+              GoRoute(
+                path: 'delete',
+                builder: (_, state) => PropertyDeleteScreen(
+                  propertyId: state.pathParameters['id']!,
+                ),
+              ),
             ],
           ),
         ],
@@ -333,6 +341,10 @@ GoRouter buildRoutes(WidgetRef ref) {
       GoRoute(
         path: '/more/payment-accounts',
         builder: (_, __) => const PaymentAccountsScreen(),
+      ),
+      GoRoute(
+        path: '/more/archived-properties',
+        builder: (_, __) => const ArchivedPropertiesScreen(),
       ),
       GoRoute(
         path: '/more/agreement',

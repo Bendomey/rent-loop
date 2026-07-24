@@ -4,6 +4,16 @@
 
 ---
 
+## Delete property flow: one screen with internal stage state, not separate routes (2026-07-24)
+**Why:** The Figma spec models Blocked/Confirm/Done as separate demo boards, but they're really one flow driven by a single `GET .../deletion:preview` fetch — `can_delete` picks Blocked vs Confirm, and a successful delete flips to Done locally. Making three separate `GoRoute`s would mean re-fetching or threading the preview result through query params/extra for no benefit. `PropertyDeleteScreen` (`properties/settings/delete.dart`) stays a single route (`/properties/:id/settings/delete`) with local stage state instead, matching how the Figma's own `MobileDelete` component is implemented (one component switching on `stage`).
+**Tradeoffs:** The three "stages" aren't independently deep-linkable — acceptable since none of them are ever reached except by tapping through from the Danger Zone card.
+
+**Danger Zone entry point stays in `settings/hub.dart`, not moved to `settings/general.dart`:** the Figma canvas frames the mobile entry point under "General settings → Danger zone," but the existing mobile IA already has a dedicated Danger Zone section on the settings hub page, and `general.dart` is still fully mock (unwired to the real property). Moving the card would fight the existing structure for no functional benefit, so `hub.dart`'s Danger Zone section was redesigned in place instead.
+
+**Archived Properties is a new top-level `/more/...` screen, not nested under a property:** an archived property is no longer reachable through its own property detail/settings pages (they 404 once archived), so the only sane home for "find + restore a deleted property" is a workspace-level list — mirrors the web portal's own `_auth._dashboard.settings.archived-properties` route, which is also global rather than per-property.
+
+---
+
 ## UI-first build order — mock data before API integration
 **Date:** not determinable from scan (predates this doc)
 **Why:** The entire screen tree (auth flow + all 5 main tabs) was built and wired through GoRouter against hardcoded/mock state first, deferring real backend integration to a later pass. This let navigation, layout, and design tokens (`RLTokens`) get validated independently of API availability.

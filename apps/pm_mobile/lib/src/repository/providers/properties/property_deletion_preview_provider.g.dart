@@ -1,12 +1,13 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'property_detail_provider.dart';
+part of 'property_deletion_preview_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$propertyDetailHash() => r'ffc1e39ed659372916717d4e18ca8971523101c7';
+String _$propertyDeletionPreviewHash() =>
+    r'6634d7982bda49d4f62afc01ce8073223548318a';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -29,27 +30,28 @@ class _SystemHash {
   }
 }
 
-/// See also [propertyDetail].
-@ProviderFor(propertyDetail)
-const propertyDetailProvider = PropertyDetailFamily();
+/// See also [propertyDeletionPreview].
+@ProviderFor(propertyDeletionPreview)
+const propertyDeletionPreviewProvider = PropertyDeletionPreviewFamily();
 
-/// See also [propertyDetail].
-class PropertyDetailFamily extends Family<AsyncValue<PropertyModel>> {
-  /// See also [propertyDetail].
-  const PropertyDetailFamily();
+/// See also [propertyDeletionPreview].
+class PropertyDeletionPreviewFamily
+    extends Family<AsyncValue<PropertyDeletionPreviewModel>> {
+  /// See also [propertyDeletionPreview].
+  const PropertyDeletionPreviewFamily();
 
-  /// See also [propertyDetail].
-  PropertyDetailProvider call(
+  /// See also [propertyDeletionPreview].
+  PropertyDeletionPreviewProvider call(
     String propertyId,
   ) {
-    return PropertyDetailProvider(
+    return PropertyDeletionPreviewProvider(
       propertyId,
     );
   }
 
   @override
-  PropertyDetailProvider getProviderOverride(
-    covariant PropertyDetailProvider provider,
+  PropertyDeletionPreviewProvider getProviderOverride(
+    covariant PropertyDeletionPreviewProvider provider,
   ) {
     return call(
       provider.propertyId,
@@ -68,32 +70,33 @@ class PropertyDetailFamily extends Family<AsyncValue<PropertyModel>> {
       _allTransitiveDependencies;
 
   @override
-  String? get name => r'propertyDetailProvider';
+  String? get name => r'propertyDeletionPreviewProvider';
 }
 
-/// See also [propertyDetail].
-class PropertyDetailProvider extends AutoDisposeFutureProvider<PropertyModel> {
-  /// See also [propertyDetail].
-  PropertyDetailProvider(
+/// See also [propertyDeletionPreview].
+class PropertyDeletionPreviewProvider
+    extends AutoDisposeFutureProvider<PropertyDeletionPreviewModel> {
+  /// See also [propertyDeletionPreview].
+  PropertyDeletionPreviewProvider(
     String propertyId,
   ) : this._internal(
-          (ref) => propertyDetail(
-            ref as PropertyDetailRef,
+          (ref) => propertyDeletionPreview(
+            ref as PropertyDeletionPreviewRef,
             propertyId,
           ),
-          from: propertyDetailProvider,
-          name: r'propertyDetailProvider',
+          from: propertyDeletionPreviewProvider,
+          name: r'propertyDeletionPreviewProvider',
           debugGetCreateSourceHash:
               const bool.fromEnvironment('dart.vm.product')
                   ? null
-                  : _$propertyDetailHash,
-          dependencies: PropertyDetailFamily._dependencies,
+                  : _$propertyDeletionPreviewHash,
+          dependencies: PropertyDeletionPreviewFamily._dependencies,
           allTransitiveDependencies:
-              PropertyDetailFamily._allTransitiveDependencies,
+              PropertyDeletionPreviewFamily._allTransitiveDependencies,
           propertyId: propertyId,
         );
 
-  PropertyDetailProvider._internal(
+  PropertyDeletionPreviewProvider._internal(
     super._createNotifier, {
     required super.name,
     required super.dependencies,
@@ -107,12 +110,14 @@ class PropertyDetailProvider extends AutoDisposeFutureProvider<PropertyModel> {
 
   @override
   Override overrideWith(
-    FutureOr<PropertyModel> Function(PropertyDetailRef provider) create,
+    FutureOr<PropertyDeletionPreviewModel> Function(
+            PropertyDeletionPreviewRef provider)
+        create,
   ) {
     return ProviderOverride(
       origin: this,
-      override: PropertyDetailProvider._internal(
-        (ref) => create(ref as PropertyDetailRef),
+      override: PropertyDeletionPreviewProvider._internal(
+        (ref) => create(ref as PropertyDeletionPreviewRef),
         from: from,
         name: null,
         dependencies: null,
@@ -124,13 +129,15 @@ class PropertyDetailProvider extends AutoDisposeFutureProvider<PropertyModel> {
   }
 
   @override
-  AutoDisposeFutureProviderElement<PropertyModel> createElement() {
-    return _PropertyDetailProviderElement(this);
+  AutoDisposeFutureProviderElement<PropertyDeletionPreviewModel>
+      createElement() {
+    return _PropertyDeletionPreviewProviderElement(this);
   }
 
   @override
   bool operator ==(Object other) {
-    return other is PropertyDetailProvider && other.propertyId == propertyId;
+    return other is PropertyDeletionPreviewProvider &&
+        other.propertyId == propertyId;
   }
 
   @override
@@ -142,18 +149,20 @@ class PropertyDetailProvider extends AutoDisposeFutureProvider<PropertyModel> {
   }
 }
 
-mixin PropertyDetailRef on AutoDisposeFutureProviderRef<PropertyModel> {
+mixin PropertyDeletionPreviewRef
+    on AutoDisposeFutureProviderRef<PropertyDeletionPreviewModel> {
   /// The parameter `propertyId` of this provider.
   String get propertyId;
 }
 
-class _PropertyDetailProviderElement
-    extends AutoDisposeFutureProviderElement<PropertyModel>
-    with PropertyDetailRef {
-  _PropertyDetailProviderElement(super.provider);
+class _PropertyDeletionPreviewProviderElement
+    extends AutoDisposeFutureProviderElement<PropertyDeletionPreviewModel>
+    with PropertyDeletionPreviewRef {
+  _PropertyDeletionPreviewProviderElement(super.provider);
 
   @override
-  String get propertyId => (origin as PropertyDetailProvider).propertyId;
+  String get propertyId =>
+      (origin as PropertyDeletionPreviewProvider).propertyId;
 }
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
