@@ -1,35 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:shimmer/shimmer.dart';
+
+import 'package:rentloop_manager/src/lib/maintenance_utils.dart';
+import 'package:rentloop_manager/src/repository/models/maintenance_request_model.dart';
+import 'package:rentloop_manager/src/repository/notifiers/activity/maintenance_assignees_notifier.dart';
+import 'package:rentloop_manager/src/repository/notifiers/activity/maintenance_request_status_notifier.dart';
+import 'package:rentloop_manager/src/repository/notifiers/activity/maintenance_requests_notifier.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
-// ── Status order ──────────────────────────────────────────────────────────────
-
-const _kStatuses = ['New', 'In Progress', 'In Review', 'Resolved', 'Cancelled'];
-
-const _kUnassigned = 'Unassigned';
+// ── Priority list (local — maintenance_utils only exports the mapping
+// functions, not a display-label list, since status/category already need
+// one for filter options but priority's 4 values are small enough to keep
+// inline here, matching the original mock's convention) ──────────────────
 
 const _kPriorities = ['Low', 'Medium', 'High', 'Emergency'];
-
-const _kCategories = [
-  'Plumbing',
-  'Electrical',
-  'HVAC',
-  'Appliance',
-  'Structural',
-  'Roofing',
-  'Pest Control',
-  'Landscaping & Grounds',
-  'Locks & Security',
-  'Painting',
-  'Flooring',
-  'Windows & Doors',
-  'Safety & Fire',
-  'Cleaning',
-  'Utilities',
-  'Other',
-];
 
 /// Priority-only tone override — `statusTone()`'s neutral fallback for
 /// unmapped strings is deliberate (see docs/implementation.md), so
@@ -37,145 +25,15 @@ const _kCategories = [
 RLTone _priorityTone(String priority) =>
     priority == 'Emergency' ? RLTone.danger : statusTone(priority);
 
-// ── Seed data ─────────────────────────────────────────────────────────────────
-
-class _MaintData {
-  _MaintData({
-    required this.id,
-    required this.code,
-    required this.title,
-    required this.unit,
-    required this.cat,
-    required this.priority,
-    required this.status,
-    required this.tenant,
-    required this.age,
-    this.assignedWorker,
-    this.assignedManager,
-  });
-
-  final String id;
-  final String code;
-  final String title;
-  final String unit;
-  final String cat;
-  final String priority;
-  String status;
-  final String tenant;
-  final String age;
-  final String? assignedWorker;
-  final String? assignedManager;
+String _ageLabel(String? createdAt) {
+  if (createdAt == null) return '';
+  final date = DateTime.tryParse(createdAt);
+  if (date == null) return '';
+  final diff = DateTime.now().difference(date);
+  if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+  if (diff.inHours < 24) return '${diff.inHours}h ago';
+  return '${diff.inDays}d ago';
 }
-
-final _kMaint = [
-  _MaintData(
-    id: 'm1',
-    code: 'MR-1001',
-    title: 'Leaking kitchen tap',
-    unit: 'Unit 4B · Cantonments Court',
-    cat: 'Plumbing',
-    priority: 'High',
-    status: 'New',
-    tenant: 'Kwame Mensah',
-    age: '2h ago',
-  ),
-  _MaintData(
-    id: 'm2',
-    code: 'MR-1002',
-    title: 'AC not cooling',
-    unit: 'Unit 5A · Cantonments Court',
-    cat: 'HVAC',
-    priority: 'Medium',
-    status: 'In Progress',
-    tenant: 'Ama Boateng',
-    age: '1d ago',
-    assignedWorker: 'Ben (Tech)',
-  ),
-  _MaintData(
-    id: 'm3',
-    code: 'MR-1003',
-    title: 'Broken window latch',
-    unit: 'Unit 7 · Spintex Heights',
-    cat: 'Other',
-    priority: 'Low',
-    status: 'In Progress',
-    tenant: 'Efua Sarpong',
-    age: '2d ago',
-    assignedWorker: 'Ben (Tech)',
-    assignedManager: 'Efua Mensah',
-  ),
-  _MaintData(
-    id: 'm4',
-    code: 'MR-1004',
-    title: 'Hallway lights out',
-    unit: 'Block A · Spintex Heights',
-    cat: 'Electrical',
-    priority: 'High',
-    status: 'In Review',
-    tenant: 'Front desk',
-    age: '3d ago',
-    assignedWorker: 'Mensah Electric',
-    assignedManager: 'Kwabena Owusu',
-  ),
-  _MaintData(
-    id: 'm5',
-    code: 'MR-1005',
-    title: 'Repaint guest bath',
-    unit: 'Suite 3 · Labadi Beach',
-    cat: 'Other',
-    priority: 'Low',
-    status: 'Resolved',
-    tenant: 'Housekeeping',
-    age: '5d ago',
-    assignedManager: 'Efua Mensah',
-  ),
-  _MaintData(
-    id: 'm6',
-    code: 'MR-1006',
-    title: 'Gate motor jammed',
-    unit: 'Cantonments Court',
-    cat: 'Other',
-    priority: 'High',
-    status: 'New',
-    tenant: 'Security',
-    age: '4h ago',
-  ),
-  _MaintData(
-    id: 'm7',
-    code: 'MR-1007',
-    title: 'Water heater fault',
-    unit: 'Unit 3B · Cantonments Court',
-    cat: 'Plumbing',
-    priority: 'Medium',
-    status: 'New',
-    tenant: 'Yaw Asante',
-    age: '6h ago',
-  ),
-  _MaintData(
-    id: 'm8',
-    code: 'MR-1008',
-    title: 'Fire alarm false-triggering',
-    unit: 'Block A · Spintex Heights',
-    cat: 'Safety & Fire',
-    priority: 'Emergency',
-    status: 'New',
-    tenant: 'Front desk',
-    age: '20m ago',
-    assignedWorker: 'Mensah Electric',
-  ),
-  _MaintData(
-    id: 'm9',
-    code: 'MR-1009',
-    title: 'Squeaky door hinge',
-    unit: 'Suite 5 · Labadi Beach',
-    cat: 'Other',
-    priority: 'Low',
-    status: 'Cancelled',
-    tenant: 'Housekeeping',
-    age: '6d ago',
-    assignedManager: 'Kwabena Owusu',
-  ),
-];
 
 // ── Card ──────────────────────────────────────────────────────────────────────
 
@@ -186,14 +44,14 @@ class _MaintCard extends StatelessWidget {
     required this.onDragEnd,
   });
 
-  final _MaintData m;
+  final MaintenanceRequestModel m;
   final void Function(Offset globalPosition) onDragUpdate;
   final VoidCallback onDragEnd;
 
   @override
   Widget build(BuildContext context) {
     final card = _CardBody(m: m);
-    return LongPressDraggable<_MaintData>(
+    return LongPressDraggable<MaintenanceRequestModel>(
       data: m,
       onDragStarted: () => Haptics.vibrate(HapticsType.selection),
       onDragUpdate: (details) => onDragUpdate(details.globalPosition),
@@ -229,11 +87,15 @@ class _MaintCard extends StatelessWidget {
 
 class _CardBody extends StatelessWidget {
   const _CardBody({required this.m});
-  final _MaintData m;
+  final MaintenanceRequestModel m;
 
   @override
   Widget build(BuildContext context) {
-    final priTone = _priorityTone(m.priority);
+    final priorityLabel = mrPriorityLabelFromApi(m.priority);
+    final categoryLabel = mrCategoryLabelFromApi(m.category);
+    final priTone = _priorityTone(priorityLabel);
+    final workerName = m.assignedWorker?.name;
+    final managerName = m.assignedManager?.name;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -249,7 +111,7 @@ class _CardBody extends StatelessWidget {
               RLDot(tone: priTone, size: 8),
               const SizedBox(width: 6),
               Text(
-                m.priority,
+                priorityLabel,
                 style: TextStyle(
                   fontFamily: RLTokens.fontSans,
                   fontSize: 11,
@@ -259,7 +121,7 @@ class _CardBody extends StatelessWidget {
               ),
               const Spacer(),
               Text(
-                m.age,
+                _ageLabel(m.createdAt),
                 style: const TextStyle(
                   fontFamily: RLTokens.fontMono,
                   fontSize: 10.5,
@@ -289,7 +151,7 @@ class _CardBody extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            m.unit,
+            m.unit?.name ?? '—',
             style: const TextStyle(
               fontFamily: RLTokens.fontSans,
               fontSize: 12.5,
@@ -302,22 +164,22 @@ class _CardBody extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              RLPill(m.cat, tone: RLTone.neutral),
-              if (m.assignedWorker != null || m.assignedManager != null)
+              RLPill(categoryLabel, tone: RLTone.neutral),
+              if (workerName != null || managerName != null)
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (m.assignedWorker != null)
+                    if (workerName != null)
                       _AssigneeAvatar(
-                        name: m.assignedWorker!,
+                        name: workerName,
                         bg: RLTokens.fill,
                         fg: RLTokens.crimson,
                       ),
-                    if (m.assignedWorker != null && m.assignedManager != null)
+                    if (workerName != null && managerName != null)
                       const SizedBox(width: 4),
-                    if (m.assignedManager != null)
+                    if (managerName != null)
                       _AssigneeAvatar(
-                        name: m.assignedManager!,
+                        name: managerName,
                         bg: RLTokens.infoBg,
                         fg: RLTokens.info,
                       ),
@@ -507,10 +369,11 @@ class _FilterTriggerChip extends StatelessWidget {
 // ── Filter sheet ──────────────────────────────────────────────────────────────
 
 class _FilterPickResult {
-  const _FilterPickResult.select(this.value) : isClear = false;
-  const _FilterPickResult.clear() : value = null, isClear = true;
+  const _FilterPickResult.select(this.value, {this.id}) : isClear = false;
+  const _FilterPickResult.clear() : value = null, id = null, isClear = true;
 
   final String? value;
+  final String? id;
   final bool isClear;
 }
 
@@ -519,11 +382,16 @@ class _FilterSheet extends StatelessWidget {
     required this.title,
     required this.options,
     required this.selected,
+    this.idsByLabel,
   });
 
   final String title;
   final List<String> options;
   final String? selected;
+
+  /// Only set for person-filters (Worker/Manager) — maps a displayed label
+  /// to the id that must actually be sent to the API.
+  final Map<String, String>? idsByLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -584,54 +452,73 @@ class _FilterSheet extends StatelessWidget {
                 ],
               ),
             ),
-            Flexible(
-              child: ListView.separated(
-                shrinkWrap: true,
+            if (options.isEmpty)
+              Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: RLTokens.space4,
+                  vertical: 24,
                 ),
-                itemCount: options.length,
-                separatorBuilder: (_, _) =>
-                    Container(height: 1, color: RLTokens.hairlineSoft),
-                itemBuilder: (_, i) {
-                  final option = options[i];
-                  final isSelected = option == selected;
-                  return GestureDetector(
-                    onTap: () => Navigator.pop(
-                      context,
-                      _FilterPickResult.select(option),
-                    ),
-                    behavior: HitTestBehavior.opaque,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 13),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              option,
-                              style: const TextStyle(
-                                fontFamily: RLTokens.fontSans,
-                                fontSize: RLTokens.textBody,
-                                color: RLTokens.ink,
+                child: Text(
+                  'No options yet.',
+                  style: TextStyle(
+                    fontFamily: RLTokens.fontSans,
+                    fontSize: RLTokens.textBody,
+                    color: RLTokens.mutedSoft,
+                  ),
+                ),
+              )
+            else
+              Flexible(
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: RLTokens.space4,
+                  ),
+                  itemCount: options.length,
+                  separatorBuilder: (_, _) =>
+                      Container(height: 1, color: RLTokens.hairlineSoft),
+                  itemBuilder: (_, i) {
+                    final option = options[i];
+                    final isSelected = option == selected;
+                    return GestureDetector(
+                      onTap: () => Navigator.pop(
+                        context,
+                        _FilterPickResult.select(
+                          option,
+                          id: idsByLabel?[option],
+                        ),
+                      ),
+                      behavior: HitTestBehavior.opaque,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                option,
+                                style: const TextStyle(
+                                  fontFamily: RLTokens.fontSans,
+                                  fontSize: RLTokens.textBody,
+                                  color: RLTokens.ink,
+                                ),
                               ),
                             ),
-                          ),
-                          Icon(
-                            isSelected
-                                ? Icons.radio_button_checked_rounded
-                                : Icons.radio_button_unchecked_rounded,
-                            size: 20,
-                            color: isSelected
-                                ? RLTokens.crimson
-                                : RLTokens.hairline,
-                          ),
-                        ],
+                            Icon(
+                              isSelected
+                                  ? Icons.radio_button_checked_rounded
+                                  : Icons.radio_button_unchecked_rounded,
+                              size: 20,
+                              color: isSelected
+                                  ? RLTokens.crimson
+                                  : RLTokens.hairline,
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
-            ),
             SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
           ],
         ),
@@ -642,28 +529,77 @@ class _FilterSheet extends StatelessWidget {
 
 // ── Status column page ────────────────────────────────────────────────────────
 
-class _StatusColumnPage extends StatelessWidget {
+class _StatusColumnPage extends ConsumerStatefulWidget {
   const _StatusColumnPage({
     required this.status,
-    required this.items,
+    required this.query,
     required this.onAccept,
     required this.onCardDragUpdate,
     required this.onCardDragEnd,
   });
 
   final String status;
-  final List<_MaintData> items;
-  final ValueChanged<_MaintData> onAccept;
+  final MaintenanceRequestsQuery query;
+  final ValueChanged<MaintenanceRequestModel> onAccept;
   final void Function(Offset globalPosition) onCardDragUpdate;
   final VoidCallback onCardDragEnd;
 
   @override
+  ConsumerState<_StatusColumnPage> createState() => _StatusColumnPageState();
+}
+
+class _StatusColumnPageState extends ConsumerState<_StatusColumnPage> {
+  late final ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController()..addListener(_onScroll);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref
+          .read(maintenanceRequestsNotifierProvider(widget.status).notifier)
+          .loadFirstPage(widget.query);
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant _StatusColumnPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.query != widget.query) {
+      ref
+          .read(maintenanceRequestsNotifierProvider(widget.status).notifier)
+          .loadFirstPage(widget.query);
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      ref
+          .read(maintenanceRequestsNotifierProvider(widget.status).notifier)
+          .loadNextPage();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final tone = statusTone(status);
+    final state = ref.watch(maintenanceRequestsNotifierProvider(widget.status));
+    final tone = statusTone(widget.status);
+    final showSkeleton = state.isLoading && state.items.isEmpty;
+    final showError = state.error != null && state.items.isEmpty;
+    final showEmpty =
+        !state.isLoading && state.error == null && state.items.isEmpty;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 6),
-      child: DragTarget<_MaintData>(
-        onAcceptWithDetails: (details) => onAccept(details.data),
+      child: DragTarget<MaintenanceRequestModel>(
+        onAcceptWithDetails: (details) => widget.onAccept(details.data),
         builder: (context, candidates, rejects) {
           return Column(
             children: [
@@ -682,7 +618,7 @@ class _StatusColumnPage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      status,
+                      widget.status,
                       style: TextStyle(
                         fontFamily: RLTokens.fontSans,
                         fontSize: 15,
@@ -691,7 +627,7 @@ class _StatusColumnPage extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '${items.length}',
+                      '${state.total}',
                       style: TextStyle(
                         fontFamily: RLTokens.fontMono,
                         fontSize: 13,
@@ -703,33 +639,118 @@ class _StatusColumnPage extends StatelessWidget {
                 ),
               ),
               Expanded(
-                child: items.isEmpty
-                    ? Center(
-                        child: Text(
-                          'No requests here',
-                          style: TextStyle(
-                            fontFamily: RLTokens.fontSans,
-                            fontSize: 13,
-                            color: RLTokens.mutedSoft,
-                          ),
-                        ),
+                child: RefreshIndicator(
+                  color: RLTokens.crimson,
+                  onRefresh: () => ref
+                      .read(
+                        maintenanceRequestsNotifierProvider(
+                          widget.status,
+                        ).notifier,
                       )
-                    : ListView.builder(
-                        padding: const EdgeInsets.fromLTRB(2, 12, 2, 40),
-                        itemCount: items.length,
-                        itemBuilder: (_, i) => Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: _MaintCard(
-                            m: items[i],
-                            onDragUpdate: onCardDragUpdate,
-                            onDragEnd: onCardDragEnd,
+                      .loadFirstPage(widget.query),
+                  child: showSkeleton
+                      ? const _ColumnSkeleton()
+                      : showError
+                      ? SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          child: Padding(
+                            padding: const EdgeInsets.all(RLTokens.gutter),
+                            child: RLSectionError(
+                              onRetry: () => ref
+                                  .read(
+                                    maintenanceRequestsNotifierProvider(
+                                      widget.status,
+                                    ).notifier,
+                                  )
+                                  .loadFirstPage(widget.query),
+                            ),
                           ),
+                        )
+                      : showEmpty
+                      ? ListView(
+                          controller: _scrollController,
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(top: 60),
+                              child: Center(
+                                child: Text(
+                                  'No requests here',
+                                  style: TextStyle(
+                                    fontFamily: RLTokens.fontSans,
+                                    fontSize: 13,
+                                    color: RLTokens.mutedSoft,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      : ListView.builder(
+                          controller: _scrollController,
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.fromLTRB(2, 12, 2, 40),
+                          itemCount:
+                              state.items.length +
+                              (state.isLoadingMore ? 1 : 0),
+                          itemBuilder: (_, i) {
+                            if (i >= state.items.length) {
+                              return const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 16),
+                                child: Center(
+                                  child: SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.5,
+                                      color: RLTokens.crimson,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 10),
+                              child: _MaintCard(
+                                m: state.items[i],
+                                onDragUpdate: widget.onCardDragUpdate,
+                                onDragEnd: widget.onCardDragEnd,
+                              ),
+                            );
+                          },
                         ),
-                      ),
+                ),
               ),
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _ColumnSkeleton extends StatelessWidget {
+  const _ColumnSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Shimmer.fromColors(
+      baseColor: RLTokens.fill,
+      highlightColor: RLTokens.paper,
+      child: ListView(
+        physics: const NeverScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(2, 12, 2, 40),
+        children: List.generate(
+          4,
+          (_) => Container(
+            margin: const EdgeInsets.only(bottom: 10),
+            height: 140,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(RLTokens.rLg),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -871,18 +892,19 @@ class _CancelReasonSheetState extends State<_CancelReasonSheet> {
 
 // ── Board ─────────────────────────────────────────────────────────────────────
 
-class MaintenanceBoard extends StatefulWidget {
+class MaintenanceBoard extends ConsumerStatefulWidget {
   const MaintenanceBoard({super.key});
 
   @override
-  State<MaintenanceBoard> createState() => _MaintenanceBoardState();
+  ConsumerState<MaintenanceBoard> createState() => _MaintenanceBoardState();
 }
 
-class _MaintenanceBoardState extends State<MaintenanceBoard> {
+class _MaintenanceBoardState extends ConsumerState<MaintenanceBoard> {
   late final PageController _pageController;
   int _currentPage = 0;
   DateTime? _lastEdgePageTurn;
 
+  MaintenanceRequestsQuery _query = const MaintenanceRequestsQuery();
   String? _priorityFilter;
   String? _categoryFilter;
   String? _workerFilter;
@@ -908,38 +930,27 @@ class _MaintenanceBoardState extends State<MaintenanceBoard> {
     super.dispose();
   }
 
-  List<String> get _workerOptions => [
-    _kUnassigned,
-    ..._kMaint.map((m) => m.assignedWorker).whereType<String>().toSet(),
-  ];
-
-  List<String> get _managerOptions => [
-    _kUnassigned,
-    ..._kMaint.map((m) => m.assignedManager).whereType<String>().toSet(),
-  ];
-
-  bool _matchesFilters(_MaintData m) {
-    if (_priorityFilter != null && m.priority != _priorityFilter) {
-      return false;
+  /// Recomputes the distinct set of property ids currently represented
+  /// across all 5 columns and asks [MaintenanceAssigneesNotifier] to fetch
+  /// people for any not-yet-seen property. Called from [build] via
+  /// `ref.listen` on each column, so it fires whenever any column's data
+  /// changes — cheap to call repeatedly since the notifier itself skips
+  /// already-fetched properties.
+  void _refreshAssigneeSources() {
+    final propertyIds = <String>{};
+    for (final status in kMaintenanceStatusOrder) {
+      final state = ref.read(maintenanceRequestsNotifierProvider(status));
+      for (final item in state.items) {
+        final propertyId = item.unit?.propertyId;
+        if (propertyId != null) propertyIds.add(propertyId);
+      }
     }
-    if (_categoryFilter != null && m.cat != _categoryFilter) return false;
-    if (_workerFilter != null) {
-      final matches = _workerFilter == _kUnassigned
-          ? m.assignedWorker == null
-          : m.assignedWorker == _workerFilter;
-      if (!matches) return false;
+    if (propertyIds.isNotEmpty) {
+      ref
+          .read(maintenanceAssigneesNotifierProvider.notifier)
+          .ensurePropertiesLoaded(propertyIds);
     }
-    if (_managerFilter != null) {
-      final matches = _managerFilter == _kUnassigned
-          ? m.assignedManager == null
-          : m.assignedManager == _managerFilter;
-      if (!matches) return false;
-    }
-    return true;
   }
-
-  List<_MaintData> _forStatus(String status) =>
-      _kMaint.where((m) => m.status == status && _matchesFilters(m)).toList();
 
   Future<void> _pickFilter({
     required String title,
@@ -956,6 +967,35 @@ class _MaintenanceBoardState extends State<MaintenanceBoard> {
     );
     if (result == null) return;
     setState(() => onChanged(result.isClear ? null : result.value));
+  }
+
+  Future<void> _pickPersonFilter({
+    required String title,
+    required List<MaintenanceAssigneeModel> people,
+    required String? selectedLabel,
+    required void Function(String? label, String? id) onChanged,
+  }) async {
+    final labels = people.map((p) => p.name ?? p.id).toList();
+    final idsByLabel = {for (final p in people) (p.name ?? p.id): p.id};
+    final result = await showModalBottomSheet<_FilterPickResult>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _FilterSheet(
+        title: title,
+        options: labels,
+        selected: selectedLabel,
+        idsByLabel: idsByLabel,
+      ),
+    );
+    if (result == null) return;
+    setState(() {
+      if (result.isClear) {
+        onChanged(null, null);
+      } else {
+        onChanged(result.value, result.id);
+      }
+    });
   }
 
   void _handleCardDragUpdate(Offset globalPosition) {
@@ -977,7 +1017,7 @@ class _MaintenanceBoardState extends State<MaintenanceBoard> {
         curve: Curves.easeOut,
       );
     } else if (globalPosition.dx > width - edgeZone &&
-        current < _kStatuses.length - 1) {
+        current < kMaintenanceStatusOrder.length - 1) {
       _lastEdgePageTurn = now;
       _pageController.animateToPage(
         current + 1,
@@ -991,28 +1031,65 @@ class _MaintenanceBoardState extends State<MaintenanceBoard> {
     _lastEdgePageTurn = null;
   }
 
-  void _handleDrop(_MaintData item, String status) {
-    if (item.status == status) return;
-    if (status == 'Resolved') {
-      _confirmResolve(item, status);
-    } else if (status == 'Cancelled') {
-      _confirmCancel(item, status);
+  void _handleDrop(MaintenanceRequestModel item, String toStatus) {
+    final fromStatus = mrStatusLabel(item.status);
+    if (fromStatus == toStatus) return;
+    if (toStatus == 'Resolved') {
+      _confirmResolve(item, fromStatus, toStatus);
+    } else if (toStatus == 'Cancelled') {
+      _confirmCancel(item, fromStatus, toStatus);
     } else {
-      _applyMove(item, status);
+      _applyMove(item, fromStatus, toStatus);
     }
   }
 
-  void _applyMove(_MaintData item, String status) {
-    Haptics.vibrate(HapticsType.light);
-    setState(() => item.status = status);
-    _pageController.animateToPage(
-      _kStatuses.indexOf(status),
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeOut,
-    );
+  Future<void> _applyMove(
+    MaintenanceRequestModel item,
+    String fromStatus,
+    String toStatus, {
+    String? cancellationReason,
+  }) async {
+    final success = await ref
+        .read(maintenanceRequestStatusNotifierProvider.notifier)
+        .updateStatus(
+          request: item,
+          toStatusLabel: toStatus,
+          cancellationReason: cancellationReason,
+        );
+    if (!mounted) return;
+    if (success) {
+      Haptics.vibrate(HapticsType.light);
+      await ref
+          .read(maintenanceRequestsNotifierProvider(fromStatus).notifier)
+          .loadFirstPage(_query);
+      if (!mounted) return;
+      await ref
+          .read(maintenanceRequestsNotifierProvider(toStatus).notifier)
+          .loadFirstPage(_query);
+      if (!mounted) return;
+      _pageController.animateToPage(
+        kMaintenanceStatusOrder.indexOf(toStatus),
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    } else {
+      final message = ref
+          .read(maintenanceRequestStatusNotifierProvider)
+          .errorMessage;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message ?? 'Could not update status.'),
+          backgroundColor: RLTokens.danger,
+        ),
+      );
+    }
   }
 
-  Future<void> _confirmResolve(_MaintData item, String status) async {
+  Future<void> _confirmResolve(
+    MaintenanceRequestModel item,
+    String fromStatus,
+    String toStatus,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -1031,10 +1108,14 @@ class _MaintenanceBoardState extends State<MaintenanceBoard> {
       ),
     );
     if (!mounted) return;
-    if (confirmed == true) _applyMove(item, status);
+    if (confirmed == true) _applyMove(item, fromStatus, toStatus);
   }
 
-  Future<void> _confirmCancel(_MaintData item, String status) async {
+  Future<void> _confirmCancel(
+    MaintenanceRequestModel item,
+    String fromStatus,
+    String toStatus,
+  ) async {
     final reason = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
@@ -1043,7 +1124,7 @@ class _MaintenanceBoardState extends State<MaintenanceBoard> {
     );
     if (!mounted) return;
     if (reason != null && reason.trim().isNotEmpty) {
-      _applyMove(item, status);
+      _applyMove(item, fromStatus, toStatus, cancellationReason: reason);
     }
   }
 
@@ -1057,6 +1138,13 @@ class _MaintenanceBoardState extends State<MaintenanceBoard> {
 
   @override
   Widget build(BuildContext context) {
+    for (final status in kMaintenanceStatusOrder) {
+      ref.listen(maintenanceRequestsNotifierProvider(status), (prev, next) {
+        _refreshAssigneeSources();
+      });
+    }
+    final people = ref.watch(maintenanceAssigneesNotifierProvider);
+
     return Column(
       children: [
         _FilterChipsRow(
@@ -1068,36 +1156,60 @@ class _MaintenanceBoardState extends State<MaintenanceBoard> {
             title: 'Priority',
             options: _kPriorities,
             selected: _priorityFilter,
-            onChanged: (v) => _priorityFilter = v,
+            onChanged: (v) {
+              _priorityFilter = v;
+              _query = _query.copyWith(
+                priorityLabel: v,
+                clearPriorityLabel: v == null,
+              );
+            },
           ),
           onTapCategory: () => _pickFilter(
             title: 'Category',
-            options: _kCategories,
+            options: kMaintenanceCategoryLabels,
             selected: _categoryFilter,
-            onChanged: (v) => _categoryFilter = v,
+            onChanged: (v) {
+              _categoryFilter = v;
+              _query = _query.copyWith(
+                categoryLabel: v,
+                clearCategoryLabel: v == null,
+              );
+            },
           ),
-          onTapWorker: () => _pickFilter(
+          onTapWorker: () => _pickPersonFilter(
             title: 'Assigned Worker',
-            options: _workerOptions,
-            selected: _workerFilter,
-            onChanged: (v) => _workerFilter = v,
+            people: people,
+            selectedLabel: _workerFilter,
+            onChanged: (label, id) {
+              _workerFilter = label;
+              _query = _query.copyWith(
+                assignedWorkerId: id,
+                clearAssignedWorkerId: id == null,
+              );
+            },
           ),
-          onTapManager: () => _pickFilter(
+          onTapManager: () => _pickPersonFilter(
             title: 'Assigned Manager',
-            options: _managerOptions,
-            selected: _managerFilter,
-            onChanged: (v) => _managerFilter = v,
+            people: people,
+            selectedLabel: _managerFilter,
+            onChanged: (label, id) {
+              _managerFilter = label;
+              _query = _query.copyWith(
+                assignedManagerId: id,
+                clearAssignedManagerId: id == null,
+              );
+            },
           ),
         ),
         Expanded(
           child: PageView.builder(
             controller: _pageController,
-            itemCount: _kStatuses.length,
+            itemCount: kMaintenanceStatusOrder.length,
             itemBuilder: (_, i) {
-              final status = _kStatuses[i];
+              final status = kMaintenanceStatusOrder[i];
               return _StatusColumnPage(
                 status: status,
-                items: _forStatus(status),
+                query: _query,
                 onAccept: (item) => _handleDrop(item, status),
                 onCardDragUpdate: _handleCardDragUpdate,
                 onCardDragEnd: _handleCardDragEnd,
@@ -1106,7 +1218,7 @@ class _MaintenanceBoardState extends State<MaintenanceBoard> {
           ),
         ),
         _PageDots(
-          count: _kStatuses.length,
+          count: kMaintenanceStatusOrder.length,
           current: _currentPage,
           onTap: _goToPage,
         ),

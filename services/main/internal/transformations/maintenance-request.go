@@ -63,7 +63,7 @@ func DBMaintenanceRequestToRest(mr *models.MaintenanceRequest) any {
 		"id":                        mr.ID.String(),
 		"code":                      mr.Code,
 		"unit_id":                   mr.UnitID,
-		"unit":                      DBUnitToRest(&mr.Unit),
+		"unit":                      DBAdminUnitToRest(&mr.Unit),
 		"lease_id":                  mr.LeaseID,
 		"created_by_tenant_id":      mr.CreatedByTenantID,
 		"created_by_tenant":         DBTenantToRest(mr.CreatedByTenant),
