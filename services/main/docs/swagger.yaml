@@ -1004,7 +1004,7 @@ definitions:
       description:
         example: A luxurious apartment overlooking the Atlantic Ocean.
         type: string
-      gpsAddress:
+      gps_address:
         example: GA-123-4567
         type: string
       images:
@@ -2057,7 +2057,7 @@ definitions:
       description:
         example: A luxurious apartment overlooking the Atlantic Ocean.
         type: string
-      gpsAddress:
+      gps_address:
         example: GA-123-4567
         type: string
       images:

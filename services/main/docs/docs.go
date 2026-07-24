@@ -21101,7 +21101,7 @@ const docTemplate = `{
                     "type": "string",
                     "example": "A luxurious apartment overlooking the Atlantic Ocean."
                 },
-                "gpsAddress": {
+                "gps_address": {
                     "type": "string",
                     "example": "GA-123-4567"
                 },
@@ -22553,7 +22553,7 @@ const docTemplate = `{
                     "type": "string",
                     "example": "A luxurious apartment overlooking the Atlantic Ocean."
                 },
-                "gpsAddress": {
+                "gps_address": {
                     "type": "string",
                     "example": "GA-123-4567"
                 },

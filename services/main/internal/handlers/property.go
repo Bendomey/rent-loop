@@ -36,7 +36,7 @@ type CreatePropertyRequest struct {
 	Country     string   `json:"country"               validate:"required,min=2,max=100"                                                                     example:"Ghana"                                                 description:"Country where the property is located."`
 	Region      string   `json:"region"                validate:"required,min=2,max=100"                                                                     example:"Greater Accra"                                         description:"Region or administrative area where the property is located."`
 	City        string   `json:"city"                  validate:"required,min=2,max=100"                                                                     example:"Accra"                                                 description:"City where the property is located."`
-	GPSAddress  *string  `json:"gpsAddress,omitempty"                                                                                                        example:"GA-123-4567"                                           description:"GPS or digital address reference."`
+	GPSAddress  *string  `json:"gps_address,omitempty"                                                                                                       example:"GA-123-4567"                                           description:"GPS or digital address reference."`
 }
 
 // CreateProperty godoc
@@ -288,7 +288,7 @@ type UpdatePropertyRequest struct {
 	Country     *string                `json:"country"     validate:"omitempty,min=2,max=100"                                                                     example:"Ghana"                                                 description:"Country where the property is located."`
 	Region      *string                `json:"region"      validate:"omitempty,min=2,max=100"                                                                     example:"Greater Accra"                                         description:"Region or administrative area where the property is located."`
 	City        *string                `json:"city"        validate:"omitempty,min=2,max=100"                                                                     example:"Accra"                                                 description:"City where the property is located."`
-	GPSAddress  lib.Optional[string]   `json:"gpsAddress"  validate:"omitempty"                                                                                   example:"GA-123-4567"                                           description:"GPS or digital address reference."                            swaggertype:"string"`
+	GPSAddress  lib.Optional[string]   `json:"gps_address" validate:"omitempty"                                                                                   example:"GA-123-4567"                                           description:"GPS or digital address reference."                            swaggertype:"string"`
 	Type        *string                `json:"type"        validate:"omitempty,oneof=SINGLE MULTI"                                                                example:"SINGLE"                                                description:"Type of the property. Options: SINGLE | MULTI."`
 	Status      *string                `json:"status"      validate:"omitempty,oneof=Property.Status.Active Property.Status.Maintenance Property.Status.Inactive" example:"Property.Status.Active"                                description:"Current operational status of the property"`
 }
