@@ -8,12 +8,13 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:rentloop_manager/src/lib/lease_status.dart';
 import 'package:rentloop_manager/src/lib/money.dart';
-import 'package:rentloop_manager/src/lib/property_status.dart';
 import 'package:rentloop_manager/src/lib/unit_status.dart';
 import 'package:rentloop_manager/src/modules/main/leases/checklist_detail.dart';
 import 'package:rentloop_manager/src/modules/main/leases/create_checklist_dialog.dart';
 import 'package:rentloop_manager/src/modules/main/leases/documents_tab.dart';
+import 'package:rentloop_manager/src/modules/main/leases/hero_card.dart';
 import 'package:rentloop_manager/src/modules/main/leases/start_lease_sheet.dart';
+import 'package:rentloop_manager/src/modules/main/leases/terms_grid.dart';
 import 'package:rentloop_manager/src/repository/models/lease_checklist_model.dart';
 import 'package:rentloop_manager/src/repository/models/lease_model.dart';
 import 'package:rentloop_manager/src/repository/models/tenant_model.dart';
@@ -22,12 +23,7 @@ import 'package:rentloop_manager/src/repository/providers/leases/lease_detail_pr
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
-const _kLeaseTabs = [
-  'Lease Details',
-  'Tenant Profile',
-  'Documents',
-  'Expenses',
-];
+const _kLeaseTabs = ['Lease', 'Tenant', 'Docs', 'Expenses'];
 
 void _pushChecklistDetail(
   BuildContext context, {
@@ -244,23 +240,26 @@ class _LeaseDetailContentState extends ConsumerState<_LeaseDetailContent> {
   @override
   Widget build(BuildContext context) {
     final lease = widget.lease;
+    final showStickyBar = lease.status == 'Lease.Status.Active';
 
-    return CustomScrollView(
+    final scroll = CustomScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
         SliverToBoxAdapter(
           child: _LeaseAlerts(propertyId: widget.propertyId, lease: lease),
         ),
         SliverPadding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+          padding: EdgeInsets.fromLTRB(20, 16, 20, showStickyBar ? 90 : 0),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
-              _LeaseSidebarCard(propertyId: widget.propertyId, lease: lease),
+              LeaseHeroCard(propertyId: widget.propertyId, lease: lease),
               const SizedBox(height: RLTokens.space6),
-              RLFilterChips(
-                options: _kLeaseTabs,
-                selected: _tab,
-                onSelect: _onSelectTab,
+              RLSegmented(
+                items: _kLeaseTabs
+                    .map((label) => RLSegmentItem(key: label, label: label))
+                    .toList(),
+                value: _tab,
+                onChanged: _onSelectTab,
               ),
               const SizedBox(height: 16),
               ..._buildTabContent(lease),
@@ -270,19 +269,81 @@ class _LeaseDetailContentState extends ConsumerState<_LeaseDetailContent> {
         ),
       ],
     );
+
+    if (!showStickyBar) return scroll;
+
+    return Stack(
+      children: [
+        scroll,
+        const Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: _LeaseStickyActionBar(),
+        ),
+      ],
+    );
   }
 
   List<Widget> _buildTabContent(LeaseModel lease) {
     switch (_tab) {
-      case 'Tenant Profile':
+      case 'Tenant':
         return _buildTenantProfile(lease.tenant);
-      case 'Documents':
+      case 'Docs':
         return buildDocumentsTab(widget.propertyId, lease);
       case 'Expenses':
         return [const _ComingSoonTab(title: 'Expenses')];
       default:
         return _buildLeaseDetails(widget.propertyId, lease);
     }
+  }
+}
+
+class _LeaseStickyActionBar extends StatelessWidget {
+  const _LeaseStickyActionBar();
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+        decoration: const BoxDecoration(
+          color: RLTokens.surface,
+          border: Border(top: BorderSide(color: RLTokens.hairline)),
+          boxShadow: RLTokens.elevBar,
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Opacity(
+                opacity: 0.5,
+                child: IgnorePointer(
+                  child: RLBtn(
+                    label: 'Renew',
+                    kind: RLBtnKind.light,
+                    full: true,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Opacity(
+                opacity: 0.5,
+                child: IgnorePointer(
+                  child: RLBtn(
+                    label: 'Terminate Lease',
+                    kind: RLBtnKind.danger,
+                    full: true,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -301,96 +362,132 @@ List<Widget> _buildLeaseDetails(String propertyId, LeaseModel lease) {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _SectionHeading('Lease Terms'),
-          _InfoCard(
+          TermsGrid(
             rows: [
-              _FieldRow(
-                k: 'Payment Frequency',
-                v: paymentFrequencyLabel(lease.paymentFrequency ?? '—'),
-              ),
-              _FieldRow(
-                k: 'Duration',
-                v:
-                    lease.stayDuration != null &&
-                        lease.stayDurationFrequency != null
-                    ? stayDurationLabel(
-                        lease.stayDuration!,
-                        lease.stayDurationFrequency!,
-                      )
-                    : '—',
-              ),
-              _FieldRow(k: 'Move-in Date', v: _formatDate(lease.moveInDate)),
-              _FieldRow(k: 'Move-out Date', v: _formatDate(lease.moveOutDate)),
-              _FieldRow(
-                k: 'Property Inspection',
-                v: _formatDate(lease.propertyInspectionDate),
-              ),
-              _FieldRow(
-                k: 'Utility Transfers',
-                v: _formatDate(lease.utilityTransfersDate),
-              ),
-              _FieldRow(k: 'Activated At', v: _formatDate(lease.activatedAt)),
+              [
+                TermCell(
+                  label: 'Payment Frequency',
+                  value: paymentFrequencyLabel(lease.paymentFrequency ?? '—'),
+                ),
+                TermCell(
+                  label: 'Duration',
+                  value:
+                      lease.stayDuration != null &&
+                          lease.stayDurationFrequency != null
+                      ? stayDurationLabel(
+                          lease.stayDuration!,
+                          lease.stayDurationFrequency!,
+                        )
+                      : '—',
+                ),
+              ],
+              [
+                TermCell(
+                  label: 'Move-in Date',
+                  value: _formatDate(lease.moveInDate),
+                ),
+                TermCell(
+                  label: 'Move-out Date',
+                  value: _formatDate(lease.moveOutDate),
+                ),
+              ],
+              [
+                TermCell(
+                  label: 'Property Inspection',
+                  value: _formatDate(lease.propertyInspectionDate),
+                ),
+                TermCell(
+                  label: 'Utility Transfers',
+                  value: _formatDate(lease.utilityTransfersDate),
+                ),
+              ],
+              [
+                TermCell(
+                  label: 'Activated At',
+                  value: _formatDate(lease.activatedAt),
+                ),
+                TermCell(
+                  label: 'Created On',
+                  value: _formatDate(lease.createdAt),
+                ),
+              ],
               if (lease.cancelledAt != null)
-                _FieldRow(k: 'Cancelled At', v: _formatDate(lease.cancelledAt)),
+                [
+                  TermCell(
+                    label: 'Cancelled At',
+                    value: _formatDate(lease.cancelledAt),
+                  ),
+                ],
               if (lease.terminatedAt != null)
-                _FieldRow(
-                  k: 'Terminated At',
-                  v: _formatDate(lease.terminatedAt),
-                  last: lease.completedAt == null,
-                ),
+                [
+                  TermCell(
+                    label: 'Terminated At',
+                    value: _formatDate(lease.terminatedAt),
+                  ),
+                ],
               if (lease.completedAt != null)
-                _FieldRow(
-                  k: 'Completed At',
-                  v: _formatDate(lease.completedAt),
-                  last: true,
-                ),
+                [
+                  TermCell(
+                    label: 'Completed At',
+                    value: _formatDate(lease.completedAt),
+                  ),
+                ],
             ],
           ),
           if (application != null) ...[
             const SizedBox(height: 20),
             _SectionHeading('Financial Terms'),
-            _InfoCard(
+            TermsGrid(
               rows: [
-                _FieldRow(
-                  k: 'Rent Fee',
-                  v: _moneyLabel(
-                    application.rentFee ?? lease.rentFee,
-                    application.rentFeeCurrency ?? lease.rentFeeCurrency,
-                  ),
-                ),
-                if (application.initialDepositFee != null)
-                  _FieldRow(
-                    k: 'Initial Deposit',
-                    v: _moneyLabel(
-                      application.initialDepositFee!,
+                [
+                  TermCell(
+                    label: 'Rent Fee',
+                    value: _moneyLabel(
+                      application.rentFee ?? lease.rentFee,
                       application.rentFeeCurrency ?? lease.rentFeeCurrency,
                     ),
                   ),
-                if (application.paymentFrequency != null)
-                  _FieldRow(
-                    k: 'Payment Frequency',
-                    v: paymentFrequencyLabel(application.paymentFrequency!),
-                  ),
-                _FieldRow(
-                  k: 'Security Deposit',
-                  v: application.securityDepositFee != null
-                      ? _moneyLabel(
-                          application.securityDepositFee!,
-                          application.rentFeeCurrency ?? lease.rentFeeCurrency,
-                        )
-                      : '-',
-                  last: application.applicationPaymentInvoice == null,
-                ),
-                if (application.applicationPaymentInvoice != null)
-                  _LinkFieldRow(
-                    k: 'Invoice',
-                    label: application.applicationPaymentInvoice!.code,
-                    last: true,
-                    onTap: (context) => context.push(
-                      '/money/invoices/${application.applicationPaymentInvoice!.id}',
+                  if (application.initialDepositFee != null)
+                    TermCell(
+                      label: 'Initial Deposit',
+                      value: _moneyLabel(
+                        application.initialDepositFee!,
+                        application.rentFeeCurrency ?? lease.rentFeeCurrency,
+                      ),
                     ),
+                ],
+                [
+                  if (application.paymentFrequency != null)
+                    TermCell(
+                      label: 'Payment Frequency',
+                      value: paymentFrequencyLabel(
+                        application.paymentFrequency!,
+                      ),
+                    ),
+                  TermCell(
+                    label: 'Security Deposit',
+                    value: application.securityDepositFee != null
+                        ? _moneyLabel(
+                            application.securityDepositFee!,
+                            application.rentFeeCurrency ??
+                                lease.rentFeeCurrency,
+                          )
+                        : '-',
                   ),
+                ],
               ],
             ),
+            if (application.applicationPaymentInvoice != null) ...[
+              const SizedBox(height: 10),
+              _LinkFieldRow(
+                k: 'Invoice',
+                label: application.applicationPaymentInvoice!.code,
+                last: true,
+                onTap: (context) => context.push(
+                  '/money/invoices/${application.applicationPaymentInvoice!.id}',
+                ),
+              ),
+            ],
           ],
         ],
       ),
@@ -446,6 +543,38 @@ List<Widget> _buildTenantProfile(TenantModel? tenant) {
   ].whereType<String>().where((v) => v.isNotEmpty).join(' ');
 
   return [
+    if (tenant.phone.isNotEmpty) ...[
+      Row(
+        children: [
+          Expanded(
+            child: RLBtn(
+              label: 'Call',
+              icon: Icons.call_outlined,
+              kind: RLBtnKind.light,
+              full: true,
+              onPressed: () async {
+                await Haptics.vibrate(HapticsType.selection);
+                await _openUrl('tel:${tenant.phone.replaceAll(' ', '')}');
+              },
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: RLBtn(
+              label: 'Message',
+              icon: Icons.sms_outlined,
+              kind: RLBtnKind.light,
+              full: true,
+              onPressed: () async {
+                await Haptics.vibrate(HapticsType.selection);
+                await _openUrl('sms:${tenant.phone.replaceAll(' ', '')}');
+              },
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 16),
+    ],
     Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -833,269 +962,6 @@ class _AlertActionRow extends StatelessWidget {
             ),
         ],
       ),
-    );
-  }
-}
-
-// ── Sidebar card ──────────────────────────────────────────────────────────────
-
-class _LeaseSidebarCard extends ConsumerWidget {
-  const _LeaseSidebarCard({required this.propertyId, required this.lease});
-  final String propertyId;
-  final LeaseModel lease;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final statusLabel = propertyStatusLabel(lease.status);
-    final tenant = lease.tenant;
-    final unit = lease.unit;
-    final isTerminable = lease.status == 'Lease.Status.Active';
-    final isPending = lease.status == 'Lease.Status.Pending';
-
-    return Container(
-      decoration: BoxDecoration(
-        color: RLTokens.surface,
-        borderRadius: BorderRadius.circular(RLTokens.rLg),
-        border: Border.all(color: RLTokens.hairline),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.description_outlined,
-                  size: 18,
-                  color: RLTokens.muted,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    lease.code,
-                    style: TextStyle(
-                      fontFamily: RLTokens.fontSans,
-                      fontSize: 15,
-                      fontWeight: RLTokens.semibold,
-                      color: RLTokens.ink,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                RLPill(statusLabel, tone: statusTone(statusLabel)),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _LinkRow(
-                  icon: Icons.person_outline_rounded,
-                  label: tenant?.fullName,
-                  onTap: tenant != null
-                      ? () => context.push('/more/tenants/${tenant.id}')
-                      : null,
-                ),
-                const SizedBox(height: 10),
-                _LinkRow(
-                  icon: Icons.home_outlined,
-                  label: unit?.name,
-                  onTap: unit?.propertyId != null
-                      ? () => context.push(
-                          '/properties/${unit!.propertyId}/units/${unit.id}',
-                        )
-                      : null,
-                ),
-                const SizedBox(height: 14),
-                const Divider(height: 1, color: RLTokens.hairlineSoft),
-                const SizedBox(height: 14),
-                Text(
-                  'Rent Fee',
-                  style: TextStyle(
-                    fontFamily: RLTokens.fontSans,
-                    fontSize: 11.5,
-                    color: RLTokens.muted,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                RLMoney(pesewasToCedis(lease.rentFee), size: 26),
-                const SizedBox(height: 4),
-                Text(
-                  paymentFrequencyLabel(lease.paymentFrequency ?? '—'),
-                  style: TextStyle(
-                    fontFamily: RLTokens.fontSans,
-                    fontSize: 11.5,
-                    color: RLTokens.muted,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                const Divider(height: 1, color: RLTokens.hairlineSoft),
-                const SizedBox(height: 14),
-                _DateRow(label: 'Created On', iso: lease.createdAt),
-                const SizedBox(height: 10),
-                _DateRow(label: 'Updated On', iso: lease.updatedAt),
-                if (lease.tenantApplicationId != null) ...[
-                  const SizedBox(height: 14),
-                  const Divider(height: 1, color: RLTokens.hairlineSoft),
-                  const SizedBox(height: 14),
-                  GestureDetector(
-                    onTap: () async {
-                      await Haptics.vibrate(HapticsType.selection);
-                      if (context.mounted) {
-                        context.push(
-                          '/activity/applications/${lease.tenantApplicationId}',
-                        );
-                      }
-                    },
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.open_in_new_rounded,
-                          size: 13,
-                          color: RLTokens.info,
-                        ),
-                        const SizedBox(width: 5),
-                        Text(
-                          'View Application'
-                          '${lease.tenantApplication != null ? ' (${lease.tenantApplication!.code})' : ''}',
-                          style: TextStyle(
-                            fontFamily: RLTokens.fontSans,
-                            fontSize: 12,
-                            color: RLTokens.info,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          if (isTerminable || isPending) ...[
-            const SizedBox(height: 4),
-            Container(
-              margin: const EdgeInsets.only(top: 14),
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-              decoration: const BoxDecoration(
-                border: Border(top: BorderSide(color: RLTokens.hairlineSoft)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  if (isTerminable)
-                    Opacity(
-                      opacity: 0.5,
-                      child: IgnorePointer(
-                        child: RLBtn(
-                          label: 'Terminate Lease',
-                          kind: RLBtnKind.danger,
-                        ),
-                      ),
-                    ),
-                  if (isPending)
-                    RLBtn(
-                      label: 'Start Lease',
-                      icon: Icons.check_rounded,
-                      onPressed: () async {
-                        await Haptics.vibrate(HapticsType.selection);
-                        if (!context.mounted) return;
-                        final result = await showStartLeaseSheet(
-                          context: context,
-                          propertyId: propertyId,
-                          lease: lease,
-                        );
-                        if (result != null) {
-                          ref.invalidate(
-                            leaseDetailProvider(propertyId, lease.id),
-                          );
-                        }
-                      },
-                    ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _LinkRow extends StatelessWidget {
-  const _LinkRow({required this.icon, required this.label, this.onTap});
-  final IconData icon;
-  final String? label;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap == null
-          ? null
-          : () async {
-              await Haptics.vibrate(HapticsType.selection);
-              onTap!();
-            },
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: RLTokens.muted),
-          const SizedBox(width: 8),
-          Text(
-            label ?? '—',
-            style: TextStyle(
-              fontFamily: RLTokens.fontSans,
-              fontSize: 13.5,
-              fontWeight: onTap != null ? RLTokens.semibold : RLTokens.regular,
-              color: onTap != null ? RLTokens.info : RLTokens.muted,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DateRow extends StatelessWidget {
-  const _DateRow({required this.label, required this.iso});
-  final String label;
-  final String? iso;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        const Icon(
-          Icons.calendar_today_outlined,
-          size: 15,
-          color: RLTokens.muted,
-        ),
-        const SizedBox(width: 8),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontFamily: RLTokens.fontSans,
-                fontSize: 11,
-                color: RLTokens.muted,
-              ),
-            ),
-            Text(
-              _formatDate(iso),
-              style: TextStyle(
-                fontFamily: RLTokens.fontSans,
-                fontSize: 13,
-                color: RLTokens.ink,
-              ),
-            ),
-          ],
-        ),
-      ],
     );
   }
 }

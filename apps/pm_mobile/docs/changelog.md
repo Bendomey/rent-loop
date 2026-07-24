@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-07-24 — Lease detail screen redesign
+- Redesigned `LeaseDetailScreen` (`leases/detail.dart`) to match the imported "Lease Detail" mock (Claude Design `rentloop` project → `rl-mgr-lease.jsx`'s `ScreenLease`), reusing existing data/providers — no backend changes.
+- New `LeaseHeroCard` (`leases/hero_card.dart`, extracted from the former `_LeaseSidebarCard`): unit photo (or tinted placeholder) with a floating status pill, tappable tenant/unit rows, rent fee, and — Active leases only — a term-progress block (new `leaseTermProgress()` in `lib/lease_status.dart`: % elapsed, "Month X of Y", "N days left" turning warning-orange at ≤14 days). Pending leases keep the inline "Start Lease" button in the same card.
+- New `TermsGrid`/`TermCell` (`leases/terms_grid.dart`) — a two-column key/value grid, replacing the single-column `_InfoCard`/`_FieldRow` layout for the Lease Terms and Financial Terms cards (Tenant tab's profile cards keep the old single-column layout).
+- Tab control swapped from `RLFilterChips` to `RLSegmented` (already built, previously unused by this screen); tab labels shortened (`Lease`/`Tenant`/`Docs`/`Expenses`).
+- Tenant tab gained working Call/Message buttons (`tel:`/`sms:` via `url_launcher`, phone whitespace stripped before building the URI).
+- New `_LeaseStickyActionBar`: for an Active lease, a persistent bottom bar with dimmed, non-interactive Renew/Terminate Lease buttons (moved out of the hero card) — both stay disabled since no backend endpoint exists for either action yet.
+- New test: `test/lib/lease_status_test.dart` (4 cases for `leaseTermProgress`).
+- Modules affected: `lib/lease_status.dart` (extended), `modules/main/leases/detail.dart` (rewritten layout, dead `_LeaseSidebarCard`/old `_LinkRow`/`_DateRow` deleted), `modules/main/leases/hero_card.dart` (new), `modules/main/leases/terms_grid.dart` (new).
+
 ## 2026-07-24 — Delete property flow + Archived properties/restore (real)
 - Redesigned the property settings Danger Zone card (`properties/settings/hub.dart`) from a non-functional "Archive property" mock `AlertDialog` into a real "Delete property" card, ported from the Figma "Delete Property Flow" spec (same design source already implemented on the web portal).
 - New `PropertyDeleteScreen` (`properties/settings/delete.dart`, `/properties/:id/settings/delete`) — one screen, internal stage state: fetches `GET .../deletion:preview`, branches on `can_delete` into a Blocked view (blocking leases/bookings/applications, "Resolve" deep-links to `/more/leases` for lease blockers) or a Confirm view (impact summary from `will_be_deleted`, type-the-property-name-to-confirm gated client-side only, matching the web portal's own validation), calls `DELETE .../{property_id}` on confirm, ends on a local Done stage.

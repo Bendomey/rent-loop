@@ -90,8 +90,15 @@ class _ArchivedPropertiesScreenState
     final result = ref.read(restorePropertyNotifierProvider);
     if (result.status.isSuccess()) {
       await Haptics.vibrate(HapticsType.success);
-      ref.invalidate(archivedPropertiesNotifierProvider);
-      ref.invalidate(propertiesNotifierProvider);
+      final search = _searchController.text.isEmpty
+          ? null
+          : _searchController.text;
+      ref
+          .read(archivedPropertiesNotifierProvider.notifier)
+          .loadFirstPage(search: search);
+      ref
+          .read(propertiesNotifierProvider.notifier)
+          .loadFirstPage(const PropertiesQuery());
       ref.read(restorePropertyNotifierProvider.notifier).reset();
       _closeRestoreSheet();
       if (mounted) {

@@ -907,7 +907,12 @@ class RLBackHeader extends StatelessWidget {
             child: Row(
               children: [
                 GestureDetector(
-                  onTap: onBack ?? () => Navigator.of(context).pop(),
+                  onTap:
+                      onBack ??
+                      () {
+                        final navigator = Navigator.of(context);
+                        if (navigator.canPop()) navigator.pop();
+                      },
                   child: Padding(
                     padding: const EdgeInsets.all(6),
                     child: Icon(Icons.chevron_left, size: 26, color: fg),

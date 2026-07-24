@@ -52,6 +52,72 @@ DateTime leaseEndDate(LeaseModel lease) {
   }
 }
 
+/// Move-in → move-out progress for the lease detail hero card's term bar.
+/// `percent` is elapsed/total duration in days, clamped to [0, 100].
+/// `daysLeft` may be negative if the lease has already passed its end date
+/// (not yet renewed/terminated). `monthsTotal` prefers `stay_duration` when
+/// it's expressed in months; otherwise it's the whole-month span between
+/// start and end (minimum 1, so `monthOf`/`monthsTotal` are never "0 of 0").
+class LeaseTermProgress {
+  const LeaseTermProgress({
+    required this.percent,
+    required this.daysLeft,
+    required this.monthOf,
+    required this.monthsTotal,
+  });
+
+  final double percent;
+  final int daysLeft;
+  final int monthOf;
+  final int monthsTotal;
+}
+
+int _wholeMonthsBetween(DateTime a, DateTime b) {
+  var months = (b.year - a.year) * 12 + (b.month - a.month);
+  if (b.day < a.day) months -= 1;
+  return months < 0 ? 0 : months;
+}
+
+int _clampInt(int value, int min, int max) {
+  if (value < min) return min;
+  if (value > max) return max;
+  return value;
+}
+
+LeaseTermProgress leaseTermProgress(LeaseModel lease) {
+  final start = DateTime.parse(
+    lease.moveInDate ?? lease.createdAt ?? DateTime.now().toIso8601String(),
+  );
+  final end = leaseEndDate(lease);
+  final now = DateTime.now();
+
+  final totalDays = end.difference(start).inHours / 24;
+  final elapsedDays = now.difference(start).inHours / 24;
+  final percent = totalDays <= 0
+      ? 100.0
+      : ((elapsedDays / totalDays) * 100).clamp(0.0, 100.0);
+
+  final daysLeft = end.difference(now).inHours ~/ 24;
+
+  final monthSpan = _wholeMonthsBetween(start, end);
+  final monthsTotal =
+      lease.stayDuration != null &&
+          (lease.stayDurationFrequency?.toLowerCase().startsWith('month') ??
+              false)
+      ? lease.stayDuration!
+      : (monthSpan < 1 ? 1 : monthSpan);
+
+  final monthsElapsed = _wholeMonthsBetween(start, now);
+  final monthOf = _clampInt(monthsElapsed + 1, 1, monthsTotal);
+
+  return LeaseTermProgress(
+    percent: percent,
+    daysLeft: daysLeft,
+    monthOf: monthOf,
+    monthsTotal: monthsTotal,
+  );
+}
+
 /// Whether the check-in reminder banner should be shown.
 /// Shows when: no CHECK_IN checklist exists, or one exists but is still in
 /// DRAFT (not yet submitted) AND we're within the first 2 payment periods

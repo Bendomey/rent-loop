@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rentloop_manager/src/navigation/routes.dart';
 import 'package:rentloop_manager/src/shared/theme.dart';
+import 'package:rentloop_manager/src/shared/toast.dart';
 
 class RentloopManagerApp extends ConsumerStatefulWidget {
   const RentloopManagerApp({super.key});
@@ -20,6 +21,28 @@ class _RentloopManagerAppState extends ConsumerState<RentloopManagerApp> {
       theme: buildTheme(),
       routerConfig: _router,
       debugShowCheckedModeBanner: false,
+      builder: (context, child) {
+        final toast = ref.watch(rlToastProvider);
+        return Stack(
+          children: [
+            if (child != null) child,
+            if (toast != null)
+              Positioned(
+                left: 14,
+                right: 14,
+                bottom: 10,
+                child: SafeArea(
+                  top: false,
+                  child: RLToastWidget(
+                    toast: toast,
+                    onDismiss: () =>
+                        ref.read(rlToastProvider.notifier).dismiss(),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }

@@ -49,7 +49,9 @@ class _PropertyDeleteScreenState extends ConsumerState<PropertyDeleteScreen> {
     if (result.status.isSuccess()) {
       await Haptics.vibrate(HapticsType.success);
       ref.invalidate(propertyDetailProvider(widget.propertyId));
-      ref.invalidate(propertiesNotifierProvider);
+      ref
+          .read(propertiesNotifierProvider.notifier)
+          .loadFirstPage(const PropertiesQuery());
       ref.invalidate(onboardingChecklistProvider);
       setState(() {
         _deletedPropertyName = propertyName;
@@ -857,7 +859,10 @@ class _DoneStage extends StatelessWidget {
                     kind: RLBtnKind.light,
                     icon: Icons.inventory_2_outlined,
                     full: true,
-                    onPressed: () => context.go('/more/archived-properties'),
+                    onPressed: () {
+                      context.go('/properties');
+                      context.push('/more/archived-properties');
+                    },
                   ),
                   const SizedBox(height: 10),
                   RLBtn(
