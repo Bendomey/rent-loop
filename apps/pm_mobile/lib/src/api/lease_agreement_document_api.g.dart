@@ -13,16 +13,16 @@ String _$leaseAgreementDocumentApiHash() =>
 @ProviderFor(leaseAgreementDocumentApi)
 final leaseAgreementDocumentApiProvider =
     AutoDisposeProvider<LeaseAgreementDocumentApi>.internal(
-      leaseAgreementDocumentApi,
-      name: r'leaseAgreementDocumentApiProvider',
-      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-          ? null
-          : _$leaseAgreementDocumentApiHash,
-      dependencies: null,
-      allTransitiveDependencies: null,
-    );
+  leaseAgreementDocumentApi,
+  name: r'leaseAgreementDocumentApiProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$leaseAgreementDocumentApiHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
 
-typedef LeaseAgreementDocumentApiRef =
-    AutoDisposeProviderRef<LeaseAgreementDocumentApi>;
+typedef LeaseAgreementDocumentApiRef
+    = AutoDisposeProviderRef<LeaseAgreementDocumentApi>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

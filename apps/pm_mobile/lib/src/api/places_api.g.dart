@@ -1,24 +1,24 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'unit_api.dart';
+part of 'places_api.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$unitApiHash() => r'a78cd0f8dc9eaa30c674436d1d007bb82ec732b4';
+String _$placesApiHash() => r'085d5fa7dd1ba42fb42a7094d90c0a3f2dbe01bf';
 
-/// See also [unitApi].
-@ProviderFor(unitApi)
-final unitApiProvider = AutoDisposeProvider<UnitApi>.internal(
-  unitApi,
-  name: r'unitApiProvider',
+/// See also [placesApi].
+@ProviderFor(placesApi)
+final placesApiProvider = AutoDisposeProvider<PlacesApi>.internal(
+  placesApi,
+  name: r'placesApiProvider',
   debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$unitApiHash,
+      const bool.fromEnvironment('dart.vm.product') ? null : _$placesApiHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef UnitApiRef = AutoDisposeProviderRef<UnitApi>;
+typedef PlacesApiRef = AutoDisposeProviderRef<PlacesApi>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

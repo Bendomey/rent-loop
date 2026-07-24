@@ -16,21 +16,18 @@ String _$generateSigningTokenNotifierHash() =>
 ///
 /// Copied from [GenerateSigningTokenNotifier].
 @ProviderFor(GenerateSigningTokenNotifier)
-final generateSigningTokenNotifierProvider =
-    AutoDisposeNotifierProvider<
-      GenerateSigningTokenNotifier,
-      GenerateSigningTokenState
-    >.internal(
-      GenerateSigningTokenNotifier.new,
-      name: r'generateSigningTokenNotifierProvider',
-      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-          ? null
-          : _$generateSigningTokenNotifierHash,
-      dependencies: null,
-      allTransitiveDependencies: null,
-    );
+final generateSigningTokenNotifierProvider = AutoDisposeNotifierProvider<
+    GenerateSigningTokenNotifier, GenerateSigningTokenState>.internal(
+  GenerateSigningTokenNotifier.new,
+  name: r'generateSigningTokenNotifierProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$generateSigningTokenNotifierHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
 
-typedef _$GenerateSigningTokenNotifier =
-    AutoDisposeNotifier<GenerateSigningTokenState>;
+typedef _$GenerateSigningTokenNotifier
+    = AutoDisposeNotifier<GenerateSigningTokenState>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

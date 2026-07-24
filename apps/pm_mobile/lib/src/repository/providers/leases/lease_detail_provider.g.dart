@@ -39,15 +39,24 @@ class LeaseDetailFamily extends Family<AsyncValue<LeaseModel>> {
   const LeaseDetailFamily();
 
   /// See also [leaseDetail].
-  LeaseDetailProvider call(String propertyId, String leaseId) {
-    return LeaseDetailProvider(propertyId, leaseId);
+  LeaseDetailProvider call(
+    String propertyId,
+    String leaseId,
+  ) {
+    return LeaseDetailProvider(
+      propertyId,
+      leaseId,
+    );
   }
 
   @override
   LeaseDetailProvider getProviderOverride(
     covariant LeaseDetailProvider provider,
   ) {
-    return call(provider.propertyId, provider.leaseId);
+    return call(
+      provider.propertyId,
+      provider.leaseId,
+    );
   }
 
   static const Iterable<ProviderOrFamily>? _dependencies = null;
@@ -68,19 +77,27 @@ class LeaseDetailFamily extends Family<AsyncValue<LeaseModel>> {
 /// See also [leaseDetail].
 class LeaseDetailProvider extends AutoDisposeFutureProvider<LeaseModel> {
   /// See also [leaseDetail].
-  LeaseDetailProvider(String propertyId, String leaseId)
-    : this._internal(
-        (ref) => leaseDetail(ref as LeaseDetailRef, propertyId, leaseId),
-        from: leaseDetailProvider,
-        name: r'leaseDetailProvider',
-        debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-            ? null
-            : _$leaseDetailHash,
-        dependencies: LeaseDetailFamily._dependencies,
-        allTransitiveDependencies: LeaseDetailFamily._allTransitiveDependencies,
-        propertyId: propertyId,
-        leaseId: leaseId,
-      );
+  LeaseDetailProvider(
+    String propertyId,
+    String leaseId,
+  ) : this._internal(
+          (ref) => leaseDetail(
+            ref as LeaseDetailRef,
+            propertyId,
+            leaseId,
+          ),
+          from: leaseDetailProvider,
+          name: r'leaseDetailProvider',
+          debugGetCreateSourceHash:
+              const bool.fromEnvironment('dart.vm.product')
+                  ? null
+                  : _$leaseDetailHash,
+          dependencies: LeaseDetailFamily._dependencies,
+          allTransitiveDependencies:
+              LeaseDetailFamily._allTransitiveDependencies,
+          propertyId: propertyId,
+          leaseId: leaseId,
+        );
 
   LeaseDetailProvider._internal(
     super._createNotifier, {
@@ -146,8 +163,7 @@ mixin LeaseDetailRef on AutoDisposeFutureProviderRef<LeaseModel> {
 }
 
 class _LeaseDetailProviderElement
-    extends AutoDisposeFutureProviderElement<LeaseModel>
-    with LeaseDetailRef {
+    extends AutoDisposeFutureProviderElement<LeaseModel> with LeaseDetailRef {
   _LeaseDetailProviderElement(super.provider);
 
   @override
@@ -155,6 +171,5 @@ class _LeaseDetailProviderElement
   @override
   String get leaseId => (origin as LeaseDetailProvider).leaseId;
 }
-
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

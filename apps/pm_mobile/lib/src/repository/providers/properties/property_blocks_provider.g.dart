@@ -39,15 +39,21 @@ class PropertyBlocksFamily extends Family<AsyncValue<PropertyBlocksPage>> {
   const PropertyBlocksFamily();
 
   /// See also [propertyBlocks].
-  PropertyBlocksProvider call(String propertyId) {
-    return PropertyBlocksProvider(propertyId);
+  PropertyBlocksProvider call(
+    String propertyId,
+  ) {
+    return PropertyBlocksProvider(
+      propertyId,
+    );
   }
 
   @override
   PropertyBlocksProvider getProviderOverride(
     covariant PropertyBlocksProvider provider,
   ) {
-    return call(provider.propertyId);
+    return call(
+      provider.propertyId,
+    );
   }
 
   static const Iterable<ProviderOrFamily>? _dependencies = null;
@@ -69,19 +75,24 @@ class PropertyBlocksFamily extends Family<AsyncValue<PropertyBlocksPage>> {
 class PropertyBlocksProvider
     extends AutoDisposeFutureProvider<PropertyBlocksPage> {
   /// See also [propertyBlocks].
-  PropertyBlocksProvider(String propertyId)
-    : this._internal(
-        (ref) => propertyBlocks(ref as PropertyBlocksRef, propertyId),
-        from: propertyBlocksProvider,
-        name: r'propertyBlocksProvider',
-        debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-            ? null
-            : _$propertyBlocksHash,
-        dependencies: PropertyBlocksFamily._dependencies,
-        allTransitiveDependencies:
-            PropertyBlocksFamily._allTransitiveDependencies,
-        propertyId: propertyId,
-      );
+  PropertyBlocksProvider(
+    String propertyId,
+  ) : this._internal(
+          (ref) => propertyBlocks(
+            ref as PropertyBlocksRef,
+            propertyId,
+          ),
+          from: propertyBlocksProvider,
+          name: r'propertyBlocksProvider',
+          debugGetCreateSourceHash:
+              const bool.fromEnvironment('dart.vm.product')
+                  ? null
+                  : _$propertyBlocksHash,
+          dependencies: PropertyBlocksFamily._dependencies,
+          allTransitiveDependencies:
+              PropertyBlocksFamily._allTransitiveDependencies,
+          propertyId: propertyId,
+        );
 
   PropertyBlocksProvider._internal(
     super._createNotifier, {
@@ -145,6 +156,5 @@ class _PropertyBlocksProviderElement
   @override
   String get propertyId => (origin as PropertyBlocksProvider).propertyId;
 }
-
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

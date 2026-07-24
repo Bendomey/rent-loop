@@ -19,14 +19,14 @@ String _$startLeaseNotifierHash() =>
 @ProviderFor(StartLeaseNotifier)
 final startLeaseNotifierProvider =
     AutoDisposeNotifierProvider<StartLeaseNotifier, StartLeaseState>.internal(
-      StartLeaseNotifier.new,
-      name: r'startLeaseNotifierProvider',
-      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-          ? null
-          : _$startLeaseNotifierHash,
-      dependencies: null,
-      allTransitiveDependencies: null,
-    );
+  StartLeaseNotifier.new,
+  name: r'startLeaseNotifierProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$startLeaseNotifierHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
 
 typedef _$StartLeaseNotifier = AutoDisposeNotifier<StartLeaseState>;
 // ignore_for_file: type=lint

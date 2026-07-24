@@ -16,19 +16,16 @@ String _$signAsManagerNotifierHash() =>
 ///
 /// Copied from [SignAsManagerNotifier].
 @ProviderFor(SignAsManagerNotifier)
-final signAsManagerNotifierProvider =
-    AutoDisposeNotifierProvider<
-      SignAsManagerNotifier,
-      SignAsManagerState
-    >.internal(
-      SignAsManagerNotifier.new,
-      name: r'signAsManagerNotifierProvider',
-      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-          ? null
-          : _$signAsManagerNotifierHash,
-      dependencies: null,
-      allTransitiveDependencies: null,
-    );
+final signAsManagerNotifierProvider = AutoDisposeNotifierProvider<
+    SignAsManagerNotifier, SignAsManagerState>.internal(
+  SignAsManagerNotifier.new,
+  name: r'signAsManagerNotifierProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$signAsManagerNotifierHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
 
 typedef _$SignAsManagerNotifier = AutoDisposeNotifier<SignAsManagerState>;
 // ignore_for_file: type=lint

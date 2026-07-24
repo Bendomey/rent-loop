@@ -13,14 +13,14 @@ String _$deleteBlockNotifierHash() =>
 @ProviderFor(DeleteBlockNotifier)
 final deleteBlockNotifierProvider =
     AutoDisposeNotifierProvider<DeleteBlockNotifier, DeleteBlockState>.internal(
-      DeleteBlockNotifier.new,
-      name: r'deleteBlockNotifierProvider',
-      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-          ? null
-          : _$deleteBlockNotifierHash,
-      dependencies: null,
-      allTransitiveDependencies: null,
-    );
+  DeleteBlockNotifier.new,
+  name: r'deleteBlockNotifierProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$deleteBlockNotifierHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
 
 typedef _$DeleteBlockNotifier = AutoDisposeNotifier<DeleteBlockState>;
 // ignore_for_file: type=lint

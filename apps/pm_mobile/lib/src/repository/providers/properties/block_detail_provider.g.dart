@@ -39,15 +39,24 @@ class BlockDetailFamily extends Family<AsyncValue<PropertyBlockModel>> {
   const BlockDetailFamily();
 
   /// See also [blockDetail].
-  BlockDetailProvider call(String propertyId, String blockId) {
-    return BlockDetailProvider(propertyId, blockId);
+  BlockDetailProvider call(
+    String propertyId,
+    String blockId,
+  ) {
+    return BlockDetailProvider(
+      propertyId,
+      blockId,
+    );
   }
 
   @override
   BlockDetailProvider getProviderOverride(
     covariant BlockDetailProvider provider,
   ) {
-    return call(provider.propertyId, provider.blockId);
+    return call(
+      provider.propertyId,
+      provider.blockId,
+    );
   }
 
   static const Iterable<ProviderOrFamily>? _dependencies = null;
@@ -69,19 +78,27 @@ class BlockDetailFamily extends Family<AsyncValue<PropertyBlockModel>> {
 class BlockDetailProvider
     extends AutoDisposeFutureProvider<PropertyBlockModel> {
   /// See also [blockDetail].
-  BlockDetailProvider(String propertyId, String blockId)
-    : this._internal(
-        (ref) => blockDetail(ref as BlockDetailRef, propertyId, blockId),
-        from: blockDetailProvider,
-        name: r'blockDetailProvider',
-        debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-            ? null
-            : _$blockDetailHash,
-        dependencies: BlockDetailFamily._dependencies,
-        allTransitiveDependencies: BlockDetailFamily._allTransitiveDependencies,
-        propertyId: propertyId,
-        blockId: blockId,
-      );
+  BlockDetailProvider(
+    String propertyId,
+    String blockId,
+  ) : this._internal(
+          (ref) => blockDetail(
+            ref as BlockDetailRef,
+            propertyId,
+            blockId,
+          ),
+          from: blockDetailProvider,
+          name: r'blockDetailProvider',
+          debugGetCreateSourceHash:
+              const bool.fromEnvironment('dart.vm.product')
+                  ? null
+                  : _$blockDetailHash,
+          dependencies: BlockDetailFamily._dependencies,
+          allTransitiveDependencies:
+              BlockDetailFamily._allTransitiveDependencies,
+          propertyId: propertyId,
+          blockId: blockId,
+        );
 
   BlockDetailProvider._internal(
     super._createNotifier, {
@@ -156,6 +173,5 @@ class _BlockDetailProviderElement
   @override
   String get blockId => (origin as BlockDetailProvider).blockId;
 }
-
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

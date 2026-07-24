@@ -13,9 +13,8 @@ String _$tenantApiHash() => r'0392667f5bac34c8c655b21c45f4cec741236e8e';
 final tenantApiProvider = AutoDisposeProvider<TenantApi>.internal(
   tenantApi,
   name: r'tenantApiProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$tenantApiHash,
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$tenantApiHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );

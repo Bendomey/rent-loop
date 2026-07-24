@@ -11,19 +11,16 @@ String _$submitChecklistNotifierHash() =>
 
 /// See also [SubmitChecklistNotifier].
 @ProviderFor(SubmitChecklistNotifier)
-final submitChecklistNotifierProvider =
-    AutoDisposeNotifierProvider<
-      SubmitChecklistNotifier,
-      SubmitChecklistState
-    >.internal(
-      SubmitChecklistNotifier.new,
-      name: r'submitChecklistNotifierProvider',
-      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-          ? null
-          : _$submitChecklistNotifierHash,
-      dependencies: null,
-      allTransitiveDependencies: null,
-    );
+final submitChecklistNotifierProvider = AutoDisposeNotifierProvider<
+    SubmitChecklistNotifier, SubmitChecklistState>.internal(
+  SubmitChecklistNotifier.new,
+  name: r'submitChecklistNotifierProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$submitChecklistNotifierHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
 
 typedef _$SubmitChecklistNotifier = AutoDisposeNotifier<SubmitChecklistState>;
 // ignore_for_file: type=lint

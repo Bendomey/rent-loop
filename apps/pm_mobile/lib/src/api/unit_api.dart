@@ -97,6 +97,7 @@ class UnitApi extends AbstractApi {
       'rent_fee_currency': rentFeeCurrency,
       'payment_frequency': paymentFrequency,
       'max_occupants_allowed': maxOccupantsAllowed,
+      'features': const {},
     };
 
     final response = await execute(

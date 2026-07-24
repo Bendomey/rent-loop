@@ -11,9 +11,8 @@ PropertyBlockModel _$PropertyBlockModelFromJson(Map<String, dynamic> json) =>
       id: json['id'] as String,
       name: json['name'] as String,
       description: json['description'] as String?,
-      images: (json['images'] as List<dynamic>?)
-          ?.map((e) => e as String)
-          .toList(),
+      images:
+          (json['images'] as List<dynamic>?)?.map((e) => e as String).toList(),
       status: json['status'] as String,
       unitsCount: (json['units_count'] as num).toInt(),
       createdAt: json['created_at'] as String?,

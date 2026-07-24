@@ -40,15 +40,24 @@ class LeaseChecklistsFamily
   const LeaseChecklistsFamily();
 
   /// See also [leaseChecklists].
-  LeaseChecklistsProvider call(String propertyId, String leaseId) {
-    return LeaseChecklistsProvider(propertyId, leaseId);
+  LeaseChecklistsProvider call(
+    String propertyId,
+    String leaseId,
+  ) {
+    return LeaseChecklistsProvider(
+      propertyId,
+      leaseId,
+    );
   }
 
   @override
   LeaseChecklistsProvider getProviderOverride(
     covariant LeaseChecklistsProvider provider,
   ) {
-    return call(provider.propertyId, provider.leaseId);
+    return call(
+      provider.propertyId,
+      provider.leaseId,
+    );
   }
 
   static const Iterable<ProviderOrFamily>? _dependencies = null;
@@ -70,21 +79,27 @@ class LeaseChecklistsFamily
 class LeaseChecklistsProvider
     extends AutoDisposeFutureProvider<List<LeaseChecklistModel>> {
   /// See also [leaseChecklists].
-  LeaseChecklistsProvider(String propertyId, String leaseId)
-    : this._internal(
-        (ref) =>
-            leaseChecklists(ref as LeaseChecklistsRef, propertyId, leaseId),
-        from: leaseChecklistsProvider,
-        name: r'leaseChecklistsProvider',
-        debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-            ? null
-            : _$leaseChecklistsHash,
-        dependencies: LeaseChecklistsFamily._dependencies,
-        allTransitiveDependencies:
-            LeaseChecklistsFamily._allTransitiveDependencies,
-        propertyId: propertyId,
-        leaseId: leaseId,
-      );
+  LeaseChecklistsProvider(
+    String propertyId,
+    String leaseId,
+  ) : this._internal(
+          (ref) => leaseChecklists(
+            ref as LeaseChecklistsRef,
+            propertyId,
+            leaseId,
+          ),
+          from: leaseChecklistsProvider,
+          name: r'leaseChecklistsProvider',
+          debugGetCreateSourceHash:
+              const bool.fromEnvironment('dart.vm.product')
+                  ? null
+                  : _$leaseChecklistsHash,
+          dependencies: LeaseChecklistsFamily._dependencies,
+          allTransitiveDependencies:
+              LeaseChecklistsFamily._allTransitiveDependencies,
+          propertyId: propertyId,
+          leaseId: leaseId,
+        );
 
   LeaseChecklistsProvider._internal(
     super._createNotifier, {
@@ -103,7 +118,7 @@ class LeaseChecklistsProvider
   @override
   Override overrideWith(
     FutureOr<List<LeaseChecklistModel>> Function(LeaseChecklistsRef provider)
-    create,
+        create,
   ) {
     return ProviderOverride(
       origin: this,
@@ -161,6 +176,5 @@ class _LeaseChecklistsProviderElement
   @override
   String get leaseId => (origin as LeaseChecklistsProvider).leaseId;
 }
-
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

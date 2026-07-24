@@ -16,14 +16,14 @@ String _$blocksNotifierHash() => r'193c623d32f7e6779387e0c92effaaa25b0d9c9b';
 @ProviderFor(BlocksNotifier)
 final blocksNotifierProvider =
     AutoDisposeNotifierProvider<BlocksNotifier, BlocksState>.internal(
-      BlocksNotifier.new,
-      name: r'blocksNotifierProvider',
-      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-          ? null
-          : _$blocksNotifierHash,
-      dependencies: null,
-      allTransitiveDependencies: null,
-    );
+  BlocksNotifier.new,
+  name: r'blocksNotifierProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$blocksNotifierHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
 
 typedef _$BlocksNotifier = AutoDisposeNotifier<BlocksState>;
 // ignore_for_file: type=lint

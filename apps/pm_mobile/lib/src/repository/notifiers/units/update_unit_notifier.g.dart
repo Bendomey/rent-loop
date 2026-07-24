@@ -13,14 +13,14 @@ String _$updateUnitNotifierHash() =>
 @ProviderFor(UpdateUnitNotifier)
 final updateUnitNotifierProvider =
     AutoDisposeNotifierProvider<UpdateUnitNotifier, UpdateUnitState>.internal(
-      UpdateUnitNotifier.new,
-      name: r'updateUnitNotifierProvider',
-      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-          ? null
-          : _$updateUnitNotifierHash,
-      dependencies: null,
-      allTransitiveDependencies: null,
-    );
+  UpdateUnitNotifier.new,
+  name: r'updateUnitNotifierProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$updateUnitNotifierHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
 
 typedef _$UpdateUnitNotifier = AutoDisposeNotifier<UpdateUnitState>;
 // ignore_for_file: type=lint

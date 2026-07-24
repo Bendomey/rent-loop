@@ -17,19 +17,16 @@ String _$linkDocumentNotifierHash() =>
 ///
 /// Copied from [LinkDocumentNotifier].
 @ProviderFor(LinkDocumentNotifier)
-final linkDocumentNotifierProvider =
-    AutoDisposeNotifierProvider<
-      LinkDocumentNotifier,
-      LinkDocumentState
-    >.internal(
-      LinkDocumentNotifier.new,
-      name: r'linkDocumentNotifierProvider',
-      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-          ? null
-          : _$linkDocumentNotifierHash,
-      dependencies: null,
-      allTransitiveDependencies: null,
-    );
+final linkDocumentNotifierProvider = AutoDisposeNotifierProvider<
+    LinkDocumentNotifier, LinkDocumentState>.internal(
+  LinkDocumentNotifier.new,
+  name: r'linkDocumentNotifierProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$linkDocumentNotifierHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
 
 typedef _$LinkDocumentNotifier = AutoDisposeNotifier<LinkDocumentState>;
 // ignore_for_file: type=lint

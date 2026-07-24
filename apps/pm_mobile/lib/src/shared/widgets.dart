@@ -475,38 +475,41 @@ class RLBtn extends StatelessWidget {
         Border.all(color: RLTokens.crimsonTint2, width: 1.5),
       ),
     };
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        width: full ? double.infinity : null,
-        padding: EdgeInsets.symmetric(
-          horizontal: 18,
-          vertical: large ? 15 : 11,
-        ),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(RLTokens.rMd),
-          border: border,
-        ),
-        child: Row(
-          mainAxisSize: full ? MainAxisSize.max : MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (icon != null) ...[
-              Icon(icon, size: 18, color: fg),
-              const SizedBox(width: 8),
-            ],
-            Text(
-              label,
-              style: TextStyle(
-                fontFamily: RLTokens.fontSans,
-                fontSize: large ? RLTokens.textAction : 14,
-                fontWeight: RLTokens.semibold,
-                color: fg,
-                letterSpacing: 0.1,
+    return Opacity(
+      opacity: onPressed == null ? 0.4 : 1,
+      child: GestureDetector(
+        onTap: onPressed,
+        child: Container(
+          width: full ? double.infinity : null,
+          padding: EdgeInsets.symmetric(
+            horizontal: 18,
+            vertical: large ? 15 : 11,
+          ),
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(RLTokens.rMd),
+            border: border,
+          ),
+          child: Row(
+            mainAxisSize: full ? MainAxisSize.max : MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (icon != null) ...[
+                Icon(icon, size: 18, color: fg),
+                const SizedBox(width: 8),
+              ],
+              Text(
+                label,
+                style: TextStyle(
+                  fontFamily: RLTokens.fontSans,
+                  fontSize: large ? RLTokens.textAction : 14,
+                  fontWeight: RLTokens.semibold,
+                  color: fg,
+                  letterSpacing: 0.1,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

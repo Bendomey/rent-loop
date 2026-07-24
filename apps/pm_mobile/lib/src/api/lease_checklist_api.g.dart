@@ -12,14 +12,14 @@ String _$leaseChecklistApiHash() => r'99edf7dd02c765b877ae13c3a108573fbae98142';
 @ProviderFor(leaseChecklistApi)
 final leaseChecklistApiProvider =
     AutoDisposeProvider<LeaseChecklistApi>.internal(
-      leaseChecklistApi,
-      name: r'leaseChecklistApiProvider',
-      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-          ? null
-          : _$leaseChecklistApiHash,
-      dependencies: null,
-      allTransitiveDependencies: null,
-    );
+  leaseChecklistApi,
+  name: r'leaseChecklistApiProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$leaseChecklistApiHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
 
 typedef LeaseChecklistApiRef = AutoDisposeProviderRef<LeaseChecklistApi>;
 // ignore_for_file: type=lint

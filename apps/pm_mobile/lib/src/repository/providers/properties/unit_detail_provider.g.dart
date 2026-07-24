@@ -39,15 +39,24 @@ class UnitDetailFamily extends Family<AsyncValue<UnitModel>> {
   const UnitDetailFamily();
 
   /// See also [unitDetail].
-  UnitDetailProvider call(String propertyId, String unitId) {
-    return UnitDetailProvider(propertyId, unitId);
+  UnitDetailProvider call(
+    String propertyId,
+    String unitId,
+  ) {
+    return UnitDetailProvider(
+      propertyId,
+      unitId,
+    );
   }
 
   @override
   UnitDetailProvider getProviderOverride(
     covariant UnitDetailProvider provider,
   ) {
-    return call(provider.propertyId, provider.unitId);
+    return call(
+      provider.propertyId,
+      provider.unitId,
+    );
   }
 
   static const Iterable<ProviderOrFamily>? _dependencies = null;
@@ -68,19 +77,27 @@ class UnitDetailFamily extends Family<AsyncValue<UnitModel>> {
 /// See also [unitDetail].
 class UnitDetailProvider extends AutoDisposeFutureProvider<UnitModel> {
   /// See also [unitDetail].
-  UnitDetailProvider(String propertyId, String unitId)
-    : this._internal(
-        (ref) => unitDetail(ref as UnitDetailRef, propertyId, unitId),
-        from: unitDetailProvider,
-        name: r'unitDetailProvider',
-        debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-            ? null
-            : _$unitDetailHash,
-        dependencies: UnitDetailFamily._dependencies,
-        allTransitiveDependencies: UnitDetailFamily._allTransitiveDependencies,
-        propertyId: propertyId,
-        unitId: unitId,
-      );
+  UnitDetailProvider(
+    String propertyId,
+    String unitId,
+  ) : this._internal(
+          (ref) => unitDetail(
+            ref as UnitDetailRef,
+            propertyId,
+            unitId,
+          ),
+          from: unitDetailProvider,
+          name: r'unitDetailProvider',
+          debugGetCreateSourceHash:
+              const bool.fromEnvironment('dart.vm.product')
+                  ? null
+                  : _$unitDetailHash,
+          dependencies: UnitDetailFamily._dependencies,
+          allTransitiveDependencies:
+              UnitDetailFamily._allTransitiveDependencies,
+          propertyId: propertyId,
+          unitId: unitId,
+        );
 
   UnitDetailProvider._internal(
     super._createNotifier, {
@@ -146,8 +163,7 @@ mixin UnitDetailRef on AutoDisposeFutureProviderRef<UnitModel> {
 }
 
 class _UnitDetailProviderElement
-    extends AutoDisposeFutureProviderElement<UnitModel>
-    with UnitDetailRef {
+    extends AutoDisposeFutureProviderElement<UnitModel> with UnitDetailRef {
   _UnitDetailProviderElement(super.provider);
 
   @override
@@ -155,6 +171,5 @@ class _UnitDetailProviderElement
   @override
   String get unitId => (origin as UnitDetailProvider).unitId;
 }
-
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

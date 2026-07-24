@@ -315,29 +315,18 @@ class _LeaseStickyActionBar extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Expanded(
-              child: Opacity(
-                opacity: 0.5,
-                child: IgnorePointer(
-                  child: RLBtn(
-                    label: 'Renew',
-                    kind: RLBtnKind.light,
-                    full: true,
-                  ),
-                ),
-              ),
+            // No `onPressed` — RLBtn dims itself when disabled. Neither
+            // action has a backend endpoint yet (see the plan/changelog),
+            // so both stay permanently non-interactive.
+            const Expanded(
+              child: RLBtn(label: 'Renew', kind: RLBtnKind.light, full: true),
             ),
             const SizedBox(width: 10),
-            Expanded(
-              child: Opacity(
-                opacity: 0.5,
-                child: IgnorePointer(
-                  child: RLBtn(
-                    label: 'Terminate Lease',
-                    kind: RLBtnKind.danger,
-                    full: true,
-                  ),
-                ),
+            const Expanded(
+              child: RLBtn(
+                label: 'Terminate Lease',
+                kind: RLBtnKind.danger,
+                full: true,
               ),
             ),
           ],

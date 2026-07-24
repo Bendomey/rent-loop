@@ -13,9 +13,8 @@ String _$signingApiHash() => r'815a288039d7e4d6c83a7447c15d53ac5bf65e4a';
 final signingApiProvider = AutoDisposeProvider<SigningApi>.internal(
   signingApi,
   name: r'signingApiProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$signingApiHash,
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$signingApiHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );

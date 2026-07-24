@@ -82,6 +82,56 @@ class PropertyApi extends AbstractApi {
     return PropertyModel.fromJson(json['data'] as Map<String, dynamic>);
   }
 
+  /// `POST .../properties` — creates a new property. Every field maps
+  /// 1:1 onto `CreatePropertyRequest` (`services/main/internal/handlers/property.go`);
+  /// `gps_address` is correct snake_case on the wire (a prior mismatch —
+  /// the backend previously tagged it `gpsAddress` while every other field
+  /// and the response DTO used snake_case — was fixed backend-side ahead
+  /// of this method, so no client-side workaround is needed here).
+  Future<PropertyModel> createProperty({
+    required String clientId,
+    required String type,
+    required String status,
+    required String name,
+    String? description,
+    List<String>? tags,
+    List<String>? images,
+    required List<String> modes,
+    required String address,
+    required String city,
+    required String region,
+    required String country,
+    required double latitude,
+    required double longitude,
+    String? gpsAddress,
+  }) async {
+    final body = <String, dynamic>{
+      'type': type,
+      'status': status,
+      'name': name,
+      if (description != null && description.isNotEmpty)
+        'description': description,
+      if (tags != null && tags.isNotEmpty) 'tags': tags,
+      if (images != null && images.isNotEmpty) 'images': images,
+      'modes': modes,
+      'address': address,
+      'city': city,
+      'region': region,
+      'country': country,
+      'latitude': latitude,
+      'longitude': longitude,
+      if (gpsAddress != null && gpsAddress.isNotEmpty)
+        'gps_address': gpsAddress,
+    };
+    final response = await execute(
+      method: 'POST',
+      path: '/api/v1/admin/clients/$clientId/properties',
+      body: body,
+    );
+    final json = jsonDecode(response.body) as Map<String, dynamic>;
+    return PropertyModel.fromJson(json['data'] as Map<String, dynamic>);
+  }
+
   Future<PropertyDeletionPreviewModel> getPropertyDeletionPreview({
     required String clientId,
     required String propertyId,

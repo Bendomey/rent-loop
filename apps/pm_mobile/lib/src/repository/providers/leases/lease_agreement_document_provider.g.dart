@@ -53,15 +53,24 @@ class LeaseAgreementDocumentFamily
   /// expected state (not an error), see `LeaseAgreementDocumentApi.getDocument()`.
   ///
   /// Copied from [leaseAgreementDocument].
-  LeaseAgreementDocumentProvider call(String propertyId, String leaseId) {
-    return LeaseAgreementDocumentProvider(propertyId, leaseId);
+  LeaseAgreementDocumentProvider call(
+    String propertyId,
+    String leaseId,
+  ) {
+    return LeaseAgreementDocumentProvider(
+      propertyId,
+      leaseId,
+    );
   }
 
   @override
   LeaseAgreementDocumentProvider getProviderOverride(
     covariant LeaseAgreementDocumentProvider provider,
   ) {
-    return call(provider.propertyId, provider.leaseId);
+    return call(
+      provider.propertyId,
+      provider.leaseId,
+    );
   }
 
   static const Iterable<ProviderOrFamily>? _dependencies = null;
@@ -89,24 +98,27 @@ class LeaseAgreementDocumentProvider
   /// expected state (not an error), see `LeaseAgreementDocumentApi.getDocument()`.
   ///
   /// Copied from [leaseAgreementDocument].
-  LeaseAgreementDocumentProvider(String propertyId, String leaseId)
-    : this._internal(
-        (ref) => leaseAgreementDocument(
-          ref as LeaseAgreementDocumentRef,
-          propertyId,
-          leaseId,
-        ),
-        from: leaseAgreementDocumentProvider,
-        name: r'leaseAgreementDocumentProvider',
-        debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-            ? null
-            : _$leaseAgreementDocumentHash,
-        dependencies: LeaseAgreementDocumentFamily._dependencies,
-        allTransitiveDependencies:
-            LeaseAgreementDocumentFamily._allTransitiveDependencies,
-        propertyId: propertyId,
-        leaseId: leaseId,
-      );
+  LeaseAgreementDocumentProvider(
+    String propertyId,
+    String leaseId,
+  ) : this._internal(
+          (ref) => leaseAgreementDocument(
+            ref as LeaseAgreementDocumentRef,
+            propertyId,
+            leaseId,
+          ),
+          from: leaseAgreementDocumentProvider,
+          name: r'leaseAgreementDocumentProvider',
+          debugGetCreateSourceHash:
+              const bool.fromEnvironment('dart.vm.product')
+                  ? null
+                  : _$leaseAgreementDocumentHash,
+          dependencies: LeaseAgreementDocumentFamily._dependencies,
+          allTransitiveDependencies:
+              LeaseAgreementDocumentFamily._allTransitiveDependencies,
+          propertyId: propertyId,
+          leaseId: leaseId,
+        );
 
   LeaseAgreementDocumentProvider._internal(
     super._createNotifier, {
@@ -125,9 +137,8 @@ class LeaseAgreementDocumentProvider
   @override
   Override overrideWith(
     FutureOr<LeaseAgreementDocumentModel?> Function(
-      LeaseAgreementDocumentRef provider,
-    )
-    create,
+            LeaseAgreementDocumentRef provider)
+        create,
   ) {
     return ProviderOverride(
       origin: this,
@@ -146,7 +157,7 @@ class LeaseAgreementDocumentProvider
 
   @override
   AutoDisposeFutureProviderElement<LeaseAgreementDocumentModel?>
-  createElement() {
+      createElement() {
     return _LeaseAgreementDocumentProviderElement(this);
   }
 
@@ -187,6 +198,5 @@ class _LeaseAgreementDocumentProviderElement
   @override
   String get leaseId => (origin as LeaseAgreementDocumentProvider).leaseId;
 }
-
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

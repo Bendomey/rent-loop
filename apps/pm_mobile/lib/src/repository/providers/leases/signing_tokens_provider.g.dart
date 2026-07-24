@@ -44,14 +44,22 @@ class SigningTokensFamily extends Family<AsyncValue<List<SigningTokenModel>>> {
     String documentId,
     String leaseId,
   ) {
-    return SigningTokensProvider(propertyId, documentId, leaseId);
+    return SigningTokensProvider(
+      propertyId,
+      documentId,
+      leaseId,
+    );
   }
 
   @override
   SigningTokensProvider getProviderOverride(
     covariant SigningTokensProvider provider,
   ) {
-    return call(provider.propertyId, provider.documentId, provider.leaseId);
+    return call(
+      provider.propertyId,
+      provider.documentId,
+      provider.leaseId,
+    );
   }
 
   static const Iterable<ProviderOrFamily>? _dependencies = null;
@@ -73,26 +81,30 @@ class SigningTokensFamily extends Family<AsyncValue<List<SigningTokenModel>>> {
 class SigningTokensProvider
     extends AutoDisposeFutureProvider<List<SigningTokenModel>> {
   /// See also [signingTokens].
-  SigningTokensProvider(String propertyId, String documentId, String leaseId)
-    : this._internal(
-        (ref) => signingTokens(
-          ref as SigningTokensRef,
-          propertyId,
-          documentId,
-          leaseId,
-        ),
-        from: signingTokensProvider,
-        name: r'signingTokensProvider',
-        debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-            ? null
-            : _$signingTokensHash,
-        dependencies: SigningTokensFamily._dependencies,
-        allTransitiveDependencies:
-            SigningTokensFamily._allTransitiveDependencies,
-        propertyId: propertyId,
-        documentId: documentId,
-        leaseId: leaseId,
-      );
+  SigningTokensProvider(
+    String propertyId,
+    String documentId,
+    String leaseId,
+  ) : this._internal(
+          (ref) => signingTokens(
+            ref as SigningTokensRef,
+            propertyId,
+            documentId,
+            leaseId,
+          ),
+          from: signingTokensProvider,
+          name: r'signingTokensProvider',
+          debugGetCreateSourceHash:
+              const bool.fromEnvironment('dart.vm.product')
+                  ? null
+                  : _$signingTokensHash,
+          dependencies: SigningTokensFamily._dependencies,
+          allTransitiveDependencies:
+              SigningTokensFamily._allTransitiveDependencies,
+          propertyId: propertyId,
+          documentId: documentId,
+          leaseId: leaseId,
+        );
 
   SigningTokensProvider._internal(
     super._createNotifier, {
@@ -113,7 +125,7 @@ class SigningTokensProvider
   @override
   Override overrideWith(
     FutureOr<List<SigningTokenModel>> Function(SigningTokensRef provider)
-    create,
+        create,
   ) {
     return ProviderOverride(
       origin: this,
@@ -179,6 +191,5 @@ class _SigningTokensProviderElement
   @override
   String get leaseId => (origin as SigningTokensProvider).leaseId;
 }
-
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
