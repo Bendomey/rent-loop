@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-07-24 — Maintenance board redesign: Jira-style paging + filters
+- Redesigned the maintenance Kanban board's navigation chrome from a pinned status-chip strip + `TabBarView` to full-width swipeable status columns (`PageView`, `viewportFraction: 0.92` for a next-column peek) with a per-column header bar and a tappable page-dot indicator row, matching a Jira mobile board reference
+- Drag-and-drop now auto-pages the board when a dragged card nears either screen edge, since visible chip drop-targets no longer exist; the whole current page is the drop target
+- Added 4 single-select filter chips (Priority, Category, Assigned Worker, Assigned Manager) above the board, each opening a bottom-sheet picker (radio rows, Clear, X close), mirroring the web Kanban board's filter set; filters apply across all 5 columns and their live counts
+- `_MaintData` gained `code` and split `assignedWorker`/`assignedManager` fields (previously one `assigned` field); cards now show `#code` and a dual worker/manager avatar row
+- Design doc: `docs/superpowers/specs/2026-07-24-pm-mobile-maintenance-kanban-redesign-design.md` (supersedes the original board design)
+- Modules affected: `modules/main/activity/`
+
+## 2026-07-24 — Kanban-style maintenance board on PM mobile Activity tab
+- Replaced the Activity tab's grouped maintenance list with a swipeable Kanban-style board (`activity/maintenance_board.dart`): pinned status-chip strip (New/In Progress/In Review/Resolved/Cancelled) + `TabBarView` pages, cards draggable via `LongPressDraggable`/`DragTarget` to change status
+- Resolved and Cancelled moves require confirmation (Cancelled additionally requires a reason via a bottom sheet)
+- Existing `_MaintCard` visuals preserved unchanged; still mock data only, no backend wiring
+- Modules affected: `modules/main/activity/`
+
 ## 2026-07-24 — Create property integration
 - Wired the existing mocked 4-step "Add property" wizard (`properties/add.dart`) to real data — the last mocked piece of the properties module's create/read/update/delete surface (update itself stays out of scope).
 - New `PropertyApi.createProperty()` — `POST .../properties`, sends `gps_address` (see backend fix below).
