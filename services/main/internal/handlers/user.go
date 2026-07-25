@@ -3,20 +3,28 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
+	"github.com/Bendomey/goutilities/pkg/signjwt"
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/services"
 	"github.com/Bendomey/rent-loop/services/main/internal/transformations"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
+	"github.com/dgrijalva/jwt-go"
 )
 
 type UserHandler struct {
-	service services.UserService
-	appCtx  pkg.AppContext
+	service             services.UserService
+	refreshTokenService services.RefreshTokenService
+	appCtx              pkg.AppContext
 }
 
-func NewUserHandler(appCtx pkg.AppContext, service services.UserService) UserHandler {
-	return UserHandler{service, appCtx}
+func NewUserHandler(
+	appCtx pkg.AppContext,
+	service services.UserService,
+	refreshTokenService services.RefreshTokenService,
+) UserHandler {
+	return UserHandler{service, refreshTokenService, appCtx}
 }
 
 type LoginUserRequest struct {
@@ -50,8 +58,10 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	result, err := h.service.LoginUser(r.Context(), services.LoginUserInput{
-		Email:    body.Email,
-		Password: body.Password,
+		Email:     body.Email,
+		Password:  body.Password,
+		UserAgent: UserAgentFromRequest(r),
+		IPAddress: ClientIPFromRequest(r),
 	})
 	if err != nil {
 		HandleErrorResponse(w, err)
@@ -59,8 +69,102 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformations.DBUserToRestWithToken(&result.User, result.Token),
+		"data": transformations.DBUserToRestWithToken(&result.User, transformations.TokenPair{
+			Token:            result.Token,
+			ExpiresIn:        result.ExpiresIn,
+			RefreshToken:     result.RefreshToken,
+			RefreshExpiresIn: result.RefreshExpiresIn,
+		}),
 	})
+}
+
+type RefreshTokenRequest struct {
+	RefreshToken string `json:"refresh_token" validate:"required" example:"3f2504e0-4f89-11d3-9a0c-0305e82c3301:sSx1"`
+}
+
+// RefreshToken godoc
+//
+//	@Summary		Exchange a refresh token for a new token pair (Admin)
+//	@Description	Rotates the presented refresh token and returns a new access token plus a new refresh token. No Authorization header is required — the refresh token itself is the credential. (Admin)
+//	@Tags			Users
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		RefreshTokenRequest								true	"Refresh token"
+//	@Success		200		{object}	object{data=transformations.OutputTokenPair}	"Token pair refreshed successfully"
+//	@Failure		401		{object}	lib.HTTPError									"Refresh token is invalid, revoked, or expired"
+//	@Failure		422		{object}	lib.HTTPError									"Validation error occurred"
+//	@Failure		500		{object}	string											"An unexpected error occurred"
+//	@Router			/api/v1/admin/users/refresh [post]
+func (h *UserHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
+	var body RefreshTokenRequest
+	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+
+	isPassedValidation := lib.ValidateRequest(h.appCtx.Validator, body, w)
+	if !isPassedValidation {
+		return
+	}
+
+	rotated, err := h.refreshTokenService.Rotate(r.Context(), body.RefreshToken)
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	accessTTL := time.Duration(h.appCtx.Config.AuthTokenTTL.AccessTokenHours) * time.Hour
+	token, signErr := signjwt.SignJWT(jwt.MapClaims{
+		"id":  rotated.UserID,
+		"exp": time.Now().Add(accessTTL).Unix(),
+	}, h.appCtx.Config.TokenSecrets.ClientUserSecret)
+	if signErr != nil {
+		HandleErrorResponse(w, pkg.InternalServerError(signErr.Error(), &pkg.RentLoopErrorParams{
+			Err:      signErr,
+			Metadata: map[string]string{"function": "RefreshToken", "action": "signing access token"},
+		}))
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.TokenPairToRest(transformations.TokenPair{
+			Token:            token,
+			ExpiresIn:        int(accessTTL.Seconds()),
+			RefreshToken:     rotated.Token,
+			RefreshExpiresIn: int(h.refreshTokenService.TTL().Seconds()),
+		}),
+	})
+}
+
+// Logout godoc
+//
+//	@Summary		Revoke a refresh token (Admin)
+//	@Description	Ends one session by revoking the presented refresh token. Always returns 204, even for an unknown or already-revoked token — logout must never block a client from clearing its local state. Other sessions for the same user are unaffected. (Admin)
+//	@Tags			Users
+//	@Accept			json
+//	@Param			body	body	RefreshTokenRequest	true	"Refresh token to revoke"
+//	@Success		204		"Session revoked"
+//	@Failure		422		{object}	lib.HTTPError	"Validation error occurred"
+//	@Failure		500		{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/admin/users/logout [post]
+func (h *UserHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	var body RefreshTokenRequest
+	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+
+	isPassedValidation := lib.ValidateRequest(h.appCtx.Validator, body, w)
+	if !isPassedValidation {
+		return
+	}
+
+	if err := h.refreshTokenService.Revoke(r.Context(), body.RefreshToken); err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // GetMe godoc

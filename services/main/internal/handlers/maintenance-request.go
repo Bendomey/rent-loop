@@ -144,9 +144,9 @@ type ListMaintenanceRequestsQuery struct {
 	Category          *string  `json:"category"            query:"category"            description:"Filter by category (free text)"`
 	AssignedWorkerID  *string  `json:"assigned_worker_id"  query:"assigned_worker_id"  description:"Filter by assigned worker UUID"`
 	AssignedManagerID *string  `json:"assigned_manager_id" query:"assigned_manager_id" description:"Filter by assigned manager UUID"`
-	UnitIDs           []string `json:"unit_id"             query:"unit_id"             description:"Filter by one or more unit UUIDs" collectionFormat:"multi"                                     validate:"omitempty,dive,uuid4"`
-	LeaseID           *string  `json:"lease_id"            query:"lease_id"            description:"Filter by lease UUID"                                               validate:"omitempty,uuid4"`
-	TenantID          *string  `json:"tenant_id"           query:"tenant_id"           description:"Filter by tenant UUID"                                              validate:"omitempty,uuid4"`
+	UnitIDs           []string `json:"unit_id"             query:"unit_id"             description:"Filter by one or more unit UUIDs"                                   collectionFormat:"multi" validate:"omitempty,dive,uuid4"`
+	LeaseID           *string  `json:"lease_id"            query:"lease_id"            description:"Filter by lease UUID"                                                                        validate:"omitempty,uuid4"`
+	TenantID          *string  `json:"tenant_id"           query:"tenant_id"           description:"Filter by tenant UUID"                                                                       validate:"omitempty,uuid4"`
 }
 
 // List godoc

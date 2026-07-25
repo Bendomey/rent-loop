@@ -18,6 +18,7 @@ func updateMigration(db *gorm.DB) error {
 		&models.ClientApplication{},
 		&models.Client{},
 		&models.User{},
+		&models.RefreshToken{},
 		&models.ClientUser{},
 		&models.PaymentAccount{},
 		&models.Property{},

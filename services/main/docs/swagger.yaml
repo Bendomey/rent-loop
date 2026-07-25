@@ -1529,6 +1529,14 @@ definitions:
     - last_name
     - phone
     type: object
+  handlers.RefreshTokenRequest:
+    properties:
+      refresh_token:
+        example: 3f2504e0-4f89-11d3-9a0c-0305e82c3301:sSx1
+        type: string
+    required:
+    - refresh_token
+    type: object
   handlers.RegisterFcmTokenRequest:
     properties:
       platform:
@@ -4886,6 +4894,21 @@ definitions:
         example: "2024-06-10T09:00:00Z"
         type: string
     type: object
+  transformations.OutputTokenPair:
+    properties:
+      expires_in:
+        example: 3600
+        type: integer
+      refresh_expires_in:
+        example: 7776000
+        type: integer
+      refresh_token:
+        example: 3f2504e0-4f89-11d3-9a0c-0305e82c3301:sSx1
+        type: string
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+    type: object
   transformations.OutputUnit:
     properties:
       area:
@@ -4963,6 +4986,15 @@ definitions:
     type: object
   transformations.OutputUserWithToken:
     properties:
+      expires_in:
+        example: 3600
+        type: integer
+      refresh_expires_in:
+        example: 7776000
+        type: integer
+      refresh_token:
+        example: 3f2504e0-4f89-11d3-9a0c-0305e82c3301:sSx1
+        type: string
       token:
         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
         type: string
@@ -15593,6 +15625,35 @@ paths:
       summary: Login user and return token (Admin)
       tags:
       - Users
+  /api/v1/admin/users/logout:
+    post:
+      consumes:
+      - application/json
+      description: Ends one session by revoking the presented refresh token. Always
+        returns 204, even for an unknown or already-revoked token — logout must never
+        block a client from clearing its local state. Other sessions for the same
+        user are unaffected. (Admin)
+      parameters:
+      - description: Refresh token to revoke
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.RefreshTokenRequest'
+      responses:
+        "204":
+          description: Session revoked
+        "422":
+          description: Validation error occurred
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      summary: Revoke a refresh token (Admin)
+      tags:
+      - Users
   /api/v1/admin/users/me:
     get:
       consumes:
@@ -15712,6 +15773,45 @@ paths:
       security:
       - BearerAuth: []
       summary: Update the currently authenticated user's password (Admin)
+      tags:
+      - Users
+  /api/v1/admin/users/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Rotates the presented refresh token and returns a new access token
+        plus a new refresh token. No Authorization header is required — the refresh
+        token itself is the credential. (Admin)
+      parameters:
+      - description: Refresh token
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.RefreshTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token pair refreshed successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputTokenPair'
+            type: object
+        "401":
+          description: Refresh token is invalid, revoked, or expired
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error occurred
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      summary: Exchange a refresh token for a new token pair (Admin)
       tags:
       - Users
   /api/v1/admin/users/reset-password:

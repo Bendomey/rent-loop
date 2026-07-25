@@ -180,12 +180,12 @@ func (h *UnitHandler) ListUnits(w http.ResponseWriter, r *http.Request) {
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
-//	@Param			property_id	query		[]string																											false	"Property ID(s) to narrow results to; omit to see every property the caller can access"	collectionFormat(multi)
-//	@Param			q			query		ListUnitsFilterRequest																								true	"Units"
+//	@Param			property_id	query		[]string				false	"Property ID(s) to narrow results to; omit to see every property the caller can access"	collectionFormat(multi)
+//	@Param			q			query		ListUnitsFilterRequest	true	"Units"
 //	@Success		200			{object}	object{data=object{rows=[]transformations.AdminOutputUnit,meta=lib.HTTPReturnPaginatedMetaResponse}}
-//	@Failure		401			{object}	string																												"Invalid or absent authentication token"
-//	@Failure		403			{object}	string																												"Requested property_id is outside the caller's access scope"
-//	@Failure		500			{object}	string																												"An unexpected error occurred"
+//	@Failure		401			{object}	string	"Invalid or absent authentication token"
+//	@Failure		403			{object}	string	"Requested property_id is outside the caller's access scope"
+//	@Failure		500			{object}	string	"An unexpected error occurred"
 //	@Router			/api/v1/admin/clients/{client_id}/units [get]
 func (h *UnitHandler) ListUnitsAcrossProperties(w http.ResponseWriter, r *http.Request) {
 	filterQuery, filterErr := lib.GenerateQuery(r.URL.Query())

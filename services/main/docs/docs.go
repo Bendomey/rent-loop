@@ -16058,6 +16058,46 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/admin/users/logout": {
+            "post": {
+                "description": "Ends one session by revoking the presented refresh token. Always returns 204, even for an unknown or already-revoked token — logout must never block a client from clearing its local state. Other sessions for the same user are unaffected. (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Revoke a refresh token (Admin)",
+                "parameters": [
+                    {
+                        "description": "Refresh token to revoke",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.RefreshTokenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Session revoked"
+                    },
+                    "422": {
+                        "description": "Validation error occurred",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/users/me": {
             "get": {
                 "security": [
@@ -16228,6 +16268,63 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "User not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error occurred",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/users/refresh": {
+            "post": {
+                "description": "Rotates the presented refresh token and returns a new access token plus a new refresh token. No Authorization header is required — the refresh token itself is the credential. (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Exchange a refresh token for a new token pair (Admin)",
+                "parameters": [
+                    {
+                        "description": "Refresh token",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.RefreshTokenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Token pair refreshed successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputTokenPair"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Refresh token is invalid, revoked, or expired",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -22021,6 +22118,18 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.RefreshTokenRequest": {
+            "type": "object",
+            "required": [
+                "refresh_token"
+            ],
+            "properties": {
+                "refresh_token": {
+                    "type": "string",
+                    "example": "3f2504e0-4f89-11d3-9a0c-0305e82c3301:sSx1"
+                }
+            }
+        },
         "handlers.RegisterFcmTokenRequest": {
             "type": "object",
             "required": [
@@ -26679,6 +26788,27 @@ const docTemplate = `{
                 }
             }
         },
+        "transformations.OutputTokenPair": {
+            "type": "object",
+            "properties": {
+                "expires_in": {
+                    "type": "integer",
+                    "example": 3600
+                },
+                "refresh_expires_in": {
+                    "type": "integer",
+                    "example": 7776000
+                },
+                "refresh_token": {
+                    "type": "string",
+                    "example": "3f2504e0-4f89-11d3-9a0c-0305e82c3301:sSx1"
+                },
+                "token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                }
+            }
+        },
         "transformations.OutputUnit": {
             "type": "object",
             "properties": {
@@ -26786,6 +26916,18 @@ const docTemplate = `{
         "transformations.OutputUserWithToken": {
             "type": "object",
             "properties": {
+                "expires_in": {
+                    "type": "integer",
+                    "example": 3600
+                },
+                "refresh_expires_in": {
+                    "type": "integer",
+                    "example": 7776000
+                },
+                "refresh_token": {
+                    "type": "string",
+                    "example": "3f2504e0-4f89-11d3-9a0c-0305e82c3301:sSx1"
+                },
                 "token": {
                     "type": "string",
                     "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."

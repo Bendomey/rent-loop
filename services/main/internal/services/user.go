@@ -32,12 +32,17 @@ type UserService interface {
 }
 
 type userService struct {
-	appCtx pkg.AppContext
-	repo   repository.UserRepository
+	appCtx              pkg.AppContext
+	repo                repository.UserRepository
+	refreshTokenService RefreshTokenService
 }
 
-func NewUserService(appCtx pkg.AppContext, repo repository.UserRepository) UserService {
-	return &userService{appCtx, repo}
+func NewUserService(
+	appCtx pkg.AppContext,
+	repo repository.UserRepository,
+	refreshTokenService RefreshTokenService,
+) UserService {
+	return &userService{appCtx, repo, refreshTokenService}
 }
 
 func (s *userService) InsertUser(ctx context.Context, user *models.User) (bool, error) {
@@ -72,13 +77,18 @@ func (s *userService) GetUserByEmail(ctx context.Context, email string) (*models
 }
 
 type LoginUserInput struct {
-	Email    string
-	Password string
+	Email     string
+	Password  string
+	UserAgent *string
+	IPAddress *string
 }
 
 type LoginUserResponse struct {
-	User  models.User
-	Token string
+	User             models.User
+	Token            string
+	ExpiresIn        int
+	RefreshToken     string
+	RefreshExpiresIn int
 }
 
 func (s *userService) LoginUser(ctx context.Context, input LoginUserInput) (*LoginUserResponse, error) {
@@ -107,9 +117,10 @@ func (s *userService) LoginUser(ctx context.Context, input LoginUserInput) (*Log
 		})
 	}
 
+	accessTTL := time.Duration(s.appCtx.Config.AuthTokenTTL.AccessTokenHours) * time.Hour
 	token, err := signjwt.SignJWT(jwt.MapClaims{
 		"id":  user.ID,
-		"exp": time.Now().Add(24 * time.Hour).Unix(),
+		"exp": time.Now().Add(accessTTL).Unix(),
 	}, s.appCtx.Config.TokenSecrets.ClientUserSecret)
 	if err != nil {
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
@@ -118,7 +129,22 @@ func (s *userService) LoginUser(ctx context.Context, input LoginUserInput) (*Log
 		})
 	}
 
-	return &LoginUserResponse{User: *userWithClients, Token: token}, nil
+	refresh, refreshErr := s.refreshTokenService.Issue(ctx, IssueRefreshTokenInput{
+		UserID:    user.ID.String(),
+		UserAgent: input.UserAgent,
+		IPAddress: input.IPAddress,
+	})
+	if refreshErr != nil {
+		return nil, refreshErr
+	}
+
+	return &LoginUserResponse{
+		User:             *userWithClients,
+		Token:            token,
+		ExpiresIn:        int(accessTTL.Seconds()),
+		RefreshToken:     refresh.Token,
+		RefreshExpiresIn: int(s.refreshTokenService.TTL().Seconds()),
+	}, nil
 }
 
 func (s *userService) GetMe(ctx context.Context, userID string) (*models.User, error) {
