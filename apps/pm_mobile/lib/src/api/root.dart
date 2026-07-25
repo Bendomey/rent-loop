@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import 'package:rentloop_manager/src/constants.dart';
+import 'package:rentloop_manager/src/lib/auth_event_bus.dart';
 import 'package:rentloop_manager/src/lib/token_manager.dart';
 
 abstract class AbstractApi {
@@ -49,6 +50,14 @@ abstract class AbstractApi {
     }
 
     if (response.statusCode >= 400) {
+      // A 401 on a request that was sent with a token means that token is
+      // dead or expired — broadcast it so the app can log the user out
+      // globally, regardless of which screen/notifier made this call.
+      // Unauthenticated calls (e.g. login with a wrong password) also
+      // return 401 but must not trigger this.
+      if (response.statusCode == 401 && authRequired) {
+        AuthEventBus.instance.notifyUnauthorized();
+      }
       throw ApiException(response.statusCode, response.body);
     }
 

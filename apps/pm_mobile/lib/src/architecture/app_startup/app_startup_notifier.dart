@@ -7,6 +7,7 @@ import 'package:rentloop_manager/src/architecture/current_user/current_user_noti
 import 'package:rentloop_manager/src/architecture/current_workspace/current_workspace_notifier.dart';
 import 'package:rentloop_manager/src/architecture/token_manager/token_manager.dart';
 import 'package:rentloop_manager/src/architecture/workspace_id_manager/workspace_id_manager.dart';
+import 'package:rentloop_manager/src/lib/auth_event_bus.dart';
 import 'package:rentloop_manager/src/lib/workspace_resolution.dart';
 import 'package:rentloop_manager/src/repository/models/client_user_model.dart';
 import 'package:rentloop_manager/src/repository/models/user_model.dart';
@@ -30,8 +31,18 @@ class AppStartupState {
 @Riverpod(keepAlive: true)
 class AppStartupNotifier extends _$AppStartupNotifier {
   @override
-  AppStartupState build() =>
-      const AppStartupState(status: AppStartupStatus.loading);
+  AppStartupState build() {
+    // Any authenticated API call anywhere in the app can discover the
+    // token is dead (expired/revoked) via a 401 — this is the single
+    // place that reacts to that and forces the user back to login,
+    // instead of relying on each individual screen/notifier to notice.
+    final subscription = AuthEventBus.instance.onUnauthorized.listen((_) {
+      logout();
+    });
+    ref.onDispose(subscription.cancel);
+
+    return const AppStartupState(status: AppStartupStatus.loading);
+  }
 
   /// Called from the splash screen on cold start or app resume.
   Future<void> init() async {
