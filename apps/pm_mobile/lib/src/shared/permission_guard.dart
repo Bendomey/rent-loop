@@ -34,3 +34,41 @@ class PermissionGuard extends ConsumerWidget {
     return hasPermission(ref, roles: roles) ? child : const SizedBox.shrink();
   }
 }
+
+/// Property-scoped role check (`ClientUserProperty.role` — MANAGER/STAFF)
+/// for the property currently being viewed. Mirrors the web app's
+/// `useHasPropertyPermissions`, with one deliberate difference: this takes
+/// the already-resolved [role] as a plain value rather than fetching it
+/// itself — the role lookup is async (`myPropertyRoleProvider`, a
+/// per-property API call), so the caller watches that provider and passes
+/// `.valueOrNull` down. Treats a still-loading/unknown role (`null`) the
+/// same as unauthorized, so a button never flashes visible before hiding.
+bool hasPropertyPermission({required String? role, List<String>? roles}) {
+  if (role == null) return false;
+  if (roles == null || roles.isEmpty) return true;
+  final upperRoles = roles.map((r) => r.toUpperCase());
+  return upperRoles.contains(role.toUpperCase());
+}
+
+/// Hides [child] entirely unless [role] (the current client-user's role for
+/// the property being viewed — see [hasPropertyPermission]) is in [roles].
+/// Mirrors the web app's `PropertyPermissionGuard`.
+class PropertyPermissionGuard extends StatelessWidget {
+  const PropertyPermissionGuard({
+    super.key,
+    required this.role,
+    this.roles,
+    required this.child,
+  });
+
+  final String? role;
+  final List<String>? roles;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return hasPropertyPermission(role: role, roles: roles)
+        ? child
+        : const SizedBox.shrink();
+  }
+}
