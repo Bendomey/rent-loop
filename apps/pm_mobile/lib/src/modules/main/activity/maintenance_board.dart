@@ -310,6 +310,14 @@ class _FilterChipsRow extends StatelessWidget {
         child: Row(
           children: [
             _FilterTriggerChip(
+              label: 'Property',
+              value: property,
+              onTap: onTapProperty,
+            ),
+            const SizedBox(width: 8),
+            _FilterTriggerChip(label: 'Unit', value: unit, onTap: onTapUnit),
+            const SizedBox(width: 8),
+            _FilterTriggerChip(
               label: 'Priority',
               value: priority,
               onTap: onTapPriority,
@@ -332,14 +340,6 @@ class _FilterChipsRow extends StatelessWidget {
               value: manager,
               onTap: onTapManager,
             ),
-            const SizedBox(width: 8),
-            _FilterTriggerChip(
-              label: 'Property',
-              value: property,
-              onTap: onTapProperty,
-            ),
-            const SizedBox(width: 8),
-            _FilterTriggerChip(label: 'Unit', value: unit, onTap: onTapUnit),
           ],
         ),
       ),
@@ -470,6 +470,9 @@ class _FilterSheetState extends State<_FilterSheet> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.8,
+        ),
         decoration: const BoxDecoration(
           color: RLTokens.surface,
           borderRadius: BorderRadius.only(
@@ -667,9 +670,13 @@ class _StatusColumnPageState extends ConsumerState<_StatusColumnPage> {
   void didUpdateWidget(covariant _StatusColumnPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.query != widget.query) {
-      ref
-          .read(maintenanceRequestsNotifierProvider(widget.status).notifier)
-          .loadFirstPage(widget.query);
+      final query = widget.query;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ref
+            .read(maintenanceRequestsNotifierProvider(widget.status).notifier)
+            .loadFirstPage(query);
+      });
     }
   }
 

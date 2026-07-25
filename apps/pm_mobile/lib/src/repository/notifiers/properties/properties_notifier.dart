@@ -1,6 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import 'package:rentloop_manager/src/api/property_api.dart';
+import 'package:rentloop_manager/src/api/client_user_property_api.dart';
 import 'package:rentloop_manager/src/api/root.dart';
 import 'package:rentloop_manager/src/architecture/current_workspace/current_workspace_notifier.dart';
 import 'package:rentloop_manager/src/lib/api_error_messages.dart';
@@ -99,8 +99,8 @@ class PropertiesNotifier extends _$PropertiesNotifier {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final result = await ref
-          .read(propertyApiProvider)
-          .getProperties(
+          .read(clientUserPropertyApiProvider)
+          .getMyProperties(
             clientId: clientId,
             page: 1,
             pageSize: _pageSize,
@@ -138,8 +138,8 @@ class PropertiesNotifier extends _$PropertiesNotifier {
     state = state.copyWith(isLoadingMore: true);
     try {
       final result = await ref
-          .read(propertyApiProvider)
-          .getProperties(
+          .read(clientUserPropertyApiProvider)
+          .getMyProperties(
             clientId: clientId,
             page: nextPage,
             pageSize: _pageSize,
