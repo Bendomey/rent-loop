@@ -108,7 +108,7 @@ func (s *unitService) CreateUnit(ctx context.Context, input CreateUnitInput) (*m
 		}
 		features = datatypes.JSON(unmarshalledFeatures)
 	} else {
-		features = datatypes.JSON{}
+		features = datatypes.JSON("{}")
 	}
 
 	if input.RentFeeCurrency != "" && !lib.IsSupportedCurrency(input.RentFeeCurrency) {

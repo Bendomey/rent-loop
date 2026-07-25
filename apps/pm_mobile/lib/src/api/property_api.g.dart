@@ -13,9 +13,8 @@ String _$propertyApiHash() => r'23bec3e85be376543026c694a13f042eabc93e16';
 final propertyApiProvider = AutoDisposeProvider<PropertyApi>.internal(
   propertyApi,
   name: r'propertyApiProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$propertyApiHash,
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$propertyApiHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );

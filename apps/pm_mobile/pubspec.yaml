@@ -2,7 +2,7 @@ name: rentloop_manager
 description: "RentLoop Manager — property manager mobile companion."
 publish_to: 'none'
 
-version: 0.1.0+2
+version: 0.1.0+6
 
 environment:
   sdk: ^3.8.1
@@ -24,6 +24,8 @@ dependencies:
   validatorless: ^1.2.5
   url_launcher: ^6.3.1
   share_plus: ^10.1.4
+  image_picker: ^1.2.1
+  flutter_dotenv: ^5.2.1
 
 dev_dependencies:
   flutter_test:
@@ -53,6 +55,7 @@ flutter:
   assets:
     - assets/fonts/
     - assets/app_icon.png
+    - .env
 
   fonts:
     - family: DMSans

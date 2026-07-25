@@ -24,9 +24,22 @@ class UnitApi extends AbstractApi {
     required String propertyId,
     int page = 1,
     int pageSize = 20,
+    String? status,
+    String? search,
+    String? blockId,
   }) async {
+    final query = <String, String>{'page': '$page', 'page_size': '$pageSize'};
+    if (status != null) query['status'] = status;
+    if (search != null && search.isNotEmpty) {
+      query['query'] = search;
+      query['search_fields'] = 'name';
+    }
+
     final queryString = Uri(
-      queryParameters: {'page': '$page', 'page_size': '$pageSize'},
+      queryParameters: {
+        ...query,
+        if (blockId != null) 'block_ids': [blockId],
+      },
     ).query;
 
     final response = await execute(
@@ -41,6 +54,131 @@ class UnitApi extends AbstractApi {
           .map((e) => UnitModel.fromJson(e as Map<String, dynamic>))
           .toList(),
       meta: PaginationMetaModel.fromJson(data['meta'] as Map<String, dynamic>),
+    );
+  }
+
+  /// `GET .../units` — cross-property "mobile" route, scoped to whichever
+  /// properties the caller can access (see backend's
+  /// InjectPropertyAccessScopeMiddleware/ResolvePropertyScopeFilter). No
+  /// property_id sent — relies entirely on the backend's own access-scope
+  /// resolution, matching how the Assigned Worker/Manager picker already
+  /// relies on backend scoping rather than re-deriving it client-side.
+  Future<List<UnitModel>> getUnitsAcrossProperties({
+    required String clientId,
+  }) async {
+    final response = await execute(
+      method: 'GET',
+      path: '/api/v1/admin/clients/$clientId/units?page_size=200',
+    );
+    final json = jsonDecode(response.body) as Map<String, dynamic>;
+    final data = json['data'] as Map<String, dynamic>;
+    return (data['rows'] as List<dynamic>)
+        .map((e) => UnitModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<UnitModel> getUnit({
+    required String clientId,
+    required String propertyId,
+    required String unitId,
+  }) async {
+    final response = await execute(
+      method: 'GET',
+      path:
+          '/api/v1/admin/clients/$clientId/properties/$propertyId/units/$unitId'
+          '?populate=Property,PropertyBlock',
+    );
+    final json = jsonDecode(response.body) as Map<String, dynamic>;
+    return UnitModel.fromJson(json['data'] as Map<String, dynamic>);
+  }
+
+  Future<UnitModel> createUnit({
+    required String clientId,
+    required String propertyId,
+    required String blockId,
+    required String name,
+    String? description,
+    List<String>? images,
+    required String type,
+    required String status,
+    required int rentFee,
+    required String rentFeeCurrency,
+    required String paymentFrequency,
+    required int maxOccupantsAllowed,
+  }) async {
+    final body = <String, dynamic>{
+      'name': name,
+      if (description != null && description.isNotEmpty)
+        'description': description,
+      if (images != null && images.isNotEmpty) 'images': images,
+      'type': type,
+      'status': status,
+      'rent_fee': rentFee,
+      'rent_fee_currency': rentFeeCurrency,
+      'payment_frequency': paymentFrequency,
+      'max_occupants_allowed': maxOccupantsAllowed,
+      'features': const {},
+    };
+
+    final response = await execute(
+      method: 'POST',
+      path:
+          '/api/v1/admin/clients/$clientId/properties/$propertyId/blocks/$blockId/units',
+      body: body,
+    );
+    final json = jsonDecode(response.body) as Map<String, dynamic>;
+    return UnitModel.fromJson(json['data'] as Map<String, dynamic>);
+  }
+
+  /// Every field is optional and only sent when non-null — lets callers
+  /// omit fields they didn't show an editor for (e.g. rental info stays
+  /// untouched when the unit is occupied) without a separate PATCH shape.
+  Future<UnitModel> updateUnit({
+    required String clientId,
+    required String propertyId,
+    required String unitId,
+    String? name,
+    String? description,
+    List<String>? images,
+    String? type,
+    double? area,
+    int? rentFee,
+    String? rentFeeCurrency,
+    String? paymentFrequency,
+    int? maxOccupantsAllowed,
+  }) async {
+    final body = <String, dynamic>{
+      if (name != null) 'name': name,
+      if (description != null) 'description': description,
+      if (images != null) 'images': images,
+      if (type != null) 'type': type,
+      if (area != null) 'area': area,
+      if (rentFee != null) 'rent_fee': rentFee,
+      if (rentFeeCurrency != null) 'rent_fee_currency': rentFeeCurrency,
+      if (paymentFrequency != null) 'payment_frequency': paymentFrequency,
+      if (maxOccupantsAllowed != null)
+        'max_occupants_allowed': maxOccupantsAllowed,
+    };
+
+    final response = await execute(
+      method: 'PATCH',
+      path:
+          '/api/v1/admin/clients/$clientId/properties/$propertyId/units/$unitId',
+      body: body,
+    );
+    final json = jsonDecode(response.body) as Map<String, dynamic>;
+    return UnitModel.fromJson(json['data'] as Map<String, dynamic>);
+  }
+
+  Future<void> deleteUnit({
+    required String clientId,
+    required String propertyId,
+    required String unitId,
+  }) async {
+    await execute(
+      method: 'DELETE',
+      path:
+          '/api/v1/admin/clients/$clientId/properties/$propertyId/units/$unitId',
     );
   }
 }

@@ -184,3 +184,53 @@ export function getChecklistTypeLabel(type: LeaseChecklistType): string {
 export function isChecklistEditable(status: LeaseChecklistStatus): boolean {
 	return status === 'DRAFT' || status === 'DISPUTED'
 }
+
+export interface LeaseTermProgress {
+	percent: number // elapsed / total duration, clamped 0–100
+	daysLeft: number // days from today to the lease end date (can be negative)
+	monthOf: number // 1-based current month, clamped to [1, monthsTotal]
+	monthsTotal: number
+	isEndingSoon: boolean
+}
+
+/**
+ * Progress through a lease's move-in → move-out term, for the summary
+ * rail's progress bar. Returns null when the lease has no real end date
+ * (getLeaseEndDate falls back to its open-ended 2099 sentinel) — callers
+ * should hide the progress bar in that case rather than show a fabricated
+ * percentage.
+ */
+export function getLeaseTermProgress(lease: Lease): LeaseTermProgress | null {
+	const start = new Date(lease.move_in_date)
+	const end = getLeaseEndDate(lease)
+	if (end.getFullYear() >= 2099) return null
+
+	const totalMs = end.getTime() - start.getTime()
+	if (totalMs <= 0) return null
+
+	const now = new Date()
+	const elapsedMs = Math.max(0, now.getTime() - start.getTime())
+	const percent = Math.min(100, Math.max(0, (elapsedMs / totalMs) * 100))
+	const daysLeft = Math.ceil((end.getTime() - now.getTime()) / 86_400_000)
+
+	const totalDays = totalMs / 86_400_000
+	const monthsTotal = lease.stay_duration_frequency
+		?.toLowerCase()
+		.startsWith('month')
+		? Math.max(1, lease.stay_duration)
+		: Math.max(1, Math.round(totalDays / 30))
+
+	const elapsedDays = elapsedMs / 86_400_000
+	const monthOf = Math.min(
+		monthsTotal,
+		Math.max(1, Math.ceil(elapsedDays / 30)),
+	)
+
+	return {
+		percent,
+		daysLeft,
+		monthOf,
+		monthsTotal,
+		isEndingSoon: shouldShowLeaseEndingAlert(lease),
+	}
+}

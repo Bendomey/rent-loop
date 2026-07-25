@@ -26,6 +26,10 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>RentLoop Manager needs camera access to take photos of your property units.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>RentLoop Manager needs photo library access to choose photos of your property units.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

@@ -39,15 +39,21 @@ class PropertyDetailFamily extends Family<AsyncValue<PropertyModel>> {
   const PropertyDetailFamily();
 
   /// See also [propertyDetail].
-  PropertyDetailProvider call(String propertyId) {
-    return PropertyDetailProvider(propertyId);
+  PropertyDetailProvider call(
+    String propertyId,
+  ) {
+    return PropertyDetailProvider(
+      propertyId,
+    );
   }
 
   @override
   PropertyDetailProvider getProviderOverride(
     covariant PropertyDetailProvider provider,
   ) {
-    return call(provider.propertyId);
+    return call(
+      provider.propertyId,
+    );
   }
 
   static const Iterable<ProviderOrFamily>? _dependencies = null;
@@ -68,19 +74,24 @@ class PropertyDetailFamily extends Family<AsyncValue<PropertyModel>> {
 /// See also [propertyDetail].
 class PropertyDetailProvider extends AutoDisposeFutureProvider<PropertyModel> {
   /// See also [propertyDetail].
-  PropertyDetailProvider(String propertyId)
-    : this._internal(
-        (ref) => propertyDetail(ref as PropertyDetailRef, propertyId),
-        from: propertyDetailProvider,
-        name: r'propertyDetailProvider',
-        debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-            ? null
-            : _$propertyDetailHash,
-        dependencies: PropertyDetailFamily._dependencies,
-        allTransitiveDependencies:
-            PropertyDetailFamily._allTransitiveDependencies,
-        propertyId: propertyId,
-      );
+  PropertyDetailProvider(
+    String propertyId,
+  ) : this._internal(
+          (ref) => propertyDetail(
+            ref as PropertyDetailRef,
+            propertyId,
+          ),
+          from: propertyDetailProvider,
+          name: r'propertyDetailProvider',
+          debugGetCreateSourceHash:
+              const bool.fromEnvironment('dart.vm.product')
+                  ? null
+                  : _$propertyDetailHash,
+          dependencies: PropertyDetailFamily._dependencies,
+          allTransitiveDependencies:
+              PropertyDetailFamily._allTransitiveDependencies,
+          propertyId: propertyId,
+        );
 
   PropertyDetailProvider._internal(
     super._createNotifier, {
@@ -144,6 +155,5 @@ class _PropertyDetailProviderElement
   @override
   String get propertyId => (origin as PropertyDetailProvider).propertyId;
 }
-
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

@@ -81,7 +81,7 @@ type GetMaintenanceRequestQuery struct {
 type ListMaintenanceRequestsFilter struct {
 	ClientID          *string
 	PropertyIDs       *[]string
-	UnitID            *string
+	UnitIDs           *[]string
 	LeaseID           *string
 	Statuses          []string
 	Priority          *string
@@ -144,7 +144,7 @@ func (r *maintenanceRequestRepository) List(
 			SearchScope("maintenance_requests", filterQuery.Search),
 			mrClientIDScope(filters.ClientID),
 			mrPropertyIDsScope(filters.PropertyIDs),
-			mrUnitIDScope(filters.UnitID),
+			mrUnitIDsScope(filters.UnitIDs),
 			mrLeaseIDScope(filters.LeaseID),
 			mrStatusScope(filters.Statuses),
 			mrPriorityScope(filters.Priority),
@@ -183,7 +183,7 @@ func (r *maintenanceRequestRepository) Count(
 			SearchScope("maintenance_requests", filterQuery.Search),
 			mrClientIDScope(filters.ClientID),
 			mrPropertyIDsScope(filters.PropertyIDs),
-			mrUnitIDScope(filters.UnitID),
+			mrUnitIDsScope(filters.UnitIDs),
 			mrLeaseIDScope(filters.LeaseID),
 			mrStatusScope(filters.Statuses),
 			mrPriorityScope(filters.Priority),
@@ -436,12 +436,12 @@ func mrPropertyIDsScope(propertyIDs *[]string) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
-func mrUnitIDScope(unitID *string) func(db *gorm.DB) *gorm.DB {
+func mrUnitIDsScope(unitIDs *[]string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		if unitID == nil {
+		if unitIDs == nil {
 			return db
 		}
-		return db.Where("maintenance_requests.unit_id = ?", *unitID)
+		return db.Where("maintenance_requests.unit_id IN (?)", *unitIDs)
 	}
 }
 
@@ -595,7 +595,7 @@ func (r *maintenanceRequestRepository) CountByStatus(
 		Scopes(
 			mrClientIDScope(filters.ClientID),
 			mrPropertyIDsScope(filters.PropertyIDs),
-			mrUnitIDScope(filters.UnitID),
+			mrUnitIDsScope(filters.UnitIDs),
 			mrLeaseIDScope(filters.LeaseID),
 			mrTenantScope(filters.TenantID),
 		).

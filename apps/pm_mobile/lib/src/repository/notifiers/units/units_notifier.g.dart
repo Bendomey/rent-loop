@@ -6,7 +6,7 @@ part of 'units_notifier.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$unitsNotifierHash() => r'bdf59c4e641b413fd3e316030569ef173c051a4f';
+String _$unitsNotifierHash() => r'c2003c324c4b119a08625d08a2ccd7f792252c91';
 
 /// See also [UnitsNotifier].
 @ProviderFor(UnitsNotifier)

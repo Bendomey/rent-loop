@@ -260,7 +260,7 @@ export const LEASE_DETAIL_TOUR_STEPS: DriveStep[] = [
 		popover: {
 			title: 'Lease Summary',
 			description:
-				'Key details at a glance: lease code, status, linked tenant and unit, rent fee, and quick-action buttons to start or terminate the lease.',
+				'Key details at a glance: lease code, status, linked tenant and unit, rent fee, and how far along the lease term is.',
 			side: 'right',
 			align: 'start',
 		},

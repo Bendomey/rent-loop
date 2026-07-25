@@ -102,11 +102,22 @@ class RLDot extends StatelessWidget {
 // ── Section label ────────────────────────────────────────────────────────────
 
 class RLLabel extends StatelessWidget {
-  const RLLabel(this.text, {super.key, this.action, this.onAction});
+  const RLLabel(
+    this.text, {
+    super.key,
+    this.action,
+    this.onAction,
+    this.trailing,
+  });
 
   final String text;
   final String? action;
   final VoidCallback? onAction;
+
+  /// A fully custom trailing widget — takes over from [action]/[onAction]
+  /// when a section needs more than one action (e.g. an icon button
+  /// alongside a text link). Ignored if null.
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -131,7 +142,9 @@ class RLLabel extends StatelessWidget {
               ),
             ),
           ),
-          if (action != null)
+          if (trailing != null)
+            trailing!
+          else if (action != null)
             GestureDetector(
               onTap: onAction,
               child: Text(
@@ -462,38 +475,41 @@ class RLBtn extends StatelessWidget {
         Border.all(color: RLTokens.crimsonTint2, width: 1.5),
       ),
     };
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        width: full ? double.infinity : null,
-        padding: EdgeInsets.symmetric(
-          horizontal: 18,
-          vertical: large ? 15 : 11,
-        ),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(RLTokens.rMd),
-          border: border,
-        ),
-        child: Row(
-          mainAxisSize: full ? MainAxisSize.max : MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (icon != null) ...[
-              Icon(icon, size: 18, color: fg),
-              const SizedBox(width: 8),
-            ],
-            Text(
-              label,
-              style: TextStyle(
-                fontFamily: RLTokens.fontSans,
-                fontSize: large ? RLTokens.textAction : 14,
-                fontWeight: RLTokens.semibold,
-                color: fg,
-                letterSpacing: 0.1,
+    return Opacity(
+      opacity: onPressed == null ? 0.4 : 1,
+      child: GestureDetector(
+        onTap: onPressed,
+        child: Container(
+          width: full ? double.infinity : null,
+          padding: EdgeInsets.symmetric(
+            horizontal: 18,
+            vertical: large ? 15 : 11,
+          ),
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(RLTokens.rMd),
+            border: border,
+          ),
+          child: Row(
+            mainAxisSize: full ? MainAxisSize.max : MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (icon != null) ...[
+                Icon(icon, size: 18, color: fg),
+                const SizedBox(width: 8),
+              ],
+              Text(
+                label,
+                style: TextStyle(
+                  fontFamily: RLTokens.fontSans,
+                  fontSize: large ? RLTokens.textAction : 14,
+                  fontWeight: RLTokens.semibold,
+                  color: fg,
+                  letterSpacing: 0.1,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -894,7 +910,12 @@ class RLBackHeader extends StatelessWidget {
             child: Row(
               children: [
                 GestureDetector(
-                  onTap: onBack ?? () => Navigator.of(context).pop(),
+                  onTap:
+                      onBack ??
+                      () {
+                        final navigator = Navigator.of(context);
+                        if (navigator.canPop()) navigator.pop();
+                      },
                   child: Padding(
                     padding: const EdgeInsets.all(6),
                     child: Icon(Icons.chevron_left, size: 26, color: fg),

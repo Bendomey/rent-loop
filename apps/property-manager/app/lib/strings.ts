@@ -28,3 +28,12 @@ export const removeFileExtension = (filename: string): string => {
 export function sanitizeFilename(filename: string): string {
 	return filename.replace(/[^a-zA-Z0-9.-_]/g, '_')
 }
+
+export const getInitials = (name: string): string => {
+	return name
+		.split(' ')
+		.filter(Boolean)
+		.slice(0, 2)
+		.map((part) => part[0]?.toUpperCase() ?? '')
+		.join('')
+}

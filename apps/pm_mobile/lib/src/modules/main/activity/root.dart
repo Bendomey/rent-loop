@@ -3,111 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
-
-// ── Seed data ─────────────────────────────────────────────────────────────────
-
-class _MaintData {
-  const _MaintData({
-    required this.id,
-    required this.title,
-    required this.unit,
-    required this.cat,
-    required this.priority,
-    required this.status,
-    required this.tenant,
-    required this.age,
-    this.assigned,
-  });
-  final String id;
-  final String title;
-  final String unit;
-  final String cat;
-  final String priority;
-  final String status;
-  final String tenant;
-  final String age;
-  final String? assigned;
-}
-
-const _kMaint = [
-  _MaintData(
-    id: 'm1',
-    title: 'Leaking kitchen tap',
-    unit: 'Unit 4B · Cantonments Court',
-    cat: 'Plumbing',
-    priority: 'High',
-    status: 'New',
-    tenant: 'Kwame Mensah',
-    age: '2h ago',
-    assigned: null,
-  ),
-  _MaintData(
-    id: 'm2',
-    title: 'AC not cooling',
-    unit: 'Unit 5A · Cantonments Court',
-    cat: 'HVAC',
-    priority: 'Medium',
-    status: 'In Progress',
-    tenant: 'Ama Boateng',
-    age: '1d ago',
-    assigned: 'Ben (Tech)',
-  ),
-  _MaintData(
-    id: 'm3',
-    title: 'Broken window latch',
-    unit: 'Unit 7 · Spintex Heights',
-    cat: 'General',
-    priority: 'Low',
-    status: 'In Progress',
-    tenant: 'Efua Sarpong',
-    age: '2d ago',
-    assigned: 'Ben (Tech)',
-  ),
-  _MaintData(
-    id: 'm4',
-    title: 'Hallway lights out',
-    unit: 'Block A · Spintex Heights',
-    cat: 'Electrical',
-    priority: 'High',
-    status: 'In Review',
-    tenant: 'Front desk',
-    age: '3d ago',
-    assigned: 'Mensah Electric',
-  ),
-  _MaintData(
-    id: 'm5',
-    title: 'Repaint guest bath',
-    unit: 'Suite 3 · Labadi Beach',
-    cat: 'General',
-    priority: 'Low',
-    status: 'Resolved',
-    tenant: 'Housekeeping',
-    age: '5d ago',
-    assigned: 'Ben (Tech)',
-  ),
-  _MaintData(
-    id: 'm6',
-    title: 'Gate motor jammed',
-    unit: 'Cantonments Court',
-    cat: 'General',
-    priority: 'High',
-    status: 'New',
-    tenant: 'Security',
-    age: '4h ago',
-    assigned: null,
-  ),
-  _MaintData(
-    id: 'm7',
-    title: 'Water heater fault',
-    unit: 'Unit 3B · Cantonments Court',
-    cat: 'Plumbing',
-    priority: 'Medium',
-    status: 'New',
-    tenant: 'Yaw Asante',
-    age: '6h ago',
-    assigned: null,
-  ),
-];
+import 'package:rentloop_manager/src/modules/main/activity/maintenance_board.dart';
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
@@ -168,7 +64,11 @@ class _ActivityScreenState extends State<ActivityScreen> {
           Expanded(
             child: IndexedStack(
               index: ['maint', 'apps', 'bookings'].indexOf(_tab),
-              children: const [_MaintList(), _AppsList(), _BookingsList()],
+              children: const [
+                MaintenanceBoard(),
+                _AppsList(),
+                _BookingsList(),
+              ],
             ),
           ),
         ],
@@ -238,175 +138,13 @@ class _Header extends StatelessWidget {
             value: selectedTab,
             onChanged: onTabChanged,
             items: const [
-              RLSegmentItem(key: 'maint', label: 'Maintenance', count: 7),
+              RLSegmentItem(key: 'maint', label: 'Maintenance', count: 9),
               RLSegmentItem(key: 'apps', label: 'Applications', count: 4),
               RLSegmentItem(key: 'bookings', label: 'Bookings', count: 4),
             ],
           ),
         ),
       ],
-    );
-  }
-}
-
-// ── Maintenance list ──────────────────────────────────────────────────────────
-
-class _MaintList extends StatelessWidget {
-  const _MaintList();
-
-  static const _order = ['New', 'In Progress', 'In Review', 'Resolved'];
-
-  @override
-  Widget build(BuildContext context) {
-    final groups = <Widget>[];
-    for (final status in _order) {
-      final items = _kMaint.where((m) => m.status == status).toList();
-      if (items.isEmpty) continue;
-
-      final tone = statusTone(status);
-      groups.add(
-        Padding(
-          padding: const EdgeInsets.fromLTRB(2, 18, 2, 10),
-          child: Row(
-            children: [
-              RLDot(tone: tone),
-              const SizedBox(width: 8),
-              Text(
-                status,
-                style: const TextStyle(
-                  fontFamily: RLTokens.fontSans,
-                  fontSize: 13,
-                  fontWeight: RLTokens.bold,
-                  color: RLTokens.ink,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                '${items.length}',
-                style: const TextStyle(
-                  fontFamily: RLTokens.fontMono,
-                  fontSize: 11,
-                  color: RLTokens.mutedSoft,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-      for (final m in items) {
-        groups.add(
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: _MaintCard(m: m),
-          ),
-        );
-      }
-    }
-
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(
-        RLTokens.gutter,
-        0,
-        RLTokens.gutter,
-        120,
-      ),
-      children: groups,
-    );
-  }
-}
-
-class _MaintCard extends StatelessWidget {
-  const _MaintCard({required this.m});
-  final _MaintData m;
-
-  @override
-  Widget build(BuildContext context) {
-    final priTone = statusTone(m.priority);
-    return GestureDetector(
-      onTap: () async {
-        await Haptics.vibrate(HapticsType.selection);
-        if (context.mounted) context.push('/activity/maintenances/${m.id}');
-      },
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: RLTokens.surface,
-          borderRadius: BorderRadius.circular(RLTokens.rLg),
-          border: Border.all(color: RLTokens.hairline),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Priority label + age
-            Row(
-              children: [
-                RLDot(tone: priTone, size: 8),
-                const SizedBox(width: 6),
-                Text(
-                  m.priority,
-                  style: TextStyle(
-                    fontFamily: RLTokens.fontSans,
-                    fontSize: 11,
-                    fontWeight: RLTokens.semibold,
-                    color: priTone.fg,
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  m.age,
-                  style: const TextStyle(
-                    fontFamily: RLTokens.fontMono,
-                    fontSize: 10.5,
-                    color: RLTokens.micro,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            // Title
-            Text(
-              m.title,
-              style: const TextStyle(
-                fontFamily: RLTokens.fontSerif,
-                fontSize: 17,
-                color: RLTokens.ink,
-                height: 1.15,
-              ),
-            ),
-            const SizedBox(height: 4),
-            // Unit
-            Text(
-              m.unit,
-              style: const TextStyle(
-                fontFamily: RLTokens.fontSans,
-                fontSize: 12.5,
-                color: RLTokens.muted,
-              ),
-            ),
-            const SizedBox(height: 11),
-            Container(height: 1, color: RLTokens.hairlineSoft),
-            const SizedBox(height: 11),
-            // Category pill + assigned
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                RLPill(m.cat, tone: RLTone.neutral),
-                Text(
-                  m.assigned ?? 'Unassigned',
-                  style: TextStyle(
-                    fontFamily: RLTokens.fontSans,
-                    fontSize: 12,
-                    fontWeight: RLTokens.medium,
-                    color: m.assigned != null
-                        ? RLTokens.inkSoft
-                        : RLTokens.crimson,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

@@ -144,7 +144,7 @@ type ListMaintenanceRequestsQuery struct {
 	Category          *string  `json:"category"            query:"category"            description:"Filter by category (free text)"`
 	AssignedWorkerID  *string  `json:"assigned_worker_id"  query:"assigned_worker_id"  description:"Filter by assigned worker UUID"`
 	AssignedManagerID *string  `json:"assigned_manager_id" query:"assigned_manager_id" description:"Filter by assigned manager UUID"`
-	UnitID            *string  `json:"unit_id"             query:"unit_id"             description:"Filter by unit UUID"                                                validate:"omitempty,uuid4"`
+	UnitIDs           []string `json:"unit_id"             query:"unit_id"             description:"Filter by one or more unit UUIDs" collectionFormat:"multi"                                     validate:"omitempty,dive,uuid4"`
 	LeaseID           *string  `json:"lease_id"            query:"lease_id"            description:"Filter by lease UUID"                                               validate:"omitempty,uuid4"`
 	TenantID          *string  `json:"tenant_id"           query:"tenant_id"           description:"Filter by tenant UUID"                                              validate:"omitempty,uuid4"`
 }
@@ -188,7 +188,7 @@ func (h *MaintenanceRequestHandler) List(w http.ResponseWriter, r *http.Request)
 		AssignedWorkerID:  lib.NullOrString(r.URL.Query().Get("assigned_worker_id")),
 		AssignedManagerID: lib.NullOrString(r.URL.Query().Get("assigned_manager_id")),
 		PropertyIDs:       &propertyIDs,
-		UnitID:            lib.NullOrString(r.URL.Query().Get("unit_id")),
+		UnitIDs:           lib.NullOrStringArray(r.URL.Query()["unit_id"]),
 		LeaseID:           lib.NullOrString(r.URL.Query().Get("lease_id")),
 		TenantID:          lib.NullOrString(r.URL.Query().Get("tenant_id")),
 	}
@@ -254,7 +254,7 @@ func (h *MaintenanceRequestHandler) ListAcrossProperties(w http.ResponseWriter, 
 		Category:          lib.NullOrString(r.URL.Query().Get("category")),
 		AssignedWorkerID:  lib.NullOrString(r.URL.Query().Get("assigned_worker_id")),
 		AssignedManagerID: lib.NullOrString(r.URL.Query().Get("assigned_manager_id")),
-		UnitID:            lib.NullOrString(r.URL.Query().Get("unit_id")),
+		UnitIDs:           lib.NullOrStringArray(r.URL.Query()["unit_id"]),
 		LeaseID:           lib.NullOrString(r.URL.Query().Get("lease_id")),
 		TenantID:          lib.NullOrString(r.URL.Query().Get("tenant_id")),
 	}

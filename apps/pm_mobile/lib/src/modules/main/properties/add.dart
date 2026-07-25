@@ -1,18 +1,31 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:image_picker/image_picker.dart';
+
+import 'package:rentloop_manager/src/api/r2_upload_service.dart';
+import 'package:rentloop_manager/src/lib/property_create_mappers.dart';
+import 'package:rentloop_manager/src/modules/main/properties/address_search_field.dart';
+import 'package:rentloop_manager/src/repository/notifiers/properties/create_property_notifier.dart';
+import 'package:rentloop_manager/src/repository/notifiers/properties/properties_notifier.dart';
+import 'package:rentloop_manager/src/repository/providers/onboarding_checklist_provider.dart';
+import 'package:rentloop_manager/src/shared/toast.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
+import 'package:rentloop_manager/src/shared/widgets.dart';
 
 const _kSteps = ['Property type', 'Basic info', 'Address', 'Review'];
 
-class AddPropertyScreen extends StatefulWidget {
+class AddPropertyScreen extends ConsumerStatefulWidget {
   const AddPropertyScreen({super.key});
 
   @override
-  State<AddPropertyScreen> createState() => _State();
+  ConsumerState<AddPropertyScreen> createState() => _State();
 }
 
-class _State extends State<AddPropertyScreen> {
+class _State extends ConsumerState<AddPropertyScreen> {
   int _step = 1; // 1-based
 
   // Step 1
@@ -21,33 +34,118 @@ class _State extends State<AddPropertyScreen> {
   String _rental = 'Long-term (Leases)';
 
   // Step 2
-  final _nameCtrl = TextEditingController(text: 'Cantonments Court');
-  final _detailsCtrl = TextEditingController(
-    text:
-        'Gated 2-bed apartment block, 24 units, borehole water and standby generator.',
-  );
+  final _nameCtrl = TextEditingController();
+  final _detailsCtrl = TextEditingController();
   final _tagDraftCtrl = TextEditingController();
-  List<String> _tags = ['Apartments', 'Gated'];
+  List<String> _tags = [];
+  List<String> _images = [];
+  bool _imagesUploading = false;
 
   // Step 3
-  final _addressCtrl = TextEditingController(
-    text: '12 Switchback Rd, Cantonments, Accra',
-  );
+  ResolvedAddress? _resolvedAddress;
   final _gpsCtrl = TextEditingController();
+
+  String? _validationError;
 
   @override
   void dispose() {
     _nameCtrl.dispose();
     _detailsCtrl.dispose();
     _tagDraftCtrl.dispose();
-    _addressCtrl.dispose();
     _gpsCtrl.dispose();
     super.dispose();
   }
 
-  void _next() {
-    Haptics.vibrate(HapticsType.selection);
-    if (_step < 4) setState(() => _step++);
+  String? _stepError() {
+    switch (_step) {
+      case 2:
+        if (_nameCtrl.text.trim().length < 3) {
+          return 'Property name must be at least 3 characters.';
+        }
+        if (_imagesUploading) {
+          return 'Please wait for the photo to finish uploading.';
+        }
+        return null;
+      case 3:
+        if (_resolvedAddress == null) {
+          return 'Search and select an address to continue.';
+        }
+        return null;
+      default:
+        return null;
+    }
+  }
+
+  Future<void> _next() async {
+    if (_step < 4) {
+      final error = _stepError();
+      if (error != null) {
+        await Haptics.vibrate(HapticsType.error);
+        setState(() => _validationError = error);
+        return;
+      }
+      await Haptics.vibrate(HapticsType.selection);
+      setState(() {
+        _validationError = null;
+        _step++;
+      });
+    } else {
+      await _submit();
+    }
+  }
+
+  Future<void> _submit() async {
+    final resolved = _resolvedAddress;
+    if (resolved == null) return;
+
+    await ref
+        .read(createPropertyNotifierProvider.notifier)
+        .submit(
+          type: mapPropertyType(_type),
+          status: mapPropertyStatus(_status),
+          name: _nameCtrl.text.trim(),
+          description: _detailsCtrl.text.trim().isEmpty
+              ? null
+              : _detailsCtrl.text.trim(),
+          tags: _tags.isEmpty ? null : _tags,
+          images: _images.isEmpty ? null : _images,
+          modes: mapRentalModes(_rental),
+          address: resolved.description,
+          city: resolved.city,
+          region: resolved.region,
+          country: resolved.country,
+          latitude: resolved.latitude,
+          longitude: resolved.longitude,
+          gpsAddress: _gpsCtrl.text.trim().isEmpty
+              ? null
+              : _gpsCtrl.text.trim(),
+        );
+
+    if (!mounted) return;
+    final state = ref.read(createPropertyNotifierProvider);
+    if (state.status.isSuccess()) {
+      await Haptics.vibrate(HapticsType.success);
+      final propertyId = state.createdPropertyId!;
+      ref.invalidate(onboardingChecklistProvider);
+      ref
+          .read(propertiesNotifierProvider.notifier)
+          .loadFirstPage(const PropertiesQuery());
+      if (!mounted) return;
+      showRLToast(
+        ref,
+        tone: RLToastTone.success,
+        title: 'Property created',
+        body: _nameCtrl.text.trim(),
+      );
+      // Reset to the Properties tab first, then push the new property's
+      // detail page on top — same "reset root, then push" pattern already
+      // fixed in `properties/settings/delete.dart`'s post-delete flow, so
+      // this new page has somewhere real to go back to.
+      context.go('/properties');
+      context.push('/properties/$propertyId');
+    } else {
+      await Haptics.vibrate(HapticsType.error);
+    }
   }
 
   void _back() {
@@ -71,6 +169,12 @@ class _State extends State<AddPropertyScreen> {
   @override
   Widget build(BuildContext context) {
     final bottom = MediaQuery.of(context).padding.bottom;
+    final createState = ref.watch(createPropertyNotifierProvider);
+    final isSubmitting = createState.status.isLoading();
+    final error =
+        _validationError ??
+        (createState.status.isFailed() ? createState.errorMessage : null);
+
     return Scaffold(
       backgroundColor: RLTokens.surface,
       body: Column(
@@ -79,11 +183,33 @@ class _State extends State<AddPropertyScreen> {
           Expanded(
             child: SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(20, 14, 20, 120 + bottom),
-              child: _buildStep(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (error != null) ...[
+                    RLInlineBanner(
+                      tone: RLBannerTone.danger,
+                      title: _step == 4
+                          ? 'Could not create property'
+                          : 'Check this step',
+                      body: error,
+                      onDismiss: () {
+                        setState(() => _validationError = null);
+                        ref
+                            .read(createPropertyNotifierProvider.notifier)
+                            .reset();
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  _buildStep(),
+                ],
+              ),
             ),
           ),
           _WizFooter(
             step: _step,
+            isSubmitting: isSubmitting,
             onBack: _back,
             onNext: _next,
             onCancel: () => context.pop(),
@@ -119,8 +245,15 @@ class _State extends State<AddPropertyScreen> {
         tags: _tags,
         onAddTag: _addTag,
         onRemoveTag: _removeTag,
+        images: _images,
+        onImagesChanged: (v) => setState(() => _images = v),
+        onUploadingChanged: (v) => setState(() => _imagesUploading = v),
       ),
-      3 => _Step3(addressCtrl: _addressCtrl, gpsCtrl: _gpsCtrl),
+      3 => _Step3(
+        resolvedAddress: _resolvedAddress,
+        onAddressResolved: (v) => setState(() => _resolvedAddress = v),
+        gpsCtrl: _gpsCtrl,
+      ),
       _ => _Step4(
         type: _type,
         status: _status,
@@ -128,7 +261,10 @@ class _State extends State<AddPropertyScreen> {
         name: _nameCtrl.text,
         details: _detailsCtrl.text,
         tags: _tags,
-        address: _addressCtrl.text,
+        address: _resolvedAddress?.description ?? '',
+        city: _resolvedAddress?.city,
+        region: _resolvedAddress?.region,
+        country: _resolvedAddress?.country,
         gps: _gpsCtrl.text,
         onEdit: (s) {
           Haptics.vibrate(HapticsType.selection);
@@ -238,11 +374,13 @@ class _WizHeader extends StatelessWidget {
 class _WizFooter extends StatelessWidget {
   const _WizFooter({
     required this.step,
+    required this.isSubmitting,
     required this.onBack,
     required this.onNext,
     required this.onCancel,
   });
   final int step;
+  final bool isSubmitting;
   final VoidCallback onBack;
   final VoidCallback onNext;
   final VoidCallback onCancel;
@@ -301,33 +439,41 @@ class _WizFooter extends StatelessWidget {
                 ),
           const Spacer(),
           GestureDetector(
-            onTap: onNext,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 13),
-              decoration: BoxDecoration(
-                color: RLTokens.crimson,
-                borderRadius: BorderRadius.circular(RLTokens.rMd),
-              ),
-              child: Row(
-                children: [
-                  Text(
-                    step < 4 ? 'Next' : 'Submit property',
-                    style: const TextStyle(
-                      fontFamily: RLTokens.fontSans,
-                      fontSize: 14.5,
-                      fontWeight: RLTokens.semibold,
+            onTap: isSubmitting ? null : onNext,
+            child: Opacity(
+              opacity: isSubmitting ? 0.6 : 1,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 22,
+                  vertical: 13,
+                ),
+                decoration: BoxDecoration(
+                  color: RLTokens.crimson,
+                  borderRadius: BorderRadius.circular(RLTokens.rMd),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      step < 4
+                          ? 'Next'
+                          : (isSubmitting ? 'Submitting…' : 'Submit property'),
+                      style: const TextStyle(
+                        fontFamily: RLTokens.fontSans,
+                        fontSize: 14.5,
+                        fontWeight: RLTokens.semibold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Icon(
+                      step < 4
+                          ? Icons.arrow_forward_rounded
+                          : Icons.check_rounded,
+                      size: 16,
                       color: Colors.white,
                     ),
-                  ),
-                  const SizedBox(width: 6),
-                  Icon(
-                    step < 4
-                        ? Icons.arrow_forward_rounded
-                        : Icons.check_rounded,
-                    size: 16,
-                    color: Colors.white,
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -688,11 +834,17 @@ class _Step2 extends StatelessWidget {
     required this.tags,
     required this.onAddTag,
     required this.onRemoveTag,
+    required this.images,
+    required this.onImagesChanged,
+    required this.onUploadingChanged,
   });
   final TextEditingController nameCtrl, detailsCtrl, tagDraftCtrl;
   final List<String> tags;
   final VoidCallback onAddTag;
   final ValueChanged<int> onRemoveTag;
+  final List<String> images;
+  final ValueChanged<List<String>> onImagesChanged;
+  final ValueChanged<bool> onUploadingChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -723,68 +875,10 @@ class _Step2 extends StatelessWidget {
         _WInput(controller: nameCtrl, placeholder: 'e.g. Cantonments Court'),
         const SizedBox(height: 20),
         const _WLabel('Property image', optional: true),
-        Container(
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: RLTokens.hairline,
-              width: 1.5,
-              style: BorderStyle.solid,
-            ),
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Column(
-            children: [
-              Container(
-                height: 130,
-                decoration: BoxDecoration(
-                  color: RLTokens.fill,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(13),
-                  ),
-                ),
-                child: const Center(
-                  child: Icon(
-                    Icons.camera_alt_outlined,
-                    size: 30,
-                    color: RLTokens.mutedSoft,
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(14),
-                child: GestureDetector(
-                  onTap: () => Haptics.vibrate(HapticsType.selection),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 10,
-                      horizontal: 18,
-                    ),
-                    decoration: BoxDecoration(
-                      color: RLTokens.surface,
-                      border: Border.all(color: RLTokens.hairline),
-                      borderRadius: BorderRadius.circular(RLTokens.rMd),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.add_rounded, size: 16, color: RLTokens.ink),
-                        SizedBox(width: 6),
-                        Text(
-                          'Choose image',
-                          style: TextStyle(
-                            fontFamily: RLTokens.fontSans,
-                            fontSize: 13.5,
-                            fontWeight: RLTokens.semibold,
-                            color: RLTokens.ink,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+        _PropertyImagePicker(
+          initialImageUrl: images.isEmpty ? null : images.first,
+          onImagesChanged: onImagesChanged,
+          onUploadingChanged: onUploadingChanged,
         ),
         const SizedBox(height: 20),
         const _WLabel('Details', optional: true),
@@ -916,11 +1010,231 @@ class _Step2 extends StatelessWidget {
   }
 }
 
+// ── Single property image picker ─────────────────────────────────────────────
+// A bespoke single-image widget (rather than reusing `unit_form_widgets.dart`'s
+// UImagePicker) so the wizard keeps its original large placeholder-box +
+// "Choose image" button visual design — UImagePicker renders as a small
+// 84×84 "Add" tile meant for a multi-photo grid, which doesn't fit a
+// single-photo field.
+
+class _PropertyImagePicker extends ConsumerStatefulWidget {
+  const _PropertyImagePicker({
+    required this.initialImageUrl,
+    required this.onImagesChanged,
+    required this.onUploadingChanged,
+  });
+  final String? initialImageUrl;
+  final ValueChanged<List<String>> onImagesChanged;
+  final ValueChanged<bool> onUploadingChanged;
+
+  @override
+  ConsumerState<_PropertyImagePicker> createState() =>
+      _PropertyImagePickerState();
+}
+
+class _PropertyImagePickerState extends ConsumerState<_PropertyImagePicker> {
+  final _picker = ImagePicker();
+  File? _file;
+  String? _url;
+  bool _uploading = false;
+  bool _failed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _url = widget.initialImageUrl;
+  }
+
+  Future<void> _choose() async {
+    await Haptics.vibrate(HapticsType.selection);
+    XFile? picked;
+    try {
+      picked = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1800,
+        maxHeight: 1800,
+        imageQuality: 85,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Couldn't open photo library."),
+          backgroundColor: RLTokens.danger,
+        ),
+      );
+      return;
+    }
+    if (picked == null || !mounted) return;
+
+    final file = File(picked.path);
+    setState(() {
+      _file = file;
+      _uploading = true;
+      _failed = false;
+    });
+    widget.onUploadingChanged(true);
+    try {
+      final url = await ref.read(r2UploadServiceProvider).uploadFile(file);
+      if (!mounted) return;
+      setState(() {
+        _url = url;
+        _uploading = false;
+      });
+      widget.onUploadingChanged(false);
+      widget.onImagesChanged([url]);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _uploading = false;
+        _failed = true;
+      });
+      widget.onUploadingChanged(false);
+    }
+  }
+
+  Future<void> _remove() async {
+    await Haptics.vibrate(HapticsType.selection);
+    setState(() {
+      _file = null;
+      _url = null;
+      _failed = false;
+    });
+    widget.onImagesChanged([]);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hasImage = _url != null || _file != null;
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: RLTokens.hairline, width: 1.5),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        children: [
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(13)),
+            child: SizedBox(
+              height: 130,
+              width: double.infinity,
+              child: hasImage
+                  ? Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        _file != null
+                            ? Image.file(_file!, fit: BoxFit.cover)
+                            : Image.network(_url!, fit: BoxFit.cover),
+                        if (_uploading)
+                          Container(
+                            color: Colors.black.withAlpha(90),
+                            child: const Center(
+                              child: SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    )
+                  : Container(
+                      color: RLTokens.fill,
+                      child: Center(
+                        child: Icon(
+                          _failed
+                              ? Icons.error_outline_rounded
+                              : Icons.camera_alt_outlined,
+                          size: 30,
+                          color: _failed ? RLTokens.danger : RLTokens.mutedSoft,
+                        ),
+                      ),
+                    ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                GestureDetector(
+                  onTap: _uploading ? null : _choose,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 10,
+                      horizontal: 18,
+                    ),
+                    decoration: BoxDecoration(
+                      color: RLTokens.surface,
+                      border: Border.all(color: RLTokens.hairline),
+                      borderRadius: BorderRadius.circular(RLTokens.rMd),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.add_rounded,
+                          size: 16,
+                          color: RLTokens.ink,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          hasImage ? 'Change image' : 'Choose image',
+                          style: const TextStyle(
+                            fontFamily: RLTokens.fontSans,
+                            fontSize: 13.5,
+                            fontWeight: RLTokens.semibold,
+                            color: RLTokens.ink,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                if (hasImage) ...[
+                  const SizedBox(width: 10),
+                  GestureDetector(
+                    onTap: _uploading ? null : _remove,
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 8,
+                      ),
+                      child: Text(
+                        'Remove',
+                        style: TextStyle(
+                          fontFamily: RLTokens.fontSans,
+                          fontSize: 13.5,
+                          fontWeight: RLTokens.semibold,
+                          color: RLTokens.danger,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // ── Step 3 — Address ──────────────────────────────────────────────────────────
 
 class _Step3 extends StatelessWidget {
-  const _Step3({required this.addressCtrl, required this.gpsCtrl});
-  final TextEditingController addressCtrl, gpsCtrl;
+  const _Step3({
+    required this.resolvedAddress,
+    required this.onAddressResolved,
+    required this.gpsCtrl,
+  });
+  final ResolvedAddress? resolvedAddress;
+  final ValueChanged<ResolvedAddress?> onAddressResolved;
+  final TextEditingController gpsCtrl;
 
   @override
   Widget build(BuildContext context) {
@@ -948,41 +1262,9 @@ class _Step3 extends StatelessWidget {
         ),
         const SizedBox(height: 22),
         const _WLabel('Address'),
-        _WInput(
-          controller: addressCtrl,
-          placeholder: 'Search address',
-          prefixIcon: Icons.search_rounded,
-        ),
-        const SizedBox(height: 16),
-        // Map placeholder
-        Container(
-          height: 150,
-          decoration: BoxDecoration(
-            color: const Color(0xFFEDEBE6),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: RLTokens.hairline),
-          ),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.location_on_rounded,
-                  size: 30,
-                  color: RLTokens.crimson,
-                ),
-                const SizedBox(height: 6),
-                const Text(
-                  'Map preview',
-                  style: TextStyle(
-                    fontFamily: RLTokens.fontSans,
-                    fontSize: 12.5,
-                    color: RLTokens.muted,
-                  ),
-                ),
-              ],
-            ),
-          ),
+        AddressSearchField(
+          initial: resolvedAddress,
+          onResolved: onAddressResolved,
         ),
         const SizedBox(height: 20),
         const _WLabel('Ghana Post GPS', optional: true),
@@ -1003,10 +1285,14 @@ class _Step4 extends StatelessWidget {
     required this.details,
     required this.tags,
     required this.address,
+    this.city,
+    this.region,
+    this.country,
     required this.gps,
     required this.onEdit,
   });
   final String type, status, rental, name, details, address, gps;
+  final String? city, region, country;
   final List<String> tags;
   final ValueChanged<int> onEdit;
 
@@ -1079,19 +1365,19 @@ class _Step4 extends StatelessWidget {
         _ReviewCard(
           title: 'Address',
           onEdit: () => onEdit(3),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: _ReviewPair(
-                  k: 'Address',
-                  v: address.isEmpty ? '—' : address,
+              _ReviewPair(k: 'Address', v: address.isEmpty ? '—' : address),
+              if (city != null && region != null && country != null) ...[
+                const SizedBox(height: 8),
+                _ReviewPair(
+                  k: 'City / Region / Country',
+                  v: '$city, $region, $country',
                 ),
-              ),
-              const SizedBox(width: 14),
-              SizedBox(
-                width: 96,
-                child: _ReviewPair(k: 'GPS', v: gps.isEmpty ? '—' : gps),
-              ),
+              ],
+              const SizedBox(height: 8),
+              _ReviewPair(k: 'GPS', v: gps.isEmpty ? '—' : gps),
             ],
           ),
         ),
@@ -1290,14 +1576,9 @@ class _WLabel extends StatelessWidget {
 }
 
 class _WInput extends StatelessWidget {
-  const _WInput({
-    required this.controller,
-    required this.placeholder,
-    this.prefixIcon,
-  });
+  const _WInput({required this.controller, required this.placeholder});
   final TextEditingController controller;
   final String placeholder;
-  final IconData? prefixIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -1315,9 +1596,6 @@ class _WInput extends StatelessWidget {
           fontSize: 15,
           color: RLTokens.mutedSoft,
         ),
-        prefixIcon: prefixIcon != null
-            ? Icon(prefixIcon, size: 18, color: RLTokens.mutedSoft)
-            : null,
         filled: true,
         fillColor: RLTokens.surface,
         contentPadding: const EdgeInsets.symmetric(

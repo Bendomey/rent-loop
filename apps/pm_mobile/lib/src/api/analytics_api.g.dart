@@ -13,9 +13,8 @@ String _$analyticsApiHash() => r'1ad15800029b853acb21d9e4096423bb8508f8e0';
 final analyticsApiProvider = AutoDisposeProvider<AnalyticsApi>.internal(
   analyticsApi,
   name: r'analyticsApiProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$analyticsApiHash,
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$analyticsApiHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
@@ -28,9 +27,8 @@ String _$cubeApiHash() => r'10a7b48173a2c279f6b0ab877cd001451b6f1fd4';
 final cubeApiProvider = AutoDisposeProvider<CubeApi>.internal(
   cubeApi,
   name: r'cubeApiProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$cubeApiHash,
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$cubeApiHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
