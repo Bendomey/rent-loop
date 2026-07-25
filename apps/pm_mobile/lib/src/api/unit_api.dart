@@ -57,6 +57,26 @@ class UnitApi extends AbstractApi {
     );
   }
 
+  /// `GET .../units` — cross-property "mobile" route, scoped to whichever
+  /// properties the caller can access (see backend's
+  /// InjectPropertyAccessScopeMiddleware/ResolvePropertyScopeFilter). No
+  /// property_id sent — relies entirely on the backend's own access-scope
+  /// resolution, matching how the Assigned Worker/Manager picker already
+  /// relies on backend scoping rather than re-deriving it client-side.
+  Future<List<UnitModel>> getUnitsAcrossProperties({
+    required String clientId,
+  }) async {
+    final response = await execute(
+      method: 'GET',
+      path: '/api/v1/admin/clients/$clientId/units?page_size=200',
+    );
+    final json = jsonDecode(response.body) as Map<String, dynamic>;
+    final data = json['data'] as Map<String, dynamic>;
+    return (data['rows'] as List<dynamic>)
+        .map((e) => UnitModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
   Future<UnitModel> getUnit({
     required String clientId,
     required String propertyId,

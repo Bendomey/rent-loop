@@ -18,12 +18,16 @@ class MaintenanceRequestsQuery {
   final String? categoryLabel;
   final String? assignedWorkerId;
   final String? assignedManagerId;
+  final List<String> propertyIds;
+  final List<String> unitIds;
 
   const MaintenanceRequestsQuery({
     this.priorityLabel,
     this.categoryLabel,
     this.assignedWorkerId,
     this.assignedManagerId,
+    this.propertyIds = const [],
+    this.unitIds = const [],
   });
 
   MaintenanceRequestsQuery copyWith({
@@ -31,6 +35,8 @@ class MaintenanceRequestsQuery {
     String? categoryLabel,
     String? assignedWorkerId,
     String? assignedManagerId,
+    List<String>? propertyIds,
+    List<String>? unitIds,
     bool clearPriorityLabel = false,
     bool clearCategoryLabel = false,
     bool clearAssignedWorkerId = false,
@@ -49,6 +55,8 @@ class MaintenanceRequestsQuery {
       assignedManagerId: clearAssignedManagerId
           ? null
           : (assignedManagerId ?? this.assignedManagerId),
+      propertyIds: propertyIds ?? this.propertyIds,
+      unitIds: unitIds ?? this.unitIds,
     );
   }
 }
@@ -131,6 +139,8 @@ class MaintenanceRequestsNotifier extends _$MaintenanceRequestsNotifier {
             categoryLabel: query.categoryLabel,
             assignedWorkerId: query.assignedWorkerId,
             assignedManagerId: query.assignedManagerId,
+            propertyIds: query.propertyIds,
+            unitIds: query.unitIds,
           );
       state = MaintenanceRequestsState(
         items: result.rows,
@@ -172,6 +182,8 @@ class MaintenanceRequestsNotifier extends _$MaintenanceRequestsNotifier {
             categoryLabel: _currentQuery.categoryLabel,
             assignedWorkerId: _currentQuery.assignedWorkerId,
             assignedManagerId: _currentQuery.assignedManagerId,
+            propertyIds: _currentQuery.propertyIds,
+            unitIds: _currentQuery.unitIds,
           );
       state = state.copyWith(
         items: [...state.items, ...result.rows],

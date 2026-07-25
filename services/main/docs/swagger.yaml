@@ -7734,9 +7734,12 @@ paths:
       - in: query
         name: tenant_id
         type: string
-      - in: query
+      - collectionFormat: multi
+        in: query
+        items:
+          type: string
         name: unit_id
-        type: string
+        type: array
       produces:
       - application/json
       responses:
@@ -12074,9 +12077,12 @@ paths:
       - in: query
         name: tenant_id
         type: string
-      - in: query
+      - collectionFormat: multi
+        in: query
+        items:
+          type: string
         name: unit_id
-        type: string
+        type: array
       produces:
       - application/json
       responses:
@@ -15216,6 +15222,145 @@ paths:
       summary: List tenants across properties (Admin, mobile)
       tags:
       - Tenants
+  /api/v1/admin/clients/{client_id}/units:
+    get:
+      consumes:
+      - application/json
+      description: List units across every property the caller has access to, optionally
+        narrowed with one or more property_id query values
+      parameters:
+      - collectionFormat: multi
+        description: Property ID(s) to narrow results to; omit to see every property
+          the caller can access
+        in: query
+        items:
+          type: string
+        name: property_id
+        type: array
+      - collectionFormat: multi
+        example:
+        - 767d8e23-8c9f-4c51-85af-5908039869da
+        - 3d90d606-2a22-4487-9431-69736829094f
+        in: query
+        items:
+          type: string
+        name: block_ids
+        type: array
+      - in: query
+        name: end_date
+        type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - enum:
+        - WEEKLY
+        - DAILY
+        - MONTHLY
+        - QUARTERLY
+        - BIANNUALLY
+        - ANNUALLY
+        example: WEEKLY
+        in: query
+        name: payment_frequency
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - example: prop_123
+        in: query
+        name: property_id
+        type: string
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      - enum:
+        - Unit.Status.Draft
+        - Unit.Status.Available
+        - Unit.Status.Occupied
+        - Unit.Status.Maintenance
+        example: Unit.Status.Available
+        in: query
+        name: status
+        type: string
+      - enum:
+        - APARTMENT
+        - HOUSE
+        - STUDIO
+        - OFFICE
+        - RETAIL
+        example: SINGLE
+        in: query
+        name: type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.AdminOutputUnit'
+                    type: array
+                type: object
+            type: object
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "403":
+          description: Requested property_id is outside the caller's access scope
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List units across properties (Admin, mobile)
+      tags:
+      - Units
   /api/v1/admin/clients/apply:
     post:
       consumes:

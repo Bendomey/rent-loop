@@ -37,6 +37,8 @@ class MaintenanceRequestApi extends AbstractApi {
     String? categoryLabel,
     String? assignedWorkerId,
     String? assignedManagerId,
+    List<String> propertyIds = const [],
+    List<String> unitIds = const [],
   }) async {
     final query = <String, String>{
       'page': '$page',
@@ -57,7 +59,13 @@ class MaintenanceRequestApi extends AbstractApi {
       query['assigned_manager_id'] = assignedManagerId;
     }
 
-    final queryString = Uri(queryParameters: query).query;
+    final queryString = Uri(
+      queryParameters: {
+        ...query,
+        if (propertyIds.isNotEmpty) 'property_id': propertyIds,
+        if (unitIds.isNotEmpty) 'unit_id': unitIds,
+      },
+    ).query;
     final response = await execute(
       method: 'GET',
       path: '/api/v1/admin/clients/$clientId/maintenance-requests?$queryString',

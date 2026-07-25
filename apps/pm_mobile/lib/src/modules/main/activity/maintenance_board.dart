@@ -9,6 +9,7 @@ import 'package:rentloop_manager/src/repository/models/maintenance_request_model
 import 'package:rentloop_manager/src/repository/notifiers/activity/maintenance_assignees_notifier.dart';
 import 'package:rentloop_manager/src/repository/notifiers/activity/maintenance_request_status_notifier.dart';
 import 'package:rentloop_manager/src/repository/notifiers/activity/maintenance_requests_notifier.dart';
+import 'package:rentloop_manager/src/repository/providers/activity/maintenance_filter_options_provider.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
@@ -33,6 +34,20 @@ String _ageLabel(String? createdAt) {
   if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
   if (diff.inHours < 24) return '${diff.inHours}h ago';
   return '${diff.inDays}d ago';
+}
+
+String? _multiSelectChipLabel({
+  required List<String> selectedIds,
+  required List<({String id, String name})> options,
+  required String singularNoun,
+  required String pluralNoun,
+}) {
+  if (selectedIds.isEmpty) return null;
+  if (selectedIds.length == 1) {
+    final match = options.where((o) => o.id == selectedIds.first);
+    return match.isEmpty ? '1 $singularNoun' : match.first.name;
+  }
+  return '${selectedIds.length} $pluralNoun';
 }
 
 // ── Card ──────────────────────────────────────────────────────────────────────
@@ -256,20 +271,28 @@ class _FilterChipsRow extends StatelessWidget {
     required this.category,
     required this.worker,
     required this.manager,
+    required this.property,
+    required this.unit,
     required this.onTapPriority,
     required this.onTapCategory,
     required this.onTapWorker,
     required this.onTapManager,
+    required this.onTapProperty,
+    required this.onTapUnit,
   });
 
   final String? priority;
   final String? category;
   final String? worker;
   final String? manager;
+  final String? property;
+  final String? unit;
   final VoidCallback onTapPriority;
   final VoidCallback onTapCategory;
   final VoidCallback onTapWorker;
   final VoidCallback onTapManager;
+  final VoidCallback onTapProperty;
+  final VoidCallback onTapUnit;
 
   @override
   Widget build(BuildContext context) {
@@ -309,6 +332,14 @@ class _FilterChipsRow extends StatelessWidget {
               value: manager,
               onTap: onTapManager,
             ),
+            const SizedBox(width: 8),
+            _FilterTriggerChip(
+              label: 'Property',
+              value: property,
+              onTap: onTapProperty,
+            ),
+            const SizedBox(width: 8),
+            _FilterTriggerChip(label: 'Unit', value: unit, onTap: onTapUnit),
           ],
         ),
       ),
@@ -369,29 +400,71 @@ class _FilterTriggerChip extends StatelessWidget {
 // ── Filter sheet ──────────────────────────────────────────────────────────────
 
 class _FilterPickResult {
-  const _FilterPickResult.select(this.value, {this.id}) : isClear = false;
-  const _FilterPickResult.clear() : value = null, id = null, isClear = true;
+  const _FilterPickResult.select(this.value, {this.id})
+    : values = null,
+      ids = null,
+      isClear = false;
+  const _FilterPickResult.selectMulti(this.values, {this.ids})
+    : value = null,
+      id = null,
+      isClear = false;
+  const _FilterPickResult.clear()
+    : value = null,
+      id = null,
+      values = null,
+      ids = null,
+      isClear = true;
 
   final String? value;
   final String? id;
+  final List<String>? values;
+  final List<String>? ids;
   final bool isClear;
 }
 
-class _FilterSheet extends StatelessWidget {
+class _FilterSheet extends StatefulWidget {
   const _FilterSheet({
     required this.title,
     required this.options,
-    required this.selected,
+    this.selected,
+    this.selectedMulti = const [],
     this.idsByLabel,
+    this.multiSelect = false,
   });
 
   final String title;
   final List<String> options;
   final String? selected;
 
-  /// Only set for person-filters (Worker/Manager) — maps a displayed label
-  /// to the id that must actually be sent to the API.
+  /// Pre-checked labels, multi-select mode only.
+  final List<String> selectedMulti;
+
+  /// Only set for person/property/unit filters — maps a displayed label to
+  /// the id that must actually be sent to the API.
   final Map<String, String>? idsByLabel;
+  final bool multiSelect;
+
+  @override
+  State<_FilterSheet> createState() => _FilterSheetState();
+}
+
+class _FilterSheetState extends State<_FilterSheet> {
+  late final Set<String> _checked = {...widget.selectedMulti};
+
+  void _apply() {
+    Navigator.pop(
+      context,
+      _FilterPickResult.selectMulti(
+        _checked.toList(),
+        ids: widget.idsByLabel == null
+            ? null
+            : _checked
+                  .map((label) => widget.idsByLabel![label])
+                  .whereType<String>()
+                  .toList(),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -426,7 +499,7 @@ class _FilterSheet extends StatelessWidget {
                   ),
                   Expanded(
                     child: Text(
-                      'Filter by $title',
+                      'Filter by ${widget.title}',
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         fontFamily: RLTokens.fontSans,
@@ -452,7 +525,7 @@ class _FilterSheet extends StatelessWidget {
                 ],
               ),
             ),
-            if (options.isEmpty)
+            if (widget.options.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: RLTokens.space4,
@@ -474,20 +547,34 @@ class _FilterSheet extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(
                     horizontal: RLTokens.space4,
                   ),
-                  itemCount: options.length,
+                  itemCount: widget.options.length,
                   separatorBuilder: (_, _) =>
                       Container(height: 1, color: RLTokens.hairlineSoft),
                   itemBuilder: (_, i) {
-                    final option = options[i];
-                    final isSelected = option == selected;
+                    final option = widget.options[i];
+                    final isSelected = widget.multiSelect
+                        ? _checked.contains(option)
+                        : option == widget.selected;
                     return GestureDetector(
-                      onTap: () => Navigator.pop(
-                        context,
-                        _FilterPickResult.select(
-                          option,
-                          id: idsByLabel?[option],
-                        ),
-                      ),
+                      onTap: () {
+                        if (widget.multiSelect) {
+                          setState(() {
+                            if (_checked.contains(option)) {
+                              _checked.remove(option);
+                            } else {
+                              _checked.add(option);
+                            }
+                          });
+                        } else {
+                          Navigator.pop(
+                            context,
+                            _FilterPickResult.select(
+                              option,
+                              id: widget.idsByLabel?[option],
+                            ),
+                          );
+                        }
+                      },
                       behavior: HitTestBehavior.opaque,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 13),
@@ -504,9 +591,13 @@ class _FilterSheet extends StatelessWidget {
                               ),
                             ),
                             Icon(
-                              isSelected
-                                  ? Icons.radio_button_checked_rounded
-                                  : Icons.radio_button_unchecked_rounded,
+                              widget.multiSelect
+                                  ? (isSelected
+                                        ? Icons.check_box_rounded
+                                        : Icons.check_box_outline_blank_rounded)
+                                  : (isSelected
+                                        ? Icons.radio_button_checked_rounded
+                                        : Icons.radio_button_unchecked_rounded),
                               size: 20,
                               color: isSelected
                                   ? RLTokens.crimson
@@ -518,6 +609,16 @@ class _FilterSheet extends StatelessWidget {
                     );
                   },
                 ),
+              ),
+            if (widget.multiSelect)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  RLTokens.space4,
+                  8,
+                  RLTokens.space4,
+                  0,
+                ),
+                child: RLBtn(label: 'Apply', full: true, onPressed: _apply),
               ),
             SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
           ],
@@ -909,6 +1010,8 @@ class _MaintenanceBoardState extends ConsumerState<MaintenanceBoard> {
   String? _categoryFilter;
   String? _workerFilter;
   String? _managerFilter;
+  List<String> _propertyFilterIds = const [];
+  List<String> _unitFilterIds = const [];
 
   @override
   void initState() {
@@ -994,6 +1097,40 @@ class _MaintenanceBoardState extends ConsumerState<MaintenanceBoard> {
         onChanged(null, null);
       } else {
         onChanged(result.value, result.id);
+      }
+    });
+  }
+
+  Future<void> _pickMultiFilter({
+    required String title,
+    required List<({String id, String name})> options,
+    required List<String> selectedIds,
+    required void Function(List<String> ids) onChanged,
+  }) async {
+    final labels = options.map((o) => o.name).toList();
+    final idsByLabel = {for (final o in options) o.name: o.id};
+    final selectedLabels = options
+        .where((o) => selectedIds.contains(o.id))
+        .map((o) => o.name)
+        .toList();
+    final result = await showModalBottomSheet<_FilterPickResult>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _FilterSheet(
+        title: title,
+        options: labels,
+        selectedMulti: selectedLabels,
+        idsByLabel: idsByLabel,
+        multiSelect: true,
+      ),
+    );
+    if (result == null) return;
+    setState(() {
+      if (result.isClear) {
+        onChanged(const []);
+      } else {
+        onChanged(result.ids ?? const []);
       }
     });
   }
@@ -1144,6 +1281,14 @@ class _MaintenanceBoardState extends ConsumerState<MaintenanceBoard> {
       });
     }
     final people = ref.watch(maintenanceAssigneesNotifierProvider);
+    final propertyOptions =
+        (ref.watch(maintenanceFilterPropertiesProvider).valueOrNull ?? [])
+            .map((p) => (id: p.id, name: p.name))
+            .toList();
+    final unitOptions =
+        (ref.watch(maintenanceFilterUnitsProvider).valueOrNull ?? [])
+            .map((u) => (id: u.id, name: u.name))
+            .toList();
 
     return Column(
       children: [
@@ -1152,6 +1297,18 @@ class _MaintenanceBoardState extends ConsumerState<MaintenanceBoard> {
           category: _categoryFilter,
           worker: _workerFilter,
           manager: _managerFilter,
+          property: _multiSelectChipLabel(
+            selectedIds: _propertyFilterIds,
+            options: propertyOptions,
+            singularNoun: 'Property',
+            pluralNoun: 'Properties',
+          ),
+          unit: _multiSelectChipLabel(
+            selectedIds: _unitFilterIds,
+            options: unitOptions,
+            singularNoun: 'Unit',
+            pluralNoun: 'Units',
+          ),
           onTapPriority: () => _pickFilter(
             title: 'Priority',
             options: _kPriorities,
@@ -1198,6 +1355,24 @@ class _MaintenanceBoardState extends ConsumerState<MaintenanceBoard> {
                 assignedManagerId: id,
                 clearAssignedManagerId: id == null,
               );
+            },
+          ),
+          onTapProperty: () => _pickMultiFilter(
+            title: 'Property',
+            options: propertyOptions,
+            selectedIds: _propertyFilterIds,
+            onChanged: (ids) {
+              _propertyFilterIds = ids;
+              _query = _query.copyWith(propertyIds: ids);
+            },
+          ),
+          onTapUnit: () => _pickMultiFilter(
+            title: 'Unit',
+            options: unitOptions,
+            selectedIds: _unitFilterIds,
+            onChanged: (ids) {
+              _unitFilterIds = ids;
+              _query = _query.copyWith(unitIds: ids);
             },
           ),
         ),

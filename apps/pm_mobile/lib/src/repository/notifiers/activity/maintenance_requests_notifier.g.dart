@@ -7,7 +7,7 @@ part of 'maintenance_requests_notifier.dart';
 // **************************************************************************
 
 String _$maintenanceRequestsNotifierHash() =>
-    r'fd6a83d129f32d418f0659df494831418d0eeb05';
+    r'9d93350a0b560da5ea5471901f2b8a8c53da3a07';
 
 /// Copied from Dart SDK
 class _SystemHash {

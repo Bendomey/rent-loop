@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-07-25 — Maintenance board Property & Unit filters (multi-select)
+- Added Property and Unit filter chips to the maintenance board — both multi-select (unlike the existing 4, which are single-select), sending repeated `property_id`/`unit_id` query params
+- `_FilterSheet` gained a multi-select mode (checkboxes, no auto-close on tap, "Apply" button) alongside its existing single-select mode; `_FilterPickResult` gained `values`/`ids` fields
+- Property filter reuses the existing `GET .../properties/me` endpoint (no backend change); Unit filter required a **new backend endpoint**, `GET .../clients/{client_id}/units`, added to the existing access-scoped cross-property "mobile" route group (same middleware as `/leases`, `/tenants`, `/maintenance-requests`)
+- **Security fix found and applied while building the new units endpoint**: the units repository had no client-scoping for an unrestricted (OWNER) query with no property filter — would have leaked units across every client. Added `unitClientIDScope` (mirrors `mrClientIDScope`'s subquery pattern) and threaded it through
+- Backend: `unit_id` on the maintenance-requests list endpoints is now multi-value (`UnitIDs []string`/`mrUnitIDsScope`, mirroring the existing `PropertyIDs` pattern), fixing 3 call sites including a previously-unnoticed `CountByStatus`
+- New `repository/providers/activity/maintenance_filter_options_provider.dart` — 2 simple query providers, not full notifiers, for the two new option lists
+- Design doc: `docs/superpowers/specs/2026-07-25-pm-mobile-maintenance-property-unit-filters-design.md`
+- Modules affected: `api/`, `repository/notifiers/activity/`, `repository/providers/activity/` (new), `modules/main/activity/`, `services/main/internal/{handlers,repository,router}/`
+
 ## 2026-07-24 — Maintenance board real API integration
 - Backend fix (`services/main/internal/transformations/maintenance-request.go`): `DBMaintenanceRequestToRest` now populates `unit` via `DBAdminUnitToRest` (was the leaner `DBUnitToRest`, which dropped `property_id`) — matches the response struct's own declared `AdminOutputUnit` type and every other field's admin-richness. Unblocks reading a request's property both for the assignee-filter lookup and for building the status-update mutation's per-property PATCH path.
 - New: `api/maintenance_request_api.dart` (`MaintenanceRequestApi.getMaintenanceRequests()` against the cross-property "mobile" list route; `.updateStatus()` against the per-property status route), `api/client_user_property_api.dart` (`ClientUserPropertyApi.getClientUserProperties()`)
