@@ -9,6 +9,7 @@ import 'package:shimmer/shimmer.dart';
 import 'package:rentloop_manager/src/lib/property_status.dart';
 import 'package:rentloop_manager/src/repository/models/property_model.dart';
 import 'package:rentloop_manager/src/repository/notifiers/properties/properties_notifier.dart';
+import 'package:rentloop_manager/src/shared/permission_guard.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
@@ -92,22 +93,25 @@ class _PropertiesScreenState extends ConsumerState<PropertiesScreen> {
 
     return Scaffold(
       backgroundColor: RLTokens.surface,
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: 'fab-properties',
-        onPressed: () async {
-          await Haptics.vibrate(HapticsType.medium);
-          if (context.mounted) context.push('/properties/add');
-        },
-        backgroundColor: RLTokens.crimson,
-        foregroundColor: Colors.white,
-        elevation: 3,
-        icon: const Icon(Icons.add, size: 20),
-        label: Text(
-          'Property',
-          style: TextStyle(
-            fontFamily: RLTokens.fontSans,
-            fontWeight: RLTokens.semibold,
-            fontSize: 14,
+      floatingActionButton: PermissionGuard(
+        roles: const ['OWNER', 'ADMIN'],
+        child: FloatingActionButton.extended(
+          heroTag: 'fab-properties',
+          onPressed: () async {
+            await Haptics.vibrate(HapticsType.medium);
+            if (context.mounted) context.push('/properties/add');
+          },
+          backgroundColor: RLTokens.crimson,
+          foregroundColor: Colors.white,
+          elevation: 3,
+          icon: const Icon(Icons.add, size: 20),
+          label: Text(
+            'Property',
+            style: TextStyle(
+              fontFamily: RLTokens.fontSans,
+              fontWeight: RLTokens.semibold,
+              fontSize: 14,
+            ),
           ),
         ),
       ),
@@ -241,12 +245,15 @@ class _Header extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          RLIconBtn(
-            icon: Icons.add,
-            onTap: () async {
-              await Haptics.vibrate(HapticsType.medium);
-              if (context.mounted) context.push('/properties/add');
-            },
+          PermissionGuard(
+            roles: const ['OWNER', 'ADMIN'],
+            child: RLIconBtn(
+              icon: Icons.add,
+              onTap: () async {
+                await Haptics.vibrate(HapticsType.medium);
+                if (context.mounted) context.push('/properties/add');
+              },
+            ),
           ),
         ],
       ),
