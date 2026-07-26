@@ -2,13 +2,17 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
+	"github.com/redis/go-redis/v9"
+	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -17,6 +21,21 @@ import (
 // revoked, or expired — only that it is not usable.
 func invalidRefreshToken() error {
 	return pkg.UnauthorizedError("InvalidRefreshToken", nil)
+}
+
+// replayCacheEntry is what a rotation leaves behind for a few seconds so that
+// the same client racing itself gets an identical answer instead of being
+// treated as a thief. It holds a live refresh token, which is why its TTL is
+// measured in seconds.
+type replayCacheEntry struct {
+	Token     string    `json:"token"`
+	ExpiresAt time.Time `json:"expires_at"`
+}
+
+// replayCacheKey is keyed on the RETIRED token's hash — the thing a replaying
+// client will present — not on the replacement's.
+func replayCacheKey(retiredTokenHash string) string {
+	return fmt.Sprintf("refresh_replay:%s", retiredTokenHash)
 }
 
 type IssueRefreshTokenInput struct {
@@ -57,6 +76,67 @@ func NewRefreshTokenService(
 
 func (s *refreshTokenService) TTL() time.Duration {
 	return time.Duration(s.appCtx.Config.AuthTokenTTL.RefreshTokenDays) * 24 * time.Hour
+}
+
+func (s *refreshTokenService) graceWindow() time.Duration {
+	return time.Duration(s.appCtx.Config.AuthTokenTTL.ReplayGraceSeconds) * time.Second
+}
+
+// rememberReplacement records what a rotation handed back. Failure is logged
+// and swallowed: the rotation itself already succeeded, and losing the grace
+// window degrades a racing client to a logout — bad, but not a reason to fail
+// an otherwise good request.
+func (s *refreshTokenService) rememberReplacement(
+	ctx context.Context,
+	retiredTokenHash string,
+	entry replayCacheEntry,
+) {
+	payload, marshalErr := json.Marshal(entry)
+	if marshalErr != nil {
+		log.WithError(marshalErr).Error("refresh replay: failed to marshal cache entry")
+		return
+	}
+	if setErr := s.appCtx.RDB.Set(
+		ctx, replayCacheKey(retiredTokenHash), payload, s.graceWindow(),
+	).Err(); setErr != nil {
+		log.WithError(setErr).Error("refresh replay: failed to cache replacement token")
+	}
+}
+
+// forgetReplacement undoes rememberReplacement. Only needed when the rotation
+// transaction fails to commit after the entry was already written, which would
+// otherwise leave the cache advertising a token that was rolled away.
+func (s *refreshTokenService) forgetReplacement(ctx context.Context, retiredTokenHash string) {
+	if delErr := s.appCtx.RDB.Del(ctx, replayCacheKey(retiredTokenHash)).Err(); delErr != nil {
+		log.WithError(delErr).Error("refresh replay: failed to evict stale cache entry")
+	}
+}
+
+// recallReplacement returns what this retired token was previously exchanged
+// for, if that happened within the grace window. It fails CLOSED: any error,
+// including Redis being unreachable, reports "no entry" so the caller falls
+// through to theft detection. An unverifiable replay must never be trusted.
+func (s *refreshTokenService) recallReplacement(
+	ctx context.Context,
+	retiredTokenHash string,
+) (*replayCacheEntry, bool) {
+	raw, getErr := s.appCtx.RDB.Get(ctx, replayCacheKey(retiredTokenHash)).Result()
+	if getErr != nil {
+		if !errors.Is(getErr, redis.Nil) {
+			log.WithError(getErr).Error("refresh replay: cache lookup failed, treating as miss")
+		}
+		return nil, false
+	}
+
+	var entry replayCacheEntry
+	if unmarshalErr := json.Unmarshal([]byte(raw), &entry); unmarshalErr != nil {
+		log.WithError(unmarshalErr).Error("refresh replay: corrupt cache entry, treating as miss")
+		return nil, false
+	}
+	if entry.Token == "" {
+		return nil, false
+	}
+	return &entry, true
 }
 
 // Issue mints a brand-new session row. It intentionally does not open its own
@@ -141,9 +221,23 @@ func (s *refreshTokenService) Rotate(
 	now := time.Now()
 
 	// Already revoked means this token was replayed after it had been rotated
-	// away — two parties hold what is meant to be a single-use credential.
-	// Kill the entire descendant chain, not just this row.
+	// away. That is usually theft — but it is also what one honest client looks
+	// like when two of its own requests refresh at the same instant. Check the
+	// grace window before reaching for the cascade.
 	if row.RevokedAt != nil {
+		if entry, hit := s.recallReplacement(ctx, row.TokenHash); hit {
+			// Same answer as the first caller got. Nothing is written: no new
+			// row, no re-rotation, no revocation.
+			tx.Rollback()
+			return &RotatedRefreshToken{
+				UserID:    row.UserID,
+				Token:     entry.Token,
+				ExpiresAt: entry.ExpiresAt,
+			}, nil
+		}
+
+		// Outside the window: a genuine replay. Kill the entire descendant
+		// chain, not just this row.
 		if _, cascadeErr := s.repo.RevokeChainFrom(txCtx, row.ID.String(), now); cascadeErr != nil {
 			tx.Rollback()
 			return nil, pkg.InternalServerError(cascadeErr.Error(), &pkg.RentLoopErrorParams{
@@ -214,18 +308,31 @@ func (s *refreshTokenService) Rotate(
 		})
 	}
 
+	rotated := &RotatedRefreshToken{
+		UserID:    row.UserID,
+		Token:     lib.ComposeRefreshToken(replacement.ID.String(), newSecret),
+		ExpiresAt: replacement.ExpiresAt,
+	}
+
+	// Written BEFORE the commit on purpose. The commit is what releases the row
+	// lock that concurrent replays are queued on, so a replay can be reading
+	// this key microseconds later — if the write happened after the commit, the
+	// racer this feature exists for could still lose and cascade the session.
+	s.rememberReplacement(ctx, row.TokenHash, replayCacheEntry{
+		Token:     rotated.Token,
+		ExpiresAt: rotated.ExpiresAt,
+	})
+
 	if commitErr := tx.Commit().Error; commitErr != nil {
+		// The rotation never happened; retract the promise we just made.
+		s.forgetReplacement(ctx, row.TokenHash)
 		return nil, pkg.InternalServerError(commitErr.Error(), &pkg.RentLoopErrorParams{
 			Err:      commitErr,
 			Metadata: map[string]string{"function": "Rotate", "action": "committing rotation"},
 		})
 	}
 
-	return &RotatedRefreshToken{
-		UserID:    row.UserID,
-		Token:     lib.ComposeRefreshToken(replacement.ID.String(), newSecret),
-		ExpiresAt: replacement.ExpiresAt,
-	}, nil
+	return rotated, nil
 }
 
 // Revoke ends one session. It runs the same full validation as Rotate — id

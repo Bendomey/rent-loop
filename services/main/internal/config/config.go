@@ -38,8 +38,9 @@ type ITokenGenerationSecret struct {
 }
 
 type IAuthTokenTTL struct {
-	AccessTokenHours int
-	RefreshTokenDays int
+	AccessTokenHours   int
+	RefreshTokenDays   int
+	ReplayGraceSeconds int
 }
 
 type IWittyflow struct {
@@ -170,8 +171,9 @@ func Load() Config {
 			TenantUserSecret: getEnv("TENANT_USER_SECRET", "superdupertenantusersecret"),
 		},
 		AuthTokenTTL: IAuthTokenTTL{
-			AccessTokenHours: getEnvInt("ACCESS_TOKEN_TTL_HOURS", 1),
-			RefreshTokenDays: getEnvInt("REFRESH_TOKEN_TTL_DAYS", 90),
+			AccessTokenHours:   getEnvInt("ACCESS_TOKEN_TTL_HOURS", 1),
+			RefreshTokenDays:   getEnvInt("REFRESH_TOKEN_TTL_DAYS", 90),
+			ReplayGraceSeconds: getEnvInt("REFRESH_TOKEN_REPLAY_GRACE_SECONDS", 20),
 		},
 		Wittyflow: IWittyflow{
 			AppID:     getEnv("WITTYFLOW_APP_ID", "fake-app-id"),
