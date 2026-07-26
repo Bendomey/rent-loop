@@ -4306,6 +4306,8 @@ definitions:
       maintenance_request_id:
         type: string
       metadata: {}
+      performed_by_client_user:
+        $ref: '#/definitions/transformations.OutputClientUser'
       performed_by_client_user_id:
         type: string
       performed_by_tenant_id:

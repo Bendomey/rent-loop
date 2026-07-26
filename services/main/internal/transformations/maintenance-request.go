@@ -156,15 +156,16 @@ func DBMaintenanceRequestToTenantRest(mr *models.MaintenanceRequest) any {
 }
 
 type OutputMaintenanceActivityLog struct {
-	ID                      string    `json:"id"`
-	MaintenanceRequestID    string    `json:"maintenance_request_id"`
-	Action                  string    `json:"action"`
-	Description             *string   `json:"description"`
-	PerformedByClientUserID *string   `json:"performed_by_client_user_id,omitempty"`
-	PerformedByTenantID     *string   `json:"performed_by_tenant_id,omitempty"`
-	Metadata                any       `json:"metadata,omitempty"`
-	CreatedAt               time.Time `json:"created_at"`
-	UpdatedAt               time.Time `json:"updated_at"`
+	ID                      string            `json:"id"`
+	MaintenanceRequestID    string            `json:"maintenance_request_id"`
+	Action                  string            `json:"action"`
+	Description             *string           `json:"description"`
+	PerformedByClientUserID *string           `json:"performed_by_client_user_id,omitempty"`
+	PerformedByClientUser   *OutputClientUser `json:"performed_by_client_user"`
+	PerformedByTenantID     *string           `json:"performed_by_tenant_id,omitempty"`
+	Metadata                any               `json:"metadata,omitempty"`
+	CreatedAt               time.Time         `json:"created_at"`
+	UpdatedAt               time.Time         `json:"updated_at"`
 }
 
 // DBMaintenanceActivityLogToRest transforms a MaintenanceRequestActivityLog to REST.
@@ -187,13 +188,13 @@ func DBMaintenanceActivityLogToRest(log *models.MaintenanceRequestActivityLog) a
 }
 
 type OutputMaintenanceRequestComment struct {
-	ID                    string           `json:"id"`
-	MaintenanceRequestID  string           `json:"maintenance_request_id"`
-	Content               string           `json:"content"`
-	CreatedByClientUserID *string          `json:"created_by_client_user_id,omitempty"`
-	CreatedByClientUser   OutputClientUser `json:"created_by_client_user,omitempty"`
-	CreatedAt             time.Time        `json:"created_at"`
-	UpdatedAt             time.Time        `json:"updated_at"`
+	ID                    string            `json:"id"`
+	MaintenanceRequestID  string            `json:"maintenance_request_id"`
+	Content               string            `json:"content"`
+	CreatedByClientUserID *string           `json:"created_by_client_user_id,omitempty"`
+	CreatedByClientUser   *OutputClientUser `json:"created_by_client_user"`
+	CreatedAt             time.Time         `json:"created_at"`
+	UpdatedAt             time.Time         `json:"updated_at"`
 }
 
 // MaintenanceRequestStatsResponse is the response shape for the stats endpoint.

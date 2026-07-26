@@ -1,377 +1,425 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:intl/intl.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import 'package:rentloop_manager/src/lib/maintenance_utils.dart';
+import 'package:rentloop_manager/src/modules/main/activity/maintenance_detail_tabs.dart';
+import 'package:rentloop_manager/src/modules/main/activity/maintenance_status_actions.dart';
+import 'package:rentloop_manager/src/repository/models/maintenance_request_model.dart';
+import 'package:rentloop_manager/src/repository/notifiers/activity/maintenance_request_status_notifier.dart';
+import 'package:rentloop_manager/src/repository/providers/activity/maintenance_detail_provider.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
+import 'package:rentloop_manager/src/shared/toast.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
-// ── Seed data (mirrors root.dart) ─────────────────────────────────────────────
+/// Single maintenance request.
+///
+/// [propertyId] is a hint, not a requirement: every detail endpoint is
+/// property-scoped but the route carries only the request id, so the board
+/// passes `unit.property_id` through as GoRouter `extra`. When it is absent
+/// (deep link, cold start) the providers recover it from the cross-property
+/// list — see `maintenance_detail_provider.dart`.
+class MaintenanceDetailScreen extends ConsumerStatefulWidget {
+  const MaintenanceDetailScreen({super.key, required this.id, this.propertyId});
 
-class _MaintData {
-  const _MaintData({
-    required this.id,
-    required this.title,
-    required this.unit,
-    required this.cat,
-    required this.priority,
-    required this.status,
-    required this.tenant,
-    required this.age,
-    this.assigned,
-  });
   final String id;
-  final String title;
-  final String unit;
-  final String cat;
-  final String priority;
-  final String status;
-  final String tenant;
-  final String age;
-  final String? assigned;
+  final String? propertyId;
+
+  @override
+  ConsumerState<MaintenanceDetailScreen> createState() =>
+      _MaintenanceDetailScreenState();
 }
 
-const _kMaint = [
-  _MaintData(
-    id: 'm1',
-    title: 'Leaking kitchen tap',
-    unit: 'Unit 4B · Cantonments Court',
-    cat: 'Plumbing',
-    priority: 'High',
-    status: 'New',
-    tenant: 'Kwame Mensah',
-    age: '2h ago',
-    assigned: null,
-  ),
-  _MaintData(
-    id: 'm2',
-    title: 'AC not cooling',
-    unit: 'Unit 5A · Cantonments Court',
-    cat: 'HVAC',
-    priority: 'Medium',
-    status: 'In Progress',
-    tenant: 'Ama Boateng',
-    age: '1d ago',
-    assigned: 'Ben (Tech)',
-  ),
-  _MaintData(
-    id: 'm3',
-    title: 'Broken window latch',
-    unit: 'Unit 7 · Spintex Heights',
-    cat: 'General',
-    priority: 'Low',
-    status: 'In Progress',
-    tenant: 'Efua Sarpong',
-    age: '2d ago',
-    assigned: 'Ben (Tech)',
-  ),
-  _MaintData(
-    id: 'm4',
-    title: 'Hallway lights out',
-    unit: 'Block A · Spintex Heights',
-    cat: 'Electrical',
-    priority: 'High',
-    status: 'In Review',
-    tenant: 'Front desk',
-    age: '3d ago',
-    assigned: 'Mensah Electric',
-  ),
-  _MaintData(
-    id: 'm5',
-    title: 'Repaint guest bath',
-    unit: 'Suite 3 · Labadi Beach',
-    cat: 'General',
-    priority: 'Low',
-    status: 'Resolved',
-    tenant: 'Housekeeping',
-    age: '5d ago',
-    assigned: 'Ben (Tech)',
-  ),
-  _MaintData(
-    id: 'm6',
-    title: 'Gate motor jammed',
-    unit: 'Cantonments Court',
-    cat: 'General',
-    priority: 'High',
-    status: 'New',
-    tenant: 'Security',
-    age: '4h ago',
-    assigned: null,
-  ),
-  _MaintData(
-    id: 'm7',
-    title: 'Water heater fault',
-    unit: 'Unit 3B · Cantonments Court',
-    cat: 'Plumbing',
-    priority: 'Medium',
-    status: 'New',
-    tenant: 'Yaw Asante',
-    age: '6h ago',
-    assigned: null,
-  ),
-];
+class _MaintenanceDetailScreenState
+    extends ConsumerState<MaintenanceDetailScreen> {
+  static const _tabHistory = 'history';
+  static const _tabComments = 'comments';
+  static const _tabExpenses = 'expenses';
 
-// ── Screen ────────────────────────────────────────────────────────────────────
-
-class MaintenanceDetailScreen extends StatelessWidget {
-  const MaintenanceDetailScreen({super.key, required this.id});
-  final String id;
-
-  static const _steps = ['New', 'In Progress', 'In Review', 'Resolved'];
+  String _tab = _tabHistory;
+  bool _submittingStatus = false;
 
   @override
   Widget build(BuildContext context) {
-    final m = _kMaint.firstWhere(
-      (x) => x.id == id,
-      orElse: () => _kMaint.first,
+    final provider = maintenanceRequestDetailProvider(
+      widget.id,
+      widget.propertyId,
     );
-    final cur = _steps.indexOf(m.status).clamp(0, _steps.length - 1);
+    final requestAsync = ref.watch(provider);
+
+    final showSkeleton = !requestAsync.hasValue && requestAsync.isLoading;
+    final showError = requestAsync.hasError && !requestAsync.hasValue;
+    final request = requestAsync.valueOrNull;
 
     return Scaffold(
       backgroundColor: RLTokens.surface,
       body: Column(
         children: [
           RLBackHeader(
-            title: 'Request · ${m.id.toUpperCase()}',
+            title: request != null ? '#${request.code}' : 'Request',
             onBack: () async {
               await Haptics.vibrate(HapticsType.selection);
               if (context.mounted) Navigator.of(context).pop();
             },
-            trailing: GestureDetector(
-              onTap: () async => Haptics.vibrate(HapticsType.selection),
-              child: const Padding(
-                padding: EdgeInsets.all(10),
-                child: Icon(Icons.more_horiz, size: 22, color: RLTokens.ink),
-              ),
+            trailing: RLIconBtn(
+              icon: Icons.more_horiz_rounded,
+              bg: Colors.transparent,
+              onTap: () async {
+                await Haptics.vibrate(HapticsType.selection);
+                if (!context.mounted) return;
+                showRLToast(
+                  ref,
+                  tone: RLToastTone.info,
+                  title: 'Coming soon',
+                  body: 'Editing a request is not available in the app yet.',
+                );
+              },
             ),
           ),
           Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+            child: showSkeleton
+                ? const _DetailSkeleton()
+                : showError
+                ? Padding(
+                    padding: const EdgeInsets.all(RLTokens.gutter),
+                    child: RLSectionError(
+                      title: "Couldn't load request",
+                      body: _errorBody(requestAsync.error),
+                      onRetry: () => ref.invalidate(provider),
+                    ),
+                  )
+                : RefreshIndicator(
+                    color: RLTokens.crimson,
+                    onRefresh: () => _refresh(),
+                    child: _Body(
+                      request: request!,
+                      propertyIdHint: widget.propertyId,
+                      tab: _tab,
+                      onTabChanged: (t) => setState(() => _tab = t),
+                    ),
+                  ),
+          ),
+          if (request != null)
+            _ActionBar(
+              request: request,
+              busy: _submittingStatus,
+              onAssign: () => showRLToast(
+                ref,
+                tone: RLToastTone.info,
+                title: 'Coming soon',
+                body: 'Assigning from the app is not available yet.',
+              ),
+              onChangeStatus: () => _changeStatus(request),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// The provider raises a plain [StateError] for the two recoverable setup
+  /// failures (no workspace, unresolvable property) — surfacing its message
+  /// tells the manager what to do, where the generic network copy would not.
+  String _errorBody(Object? error) => error is StateError
+      ? error.message.toString()
+      : 'Check your connection and try again.';
+
+  /// Refreshes the request plus whichever tab is on screen — the other two
+  /// refetch on first open, so pulling never pays for hidden tabs. Both are
+  /// awaited together so the spinner lasts as long as the slower of the two.
+  Future<void> _refresh() async {
+    final id = widget.id;
+    final hint = widget.propertyId;
+    try {
+      await Future.wait(<Future<Object?>>[
+        ref.refresh(maintenanceRequestDetailProvider(id, hint).future),
+        switch (_tab) {
+          _tabComments => ref.refresh(
+            maintenanceRequestCommentsProvider(id, hint).future,
+          ),
+          _tabExpenses => ref.refresh(
+            maintenanceRequestExpensesProvider(id, hint).future,
+          ),
+          _ => ref.refresh(
+            maintenanceRequestActivityLogsProvider(id, hint).future,
+          ),
+        },
+      ]);
+    } catch (_) {
+      // Swallowed deliberately: each provider already holds its own error and
+      // renders it inline. Letting it escape here would only surface an
+      // unhandled exception from RefreshIndicator on top of that.
+    }
+  }
+
+  Future<void> _changeStatus(MaintenanceRequestModel request) async {
+    final current = mrStatusLabel(request.status);
+    final target = await pickMaintenanceStatus(context, current);
+    if (!mounted || target == null) return;
+
+    String? reason;
+    if (target == 'Resolved') {
+      if (!await confirmMaintenanceResolve(context, request.title)) return;
+    } else if (target == 'Cancelled') {
+      reason = await promptMaintenanceCancelReason(context, request.title);
+      if (reason == null) return;
+    }
+    if (!mounted) return;
+
+    setState(() => _submittingStatus = true);
+    final success = await ref
+        .read(maintenanceRequestStatusNotifierProvider.notifier)
+        .updateStatus(
+          request: request,
+          toStatusLabel: target,
+          cancellationReason: reason,
+        );
+    if (!mounted) return;
+    setState(() => _submittingStatus = false);
+
+    if (success) {
+      await Haptics.vibrate(HapticsType.light);
+      if (!mounted) return;
+      // The move writes an activity-log entry, so History is stale too.
+      ref.invalidate(
+        maintenanceRequestDetailProvider(widget.id, widget.propertyId),
+      );
+      ref.invalidate(
+        maintenanceRequestActivityLogsProvider(widget.id, widget.propertyId),
+      );
+      showRLToast(
+        ref,
+        tone: RLToastTone.success,
+        title: 'Status updated',
+        body: 'Request moved to $target.',
+      );
+    } else {
+      showRLToast(
+        ref,
+        tone: RLToastTone.error,
+        title: "Couldn't update status",
+        body:
+            ref.read(maintenanceRequestStatusNotifierProvider).errorMessage ??
+            'Please try again.',
+      );
+    }
+  }
+}
+
+// ── Body ──────────────────────────────────────────────────────────────────────
+
+class _Body extends StatelessWidget {
+  const _Body({
+    required this.request,
+    required this.propertyIdHint,
+    required this.tab,
+    required this.onTabChanged,
+  });
+
+  final MaintenanceRequestModel request;
+  final String? propertyIdHint;
+  final String tab;
+  final ValueChanged<String> onTabChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(
+        RLTokens.gutter,
+        8,
+        RLTokens.gutter,
+        8,
+      ),
+      children: [
+        _HeroCard(request: request),
+        if (request.attachments.isNotEmpty)
+          _Attachments(urls: request.attachments),
+        const RLLabel('Assignments'),
+        _AssignmentsCard(request: request),
+        const RLLabel('Properties'),
+        _PropertiesCard(request: request),
+        const SizedBox(height: 18),
+        RLSegmented(
+          value: tab,
+          onChanged: onTabChanged,
+          items: const [
+            RLSegmentItem(key: 'history', label: 'History'),
+            RLSegmentItem(key: 'comments', label: 'Comments'),
+            RLSegmentItem(key: 'expenses', label: 'Expenses'),
+          ],
+        ),
+        const SizedBox(height: 14),
+        switch (tab) {
+          'comments' => MaintenanceCommentsTab(
+            requestId: request.id,
+            propertyIdHint: propertyIdHint,
+          ),
+          'expenses' => MaintenanceExpensesTab(
+            requestId: request.id,
+            propertyIdHint: propertyIdHint,
+          ),
+          _ => MaintenanceHistoryTab(
+            request: request,
+            propertyIdHint: propertyIdHint,
+          ),
+        },
+        _Footer(request: request),
+      ],
+    );
+  }
+}
+
+// ── Hero ──────────────────────────────────────────────────────────────────────
+
+class _HeroCard extends StatelessWidget {
+  const _HeroCard({required this.request});
+
+  final MaintenanceRequestModel request;
+
+  @override
+  Widget build(BuildContext context) {
+    final statusLabel = mrStatusLabel(request.status);
+    final description = request.description;
+
+    return RLCard(
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '#${request.code}',
+                  style: const TextStyle(
+                    fontFamily: RLTokens.fontMono,
+                    fontSize: 12,
+                    color: RLTokens.muted,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ),
+              RLPill(statusLabel, tone: statusTone(statusLabel), large: true),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            request.title,
+            style: const TextStyle(
+              fontFamily: RLTokens.fontSerif,
+              fontSize: 22,
+              color: RLTokens.ink,
+              letterSpacing: -0.3,
+              height: 1.2,
+            ),
+          ),
+          if (request.createdAt != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Opened ${_dateTime(request.createdAt)}',
+              style: const TextStyle(
+                fontFamily: RLTokens.fontSans,
+                fontSize: 12.5,
+                color: RLTokens.muted,
+              ),
+            ),
+          ],
+          if (description != null && description.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.only(top: 14),
+              decoration: const BoxDecoration(
+                border: Border(top: BorderSide(color: RLTokens.hairlineSoft)),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 12),
-                  // Priority + category pills
-                  Row(
-                    children: [
-                      RLPill(
-                        '${m.priority} priority',
-                        tone: statusTone(m.priority),
-                        large: true,
-                      ),
-                      const SizedBox(width: 8),
-                      RLPill(m.cat, tone: RLTone.neutral, large: true),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-                  // Title
-                  Text(
-                    m.title,
-                    style: const TextStyle(
-                      fontFamily: RLTokens.fontSerif,
-                      fontSize: 26,
-                      color: RLTokens.ink,
-                      letterSpacing: -0.4,
-                      height: 1.1,
+                  const Text(
+                    'DESCRIPTION',
+                    style: TextStyle(
+                      fontFamily: RLTokens.fontMono,
+                      fontSize: 10,
+                      letterSpacing: 0.6,
+                      color: RLTokens.mutedSoft,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  // Unit
+                  const SizedBox(height: 5),
                   Text(
-                    m.unit,
+                    description,
                     style: const TextStyle(
                       fontFamily: RLTokens.fontSans,
-                      fontSize: 13.5,
-                      color: RLTokens.muted,
+                      fontSize: 14.5,
+                      color: RLTokens.inkSoft,
+                      height: 1.5,
                     ),
                   ),
-                  const SizedBox(height: 18),
-                  // Stepper card
-                  Container(
-                    padding: const EdgeInsets.all(18),
-                    decoration: BoxDecoration(
-                      color: RLTokens.surface,
-                      borderRadius: BorderRadius.circular(RLTokens.rLg),
-                      border: Border.all(color: RLTokens.hairline),
-                    ),
-                    child: _Stepper(steps: _steps, current: cur),
-                  ),
-                  // Photos
-                  RLLabel('Photos from tenant'),
-                  _PhotosRow(),
-                  // Details
-                  RLLabel('Details'),
-                  _DetailsCard(m: m),
-                  // Discussion
-                  RLLabel('Discussion'),
-                  _DiscussionCard(m: m),
-                  const SizedBox(height: 8),
                 ],
               ),
             ),
-          ),
-          _ActionBar(m: m),
+          ],
         ],
       ),
     );
   }
 }
 
-// ── Status stepper ────────────────────────────────────────────────────────────
+// ── Attachments ───────────────────────────────────────────────────────────────
 
-class _Stepper extends StatelessWidget {
-  const _Stepper({required this.steps, required this.current});
-  final List<String> steps;
-  final int current;
+/// Attachments come back as bare URLs with no MIME hint, so each tile
+/// optimistically renders an image and falls back to a labelled file card when
+/// that fails. Tapping hands the URL to the system browser rather than
+/// building an in-app viewer.
+class _Attachments extends StatelessWidget {
+  const _Attachments({required this.urls});
+
+  final List<String> urls;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: steps.asMap().entries.map((e) {
-        final i = e.key;
-        final label = e.value;
-        final done = i < current;
-        final active = i == current;
-        final isLast = i == steps.length - 1;
-
-        return Expanded(
-          child: Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(2, RLTokens.space6, 2, 10),
+          child: Row(
             children: [
-              // Circle row with connector lines
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // Left connector
-                  Expanded(
-                    child: Container(
-                      height: 2,
-                      color: i == 0
-                          ? Colors.transparent
-                          : (done || active)
-                          ? RLTokens.crimson
-                          : RLTokens.hairline,
-                    ),
-                  ),
-                  // Circle
-                  _StepCircle(done: done, active: active),
-                  // Right connector
-                  Expanded(
-                    child: Container(
-                      height: 2,
-                      color: isLast
-                          ? Colors.transparent
-                          : done
-                          ? RLTokens.crimson
-                          : RLTokens.hairline,
-                    ),
-                  ),
-                ],
+              const Icon(
+                Icons.attach_file_rounded,
+                size: 15,
+                color: RLTokens.ink,
               ),
-              const SizedBox(height: 6),
-              // Label
-              Text(
-                label,
-                textAlign: TextAlign.center,
+              const SizedBox(width: 7),
+              const Text(
+                'Attachments',
                 style: TextStyle(
                   fontFamily: RLTokens.fontSans,
-                  fontSize: 10,
-                  fontWeight: active ? RLTokens.bold : RLTokens.medium,
-                  color: (done || active) ? RLTokens.ink : RLTokens.mutedSoft,
-                  height: 1.2,
+                  fontSize: 13,
+                  fontWeight: RLTokens.bold,
+                  color: RLTokens.ink,
+                ),
+              ),
+              const SizedBox(width: 5),
+              Text(
+                '(${urls.length})',
+                style: const TextStyle(
+                  fontFamily: RLTokens.fontSans,
+                  fontSize: 13,
+                  color: RLTokens.muted,
                 ),
               ),
             ],
           ),
-        );
-      }).toList(),
-    );
-  }
-}
-
-class _StepCircle extends StatelessWidget {
-  const _StepCircle({required this.done, required this.active});
-  final bool done;
-  final bool active;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 24,
-      height: 24,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: done
-            ? RLTokens.crimson
-            : active
-            ? RLTokens.surface
-            : RLTokens.fill,
-        border: Border.all(
-          color: (done || active) ? RLTokens.crimson : RLTokens.hairline,
-          width: 2,
         ),
-      ),
-      child: Center(
-        child: done
-            ? const Icon(Icons.check_rounded, size: 13, color: Colors.white)
-            : Container(
-                width: 7,
-                height: 7,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: active ? RLTokens.crimson : RLTokens.micro,
-                ),
-              ),
-      ),
-    );
-  }
-}
-
-// ── Photos row ────────────────────────────────────────────────────────────────
-
-class _PhotosRow extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        // Photo placeholder 1
-        Expanded(child: _PhotoThumb()),
-        const SizedBox(width: 10),
-        // Photo placeholder 2
-        Expanded(child: _PhotoThumb()),
-        const SizedBox(width: 10),
-        // Add button
-        Expanded(
-          child: GestureDetector(
-            onTap: () async => Haptics.vibrate(HapticsType.selection),
-            child: Container(
-              height: 96,
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: RLTokens.hairline,
-                  width: 1.5,
-                  style: BorderStyle.solid,
-                ),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.camera_alt_outlined,
-                    size: 20,
-                    color: RLTokens.mutedSoft,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Add',
-                    style: TextStyle(
-                      fontFamily: RLTokens.fontSans,
-                      fontSize: 10,
-                      color: RLTokens.mutedSoft,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+        SizedBox(
+          height: 92,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: urls.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 10),
+            itemBuilder: (_, i) => _AttachmentTile(url: urls[i]),
           ),
         ),
       ],
@@ -379,105 +427,411 @@ class _PhotosRow extends StatelessWidget {
   }
 }
 
-class _PhotoThumb extends StatelessWidget {
+class _AttachmentTile extends StatelessWidget {
+  const _AttachmentTile({required this.url});
+
+  final String url;
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 96,
-      decoration: BoxDecoration(
-        color: RLTokens.fill,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: RLTokens.hairline),
-      ),
-      child: const Center(
-        child: Icon(Icons.image_outlined, size: 22, color: RLTokens.mutedSoft),
+    return GestureDetector(
+      onTap: () async {
+        await Haptics.vibrate(HapticsType.selection);
+        final uri = Uri.tryParse(url);
+        if (uri == null) return;
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      },
+      child: Container(
+        width: 118,
+        decoration: BoxDecoration(
+          color: RLTokens.fill,
+          borderRadius: BorderRadius.circular(13),
+          border: Border.all(color: RLTokens.hairline),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Image.network(
+          url,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _AttachmentFallback(url: url),
+          loadingBuilder: (_, child, progress) =>
+              progress == null ? child : const _AttachmentLoading(),
+        ),
       ),
     );
   }
 }
 
-// ── Details card ──────────────────────────────────────────────────────────────
+class _AttachmentFallback extends StatelessWidget {
+  const _AttachmentFallback({required this.url});
 
-class _DetailsCard extends StatelessWidget {
-  const _DetailsCard({required this.m});
-  final _MaintData m;
+  final String url;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: RLTokens.surface,
-        borderRadius: BorderRadius.circular(RLTokens.rLg),
-        border: Border.all(color: RLTokens.hairline),
-      ),
+    final name = Uri.tryParse(url)?.pathSegments.lastOrNull ?? 'Attachment';
+    return Padding(
+      padding: const EdgeInsets.all(8),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _FieldRow(k: 'Reported by', v: m.tenant),
-          _FieldRow(k: 'Reported', v: m.age),
-          _FieldRow(k: 'Category', v: m.cat),
-          // Assigned row (last — no border)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 11),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Assigned to',
-                  style: const TextStyle(
-                    fontFamily: RLTokens.fontSans,
-                    fontSize: 13.5,
-                    color: RLTokens.muted,
-                  ),
-                ),
-                Text(
-                  m.assigned ?? 'Assign worker →',
-                  style: TextStyle(
-                    fontFamily: RLTokens.fontSans,
-                    fontSize: 13.5,
-                    fontWeight: RLTokens.semibold,
-                    color: m.assigned != null ? RLTokens.ink : RLTokens.crimson,
-                  ),
-                ),
-              ],
-            ),
+          const Icon(
+            Icons.insert_drive_file_outlined,
+            size: 22,
+            color: RLTokens.mutedSoft,
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FieldRow extends StatelessWidget {
-  const _FieldRow({required this.k, required this.v});
-  final String k;
-  final String v;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 11),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: RLTokens.hairlineSoft)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
+          const SizedBox(height: 6),
           Text(
-            k,
+            name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
-              fontFamily: RLTokens.fontSans,
-              fontSize: 13.5,
+              fontFamily: RLTokens.fontMono,
+              fontSize: 9.5,
               color: RLTokens.muted,
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AttachmentLoading extends StatelessWidget {
+  const _AttachmentLoading();
+
+  @override
+  Widget build(BuildContext context) {
+    return Shimmer.fromColors(
+      baseColor: RLTokens.fill,
+      highlightColor: RLTokens.paper,
+      child: Container(color: Colors.white),
+    );
+  }
+}
+
+// ── Assignments ───────────────────────────────────────────────────────────────
+
+class _AssignmentsCard extends ConsumerWidget {
+  const _AssignmentsCard({required this.request});
+
+  final MaintenanceRequestModel request;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return RLCard(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        children: [
+          _EditRow(
+            label: 'Worker',
+            value: request.assignedWorker?.name ?? 'Unassigned',
+            unset: request.assignedWorker == null,
+            onTap: () => _editSoon(context, ref, 'Assigning a worker'),
+          ),
+          _EditRow(
+            label: 'Manager',
+            value: request.assignedManager?.name ?? 'Unassigned',
+            unset: request.assignedManager == null,
+            last: true,
+            onTap: () => _editSoon(context, ref, 'Assigning a manager'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Placeholder for the edit sheets that will eventually back every tokenized
+/// row. The rows are already built as tap targets so wiring each one is a
+/// matter of swapping this call for its sheet — nothing about the row
+/// treatment has to change then.
+Future<void> _editSoon(BuildContext context, WidgetRef ref, String what) async {
+  await Haptics.vibrate(HapticsType.selection);
+  if (!context.mounted) return;
+  showRLToast(
+    ref,
+    tone: RLToastTone.info,
+    title: 'Coming soon',
+    body: '$what is not available in the app yet.',
+  );
+}
+
+// ── Properties ────────────────────────────────────────────────────────────────
+
+class _PropertiesCard extends ConsumerWidget {
+  const _PropertiesCard({required this.request});
+
+  final MaintenanceRequestModel request;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final priority = mrPriorityLabelFromApi(request.priority);
+    // Both destinations are property-scoped routes, so neither link can be
+    // offered without the unit's property id.
+    final propertyId = request.unit?.propertyId;
+    final leaseId = request.leaseId;
+    final canOpenUnit = propertyId != null;
+    final canOpenLease = propertyId != null && leaseId != null;
+
+    return RLCard(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        children: [
+          _EditRow(
+            label: 'Priority',
+            value: priority,
+            tone: statusTone(priority),
+            onTap: () => _editSoon(context, ref, 'Changing priority'),
+          ),
+          _EditRow(
+            label: 'Category',
+            value: mrCategoryLabelFromApi(request.category),
+            onTap: () => _editSoon(context, ref, 'Changing category'),
+          ),
+          _EditRow(
+            label: 'Visibility',
+            value: mrVisibilityLabelFromApi(request.visibility),
+            onTap: () => _editSoon(context, ref, 'Changing visibility'),
+            last: !canOpenUnit && !canOpenLease,
+          ),
+          if (canOpenUnit)
+            _NavRow(
+              label: 'Unit',
+              value: request.unit?.name ?? 'View unit',
+              last: !canOpenLease,
+              onTap: () async {
+                await Haptics.vibrate(HapticsType.selection);
+                if (!context.mounted) return;
+                context.push('/properties/$propertyId/units/${request.unitId}');
+              },
+            ),
+          if (canOpenLease)
+            _NavRow(
+              label: 'Lease',
+              value: 'View lease',
+              last: true,
+              onTap: () async {
+                await Haptics.vibrate(HapticsType.selection);
+                if (!context.mounted) return;
+                // LeaseDetailScreen reads its property scope from a query
+                // param, not the path — see routes.dart.
+                context.push('/more/leases/$leaseId?property_id=$propertyId');
+              },
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Label left, value right, hairline between — the shared shape of both row
+/// kinds below. Deliberately not [RLRow]: that primitive leads with a bold
+/// title and treats the right side as secondary, which inverts the emphasis
+/// these spec rows need.
+class _SpecRow extends StatelessWidget {
+  const _SpecRow({
+    required this.label,
+    required this.trailing,
+    required this.onTap,
+    this.last = false,
+  });
+
+  final String label;
+  final Widget trailing;
+  final VoidCallback? onTap;
+  final bool last;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 11),
+        decoration: BoxDecoration(
+          border: last
+              ? null
+              : const Border(bottom: BorderSide(color: RLTokens.hairlineSoft)),
+        ),
+        child: Row(
+          children: [
+            Text(
+              label,
+              style: const TextStyle(
+                fontFamily: RLTokens.fontSans,
+                fontSize: 13.5,
+                color: RLTokens.muted,
+              ),
+            ),
+            const SizedBox(width: 12),
+            // All the leftover width goes to one Expanded and the trailing
+            // group is right-aligned inside it, so every chevron/arrow lands
+            // on the same edge no matter how wide its value is. A `Spacer()`
+            // plus a `Flexible(trailing)` would each claim flex: 1 and split
+            // that space in half, leaving short values floating mid-row.
+            Expanded(
+              child: Align(alignment: Alignment.centerRight, child: trailing),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A value the manager can change: plain text plus a chevron.
+///
+/// The chevron is what marks these rows as editable and separates them from
+/// the navigation rows below. Only Priority renders as a tag, via [tone] —
+/// it's the one value with a status meaning, so it earns the colour. Names,
+/// categories and visibility stay plain strings.
+class _EditRow extends StatelessWidget {
+  const _EditRow({
+    required this.label,
+    required this.value,
+    required this.onTap,
+    this.tone,
+    this.unset = false,
+    this.last = false,
+  });
+
+  final String label;
+  final String value;
+  final VoidCallback onTap;
+
+  /// Set only for Priority — the one value that carries a status meaning and
+  /// so renders as a tag. Every other value is plain text: wrapping a name or
+  /// a category in a tag would imply a status it doesn't have.
+  final RLTone? tone;
+
+  /// Dims the value for "Unassigned", which is a prompt to act, not a value.
+  final bool unset;
+  final bool last;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = tone;
+
+    return _SpecRow(
+      label: label,
+      last: last,
+      onTap: onTap,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Flexible(
+            child: t != null
+                ? RLPill(value, tone: t)
+                : Text(
+                    value,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      fontFamily: RLTokens.fontSans,
+                      fontSize: 13.5,
+                      fontWeight: RLTokens.semibold,
+                      color: unset ? RLTokens.mutedSoft : RLTokens.ink,
+                    ),
+                  ),
+          ),
+          const SizedBox(width: 6),
+          const Icon(
+            Icons.chevron_right_rounded,
+            size: 18,
+            color: RLTokens.micro,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A value that leaves this screen: crimson text plus a forward arrow, the
+/// app's existing "go somewhere" signal. Colour and glyph both differ from
+/// the rows above, which is the whole point — a chevron edits something here,
+/// an arrow navigates away.
+class _NavRow extends StatelessWidget {
+  const _NavRow({
+    required this.label,
+    required this.value,
+    required this.onTap,
+    this.last = false,
+  });
+
+  final String label;
+  final String value;
+  final VoidCallback onTap;
+  final bool last;
+
+  @override
+  Widget build(BuildContext context) {
+    return _SpecRow(
+      label: label,
+      last: last,
+      onTap: onTap,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Flexible(
+            child: Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                fontFamily: RLTokens.fontSans,
+                fontSize: 13.5,
+                fontWeight: RLTokens.semibold,
+                color: RLTokens.crimson,
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
+          const Icon(
+            Icons.arrow_forward_rounded,
+            size: 14,
+            color: RLTokens.crimson,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Footer ────────────────────────────────────────────────────────────────────
+
+class _Footer extends StatelessWidget {
+  const _Footer({required this.request});
+
+  final MaintenanceRequestModel request;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(top: 18),
+      padding: const EdgeInsets.only(top: 14),
+      decoration: const BoxDecoration(
+        border: Border(top: BorderSide(color: RLTokens.hairlineSoft)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           Text(
-            v,
+            'Created ${_dateTime(request.createdAt)}',
             style: const TextStyle(
               fontFamily: RLTokens.fontSans,
-              fontSize: 13.5,
-              fontWeight: RLTokens.semibold,
-              color: RLTokens.ink,
+              fontSize: 12,
+              color: RLTokens.muted,
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            'Updated ${_dateTime(request.updatedAt)}',
+            style: const TextStyle(
+              fontFamily: RLTokens.fontSans,
+              fontSize: 12,
+              color: RLTokens.muted,
             ),
           ),
         ],
@@ -486,144 +840,33 @@ class _FieldRow extends StatelessWidget {
   }
 }
 
-// ── Discussion card ───────────────────────────────────────────────────────────
-
-class _DiscussionCard extends StatelessWidget {
-  const _DiscussionCard({required this.m});
-  final _MaintData m;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: RLTokens.surface,
-        borderRadius: BorderRadius.circular(RLTokens.rLg),
-        border: Border.all(color: RLTokens.hairline),
-      ),
-      child: Column(
-        children: [
-          // Tenant message (left)
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              RLAvatar(m.tenant, size: 32),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: RLTokens.fill,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(4),
-                      topRight: Radius.circular(14),
-                      bottomLeft: Radius.circular(14),
-                      bottomRight: Radius.circular(14),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        "Water's pooling under the sink, getting worse. Can someone come today?",
-                        style: TextStyle(
-                          fontFamily: RLTokens.fontSans,
-                          fontSize: 13,
-                          color: RLTokens.inkSoft,
-                          height: 1.45,
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        m.age,
-                        style: const TextStyle(
-                          fontFamily: RLTokens.fontMono,
-                          fontSize: 9.5,
-                          color: RLTokens.micro,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          // Manager reply (right)
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: RLTokens.crimsonTint,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(14),
-                      topRight: Radius.circular(4),
-                      bottomLeft: Radius.circular(14),
-                      bottomRight: Radius.circular(14),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        "Got it — sending Ben over this afternoon. Please clear under the sink.",
-                        style: TextStyle(
-                          fontFamily: RLTokens.fontSans,
-                          fontSize: 13,
-                          color: RLTokens.inkSoft,
-                          height: 1.45,
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      const Text(
-                        '1h ago',
-                        style: TextStyle(
-                          fontFamily: RLTokens.fontMono,
-                          fontSize: 9.5,
-                          color: RLTokens.micro,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              RLAvatar('Akosua Owusu', size: 32, crimsonTone: true),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Bottom action bar ─────────────────────────────────────────────────────────
+// ── Action bar ────────────────────────────────────────────────────────────────
 
 class _ActionBar extends StatelessWidget {
-  const _ActionBar({required this.m});
-  final _MaintData m;
+  const _ActionBar({
+    required this.request,
+    required this.busy,
+    required this.onAssign,
+    required this.onChangeStatus,
+  });
+
+  final MaintenanceRequestModel request;
+  final bool busy;
+  final VoidCallback onAssign;
+  final VoidCallback onChangeStatus;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.fromLTRB(
-        20,
+        RLTokens.gutter,
         12,
-        20,
+        RLTokens.gutter,
         12 + MediaQuery.of(context).padding.bottom,
       ),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: RLTokens.surface,
-        border: const Border(top: BorderSide(color: RLTokens.hairline)),
+        border: Border(top: BorderSide(color: RLTokens.hairline)),
         boxShadow: RLTokens.elevBar,
       ),
       child: Row(
@@ -632,20 +875,67 @@ class _ActionBar extends StatelessWidget {
             label: 'Assign',
             kind: RLBtnKind.light,
             icon: Icons.person_outline_rounded,
-            onPressed: () async => Haptics.vibrate(HapticsType.selection),
+            onPressed: busy ? null : onAssign,
           ),
           const SizedBox(width: 10),
           Expanded(
             child: RLBtn(
-              label: 'Advance status',
+              label: busy ? 'Updating…' : 'Change status',
               kind: RLBtnKind.primary,
-              icon: Icons.arrow_forward_rounded,
+              icon: Icons.swap_horiz_rounded,
               full: true,
-              onPressed: () async => Haptics.vibrate(HapticsType.medium),
+              onPressed: busy ? null : onChangeStatus,
             ),
           ),
         ],
       ),
     );
   }
+}
+
+// ── Skeleton ──────────────────────────────────────────────────────────────────
+
+class _DetailSkeleton extends StatelessWidget {
+  const _DetailSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Shimmer.fromColors(
+      baseColor: RLTokens.fill,
+      highlightColor: RLTokens.paper,
+      child: ListView(
+        physics: const NeverScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(
+          RLTokens.gutter,
+          8,
+          RLTokens.gutter,
+          0,
+        ),
+        children: [
+          _block(184),
+          _block(92, top: 30),
+          _block(104, top: 30),
+          _block(214, top: 30),
+        ],
+      ),
+    );
+  }
+
+  Widget _block(double height, {double top = 0}) => Container(
+    height: height,
+    margin: EdgeInsets.only(top: top),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(RLTokens.rLg),
+    ),
+  );
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+String _dateTime(String? iso) {
+  if (iso == null) return '—';
+  final date = DateTime.tryParse(iso);
+  if (date == null) return '—';
+  return DateFormat('d MMMM y, h:mm a').format(date.toLocal());
 }

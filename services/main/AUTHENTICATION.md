@@ -1,6 +1,6 @@
 # Authentication
 
-This describes how authentication works across the Rent-Loop backend, independent of any particular implementation detail. For the concrete implementation design of the refresh-token system described below, see `docs/superpowers/specs/2026-07-25-refresh-token-api-design.md` in the monorepo root.
+This describes how authentication works across the Rent-Loop backend, independent of any particular implementation detail.
 
 ## Three separate realms
 
@@ -31,6 +31,18 @@ That server-side record is what enables everything else described below:
 - **Explicit revocation.** Unlike the token's own expiration, revocation is something the server can trigger immediately — on logout, or in response to a session being flagged as suspicious. There's no waiting for a stale token to time out on its own.
 - **Theft response.** If a refresh token that has already been rotated away gets used again, the system doesn't just reject that one attempt — it invalidates every token descended from it, ending that entire signed-in session outright and requiring a real login to recover. This is the one case where a genuine user might legitimately get signed out, and it's the correct outcome: it means something is actively wrong with that session.
 
+## The replay grace window
+
+Rotation creates a problem the theory doesn't anticipate: a single honest client can present the same refresh token twice, at nearly the same instant, through no fault of its own. Two browser tabs waking up together, or a page load racing a background request, both notice the access token expired and both try to refresh. One wins; the other arrives holding a token that was valid when it was picked up and retired a few milliseconds later.
+
+Judged purely on the rule above, that second request looks exactly like theft — and the response, ending the whole session, would be a spurious logout for someone who did nothing wrong.
+
+So a replayed token is only treated as theft once a short grace window has passed. Inside that window, the server remembers what it handed back the first time and returns the same thing again. The late request gets the same answer as the early one, both tabs carry on, and nothing is revoked. After the window closes, the original rule applies in full: a replayed token kills the chain.
+
+The window is deliberately short — seconds, not minutes. It's sized to cover the physical simultaneity of one client racing itself, which is inherently brief. A genuine attacker replaying a stolen token minutes, hours, or days later falls well outside it and is still caught. The trade-off is narrow and explicit: a very small period in which a replayed token is answered rather than punished, bought in exchange for not logging people out for using two tabs.
+
+Because the server stores only a fingerprint of each refresh token and never the token itself, it cannot re-derive what it previously issued. The remembered answer is therefore held briefly in a short-lived cache keyed by the retired token's fingerprint, and expires on its own when the window closes.
+
 ## The practical experience
 
 1. Log in once → get a short access token and a refresh token.
@@ -47,5 +59,5 @@ That server-side record is what enables everything else described below:
 
 ## Current status
 
-- **Client User (property manager) realm**: the model above is implemented (or being implemented) as described.
+- **Client User (property manager) realm**: implemented as described, with one exception — the replay grace window above is **designed but not yet built**. Until it is, two tabs racing a refresh can trip the theft response and force a spurious logout. This matters most for the web portal, where multiple tabs are normal.
 - **Admin and Tenant Account realms**: still authenticate with a bare access token only — no refresh, no server-side revocation, no sliding session. Extending the same model to these realms is a natural next step but is not yet scheduled.

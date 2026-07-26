@@ -5,6 +5,7 @@ import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:shimmer/shimmer.dart';
 
 import 'package:rentloop_manager/src/lib/maintenance_utils.dart';
+import 'package:rentloop_manager/src/modules/main/activity/maintenance_status_actions.dart';
 import 'package:rentloop_manager/src/repository/models/maintenance_request_model.dart';
 import 'package:rentloop_manager/src/repository/notifiers/activity/maintenance_assignees_notifier.dart';
 import 'package:rentloop_manager/src/repository/notifiers/activity/maintenance_request_status_notifier.dart';
@@ -92,7 +93,12 @@ class _MaintCard extends StatelessWidget {
       child: GestureDetector(
         onTap: () async {
           await Haptics.vibrate(HapticsType.selection);
-          if (context.mounted) context.push('/activity/maintenances/${m.id}');
+          if (context.mounted) {
+            context.push(
+              '/activity/maintenances/${m.id}',
+              extra: m.unit?.propertyId,
+            );
+          }
         },
         child: card,
       ),
@@ -905,99 +911,6 @@ class _PageDots extends StatelessWidget {
   }
 }
 
-// ── Cancel reason sheet ────────────────────────────────────────────────────────
-
-class _CancelReasonSheet extends StatefulWidget {
-  const _CancelReasonSheet({required this.title});
-  final String title;
-
-  @override
-  State<_CancelReasonSheet> createState() => _CancelReasonSheetState();
-}
-
-class _CancelReasonSheetState extends State<_CancelReasonSheet> {
-  final _controller = TextEditingController();
-  bool _touched = false;
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isEmpty = _controller.text.trim().isEmpty;
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(
-          RLTokens.gutter,
-          20,
-          RLTokens.gutter,
-          20,
-        ),
-        decoration: const BoxDecoration(
-          color: RLTokens.surface,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(RLTokens.rXl),
-            topRight: Radius.circular(RLTokens.rXl),
-          ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Cancel request',
-              style: TextStyle(
-                fontFamily: RLTokens.fontSerif,
-                fontSize: RLTokens.textCardHead,
-                color: RLTokens.ink,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              widget.title,
-              style: const TextStyle(
-                fontFamily: RLTokens.fontSans,
-                fontSize: RLTokens.textSubtitle,
-                color: RLTokens.muted,
-              ),
-            ),
-            const SizedBox(height: 14),
-            TextField(
-              controller: _controller,
-              autofocus: true,
-              maxLines: 3,
-              onChanged: (_) => setState(() => _touched = true),
-              decoration: InputDecoration(
-                hintText: 'Reason for cancelling',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(RLTokens.rMd),
-                ),
-                errorText: _touched && isEmpty ? 'A reason is required' : null,
-              ),
-            ),
-            const SizedBox(height: 16),
-            RLBtn(
-              label: 'Confirm cancellation',
-              full: true,
-              kind: RLBtnKind.danger,
-              onPressed: isEmpty
-                  ? null
-                  : () => Navigator.pop(context, _controller.text),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 // ── Board ─────────────────────────────────────────────────────────────────────
 
 class MaintenanceBoard extends ConsumerStatefulWidget {
@@ -1234,25 +1147,9 @@ class _MaintenanceBoardState extends ConsumerState<MaintenanceBoard> {
     String fromStatus,
     String toStatus,
   ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Mark as Resolved?'),
-        content: Text('"${item.title}" will be moved to Resolved.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Confirm'),
-          ),
-        ],
-      ),
-    );
+    final confirmed = await confirmMaintenanceResolve(context, item.title);
     if (!mounted) return;
-    if (confirmed == true) _applyMove(item, fromStatus, toStatus);
+    if (confirmed) _applyMove(item, fromStatus, toStatus);
   }
 
   Future<void> _confirmCancel(
@@ -1260,14 +1157,9 @@ class _MaintenanceBoardState extends ConsumerState<MaintenanceBoard> {
     String fromStatus,
     String toStatus,
   ) async {
-    final reason = await showModalBottomSheet<String>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => _CancelReasonSheet(title: item.title),
-    );
+    final reason = await promptMaintenanceCancelReason(context, item.title);
     if (!mounted) return;
-    if (reason != null && reason.trim().isNotEmpty) {
+    if (reason != null) {
       _applyMove(item, fromStatus, toStatus, cancellationReason: reason);
     }
   }

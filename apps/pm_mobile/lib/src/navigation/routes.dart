@@ -279,8 +279,10 @@ GoRouter buildRoutes(WidgetRef ref) {
       ),
       GoRoute(
         path: '/activity/maintenances/:id',
-        builder: (_, state) =>
-            MaintenanceDetailScreen(id: state.pathParameters['id']!),
+        builder: (_, state) => MaintenanceDetailScreen(
+          id: state.pathParameters['id']!,
+          propertyId: state.extra as String?,
+        ),
       ),
       GoRoute(
         path: '/activity/bookings/add',

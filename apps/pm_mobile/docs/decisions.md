@@ -42,3 +42,15 @@
 - Dropped the `properties · units` stat shown on mocked workspace cards — that data isn't in the API response, and fetching it would require an extra per-workspace call before the user has even picked one.
 **Tradeoffs:** No token refresh (matches `apps/go` — none exists server-side); `AppStartupNotifier`'s `completeLogin()`/`selectWorkspace()`/`logout()` have no internal try/catch, so a storage failure inside them propagates to the caller (acceptable since `LoginNotifier.submit()` already wraps the whole login path in one try/catch, and the app self-heals on next cold start regardless).
 **Alternatives considered:** Keeping the whole login flow inside `AppStartupNotifier` (rejected — diverges from the project's documented mutation-notifier convention); building modules other than auth in this same pass (rejected — kept to a single, reviewable slice; properties/tenants/activity/money/announcements remain mocked, pending their own integration passes).
+
+---
+
+## Property-scoped detail routes carry the property id as an optional GoRouter `extra` (2026-07-26)
+**Date:** 2026-07-26
+**Why:** Every maintenance-request detail endpoint is scoped to a property (`.../clients/{c}/properties/{p}/maintenance-requests/{id}/...`), but the app's route is `/activity/maintenances/:id` — the id alone. The board already holds the fully-populated record, so it passes `unit.property_id` through `context.push(..., extra: ...)`, and the detail providers treat it as a **hint**: when it's missing (deep link, cold start, restored session, unpopulated unit) `maintenanceRequestPropertyId` recovers it by scanning one bounded page of the cross-property list. This keeps the route a plain shareable `/:id` while still costing zero extra requests on the normal path.
+**Tradeoffs:** The fallback is a bounded scan (200 rows, no status filter) because that endpoint has no by-id filter — a request outside that window is unrecoverable and surfaces an actionable error ("Open it from the board") rather than silently rendering the wrong request. `extra` is also not preserved across a browser-style deep link or process death, which is exactly why the fallback exists rather than being optional.
+**Alternatives considered:**
+- *Required query param, like `LeaseDetailScreen`* — rejected: that screen hard-errors with "Missing property context" when the param is absent, which turns any deep link into a dead end. The hint+fallback shape degrades instead of failing.
+- *Always look the property up client-wide* — rejected: pays a guaranteed extra round-trip on every open to serve the rare cold-start case.
+- *Restructure to a nested `/activity/properties/:propertyId/maintenances/:id` route* — rejected for this pass: cleanest URL semantics, but it changes routing and every call site for a problem the hint already solves.
+

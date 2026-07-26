@@ -25980,6 +25980,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "metadata": {},
+                "performed_by_client_user": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
+                },
                 "performed_by_client_user_id": {
                     "type": "string"
                 },

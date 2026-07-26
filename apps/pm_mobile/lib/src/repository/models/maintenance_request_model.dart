@@ -46,6 +46,31 @@ class MaintenanceUnitModel {
   Map<String, dynamic> toJson() => _$MaintenanceUnitModelToJson(this);
 }
 
+/// The tenant who raised a request, when one did. Only the name is modelled —
+/// the History timeline is the sole consumer and it just needs someone to
+/// attribute "Submitted by …" to.
+@JsonSerializable()
+class MaintenanceTenantModel {
+  final String id;
+  @JsonKey(name: 'first_name')
+  final String firstName;
+  @JsonKey(name: 'last_name')
+  final String lastName;
+
+  const MaintenanceTenantModel({
+    required this.id,
+    required this.firstName,
+    required this.lastName,
+  });
+
+  String get fullName => '$firstName $lastName'.trim();
+
+  factory MaintenanceTenantModel.fromJson(Map<String, dynamic> json) =>
+      _$MaintenanceTenantModelFromJson(json);
+
+  Map<String, dynamic> toJson() => _$MaintenanceTenantModelToJson(this);
+}
+
 @JsonSerializable(explicitToJson: true)
 class MaintenanceRequestModel {
   final String id;
@@ -58,6 +83,31 @@ class MaintenanceRequestModel {
   @JsonKey(name: 'unit_id')
   final String unitId;
   final MaintenanceUnitModel? unit;
+  @JsonKey(name: 'lease_id')
+  final String? leaseId;
+
+  /// Who raised the request. The History tab branches on these exactly as the
+  /// web portal's activity tab does: both set means a manager filed it on the
+  /// tenant's behalf, manager-only means they filed it themselves, and
+  /// tenant-only means the tenant submitted it.
+  @JsonKey(name: 'created_by_tenant_id')
+  final String? createdByTenantId;
+  @JsonKey(name: 'created_by_tenant')
+  final MaintenanceTenantModel? createdByTenant;
+  @JsonKey(name: 'created_by_client_user_id')
+  final String? createdByClientUserId;
+
+  /// Raw attachment URLs. The API omits the key entirely when there are none,
+  /// so this defaults to empty rather than being nullable — callers always
+  /// get a list they can length-check.
+  @JsonKey(defaultValue: <String>[])
+  final List<String> attachments;
+
+  /// `TENANT_VISIBLE` | `INTERNAL_ONLY`. Defaulted rather than required so a
+  /// payload predating the column still parses; the backend column itself is
+  /// non-null with the same default.
+  @JsonKey(defaultValue: 'TENANT_VISIBLE')
+  final String visibility;
   @JsonKey(name: 'assigned_worker_id')
   final String? assignedWorkerId;
   @JsonKey(
@@ -78,6 +128,8 @@ class MaintenanceRequestModel {
   final String? cancellationReason;
   @JsonKey(name: 'started_at')
   final String? startedAt;
+  @JsonKey(name: 'reviewed_at')
+  final String? reviewedAt;
   @JsonKey(name: 'resolved_at')
   final String? resolvedAt;
   @JsonKey(name: 'canceled_at')
@@ -97,12 +149,19 @@ class MaintenanceRequestModel {
     required this.status,
     required this.unitId,
     this.unit,
+    this.leaseId,
+    this.createdByTenantId,
+    this.createdByTenant,
+    this.createdByClientUserId,
+    this.attachments = const [],
+    this.visibility = 'TENANT_VISIBLE',
     this.assignedWorkerId,
     this.assignedWorker,
     this.assignedManagerId,
     this.assignedManager,
     this.cancellationReason,
     this.startedAt,
+    this.reviewedAt,
     this.resolvedAt,
     this.canceledAt,
     this.createdAt,
@@ -123,7 +182,8 @@ MaintenanceAssigneeModel? _assigneeFromJson(Object? json) {
 // This model is never serialized back to JSON for a request body — assignee
 // changes go through dedicated assign-worker/assign-manager endpoints (out
 // of scope for this pass), not a round-tripped MaintenanceRequestModel.
-Object? _assigneeToJsonUnsupported(MaintenanceAssigneeModel? _) =>
-    throw UnsupportedError(
-      'MaintenanceRequestModel.toJson does not support assignedWorker/assignedManager',
-    );
+Object? _assigneeToJsonUnsupported(
+  MaintenanceAssigneeModel? _,
+) => throw UnsupportedError(
+  'MaintenanceRequestModel.toJson does not support assignedWorker/assignedManager',
+);
