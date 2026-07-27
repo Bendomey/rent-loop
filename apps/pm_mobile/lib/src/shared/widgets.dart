@@ -781,13 +781,17 @@ class RLSegmented extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      item.label,
-                      style: TextStyle(
-                        fontFamily: RLTokens.fontSans,
-                        fontSize: 13,
-                        fontWeight: active ? RLTokens.bold : RLTokens.medium,
-                        color: active ? RLTokens.ink : RLTokens.muted,
+                    Flexible(
+                      child: Text(
+                        item.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontFamily: RLTokens.fontSans,
+                          fontSize: 13,
+                          fontWeight: active ? RLTokens.bold : RLTokens.medium,
+                          color: active ? RLTokens.ink : RLTokens.muted,
+                        ),
                       ),
                     ),
                     if (item.count != null) ...[
