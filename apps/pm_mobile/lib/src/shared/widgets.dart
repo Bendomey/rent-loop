@@ -498,14 +498,24 @@ class RLBtn extends StatelessWidget {
                 Icon(icon, size: 18, color: fg),
                 const SizedBox(width: 8),
               ],
-              Text(
-                label,
-                style: TextStyle(
-                  fontFamily: RLTokens.fontSans,
-                  fontSize: large ? RLTokens.textAction : 14,
-                  fontWeight: RLTokens.semibold,
-                  color: fg,
-                  letterSpacing: 0.1,
+              // Flexible so a label that outgrows its box ellipsizes instead
+              // of overflowing the row — an unconstrained Text here breaks
+              // any full-width button whose label is long relative to the
+              // screen (e.g. a two-button action bar on a 375pt phone).
+              // Costs nothing when there is room: the Text still takes its
+              // natural width.
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: RLTokens.fontSans,
+                    fontSize: large ? RLTokens.textAction : 14,
+                    fontWeight: RLTokens.semibold,
+                    color: fg,
+                    letterSpacing: 0.1,
+                  ),
                 ),
               ),
             ],

@@ -5,6 +5,7 @@ import 'package:rentloop_manager/src/api/user_api.dart';
 import 'package:rentloop_manager/src/architecture/app_startup/app_startup_notifier.dart';
 import 'package:rentloop_manager/src/architecture/token_manager/token_manager.dart';
 import 'package:rentloop_manager/src/lib/api_error_messages.dart';
+import 'package:rentloop_manager/src/lib/session_metadata.dart';
 import 'package:rentloop_manager/src/repository/api_state.dart';
 
 part 'login_notifier.g.dart';
@@ -22,10 +23,15 @@ class LoginNotifier extends _$LoginNotifier {
     state = LoginState(status: ApiStatus.pending);
 
     try {
+      // Cosmetic and best-effort: collectSessionMetadata never throws, so this
+      // cannot stop someone signing in.
+      final metadata = await collectSessionMetadata();
       final result = await ref
           .read(userApiProvider)
-          .login(email: email, password: password);
-      await ref.read(tokenManagerProvider).save(result.token);
+          .login(email: email, password: password, metadata: metadata);
+      final tokenManager = ref.read(tokenManagerProvider);
+      await tokenManager.save(result.token);
+      await tokenManager.saveRefresh(result.refreshToken);
       await ref
           .read(appStartupNotifierProvider.notifier)
           .completeLogin(result.user);

@@ -4,16 +4,17 @@ import { getDocument } from '~/api/documents'
 import { getLeaseAgreementDocumentForServer } from '~/api/lease-agreement-document/server'
 import { getAdminPropertyTenantApplicationForServer } from '~/api/tenant-applications'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
+import { resolveAuthToken } from '~/lib/actions/auth.token.server'
 import { environmentVariables } from '~/lib/actions/env.server'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
 import { safeString } from '~/lib/strings'
 import { DocumentSigningModule } from '~/modules'
 
-export async function loader({ request, params }: Route.LoaderArgs) {
+export async function loader({ request, params, context }: Route.LoaderArgs) {
 	const baseUrl = environmentVariables().API_ADDRESS
 	const authSession = await getAuthSession(request.headers.get('Cookie'))
-	const authToken = authSession.get('authToken')
+	const authToken = await resolveAuthToken(request, context)
 	if (!authToken) return redirect('/login')
 
 	const clientId = safeString(authSession.get('selectedClientId'))

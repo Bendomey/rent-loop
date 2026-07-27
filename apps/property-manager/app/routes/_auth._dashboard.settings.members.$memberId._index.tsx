@@ -2,16 +2,17 @@ import type { Route } from './+types/_auth._dashboard.settings.members.$memberId
 import { getClientUserPropertiesForServer } from '~/api/client-user-properties/server'
 import { getClientUserForServer } from '~/api/client-users'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
+import { resolveAuthToken } from '~/lib/actions/auth.token.server'
 import { environmentVariables } from '~/lib/actions/env.server'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
 import { safeString } from '~/lib/strings'
 import { EditMemberModule } from '~/modules'
 
-export async function loader({ request, params }: Route.LoaderArgs) {
+export async function loader({ request, params, context }: Route.LoaderArgs) {
 	const baseUrl = environmentVariables().API_ADDRESS
 	const authSession = await getAuthSession(request.headers.get('Cookie'))
-	const authToken = authSession.get('authToken')
+	const authToken = await resolveAuthToken(request, context)
 	const clientId = safeString(authSession.get('selectedClientId'))
 	const apiConfig = { baseUrl, authToken }
 

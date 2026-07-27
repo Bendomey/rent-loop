@@ -2,6 +2,7 @@ import { redirect } from 'react-router'
 import type { Route } from './+types/_auth.settings.documents.$documentId._index'
 import { getDocument } from '~/api/documents'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
+import { resolveAuthToken } from '~/lib/actions/auth.token.server'
 import { environmentVariables } from '~/lib/actions/env.server'
 import { APP_NAME } from '~/lib/constants'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
@@ -9,10 +10,10 @@ import { getSocialMetas } from '~/lib/seo'
 import { safeString } from '~/lib/strings'
 import { SingleDocumentModule } from '~/modules'
 
-export async function loader({ request, params }: Route.LoaderArgs) {
+export async function loader({ request, params, context }: Route.LoaderArgs) {
 	const baseUrl = environmentVariables().API_ADDRESS
 	const authSession = await getAuthSession(request.headers.get('Cookie'))
-	const authToken = authSession.get('authToken')
+	const authToken = await resolveAuthToken(request, context)
 	if (!authToken) {
 		return redirect('/login')
 	}

@@ -24,6 +24,22 @@ Map<String, dynamic> _$MaintenanceUnitModelToJson(
       'property_id': instance.propertyId,
     };
 
+MaintenanceTenantModel _$MaintenanceTenantModelFromJson(
+        Map<String, dynamic> json) =>
+    MaintenanceTenantModel(
+      id: json['id'] as String,
+      firstName: json['first_name'] as String,
+      lastName: json['last_name'] as String,
+    );
+
+Map<String, dynamic> _$MaintenanceTenantModelToJson(
+        MaintenanceTenantModel instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'first_name': instance.firstName,
+      'last_name': instance.lastName,
+    };
+
 MaintenanceRequestModel _$MaintenanceRequestModelFromJson(
         Map<String, dynamic> json) =>
     MaintenanceRequestModel(
@@ -38,12 +54,25 @@ MaintenanceRequestModel _$MaintenanceRequestModelFromJson(
       unit: json['unit'] == null
           ? null
           : MaintenanceUnitModel.fromJson(json['unit'] as Map<String, dynamic>),
+      leaseId: json['lease_id'] as String?,
+      createdByTenantId: json['created_by_tenant_id'] as String?,
+      createdByTenant: json['created_by_tenant'] == null
+          ? null
+          : MaintenanceTenantModel.fromJson(
+              json['created_by_tenant'] as Map<String, dynamic>),
+      createdByClientUserId: json['created_by_client_user_id'] as String?,
+      attachments: (json['attachments'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
+      visibility: json['visibility'] as String? ?? 'TENANT_VISIBLE',
       assignedWorkerId: json['assigned_worker_id'] as String?,
       assignedWorker: _assigneeFromJson(json['assigned_worker']),
       assignedManagerId: json['assigned_manager_id'] as String?,
       assignedManager: _assigneeFromJson(json['assigned_manager']),
       cancellationReason: json['cancellation_reason'] as String?,
       startedAt: json['started_at'] as String?,
+      reviewedAt: json['reviewed_at'] as String?,
       resolvedAt: json['resolved_at'] as String?,
       canceledAt: json['canceled_at'] as String?,
       createdAt: json['created_at'] as String?,
@@ -62,12 +91,19 @@ Map<String, dynamic> _$MaintenanceRequestModelToJson(
       'status': instance.status,
       'unit_id': instance.unitId,
       'unit': instance.unit?.toJson(),
+      'lease_id': instance.leaseId,
+      'created_by_tenant_id': instance.createdByTenantId,
+      'created_by_tenant': instance.createdByTenant?.toJson(),
+      'created_by_client_user_id': instance.createdByClientUserId,
+      'attachments': instance.attachments,
+      'visibility': instance.visibility,
       'assigned_worker_id': instance.assignedWorkerId,
       'assigned_worker': _assigneeToJsonUnsupported(instance.assignedWorker),
       'assigned_manager_id': instance.assignedManagerId,
       'assigned_manager': _assigneeToJsonUnsupported(instance.assignedManager),
       'cancellation_reason': instance.cancellationReason,
       'started_at': instance.startedAt,
+      'reviewed_at': instance.reviewedAt,
       'resolved_at': instance.resolvedAt,
       'canceled_at': instance.canceledAt,
       'created_at': instance.createdAt,

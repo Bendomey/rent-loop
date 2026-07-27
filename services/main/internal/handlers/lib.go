@@ -24,6 +24,35 @@ func GetPopulateFields(r *http.Request) *[]string {
 	return populateFields
 }
 
+// ClientIPFromRequest resolves the caller's IP, preferring the proxy-set
+// X-Forwarded-For (we sit behind Fly's proxy, so RemoteAddr is the proxy).
+// Returns nil rather than an empty string so the column stays NULL when
+// nothing usable is present.
+func ClientIPFromRequest(r *http.Request) *string {
+	ip := r.Header.Get("X-Forwarded-For")
+	if ip == "" {
+		ip = r.RemoteAddr
+	} else if idx := strings.Index(ip, ","); idx != -1 {
+		// X-Forwarded-For is a comma-separated chain; the first entry is the
+		// original client.
+		ip = strings.TrimSpace(ip[:idx])
+	}
+	if ip == "" {
+		return nil
+	}
+	return &ip
+}
+
+// UserAgentFromRequest returns nil rather than an empty string so the column
+// stays NULL when the header is absent.
+func UserAgentFromRequest(r *http.Request) *string {
+	ua := r.UserAgent()
+	if ua == "" {
+		return nil
+	}
+	return &ua
+}
+
 // handle error response
 func HandleErrorResponse[T error](w http.ResponseWriter, err T) {
 	var det *pkg.IRentLoopError

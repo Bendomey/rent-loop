@@ -17,9 +17,29 @@ type OutputUser struct {
 	UpdatedAt   time.Time          `json:"updated_at"   example:"2023-01-01T00:00:00Z"`
 }
 
+// TokenPair is the service-layer input to the token transformations. ExpiresIn
+// and RefreshExpiresIn are seconds, computed server-side so clients never have
+// to decode the JWT or do wall-clock math.
+type TokenPair struct {
+	Token            string
+	ExpiresIn        int
+	RefreshToken     string
+	RefreshExpiresIn int
+}
+
+type OutputTokenPair struct {
+	Token            string `json:"token"              example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
+	ExpiresIn        int    `json:"expires_in"         example:"3600"`
+	RefreshToken     string `json:"refresh_token"      example:"3f2504e0-4f89-11d3-9a0c-0305e82c3301:sSx1"`
+	RefreshExpiresIn int    `json:"refresh_expires_in" example:"7776000"`
+}
+
 type OutputUserWithToken struct {
-	User  OutputUser `json:"user"`
-	Token string     `json:"token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
+	User             OutputUser `json:"user"`
+	Token            string     `json:"token"              example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
+	ExpiresIn        int        `json:"expires_in"         example:"3600"`
+	RefreshToken     string     `json:"refresh_token"      example:"3f2504e0-4f89-11d3-9a0c-0305e82c3301:sSx1"`
+	RefreshExpiresIn int        `json:"refresh_expires_in" example:"7776000"`
 }
 
 func DBUserToRest(u *models.User) interface{} {
@@ -43,12 +63,24 @@ func DBUserToRest(u *models.User) interface{} {
 	}
 }
 
-func DBUserToRestWithToken(u *models.User, token string) interface{} {
+func DBUserToRestWithToken(u *models.User, tokens TokenPair) interface{} {
 	if u == nil {
 		return nil
 	}
 	return map[string]interface{}{
-		"user":  DBUserToRest(u),
-		"token": token,
+		"user":               DBUserToRest(u),
+		"token":              tokens.Token,
+		"expires_in":         tokens.ExpiresIn,
+		"refresh_token":      tokens.RefreshToken,
+		"refresh_expires_in": tokens.RefreshExpiresIn,
+	}
+}
+
+func TokenPairToRest(tokens TokenPair) interface{} {
+	return map[string]interface{}{
+		"token":              tokens.Token,
+		"expires_in":         tokens.ExpiresIn,
+		"refresh_token":      tokens.RefreshToken,
+		"refresh_expires_in": tokens.RefreshExpiresIn,
 	}
 }

@@ -44,7 +44,7 @@ func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
 	authHandler := NewAuthHandler(appCtx, services.AuthService)
 	analyticsHandler := NewAnalyticsHandler(appCtx)
 	adminHandler := NewAdminHandler(appCtx, services.AdminService)
-	userHandler := NewUserHandler(appCtx, services.UserService)
+	userHandler := NewUserHandler(appCtx, services.UserService, services.RefreshTokenService)
 	clientApplicationHandler := NewClientApplicationHandler(appCtx, services.ClientApplicationService)
 	clientHandler := NewClientHandler(appCtx, services.ClientService)
 	clientUserHandler := NewClientUserHandler(appCtx, services.ClientUserService)

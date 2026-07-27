@@ -16,7 +16,7 @@ import {
 	InputGroupInput,
 } from '~/components/ui/input-group'
 import { TypographyH1 } from '~/components/ui/typography'
-import { getAuthSession } from '~/lib/actions/auth.session.server'
+import { resolveAuthToken } from '~/lib/actions/auth.token.server'
 import { clientContext } from '~/lib/actions/client.context.server'
 import { environmentVariables } from '~/lib/actions/env.server'
 import { APP_NAME } from '~/lib/constants'
@@ -25,8 +25,7 @@ import { getSocialMetas } from '~/lib/seo'
 
 export async function loader({ request, context }: Route.LoaderArgs) {
 	const baseUrl = environmentVariables().API_ADDRESS
-	const authSession = await getAuthSession(request.headers.get('Cookie'))
-	const authToken = authSession.get('authToken')
+	const authToken = await resolveAuthToken(request, context)
 	if (!authToken) {
 		return redirect('/login')
 	}

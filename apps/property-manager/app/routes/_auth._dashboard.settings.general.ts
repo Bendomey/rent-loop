@@ -1,22 +1,24 @@
 import type { Route } from './+types/_auth._dashboard.settings.general'
 import { getCurrentUser } from '~/api/auth'
-import { getAuthSession } from '~/lib/actions/auth.session.server'
+import { resolveAuthToken } from '~/lib/actions/auth.token.server'
 import { environmentVariables } from '~/lib/actions/env.server'
 import { APP_NAME } from '~/lib/constants'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
 import { GeneralSettingsModule } from '~/modules'
 
-export async function loader({ request }: Route.LoaderArgs) {
+export async function loader({ request, context }: Route.LoaderArgs) {
 	const baseUrl = environmentVariables().API_ADDRESS
-	const authSession = await getAuthSession(request.headers.get('Cookie'))
-	const authToken = authSession.get('authToken')
+	const authToken = await resolveAuthToken(request, context)
 
 	const currentUser = await getCurrentUser({ baseUrl, authToken })
+	if (!currentUser.ok) {
+		throw new Response(null, { status: currentUser.status ?? 500 })
+	}
 
 	return {
 		origin: getDomainUrl(request),
-		currentUser,
+		currentUser: currentUser.user,
 	}
 }
 

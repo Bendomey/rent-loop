@@ -98,7 +98,20 @@ class AppStartupNotifier extends _$AppStartupNotifier {
   /// Called on logout — clears all local state. GoRouter's redirect
   /// listener handles navigation back to /auth/welcome.
   Future<void> logout() async {
-    await ref.read(tokenManagerProvider).remove();
+    final tokenManager = ref.read(tokenManagerProvider);
+
+    // Tell the server first, while we still hold the token. Without this the
+    // refresh token stays valid for its full 90-day window — "log out" would
+    // end this device's session while leaving the credential behind it alive.
+    // revokeRefreshToken never throws and times out on its own, so a dead
+    // network cannot trap someone who is trying to leave.
+    final refreshToken = await tokenManager.getRefresh();
+    if (refreshToken != null) {
+      await ref.read(userApiProvider).revokeRefreshToken(refreshToken);
+    }
+
+    await tokenManager.remove();
+    await tokenManager.removeRefresh();
     await ref.read(workspaceIdManagerProvider).remove();
     ref.read(currentUserNotifierProvider.notifier).clear();
     ref.read(currentWorkspaceNotifierProvider.notifier).clear();

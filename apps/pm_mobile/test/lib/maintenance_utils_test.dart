@@ -16,6 +16,18 @@ void main() {
     });
   });
 
+  group('visibility mapping', () {
+    test('both visibilities round-trip through their API values', () {
+      for (final label in ['Tenant Visible', 'Internal Only']) {
+        expect(mrVisibilityLabelFromApi(mrVisibilityApiValue(label)), label);
+      }
+    });
+
+    test('an unknown value passes through untranslated', () {
+      expect(mrVisibilityLabelFromApi('SOMETHING_NEW'), 'SOMETHING_NEW');
+    });
+  });
+
   group('priority mapping', () {
     test('every priority round-trips through its API value', () {
       for (final label in ['Low', 'Medium', 'High', 'Emergency']) {

@@ -91,3 +91,17 @@ String mrCategoryApiValue(String label) => _kCategoryToApi[label] ?? label;
 
 String mrCategoryLabelFromApi(String apiValue) =>
     _kApiToCategory[apiValue] ?? apiValue;
+
+const _kVisibilityToApi = {
+  'Tenant Visible': 'TENANT_VISIBLE',
+  'Internal Only': 'INTERNAL_ONLY',
+};
+
+final _kApiToVisibility = {
+  for (final e in _kVisibilityToApi.entries) e.value: e.key,
+};
+
+String mrVisibilityApiValue(String label) => _kVisibilityToApi[label] ?? label;
+
+String mrVisibilityLabelFromApi(String apiValue) =>
+    _kApiToVisibility[apiValue] ?? apiValue;
