@@ -79,6 +79,7 @@ abstract final class RLTokens {
   static const String fontSans = 'DMSans'; // body, UI, buttons
   static const String fontSerif = 'DMSerifDisplay'; // headings, numbers
   static const String fontMono = 'JetBrainsMono'; // labels, metadata
+  static const List<String> fontFallback = ['InterCurrency'];
 
   // ── Elevation / shadows ────────────────────────────────────────────────────
   // elev-0: border only (no shadow) — default cards, use hairline + surface

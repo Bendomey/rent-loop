@@ -9,6 +9,7 @@ ThemeData buildTheme() {
   final base = ThemeData(
     useMaterial3: true,
     fontFamily: sans,
+    fontFamilyFallback: RLTokens.fontFallback,
     colorScheme: ColorScheme.fromSeed(
       seedColor: RLTokens.crimson,
       primary: RLTokens.crimson,
@@ -24,71 +25,73 @@ ThemeData buildTheme() {
   );
 
   return base.copyWith(
-    textTheme: base.textTheme.copyWith(
-      displayLarge: TextStyle(
-        fontFamily: serif,
-        fontSize: RLTokens.textDisplay,
-        fontWeight: RLTokens.regular,
-        letterSpacing: -0.6,
-        color: RLTokens.ink,
-        height: 1,
-      ),
-      displayMedium: TextStyle(
-        fontFamily: serif,
-        fontSize: RLTokens.textTitle,
-        fontWeight: RLTokens.regular,
-        letterSpacing: -0.4,
-        color: RLTokens.ink,
-        height: 1,
-      ),
-      displaySmall: TextStyle(
-        fontFamily: serif,
-        fontSize: RLTokens.textCardHead,
-        fontWeight: RLTokens.regular,
-        color: RLTokens.ink,
-        height: 1.15,
-      ),
-      titleLarge: TextStyle(
-        fontFamily: sans,
-        fontSize: RLTokens.textBarTitle,
-        fontWeight: RLTokens.semibold,
-        letterSpacing: -0.2,
-        color: RLTokens.ink,
-      ),
-      titleMedium: TextStyle(
-        fontFamily: sans,
-        fontSize: RLTokens.textRowTitle,
-        fontWeight: RLTokens.semibold,
-        letterSpacing: -0.1,
-        color: RLTokens.ink,
-      ),
-      labelLarge: TextStyle(
-        fontFamily: sans,
-        fontSize: RLTokens.textAction,
-        fontWeight: RLTokens.semibold,
-        letterSpacing: 0.1,
-        color: RLTokens.ink,
-      ),
-      bodyLarge: TextStyle(
-        fontFamily: sans,
-        fontSize: RLTokens.textBody,
-        fontWeight: RLTokens.regular,
-        color: RLTokens.ink,
-      ),
-      bodySmall: TextStyle(
-        fontFamily: sans,
-        fontSize: RLTokens.textSubtitle,
-        fontWeight: RLTokens.regular,
-        color: RLTokens.muted,
-      ),
-      labelSmall: TextStyle(
-        fontFamily: mono,
-        fontSize: RLTokens.textLabel,
-        fontWeight: RLTokens.medium,
-        letterSpacing: 1.1,
-        color: RLTokens.mutedSoft,
-      ),
-    ),
+    textTheme: base.textTheme
+        .copyWith(
+          displayLarge: TextStyle(
+            fontFamily: serif,
+            fontSize: RLTokens.textDisplay,
+            fontWeight: RLTokens.regular,
+            letterSpacing: -0.6,
+            color: RLTokens.ink,
+            height: 1,
+          ),
+          displayMedium: TextStyle(
+            fontFamily: serif,
+            fontSize: RLTokens.textTitle,
+            fontWeight: RLTokens.regular,
+            letterSpacing: -0.4,
+            color: RLTokens.ink,
+            height: 1,
+          ),
+          displaySmall: TextStyle(
+            fontFamily: serif,
+            fontSize: RLTokens.textCardHead,
+            fontWeight: RLTokens.regular,
+            color: RLTokens.ink,
+            height: 1.15,
+          ),
+          titleLarge: TextStyle(
+            fontFamily: sans,
+            fontSize: RLTokens.textBarTitle,
+            fontWeight: RLTokens.semibold,
+            letterSpacing: -0.2,
+            color: RLTokens.ink,
+          ),
+          titleMedium: TextStyle(
+            fontFamily: sans,
+            fontSize: RLTokens.textRowTitle,
+            fontWeight: RLTokens.semibold,
+            letterSpacing: -0.1,
+            color: RLTokens.ink,
+          ),
+          labelLarge: TextStyle(
+            fontFamily: sans,
+            fontSize: RLTokens.textAction,
+            fontWeight: RLTokens.semibold,
+            letterSpacing: 0.1,
+            color: RLTokens.ink,
+          ),
+          bodyLarge: TextStyle(
+            fontFamily: sans,
+            fontSize: RLTokens.textBody,
+            fontWeight: RLTokens.regular,
+            color: RLTokens.ink,
+          ),
+          bodySmall: TextStyle(
+            fontFamily: sans,
+            fontSize: RLTokens.textSubtitle,
+            fontWeight: RLTokens.regular,
+            color: RLTokens.muted,
+          ),
+          labelSmall: TextStyle(
+            fontFamily: mono,
+            fontSize: RLTokens.textLabel,
+            fontWeight: RLTokens.medium,
+            letterSpacing: 1.1,
+            color: RLTokens.mutedSoft,
+          ),
+        )
+        .apply(fontFamilyFallback: RLTokens.fontFallback),
     appBarTheme: const AppBarTheme(
       backgroundColor: RLTokens.surface,
       surfaceTintColor: Colors.transparent,
@@ -96,6 +99,7 @@ ThemeData buildTheme() {
       centerTitle: true,
       titleTextStyle: TextStyle(
         fontFamily: sans,
+        fontFamilyFallback: RLTokens.fontFallback,
         fontSize: RLTokens.textBarTitle,
         fontWeight: RLTokens.semibold,
         letterSpacing: -0.2,
@@ -115,6 +119,7 @@ ThemeData buildTheme() {
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
         textStyle: const TextStyle(
           fontFamily: sans,
+          fontFamilyFallback: RLTokens.fontFallback,
           fontSize: RLTokens.textAction,
           fontWeight: RLTokens.semibold,
           letterSpacing: 0.1,
@@ -139,6 +144,7 @@ ThemeData buildTheme() {
       ),
       hintStyle: const TextStyle(
         fontFamily: sans,
+        fontFamilyFallback: RLTokens.fontFallback,
         fontSize: RLTokens.textBody,
         color: RLTokens.mutedSoft,
       ),

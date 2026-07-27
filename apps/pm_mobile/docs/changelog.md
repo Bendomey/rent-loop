@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-07-27 — Fix cedi sign (`₵`) rendering as tofu boxes on Android
+- Root cause: none of the three bundled families (`DMSans`, `DMSerifDisplay`, `JetBrainsMono`) has a glyph for U+20B5, verified by reading each TTF's `cmap` table; Android's system fallback chain doesn't reliably supply it either, so every `GH₵`/`₵` string rendered a box
+- Bundled `assets/fonts/InterCurrency[opsz,wght].ttf` — a 24 KB subset of Inter (U+0024, U+00A2–U+00A5, U+20A0–U+20BF) that retains the `wght` axis so the glyph matches surrounding text weight — and declared it as family `InterCurrency` at weights 100–900
+- Added `RLTokens.fontFallback` and wired it through `buildTheme()`: `ThemeData(fontFamilyFallback:)`, `textTheme.apply(fontFamilyFallback:)`, plus the three inline styles that bypass the text theme (app-bar title, elevated-button label, input hint). The ~800 widget-level `TextStyle`s that set only `fontFamily` inherit the fallback via `DefaultTextStyle` merge — no per-widget changes needed
+- Added `test/shared/font_coverage_test.dart`: parses every bundled TTF's `cmap` and fails if a currency-block rune used anywhere in `lib/` has no glyph in any bundled font; also asserts the theme's styles carry the fallback. Verified it fails without the fix
+- Modules affected: `assets/fonts/`, `pubspec.yaml`, `shared/tokens.dart`, `shared/theme.dart`, `test/shared/`
+
 ## 2026-07-26 — Maintenance request detail: redesign + read path
 - Rebuilt `activity/maintenance_detail.dart` against the Claude Design source (`Maintenance Request (mobile).html` → `ScreenMRDetail`): hero card (code · status pill · serif title · opened · description), attachments strip, Assignments card (Worker · Manager), Properties card (Priority · Category · Visibility · Unit · Lease), History/Comments/Expenses segmented tabs, created/updated footer, sticky Assign · Change status bar. Built entirely from existing `RL*` primitives — no new shared widgets
 - **The screen was 100% hardcoded mock data (`_kMaint`) before this** — it never called the API, so tapping a real request from the (already-wired) board showed unrelated seed data. All read data is now real

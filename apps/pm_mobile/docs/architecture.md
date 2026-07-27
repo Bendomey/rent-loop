@@ -80,6 +80,21 @@ apps/pm_mobile/
 
 **Every other module** (activity, money, announcements, most of `more/`, and tenant *detail*) still renders local mock data — no API calls in those trees yet. The pattern is proven and ready to replicate: `AbstractApi.execute()` → resource `XxxApi` class → Riverpod query provider / `ApiState` mutation notifier → screen (see `docs/patterns.md`), one module at a time.
 
+## Fonts
+
+Four families are bundled from `assets/fonts/` and declared in `pubspec.yaml`:
+
+| Family | Role |
+|---|---|
+| `DMSans` (variable) | body, UI, buttons — `RLTokens.fontSans`, the theme's default |
+| `DMSerifDisplay` | headings, hero numbers — `RLTokens.fontSerif` |
+| `JetBrainsMono` (variable) | eyebrows, labels, metadata — `RLTokens.fontMono` |
+| `InterCurrency` (variable) | **glyph fallback only** — `RLTokens.fontFallback` |
+
+None of the three brand families ships a glyph for the Ghana cedi (`₵`, U+20B5), which the app prints on nearly every money surface, and Android's system fallback chain does not reliably cover it either — so it rendered as tofu boxes. `InterCurrency` is a 24 KB subset of Inter (U+0024, U+00A2–U+00A5, U+20A0–U+20BF) that keeps Inter's `wght` axis, so the fallback glyph tracks the weight of the text around it. It is never selected as a primary family; it only supplies glyphs the brand families are missing.
+
+`test/shared/font_coverage_test.dart` parses each bundled TTF's `cmap` and fails if any currency-block rune used in `lib/` has no glyph in any bundled font, and asserts the theme's text styles all carry the fallback.
+
 ## External Dependencies
 | Name | Purpose |
 |---|---|

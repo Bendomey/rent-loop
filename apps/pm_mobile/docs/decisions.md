@@ -4,6 +4,13 @@
 
 ---
 
+## Cedi glyph: bundle a subset fallback font, don't change the strings (2026-07-27)
+**Why:** `DMSans`/`DMSerifDisplay`/`JetBrainsMono` have no glyph for U+20B5 (`₵`), and Android's system fallback doesn't reliably supply one, so every money surface showed a tofu box. Three options were on the table: (a) replace `GH₵` with `GHS` everywhere, (b) hand-wire `fontFamilyFallback` onto the ~800 widget-level `TextStyle`s, (c) bundle a fallback family and declare it once in the theme. (c) won: `TextStyle.merge`/`copyWith` preserve a parent's `fontFamilyFallback` when the child only sets `fontFamily`, so declaring it on `ThemeData` + the `textTheme` propagates to every `Text` through `DefaultTextStyle` — one small diff instead of 800, and the design keeps its currency symbol.
+**Tradeoffs:** +24 KB of assets, and the cedi is drawn in Inter while the digits around it are DM Sans. The subset keeps Inter's `wght` axis and the two families' cap heights are within ~4% (0.728 vs 0.700 em), so the mismatch is not noticeable at UI sizes. A bare `RichText` doesn't inherit `DefaultTextStyle`, so a span rendering currency must set the fallback itself — none do today, and `test/shared/font_coverage_test.dart` guards the font side of this.
+**Alternatives considered:** Patching the `₵` glyph directly into DM Sans (composite glyph over the existing `C`) — rejected as fragile to maintain across font updates for no user-visible gain.
+
+---
+
 ## Delete property flow: one screen with internal stage state, not separate routes (2026-07-24)
 **Why:** The Figma spec models Blocked/Confirm/Done as separate demo boards, but they're really one flow driven by a single `GET .../deletion:preview` fetch — `can_delete` picks Blocked vs Confirm, and a successful delete flips to Done locally. Making three separate `GoRoute`s would mean re-fetching or threading the preview result through query params/extra for no benefit. `PropertyDeleteScreen` (`properties/settings/delete.dart`) stays a single route (`/properties/:id/settings/delete`) with local stage state instead, matching how the Figma's own `MobileDelete` component is implemented (one component switching on `stage`).
 **Tradeoffs:** The three "stages" aren't independently deep-linkable — acceptable since none of them are ever reached except by tapping through from the Danger Zone card.

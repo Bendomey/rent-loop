@@ -2,7 +2,7 @@ name: rentloop_manager
 description: "RentLoop Manager — property manager mobile companion."
 publish_to: 'none'
 
-version: 0.1.0+7
+version: 0.1.0+8
 
 environment:
   sdk: ^3.8.1
@@ -79,6 +79,29 @@ flutter:
         - asset: "assets/fonts/DMSans[opsz,wght].ttf"
           weight: 800
         - asset: "assets/fonts/DMSans[opsz,wght].ttf"
+          weight: 900
+
+    # Currency-only subset of Inter — glyph fallback for symbols the families
+    # above lack (notably the Ghana cedi, U+20B5). See RLTokens.fontFallback.
+    - family: InterCurrency
+      fonts:
+        - asset: "assets/fonts/InterCurrency[opsz,wght].ttf"
+          weight: 100
+        - asset: "assets/fonts/InterCurrency[opsz,wght].ttf"
+          weight: 200
+        - asset: "assets/fonts/InterCurrency[opsz,wght].ttf"
+          weight: 300
+        - asset: "assets/fonts/InterCurrency[opsz,wght].ttf"
+          weight: 400
+        - asset: "assets/fonts/InterCurrency[opsz,wght].ttf"
+          weight: 500
+        - asset: "assets/fonts/InterCurrency[opsz,wght].ttf"
+          weight: 600
+        - asset: "assets/fonts/InterCurrency[opsz,wght].ttf"
+          weight: 700
+        - asset: "assets/fonts/InterCurrency[opsz,wght].ttf"
+          weight: 800
+        - asset: "assets/fonts/InterCurrency[opsz,wght].ttf"
           weight: 900
 
     - family: DMSerifDisplay
