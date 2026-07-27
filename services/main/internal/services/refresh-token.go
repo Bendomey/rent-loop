@@ -13,6 +13,7 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 	"github.com/redis/go-redis/v9"
 	log "github.com/sirupsen/logrus"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -42,6 +43,10 @@ type IssueRefreshTokenInput struct {
 	UserID    string
 	UserAgent *string
 	IPAddress *string
+	// Metadata is the client's self-description of the device starting this
+	// session. Carried forward unchanged by rotation, so it survives for the
+	// life of the session line.
+	Metadata *datatypes.JSON
 }
 
 type IssuedRefreshToken struct {
@@ -162,6 +167,7 @@ func (s *refreshTokenService) Issue(
 		TokenHash:  lib.HashRefreshTokenSecret(secret),
 		UserAgent:  input.UserAgent,
 		IPAddress:  input.IPAddress,
+		Metadata:   input.Metadata,
 		ExpiresAt:  now.Add(s.TTL()),
 		LastUsedAt: now,
 	}

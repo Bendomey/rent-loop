@@ -2,6 +2,7 @@ import type { Route } from './+types/_auth._dashboard.settings.customer-support-
 import { linkClientUserPropertyForServer } from '~/api/client-user-properties/server'
 import { createClientUser } from '~/api/client-users/server'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
+import { resolveAuthToken } from '~/lib/actions/auth.token.server'
 import { environmentVariables } from '~/lib/actions/env.server'
 import { CUSTOMER_SUPPORT_ACCOUNT } from '~/lib/constants'
 import { getErrorMessage } from '~/lib/error-messages'
@@ -20,11 +21,14 @@ export const handle = {
 	breadcrumb: 'Customer Support Access',
 }
 
-export async function action({ request }: Route.ActionArgs) {
+export async function action({ request, context }: Route.ActionArgs) {
 	const baseUrl = environmentVariables().API_ADDRESS
 	const authSession = await getAuthSession(request.headers.get('Cookie'))
 	const clientId = safeString(authSession.get('selectedClientId'))
-	const apiConfig = { baseUrl, authToken: authSession.get('authToken') }
+	const apiConfig = {
+		baseUrl,
+		authToken: await resolveAuthToken(request, context),
+	}
 
 	const formData = await request.formData()
 	const existingMemberId = formData.get('existing_member_id') as string

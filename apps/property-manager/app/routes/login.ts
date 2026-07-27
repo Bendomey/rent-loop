@@ -46,6 +46,18 @@ export async function action({ request }: Route.ActionArgs) {
 	const email = form.get('email')
 	const password = form.get('password')
 
+	// Client-supplied and cosmetic: if it is missing or unparseable we log in
+	// anyway and simply store no metadata. Never let it fail a login.
+	let deviceMetadata: unknown
+	const rawMetadata = form.get('device_metadata')
+	if (typeof rawMetadata === 'string' && rawMetadata.length) {
+		try {
+			deviceMetadata = JSON.parse(rawMetadata)
+		} catch {
+			deviceMetadata = undefined
+		}
+	}
+
 	if (
 		!email ||
 		!password ||
@@ -58,12 +70,25 @@ export async function action({ request }: Route.ActionArgs) {
 	}
 
 	try {
-		const loginResponse = await login({ email, password }, { baseUrl })
+		// Pass the browser's identity through to the backend. X-Forwarded-For is
+		// only present in front of a proxy (Fly in production); locally it is
+		// absent and the backend falls back to the connection address.
+		const forwardedHeaders: Record<string, string> = {}
+		const browserUserAgent = request.headers.get('User-Agent')
+		if (browserUserAgent) forwardedHeaders['User-Agent'] = browserUserAgent
+		const forwardedFor = request.headers.get('X-Forwarded-For')
+		if (forwardedFor) forwardedHeaders['X-Forwarded-For'] = forwardedFor
+
+		const loginResponse = await login(
+			{ email, password, metadata: deviceMetadata },
+			{ baseUrl, forwardedHeaders },
+		)
 		if (!loginResponse) {
 			throw new Error('Login failed')
 		}
 
 		session.set('authToken', loginResponse.token)
+		session.set('refreshToken', loginResponse.refresh_token)
 
 		// Check how many clients the user has
 		const clientUsers = loginResponse.user.client_users ?? []

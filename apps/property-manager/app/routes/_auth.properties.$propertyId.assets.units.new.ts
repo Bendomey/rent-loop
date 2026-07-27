@@ -3,6 +3,7 @@ import type { Route } from './+types/_auth.properties.$propertyId.assets.units._
 import { createPropertyUnit } from '~/api/units'
 import { getPropertyUnitForServer } from '~/api/units/server'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
+import { resolveAuthToken } from '~/lib/actions/auth.token.server'
 import { environmentVariables } from '~/lib/actions/env.server'
 import { propertyContext } from '~/lib/actions/property.context.server'
 import { replaceNullUndefinedWithUndefined } from '~/lib/actions/utils.server'
@@ -35,7 +36,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 			(await getPropertyUnitForServer(
 				clientId,
 				{ property_id: clientUserProperty.property.id, unit_id: unitId },
-				{ baseUrl, authToken: authSession.get('authToken') },
+				{ baseUrl, authToken: await resolveAuthToken(request, context) },
 			)) ?? null
 	}
 
@@ -50,7 +51,7 @@ export const handle = {
 	breadcrumb: 'Add Unit',
 }
 
-export async function action({ request }: Route.ActionArgs) {
+export async function action({ request, context }: Route.ActionArgs) {
 	const baseUrl = environmentVariables().API_ADDRESS
 	const authSession = await getAuthSession(request.headers.get('Cookie'))
 	const clientId = authSession.get('selectedClientId') ?? ''
@@ -100,7 +101,7 @@ export async function action({ request }: Route.ActionArgs) {
 			}),
 			{
 				baseUrl,
-				authToken: authSession.get('authToken'),
+				authToken: await resolveAuthToken(request, context),
 			},
 		)
 

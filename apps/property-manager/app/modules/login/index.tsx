@@ -19,6 +19,7 @@ import {
 import { Input } from '~/components/ui/input'
 import { Spinner } from '~/components/ui/spinner'
 import { TypographyH1, TypographyH3 } from '~/components/ui/typography'
+import { collectDeviceMetadata } from '~/lib/device-info'
 import { cn } from '~/lib/utils'
 
 const ValidationSchema = z.object({
@@ -42,9 +43,17 @@ export function LoginModule() {
 
 	const { control, handleSubmit } = rhfMethods
 
-	const onSubmit = handleSubmit(async (data) =>
-		fetcher.submit(data, { method: 'post' }),
-	)
+	const onSubmit = handleSubmit(async (data) => {
+		// Describe this device alongside the credentials so the session row can
+		// say which browser/machine it belongs to. Collected here because the
+		// values that matter (timezone, locale, client hints) exist only in the
+		// browser — the server sees none of them.
+		const metadata = await collectDeviceMetadata()
+		return fetcher.submit(
+			{ ...data, device_metadata: JSON.stringify(metadata) },
+			{ method: 'post' },
+		)
+	})
 
 	const isSubmitting = fetcher.state !== 'idle'
 

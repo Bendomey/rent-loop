@@ -17,6 +17,7 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 	"github.com/dgrijalva/jwt-go"
 	log "github.com/sirupsen/logrus"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -81,6 +82,7 @@ type LoginUserInput struct {
 	Password  string
 	UserAgent *string
 	IPAddress *string
+	Metadata  *datatypes.JSON
 }
 
 type LoginUserResponse struct {
@@ -133,6 +135,7 @@ func (s *userService) LoginUser(ctx context.Context, input LoginUserInput) (*Log
 		UserID:    user.ID.String(),
 		UserAgent: input.UserAgent,
 		IPAddress: input.IPAddress,
+		Metadata:  input.Metadata,
 	})
 	if refreshErr != nil {
 		return nil, refreshErr

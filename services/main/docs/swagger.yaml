@@ -1436,6 +1436,12 @@ definitions:
       email:
         example: user@example.com
         type: string
+      metadata:
+        description: |-
+          Metadata describes the device/browser starting this session. Optional and
+          entirely client-supplied — it is display data for a future "active
+          sessions" view, never anything an authorization decision may rest on.
+        type: object
       password:
         example: password123
         minLength: 6

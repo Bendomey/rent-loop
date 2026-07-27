@@ -21988,6 +21988,10 @@
                     "type": "string",
                     "example": "user@example.com"
                 },
+                "metadata": {
+                    "description": "Metadata describes the device/browser starting this session. Optional and\nentirely client-supplied — it is display data for a future \"active\nsessions\" view, never anything an authorization decision may rest on.",
+                    "type": "object"
+                },
                 "password": {
                     "type": "string",
                     "minLength": 6,

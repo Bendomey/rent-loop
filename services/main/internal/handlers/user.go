@@ -11,6 +11,7 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/transformations"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 	"github.com/dgrijalva/jwt-go"
+	"gorm.io/datatypes"
 )
 
 type UserHandler struct {
@@ -27,9 +28,18 @@ func NewUserHandler(
 	return UserHandler{service, refreshTokenService, appCtx}
 }
 
+// maxSessionMetadataBytes caps the client-supplied session metadata blob.
+// This is untrusted input that goes straight into a jsonb column, so it needs
+// a ceiling; the documented shape is well under 1KB.
+const maxSessionMetadataBytes = 4096
+
 type LoginUserRequest struct {
-	Email    string `json:"email"    validate:"required,email" example:"user@example.com"`
-	Password string `json:"password" validate:"required,min=6" example:"password123"`
+	Email    string `json:"email"              validate:"required,email" example:"user@example.com"`
+	Password string `json:"password"           validate:"required,min=6" example:"password123"`
+	// Metadata describes the device/browser starting this session. Optional and
+	// entirely client-supplied — it is display data for a future "active
+	// sessions" view, never anything an authorization decision may rest on.
+	Metadata json.RawMessage `json:"metadata,omitempty"                                                      swaggertype:"object"`
 }
 
 // LoginUser godoc
@@ -57,11 +67,21 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Oversized or malformed metadata is dropped rather than rejected: it is
+	// cosmetic, and failing a login over it would be absurd.
+	var sessionMetadata *datatypes.JSON
+	if len(body.Metadata) > 0 && len(body.Metadata) <= maxSessionMetadataBytes &&
+		json.Valid(body.Metadata) {
+		decoded := datatypes.JSON(body.Metadata)
+		sessionMetadata = &decoded
+	}
+
 	result, err := h.service.LoginUser(r.Context(), services.LoginUserInput{
 		Email:     body.Email,
 		Password:  body.Password,
 		UserAgent: UserAgentFromRequest(r),
 		IPAddress: ClientIPFromRequest(r),
+		Metadata:  sessionMetadata,
 	})
 	if err != nil {
 		HandleErrorResponse(w, err)

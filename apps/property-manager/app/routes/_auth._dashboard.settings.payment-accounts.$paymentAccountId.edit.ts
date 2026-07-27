@@ -1,16 +1,17 @@
 import type { Route } from './+types/_auth._dashboard.settings.payment-accounts.$paymentAccountId.edit'
 import { getPaymentAccountForServer } from '~/api/payment-accounts/server'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
+import { resolveAuthToken } from '~/lib/actions/auth.token.server'
 import { environmentVariables } from '~/lib/actions/env.server'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
 import { safeString } from '~/lib/strings'
 import { EditPaymentAccountModule } from '~/modules'
 
-export async function loader({ request, params }: Route.LoaderArgs) {
+export async function loader({ request, params, context }: Route.LoaderArgs) {
 	const baseUrl = environmentVariables().API_ADDRESS
 	const authSession = await getAuthSession(request.headers.get('Cookie'))
-	const authToken = authSession.get('authToken')
+	const authToken = await resolveAuthToken(request, context)
 	const clientId = safeString(authSession.get('selectedClientId'))
 	const payment_account_id = params.paymentAccountId
 
