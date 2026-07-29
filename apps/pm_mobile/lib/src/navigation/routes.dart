@@ -9,6 +9,7 @@ import 'package:rentloop_manager/src/modules/main/activity/add_application.dart'
 import 'package:rentloop_manager/src/modules/main/activity/add_booking.dart';
 import 'package:rentloop_manager/src/modules/main/activity/add_maintenance.dart';
 import 'package:rentloop_manager/src/modules/main/activity/application_detail.dart';
+import 'package:rentloop_manager/src/repository/models/tenant_application_model.dart';
 import 'package:rentloop_manager/src/modules/main/activity/booking_detail.dart';
 import 'package:rentloop_manager/src/modules/main/activity/maintenance_detail.dart';
 import 'package:rentloop_manager/src/modules/main/activity/root.dart';
@@ -299,8 +300,14 @@ GoRouter buildRoutes(WidgetRef ref) {
       ),
       GoRoute(
         path: '/activity/applications/:id',
-        builder: (_, state) =>
-            ApplicationDetailScreen(id: state.pathParameters['id']!),
+        builder: (_, state) => ApplicationDetailScreen(
+          id: state.pathParameters['id']!,
+          // The applications list passes the row it was already showing, so a
+          // tapped card opens that application instead of a seed fixture.
+          application: state.extra is TenantApplicationModel
+              ? state.extra! as TenantApplicationModel
+              : null,
+        ),
       ),
 
       // money routes

@@ -7,20 +7,20 @@ part of 'properties_notifier.dart';
 // **************************************************************************
 
 String _$propertiesNotifierHash() =>
-    r'06f00bfe00ecf021fa4db27a68d2947433edede5';
+    r'2a123c01e6ff94963f708ae18a9d60189abce4d3';
 
 /// See also [PropertiesNotifier].
 @ProviderFor(PropertiesNotifier)
 final propertiesNotifierProvider =
     AutoDisposeNotifierProvider<PropertiesNotifier, PropertiesState>.internal(
-  PropertiesNotifier.new,
-  name: r'propertiesNotifierProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$propertiesNotifierHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+      PropertiesNotifier.new,
+      name: r'propertiesNotifierProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$propertiesNotifierHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
 
 typedef _$PropertiesNotifier = AutoDisposeNotifier<PropertiesState>;
 // ignore_for_file: type=lint

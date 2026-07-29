@@ -59,7 +59,7 @@ class ClientUserPropertyApi extends AbstractApi {
   /// so this is the single source of truth for "properties I can see"
   /// across every role, not just STAFF: both the Properties tab
   /// (PropertiesNotifier) and the maintenance board's Property filter
-  /// (maintenanceFilterProperties) go through this one endpoint, by design
+  /// (activityFilterProperties) go through this one endpoint, by design
   /// — access is always explicit, never role-inferred. Supports the same
   /// pagination/search/status params as `PropertyApi.getProperties`, minus
   /// `archived` (this endpoint's join always excludes soft-deleted

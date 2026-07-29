@@ -6,15 +6,16 @@ import 'package:rentloop_manager/src/architecture/current_workspace/current_work
 import 'package:rentloop_manager/src/repository/models/property_model.dart';
 import 'package:rentloop_manager/src/repository/models/unit_model.dart';
 
-part 'maintenance_filter_options_provider.g.dart';
+part 'activity_filter_options_provider.g.dart';
 
-/// The maintenance board's Property filter option list — properties the
+/// The activity screens' Property filter option list (maintenance board and
+/// applications list) — properties the
 /// current client-user is explicitly linked to (see
 /// `ClientUserPropertyApi.getMyProperties`), same source the Properties tab
 /// uses — access is always explicit, never inferred from role.
 @riverpod
-Future<List<PropertyModel>> maintenanceFilterProperties(
-  MaintenanceFilterPropertiesRef ref,
+Future<List<PropertyModel>> activityFilterProperties(
+  ActivityFilterPropertiesRef ref,
 ) async {
   final clientId = ref.watch(currentWorkspaceNotifierProvider)?.clientId;
   if (clientId == null) return [];
@@ -24,12 +25,10 @@ Future<List<PropertyModel>> maintenanceFilterProperties(
   return page.rows;
 }
 
-/// The maintenance board's Unit filter option list — units across every
+/// The activity screens' Unit filter option list — units across every
 /// property the current client-user has access to.
 @riverpod
-Future<List<UnitModel>> maintenanceFilterUnits(
-  MaintenanceFilterUnitsRef ref,
-) async {
+Future<List<UnitModel>> activityFilterUnits(ActivityFilterUnitsRef ref) async {
   final clientId = ref.watch(currentWorkspaceNotifierProvider)?.clientId;
   if (clientId == null) return [];
   return ref.read(unitApiProvider).getUnitsAcrossProperties(clientId: clientId);

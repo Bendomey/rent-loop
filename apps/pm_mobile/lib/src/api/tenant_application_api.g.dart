@@ -1,26 +1,27 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'login_notifier.dart';
+part of 'tenant_application_api.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$loginNotifierHash() => r'5cbabc0194a83c8d0c6bb714721fd54c6abbefc6';
+String _$tenantApplicationApiHash() =>
+    r'dc9ae9bd76472920a3090db886612a5e3954e2a4';
 
-/// See also [LoginNotifier].
-@ProviderFor(LoginNotifier)
-final loginNotifierProvider =
-    AutoDisposeNotifierProvider<LoginNotifier, LoginState>.internal(
-      LoginNotifier.new,
-      name: r'loginNotifierProvider',
+/// See also [tenantApplicationApi].
+@ProviderFor(tenantApplicationApi)
+final tenantApplicationApiProvider =
+    AutoDisposeProvider<TenantApplicationApi>.internal(
+      tenantApplicationApi,
+      name: r'tenantApplicationApiProvider',
       debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
           ? null
-          : _$loginNotifierHash,
+          : _$tenantApplicationApiHash,
       dependencies: null,
       allTransitiveDependencies: null,
     );
 
-typedef _$LoginNotifier = AutoDisposeNotifier<LoginState>;
+typedef TenantApplicationApiRef = AutoDisposeProviderRef<TenantApplicationApi>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

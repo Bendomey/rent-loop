@@ -1,24 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
+import 'package:rentloop_manager/src/modules/main/activity/applications_list.dart';
 import 'package:rentloop_manager/src/modules/main/activity/maintenance_board.dart';
+import 'package:rentloop_manager/src/repository/notifiers/activity/tenant_applications_notifier.dart';
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
-class ActivityScreen extends StatefulWidget {
+class ActivityScreen extends ConsumerStatefulWidget {
   const ActivityScreen({super.key});
 
   @override
-  State<ActivityScreen> createState() => _ActivityScreenState();
+  ConsumerState<ActivityScreen> createState() => _ActivityScreenState();
 }
 
-class _ActivityScreenState extends State<ActivityScreen> {
+class _ActivityScreenState extends ConsumerState<ActivityScreen> {
   String _tab = 'maint';
 
   @override
   Widget build(BuildContext context) {
+    final applicationsCount = ref.watch(
+      tenantApplicationsNotifierProvider.select((s) => s.total),
+    );
+
     return Scaffold(
       backgroundColor: RLTokens.surface,
       floatingActionButton: FloatingActionButton.extended(
@@ -56,6 +63,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
         children: [
           _Header(
             selectedTab: _tab,
+            applicationsCount: applicationsCount,
             onTabChanged: (v) async {
               await Haptics.vibrate(HapticsType.selection);
               setState(() => _tab = v);
@@ -66,7 +74,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
               index: ['maint', 'apps', 'bookings'].indexOf(_tab),
               children: const [
                 MaintenanceBoard(),
-                _AppsList(),
+                ApplicationsList(),
                 _BookingsList(),
               ],
             ),
@@ -80,9 +88,17 @@ class _ActivityScreenState extends State<ActivityScreen> {
 // ── Header ────────────────────────────────────────────────────────────────────
 
 class _Header extends StatelessWidget {
-  const _Header({required this.selectedTab, required this.onTabChanged});
+  const _Header({
+    required this.selectedTab,
+    required this.onTabChanged,
+    required this.applicationsCount,
+  });
   final String selectedTab;
   final ValueChanged<String> onTabChanged;
+
+  /// Real total from the applications notifier. Maintenance and Bookings are
+  /// still hardcoded — out of scope for this change.
+  final int applicationsCount;
 
   @override
   Widget build(BuildContext context) {
@@ -137,10 +153,14 @@ class _Header extends StatelessWidget {
           child: RLSegmented(
             value: selectedTab,
             onChanged: onTabChanged,
-            items: const [
-              RLSegmentItem(key: 'maint', label: 'Maintenance', count: 9),
-              RLSegmentItem(key: 'apps', label: 'Applications', count: 4),
-              RLSegmentItem(key: 'bookings', label: 'Bookings', count: 4),
+            items: [
+              const RLSegmentItem(key: 'maint', label: 'Maintenance', count: 9),
+              RLSegmentItem(
+                key: 'apps',
+                label: 'Applications',
+                count: applicationsCount,
+              ),
+              const RLSegmentItem(key: 'bookings', label: 'Bookings', count: 4),
             ],
           ),
         ),
@@ -149,187 +169,7 @@ class _Header extends StatelessWidget {
   }
 }
 
-// ── Applications data ─────────────────────────────────────────────────────────
-
-class _AppData {
-  const _AppData({
-    required this.id,
-    required this.name,
-    required this.unit,
-    required this.status,
-    required this.age,
-    required this.rent,
-    required this.stage,
-    required this.phone,
-  });
-  final String id;
-  final String name;
-  final String unit;
-  final String status;
-  final String age;
-  final int rent;
-  final int stage;
-  final String phone;
-}
-
-const _kApps = [
-  _AppData(
-    id: 'a1',
-    name: 'Adjoa Frimpong',
-    unit: 'Unit 1C · Cantonments Court',
-    status: 'New',
-    age: 'Today',
-    rent: 3000,
-    stage: 1,
-    phone: '+233 26 118 5540',
-  ),
-  _AppData(
-    id: 'a2',
-    name: 'Daniel Ofori',
-    unit: 'Unit 12 · Spintex Heights',
-    status: 'In Progress',
-    age: '2d ago',
-    rent: 3500,
-    stage: 3,
-    phone: '+233 24 330 7781',
-  ),
-  _AppData(
-    id: 'a3',
-    name: 'Naa Adjeley',
-    unit: 'Shop 5 · Osu Retail Block',
-    status: 'In Progress',
-    age: '3d ago',
-    rent: 6000,
-    stage: 2,
-    phone: '+233 20 555 9921',
-  ),
-  _AppData(
-    id: 'a4',
-    name: 'Selorm Kudjo',
-    unit: 'Unit 9 · Spintex Heights',
-    status: 'New',
-    age: '4d ago',
-    rent: 3500,
-    stage: 1,
-    phone: '+233 55 712 0034',
-  ),
-];
-
-// ── Applications list ─────────────────────────────────────────────────────────
-
-class _AppsList extends StatelessWidget {
-  const _AppsList();
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(
-        RLTokens.gutter,
-        6,
-        RLTokens.gutter,
-        120,
-      ),
-      itemCount: _kApps.length,
-      itemBuilder: (_, i) => Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: _AppCard(a: _kApps[i]),
-      ),
-    );
-  }
-}
-
-class _AppCard extends StatelessWidget {
-  const _AppCard({required this.a});
-  final _AppData a;
-
-  @override
-  Widget build(BuildContext context) {
-    final pct = a.stage / 5 * 100;
-    return GestureDetector(
-      onTap: () async {
-        await Haptics.vibrate(HapticsType.selection);
-        if (context.mounted) context.push('/activity/applications/${a.id}');
-      },
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: RLTokens.surface,
-          borderRadius: BorderRadius.circular(RLTokens.rLg),
-          border: Border.all(color: RLTokens.hairline),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Avatar + name/unit + status pill
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                RLAvatar(a.name, size: 42),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        a.name,
-                        style: const TextStyle(
-                          fontFamily: RLTokens.fontSans,
-                          fontSize: 15.5,
-                          fontWeight: RLTokens.semibold,
-                          color: RLTokens.ink,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        a.unit,
-                        style: const TextStyle(
-                          fontFamily: RLTokens.fontSans,
-                          fontSize: 12.5,
-                          color: RLTokens.muted,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 10),
-                RLPill(a.status, tone: statusTone(a.status)),
-              ],
-            ),
-            const SizedBox(height: 14),
-            // Step label + rent/age
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'STEP ${a.stage}/5',
-                  style: const TextStyle(
-                    fontFamily: RLTokens.fontMono,
-                    fontSize: 10,
-                    color: RLTokens.mutedSoft,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                Text(
-                  'GH₵ ${_fmtN(a.rent)}/mo · ${a.age}',
-                  style: const TextStyle(
-                    fontFamily: RLTokens.fontSans,
-                    fontSize: 12,
-                    color: RLTokens.muted,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            // Progress bar
-            RLBar(percent: pct, height: 6),
-          ],
-        ),
-      ),
-    );
-  }
-}
+// ── Shared formatting ─────────────────────────────────────────────────────────
 
 String _fmtN(int n) =>
     n.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => ',');

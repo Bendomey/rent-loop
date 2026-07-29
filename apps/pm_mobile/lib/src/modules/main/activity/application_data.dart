@@ -6,8 +6,15 @@
 // change rather than a rewrite. Money is held as integer pesewas, matching the
 // backend and the rest of this app — see lib/src/lib/money.dart.
 
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
+import 'package:rentloop_manager/src/lib/application_checklist.dart';
+import 'package:rentloop_manager/src/lib/application_utils.dart';
+import 'package:rentloop_manager/src/lib/document_utils.dart';
 import 'package:rentloop_manager/src/lib/money.dart';
+import 'package:rentloop_manager/src/repository/models/tenant_application_model.dart';
+import 'package:rentloop_manager/src/repository/models/unit_model.dart';
 
 // ── Option sets (mirror the web zod enums) ───────────────────────────────────
 
@@ -96,35 +103,6 @@ String formatPesewas(int? pesewas, {String currency = 'GH₵'}) {
     (_) => ',',
   );
   return '$currency $whole.${parts[1]}';
-}
-
-// ── Checklist ────────────────────────────────────────────────────────────────
-
-@immutable
-class ApplicationChecklistItem {
-  const ApplicationChecklistItem(this.label, {required this.done});
-  final String label;
-  final bool done;
-}
-
-/// One row of the "Complete application info" card.
-@immutable
-class ApplicationChecklistSection {
-  const ApplicationChecklistSection({
-    required this.key,
-    required this.label,
-    required this.items,
-  });
-
-  final String key;
-  final String label;
-  final List<ApplicationChecklistItem> items;
-
-  int get doneCount => items.where((i) => i.done).length;
-
-  /// An empty section passes vacuously (docs are optional until attached),
-  /// but only a section with items counts as "complete" for progress.
-  bool get complete => items.isNotEmpty && doneCount == items.length;
 }
 
 // ── Sub-models ───────────────────────────────────────────────────────────────
@@ -557,151 +535,244 @@ class ApplicationDetailData {
 
   String get displayStatus => approved ? 'Completed' : status;
 
-  // ── Derived checklist (mirrors the web's use-calculate-checklist) ──────────
+  // ── Derived checklist ─────────────────────────────────────────────────────
+  //
+  // Computed by the shared lib (lib/src/lib/application_checklist.dart), the
+  // same code the real applications list uses, so the seeded screen and the
+  // live list can never disagree about what "complete" means.
 
-  ApplicationChecklistSection get unitSection => ApplicationChecklistSection(
-    key: 'unit',
-    label: 'Select a unit',
-    items: [
-      ApplicationChecklistItem('Unit selected', done: desiredUnit != null),
-    ],
-  );
+  /// Projects the seed onto the REST shape the checklist lib reads. Witness
+  /// labels live in a document's Lexical content under the web's rules rather
+  /// than on the signature rows, so seeded witnesses are re-emitted as
+  /// synthetic content nodes.
+  TenantApplicationModel toApplicationModel() {
+    final witnessSigners = doc.signers.where(
+      (s) => s.role == 'PM_WITNESS' || s.role == 'TENANT_WITNESS',
+    );
+    final content = witnessSigners.isEmpty
+        ? null
+        : jsonEncode({
+            'root': {
+              'type': 'root',
+              'children': [
+                for (final s in witnessSigners)
+                  {
+                    'type': 'signature',
+                    'role': s.role == 'PM_WITNESS'
+                        ? 'pm_witness'
+                        : 'tenant_witness',
+                    'label': s.label,
+                  },
+              ],
+            },
+          });
 
-  ApplicationChecklistSection get tenantSection {
-    bool has(String? v) => v != null && v.isNotEmpty;
-    return ApplicationChecklistSection(
-      key: 'tenant',
-      label: 'Add tenant details',
-      items: [
-        ApplicationChecklistItem('First name', done: has(applicant.firstName)),
-        ApplicationChecklistItem('Last name', done: has(applicant.lastName)),
-        ApplicationChecklistItem('Phone', done: has(applicant.phone)),
-        ApplicationChecklistItem('Gender', done: has(applicant.gender)),
-        ApplicationChecklistItem(
-          'Date of birth',
-          done: applicant.dateOfBirth != null,
-        ),
-        ApplicationChecklistItem(
-          'Nationality',
-          done: has(identity.nationality),
-        ),
-        ApplicationChecklistItem(
-          'Marital status',
-          done: has(applicant.maritalStatus),
-        ),
-        ApplicationChecklistItem('ID type', done: has(identity.idType)),
-        ApplicationChecklistItem('ID number', done: has(identity.idNumber)),
-        ApplicationChecklistItem(
-          'Current address',
-          done: has(identity.currentAddress),
-        ),
-        ApplicationChecklistItem(
-          'Emergency contact name',
-          done: has(background.emergencyContactName),
-        ),
-        ApplicationChecklistItem(
-          'Emergency contact phone',
-          done: has(background.emergencyContactPhone),
-        ),
-        ApplicationChecklistItem(
-          'Relationship to emergency contact',
-          done: has(background.relationshipToEmergencyContact),
-        ),
-        ApplicationChecklistItem(
-          'Employment type',
-          done: has(background.employerType),
-        ),
-        ApplicationChecklistItem(
-          'Occupation',
-          done: has(background.occupation),
-        ),
-        ApplicationChecklistItem('Employer', done: has(background.employer)),
-        ApplicationChecklistItem(
-          'Occupation address',
-          done: has(background.occupationAddress),
-        ),
+    const docId = 'seed-doc';
+    return TenantApplicationModel(
+      id: id,
+      code: code,
+      status: status,
+      firstName: applicant.firstName,
+      otherNames: applicant.otherNames,
+      lastName: applicant.lastName,
+      email: applicant.email,
+      phone: applicant.phone,
+      gender: applicant.gender,
+      dateOfBirth: applicant.dateOfBirth,
+      maritalStatus: applicant.maritalStatus,
+      profilePhotoUrl: applicant.profilePhotoUrl,
+      nationality: identity.nationality,
+      idType: identity.idType,
+      idNumber: identity.idNumber,
+      currentAddress: identity.currentAddress,
+      emergencyContactName: background.emergencyContactName,
+      emergencyContactPhone: background.emergencyContactPhone,
+      relationshipToEmergencyContact: background.relationshipToEmergencyContact,
+      employerType: background.employerType,
+      occupation: background.occupation,
+      employer: background.employer,
+      occupationAddress: background.occupationAddress,
+      desiredUnitId: desiredUnit?.id,
+      desiredUnit: desiredUnit == null
+          ? null
+          : UnitModel(
+              id: desiredUnit!.id,
+              name: desiredUnit!.name,
+              type: desiredUnit!.type,
+              status: desiredUnit!.status,
+              rentFee: desiredUnit!.rentFee ?? 0,
+              rentFeeCurrency: 'GHS',
+              paymentFrequency: desiredUnit!.paymentFrequency,
+            ),
+      desiredMoveInDate: moveIn.desiredMoveInDate,
+      stayDuration: moveIn.stayDuration,
+      stayDurationFrequency: moveIn.stayDurationFrequency,
+      rentFee: financial.rentFee,
+      paymentFrequency: financial.paymentFrequency,
+      securityDepositFee: financial.securityDepositFee,
+      applicationPaymentInvoice: financial.invoiceGenerated
+          ? InvoiceRef(
+              id: 'seed-invoice',
+              code: 'SEED',
+              status: financial.invoicePaid ? 'PAID' : 'ISSUED',
+            )
+          : null,
+      leaseAgreementDocumentMode: doc.mode,
+      leaseAgreementDocumentId: doc.attached ? docId : null,
+      leaseAgreementDocumentUrl: doc.attached ? 'seed://lease.pdf' : null,
+      leaseAgreementDocument: doc.attached
+          ? ApplicationDocumentModel(id: docId, content: content)
+          : null,
+      leaseAgreementDocumentSignatures: [
+        for (final s in doc.signers)
+          if (s.signed)
+            ApplicationDocumentSignatureModel(
+              id: '${s.role}-sig',
+              documentId: docId,
+              role: s.role,
+            ),
       ],
     );
   }
 
-  ApplicationChecklistSection get moveInSection => ApplicationChecklistSection(
-    key: 'movein',
-    label: 'Move-in setup',
-    items: [
-      ApplicationChecklistItem(
-        'Move-in date',
-        done: moveIn.desiredMoveInDate != null,
-      ),
-      ApplicationChecklistItem(
-        'Stay duration frequency',
-        done: moveIn.stayDurationFrequency != null,
-      ),
-      ApplicationChecklistItem(
-        'Stay duration',
-        done: moveIn.stayDuration != null,
-      ),
-    ],
-  );
+  // Per-section accessors, kept so the type's API is unchanged. Each is a
+  // one-line delegate to the shared lib.
+  ApplicationChecklistSection get unitSection =>
+      getUnitSection(toApplicationModel());
+
+  ApplicationChecklistSection get tenantSection =>
+      getTenantDetailsSection(toApplicationModel());
+
+  ApplicationChecklistSection get moveInSection =>
+      getMoveInSection(toApplicationModel());
 
   ApplicationChecklistSection get financialSection =>
-      ApplicationChecklistSection(
-        key: 'financial',
-        label: 'Financial setup',
-        items: [
-          ApplicationChecklistItem('Rent fee', done: financial.rentFee != null),
-          ApplicationChecklistItem(
-            'Payment frequency',
-            done: financial.paymentFrequency != null,
-          ),
-          ApplicationChecklistItem(
-            'Invoice generated',
-            done: financial.invoiceGenerated,
-          ),
-          ApplicationChecklistItem('Invoice paid', done: financial.invoicePaid),
-        ],
-      );
+      getFinancialSection(toApplicationModel());
 
-  /// Docs are optional — with nothing attached the section is empty and
-  /// passes vacuously, exactly as the web treats it.
-  ApplicationChecklistSection get docsSection {
-    if (!doc.attached) {
-      return const ApplicationChecklistSection(
-        key: 'docs',
-        label: 'Lease docs setup',
-        items: [],
-      );
-    }
-    return ApplicationChecklistSection(
-      key: 'docs',
-      label: 'Lease docs setup',
-      items: [
-        ApplicationChecklistItem('Document uploaded', done: true),
-        for (final s in doc.signers)
-          ApplicationChecklistItem(
-            '${s.label} signed',
-            done: doc.isManual || s.signed,
-          ),
-      ],
+  ApplicationChecklistSection get docsSection =>
+      getDocsSection(toApplicationModel());
+
+  List<ApplicationChecklistSection> get checklist =>
+      buildApplicationChecklist(toApplicationModel());
+
+  double get progress => applicationProgress(toApplicationModel());
+
+  bool get canApprove => canApproveApplication(toApplicationModel());
+
+  /// Builds the screen's view model from a real API row — the inverse of
+  /// [toApplicationModel]. Used when the applications list pushes the row it
+  /// was already showing, so a tapped card opens that application rather than
+  /// falling through to a fixture. Fields the detail screen renders but the
+  /// list payload does not carry (document name/source/status) stay null.
+  factory ApplicationDetailData.fromApplicationModel(TenantApplicationModel a) {
+    final signatures = a.leaseAgreementDocumentSignatures ?? const [];
+    final witnessNodes = getWitnessNodesFromContent(
+      a.leaseAgreementDocument?.content,
     );
-  }
 
-  List<ApplicationChecklistSection> get checklist => [
-    unitSection,
-    tenantSection,
-    moveInSection,
-    financialSection,
-    docsSection,
-  ];
+    // Manager and tenant slots are implicit; witness slots come from the
+    // document body, matching the checklist's own reading of a document.
+    var pmWitnessSeen = 0;
+    var tenantWitnessSeen = 0;
+    final signers = <ApplicationSigner>[
+      ApplicationSigner(
+        role: 'PROPERTY_MANAGER',
+        label: 'Property Manager',
+        signed: signatures.any((s) => s.role == 'PROPERTY_MANAGER'),
+        isSelf: true,
+      ),
+      ApplicationSigner(
+        role: 'TENANT',
+        label: 'Tenant',
+        signed: signatures.any((s) => s.role == 'TENANT'),
+        isSelf: false,
+      ),
+      for (final node in witnessNodes)
+        if (node.role == 'pm_witness')
+          ApplicationSigner(
+            role: 'PM_WITNESS',
+            label: node.label,
+            signed:
+                pmWitnessSeen++ <
+                signatures.where((s) => s.role == 'PM_WITNESS').length,
+            isSelf: false,
+          )
+        else
+          ApplicationSigner(
+            role: 'TENANT_WITNESS',
+            label: node.label,
+            signed:
+                tenantWitnessSeen++ <
+                signatures.where((s) => s.role == 'TENANT_WITNESS').length,
+            isSelf: false,
+          ),
+    ];
 
-  /// Percentage of the five sections that are fully complete. Empty sections
-  /// count as incomplete for display (matching the web).
-  double get progress =>
-      checklist.where((s) => s.complete).length / checklist.length * 100;
+    final invoice = a.applicationPaymentInvoice;
 
-  /// Approval gate — only sections that actually carry items must pass.
-  bool get canApprove {
-    final required = checklist.where((s) => s.items.isNotEmpty);
-    return required.isEmpty || required.every((s) => s.complete);
+    return ApplicationDetailData(
+      id: a.id,
+      code: a.code,
+      status: applicationStatusLabel(a.status),
+      submittedOn: a.createdAt == null
+          ? '—'
+          : formatApplicationDate(a.createdAt!),
+      submittedBy: a.source ?? '—',
+      applicant: ApplicationApplicant(
+        firstName: a.firstName ?? '',
+        lastName: a.lastName ?? '',
+        otherNames: a.otherNames,
+        gender: a.gender,
+        maritalStatus: a.maritalStatus,
+        email: a.email ?? '',
+        phone: a.phone,
+        dateOfBirth: a.dateOfBirth,
+        profilePhotoUrl: a.profilePhotoUrl,
+      ),
+      identity: ApplicationIdentity(
+        nationality: a.nationality,
+        idType: a.idType,
+        idNumber: a.idNumber,
+        currentAddress: a.currentAddress,
+      ),
+      background: ApplicationBackground(
+        emergencyContactName: a.emergencyContactName,
+        relationshipToEmergencyContact: a.relationshipToEmergencyContact,
+        emergencyContactPhone: a.emergencyContactPhone,
+        employerType: a.employerType,
+        occupation: a.occupation,
+        employer: a.employer,
+        occupationAddress: a.occupationAddress,
+      ),
+      moveIn: ApplicationMoveIn(
+        desiredMoveInDate: a.desiredMoveInDate,
+        stayDurationFrequency: a.stayDurationFrequency,
+        stayDuration: a.stayDuration,
+      ),
+      financial: ApplicationFinancial(
+        rentFee: a.rentFee,
+        paymentFrequency: a.paymentFrequency,
+        securityDepositFee: a.securityDepositFee,
+        securityDepositEnabled: a.securityDepositFee != null,
+        invoiceGenerated: invoice != null,
+        invoicePaid: invoice?.isPaid ?? false,
+      ),
+      doc: ApplicationDoc(
+        mode: a.leaseAgreementDocumentMode,
+        signers: a.leaseAgreementDocumentMode == null ? const [] : signers,
+      ),
+      desiredUnit: a.desiredUnit == null
+          ? null
+          : ApplicationUnit(
+              id: a.desiredUnit!.id,
+              name: a.desiredUnit!.name,
+              type: a.desiredUnit!.type,
+              status: a.desiredUnit!.status,
+              rentFee: a.desiredUnit!.rentFee,
+              paymentFrequency: a.desiredUnit!.paymentFrequency,
+            ),
+      approved: a.status == 'TenantApplication.Status.Completed',
+    );
   }
 
   // ── Seed lookup ───────────────────────────────────────────────────────────

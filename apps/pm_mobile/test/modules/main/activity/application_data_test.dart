@@ -1,4 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:rentloop_manager/src/lib/application_checklist.dart';
+import 'package:rentloop_manager/src/repository/models/tenant_application_model.dart';
 import 'package:rentloop_manager/src/modules/main/activity/application_data.dart';
 
 /// The checklist mirrors the web's `use-calculate-checklist`: five sections,
@@ -173,6 +175,57 @@ void main() {
       expect(periodLabel('MONTHLY', 1), 'month');
       expect(periodLabel('MONTHLY', 12), 'months');
       expect(periodLabel(null, 2), 'periods');
+    });
+  });
+
+  group('real API row round-trip', () {
+    test('fromApplicationModel preserves the checklist of the source row', () {
+      final model = TenantApplicationModel.fromJson({
+        'id': 'app-9',
+        'code': 'TA-9',
+        'status': 'TenantApplication.Status.InProgress',
+        'first_name': 'Adjoa',
+        'last_name': 'Frimpong',
+        'email': 'a@b.c',
+        'desired_unit': {
+          'id': 'u1',
+          'name': 'Unit 1C',
+          'type': 'APARTMENT',
+          'status': 'Unit.Status.Available',
+          'rent_fee': 300000,
+          'rent_fee_currency': 'GHS',
+        },
+        'rent_fee': 300000,
+        'payment_frequency': 'MONTHLY',
+      });
+
+      final data = ApplicationDetailData.fromApplicationModel(model);
+
+      expect(data.id, 'app-9');
+      expect(data.applicant.fullName, 'Adjoa Frimpong');
+      expect(data.desiredUnit?.name, 'Unit 1C');
+      // The important one: the trip through ApplicationDetailData loses
+      // nothing the checklist reads.
+      expect(data.progress, applicationProgress(model));
+    });
+
+    test('a completed application reads as approved', () {
+      final model = TenantApplicationModel.fromJson({
+        'id': 'a',
+        'code': 'c',
+        'status': 'TenantApplication.Status.Completed',
+      });
+      expect(
+        ApplicationDetailData.fromApplicationModel(model).approved,
+        isTrue,
+      );
+    });
+
+    test('no document mode yields no signers and an empty docs section', () {
+      final model = TenantApplicationModel.fromJson({'id': 'a', 'code': 'c'});
+      final data = ApplicationDetailData.fromApplicationModel(model);
+      expect(data.doc.signers, isEmpty);
+      expect(data.docsSection.items, isEmpty);
     });
   });
 }

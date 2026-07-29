@@ -7,6 +7,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:rentloop_manager/src/lib/application_checklist.dart';
+import 'package:rentloop_manager/src/repository/models/tenant_application_model.dart';
 import 'package:rentloop_manager/src/lib/unit_status.dart';
 import 'package:rentloop_manager/src/modules/main/activity/application_data.dart';
 import 'package:rentloop_manager/src/modules/main/activity/application_detail_pages.dart';
@@ -15,8 +17,19 @@ import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
 class ApplicationDetailScreen extends StatefulWidget {
-  const ApplicationDetailScreen({super.key, required this.id});
+  const ApplicationDetailScreen({
+    super.key,
+    required this.id,
+    this.application,
+  });
+
   final String id;
+
+  /// The row the applications list was showing when it was tapped. This screen
+  /// is otherwise still seed-backed (there is no detail fetch yet), so without
+  /// this a real application id would fall through to the first fixture and
+  /// every card would open the same record.
+  final TenantApplicationModel? application;
 
   @override
   State<ApplicationDetailScreen> createState() =>
@@ -24,7 +37,9 @@ class ApplicationDetailScreen extends StatefulWidget {
 }
 
 class _ApplicationDetailScreenState extends State<ApplicationDetailScreen> {
-  late ApplicationDetailData _d = ApplicationDetailData.forId(widget.id);
+  late ApplicationDetailData _d = widget.application != null
+      ? ApplicationDetailData.fromApplicationModel(widget.application!)
+      : ApplicationDetailData.forId(widget.id);
 
   void _update(ApplicationDetailData next) => setState(() => _d = next);
 
