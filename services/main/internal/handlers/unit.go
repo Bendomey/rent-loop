@@ -199,7 +199,7 @@ func (h *UnitHandler) ListUnitsAcrossProperties(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	propertyIDs, unrestrictedClientID, scopeOk := ResolvePropertyScopeFilter(w, r, h.appCtx)
+	propertyIDs, currentUserID, scopeOk := ValidateRequestedPropertyAccess(w, r, h.appCtx)
 	if !scopeOk {
 		return
 	}
@@ -207,7 +207,7 @@ func (h *UnitHandler) ListUnitsAcrossProperties(w http.ResponseWriter, r *http.R
 	input := repository.ListUnitsFilter{
 		FilterQuery:      *filterQuery,
 		PropertyIDs:      propertyIDs,
-		ClientID:         unrestrictedClientID,
+		ClientUserID:     &currentUserID,
 		Status:           lib.NullOrString(r.URL.Query().Get("status")),
 		Type:             lib.NullOrString(r.URL.Query().Get("type")),
 		PaymentFrequency: lib.NullOrString(r.URL.Query().Get("payment_frequency")),

@@ -188,16 +188,16 @@ func (h *TenantHandler) ListTenantsAcrossProperties(w http.ResponseWriter, r *ht
 		return
 	}
 
-	propertyIDs, unrestrictedClientID, scopeOk := ResolvePropertyScopeFilter(w, r, h.appCtx)
+	propertyIDs, currentUserID, scopeOk := ValidateRequestedPropertyAccess(w, r, h.appCtx)
 	if !scopeOk {
 		return
 	}
 
 	input := repository.ListTenantsByPropertyFilter{
-		FilterQuery: *filterQuery,
-		PropertyIDs: propertyIDs,
-		ClientID:    unrestrictedClientID,
-		Status:      lib.NullOrString(r.URL.Query().Get("status")),
+		FilterQuery:  *filterQuery,
+		PropertyIDs:  propertyIDs,
+		ClientUserID: &currentUserID,
+		Status:       lib.NullOrString(r.URL.Query().Get("status")),
 	}
 
 	tenants, tenantsErr := h.service.ListTenantsByProperty(r.Context(), input)

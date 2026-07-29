@@ -484,6 +484,84 @@ func (h *TenantApplicationHandler) ListTenantApplications(w http.ResponseWriter,
 		Encode(lib.ReturnListResponse(filterQuery, tenantApplicationsTransformed, tenantApplicationsCount))
 }
 
+// ListTenantApplicationsAcrossProperties godoc
+//
+//	@Summary		List lease applications across properties (Admin, mobile)
+//	@Description	List lease applications across every property the caller is linked to, optionally narrowed with one or more property_id query values
+//	@Tags			TenantApplication
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			client_id		path		string																												false	"Client ID"
+//	@Param			property_id		query		[]string																											false	"Property ID(s) to narrow results to; omit to see every property the caller is linked to"	collectionFormat(multi)
+//	@Param			desired_unit_id	query		[]string																											false	"Desired unit ID(s) to narrow results to"													collectionFormat(multi)
+//	@Param			q				query		ListTenantApplicationsQuery																							true	"Query parameters"
+//	@Success		200				{object}	object{data=object{rows=[]transformations.OutputAdminTenantApplication,meta=lib.HTTPReturnPaginatedMetaResponse}}	"Lease applications"
+//	@Failure		400				{object}	lib.HTTPError																										"Error occurred when fetching lease applications"
+//	@Failure		401				{object}	string																												"Invalid or absent authentication token"
+//	@Failure		403				{object}	string																												"Requested property_id is outside the caller's linked properties"
+//	@Failure		500				{object}	string																												"An unexpected error occurred"
+//	@Router			/api/v1/admin/clients/{client_id}/tenant-applications [get]
+func (h *TenantApplicationHandler) ListTenantApplicationsAcrossProperties(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	filterQuery, filterQueryErr := lib.GenerateQuery(r.URL.Query())
+	if filterQueryErr != nil {
+		HandleErrorResponse(w, filterQueryErr)
+		return
+	}
+
+	if !lib.ValidateRequest(h.appCtx.Validator, filterQuery, w) {
+		return
+	}
+
+	propertyIDs, currentUserID, scopeOk := ValidateRequestedPropertyAccess(w, r, h.appCtx)
+	if !scopeOk {
+		return
+	}
+
+	input := repository.ListTenantApplicationsQuery{
+		FilterQuery:           *filterQuery,
+		ClientUserID:          &currentUserID,
+		PropertyIDs:           propertyIDs,
+		DesiredUnitIDs:        lib.NullOrStringArray(r.URL.Query()["desired_unit_id"]),
+		Status:                lib.NullOrString(r.URL.Query().Get("status")),
+		StayDurationFrequency: lib.NullOrString(r.URL.Query().Get("stay_duration_frequency")),
+		PaymentFrequency:      lib.NullOrString(r.URL.Query().Get("payment_frequency")),
+		Gender:                lib.NullOrString(r.URL.Query().Get("gender")),
+		MaritalStatus:         lib.NullOrString(r.URL.Query().Get("marital_status")),
+		CreatedById:           lib.NullOrString(r.URL.Query().Get("created_by_id")),
+		Email:                 lib.NullOrStringArray(r.URL.Query()["email"]),
+		Phone:                 lib.NullOrStringArray(r.URL.Query()["phone"]),
+	}
+
+	tenantApplications, tenantApplicationsErr := h.service.ListTenantApplications(r.Context(), input)
+	if tenantApplicationsErr != nil {
+		HandleErrorResponse(w, tenantApplicationsErr)
+		return
+	}
+
+	tenantApplicationsCount, tenantApplicationsCountErr := h.service.CountTenantApplications(r.Context(), input)
+	if tenantApplicationsCountErr != nil {
+		HandleErrorResponse(w, tenantApplicationsCountErr)
+		return
+	}
+
+	tenantApplicationsTransformed := make([]any, 0)
+	for _, tenantApplication := range tenantApplications {
+		tenantApplicationsTransformed = append(
+			tenantApplicationsTransformed,
+			transformations.DBAdminTenantApplicationToRest(
+				&tenantApplication,
+			),
+		)
+	}
+
+	json.NewEncoder(w).
+		Encode(lib.ReturnListResponse(filterQuery, tenantApplicationsTransformed, tenantApplicationsCount))
+}
+
 type GetTenantApplicationQuery struct {
 	lib.GetOneQueryInput
 }

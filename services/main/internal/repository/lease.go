@@ -99,7 +99,7 @@ type ListLeasesFilter struct {
 	TenantID                   *string
 	TenantAccountID            *string
 	PropertyIDs                *[]string
-	ClientID                   *string
+	ClientUserID               *string
 	Status                     *string
 	ParentLeaseID              *string
 	PaymentFrequency           *string
@@ -114,7 +114,7 @@ func (r *leaseRepository) List(ctx context.Context, filterQuery ListLeasesFilter
 	db := r.DB.WithContext(ctx).Scopes(
 		leaseFilterScope("tenant_id", filterQuery.TenantID),
 		tenantAccountLeasesScope(filterQuery.TenantAccountID),
-		propertyLeasesScope(filterQuery.PropertyIDs, filterQuery.ClientID),
+		propertyLeasesScope(filterQuery.PropertyIDs, filterQuery.ClientUserID),
 		leaseFilterScope("status", filterQuery.Status),
 		leaseFilterScope("parent_lease_id", filterQuery.ParentLeaseID),
 		leaseFilterScope("payment_frequency", filterQuery.PaymentFrequency),
@@ -148,7 +148,7 @@ func (r *leaseRepository) Count(ctx context.Context, filterQuery ListLeasesFilte
 	result := r.DB.WithContext(ctx).Model(&models.Lease{}).Scopes(
 		leaseFilterScope("tenant_id", filterQuery.TenantID),
 		tenantAccountLeasesScope(filterQuery.TenantAccountID),
-		propertyLeasesScope(filterQuery.PropertyIDs, filterQuery.ClientID),
+		propertyLeasesScope(filterQuery.PropertyIDs, filterQuery.ClientUserID),
 		leaseFilterScope("status", filterQuery.Status),
 		leaseFilterScope("parent_lease_id", filterQuery.ParentLeaseID),
 		leaseFilterScope("payment_frequency", filterQuery.PaymentFrequency),
@@ -190,16 +190,18 @@ func (r *leaseRepository) CountActiveByUnitID(ctx context.Context, unitID string
 // route — or many for the cross-property route) and takes precedence when set; clientID is
 // the unrestricted-for-client case (join through units -> properties, without enumerating
 // every property). nil/nil means no filter at all.
-func propertyLeasesScope(propertyIDs *[]string, clientID *string) func(db *gorm.DB) *gorm.DB {
+func propertyLeasesScope(propertyIDs *[]string, clientUserID *string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if propertyIDs != nil {
 			return db.Joins("INNER JOIN units ON leases.unit_id = units.id").
 				Where("units.property_id IN (?)", *propertyIDs)
 		}
-		if clientID != nil {
+		if clientUserID != nil {
 			return db.Joins("INNER JOIN units ON leases.unit_id = units.id").
-				Joins("INNER JOIN properties ON units.property_id = properties.id").
-				Where("properties.client_id = ?", *clientID)
+				Where(
+					"units.property_id IN (SELECT property_id FROM client_user_properties WHERE client_user_id = ? AND deleted_at IS NULL)",
+					*clientUserID,
+				)
 		}
 		return db
 	}
@@ -365,13 +367,13 @@ func (r *leaseRepository) ListDueForCompletion(ctx context.Context) (*[]models.L
 // GroupExpiringByProperty counts active leases whose MoveOutDate falls within
 // [from, to] per property, for the Insights risk-summary "leases expiring"
 // breakdown. propertyIDs narrows to an exact set (cross-property mobile
-// scope); clientID (used when propertyIDs is nil) scopes to every property
-// under the client. Only properties with at least one expiring lease are
+// scope); clientUserID (used when propertyIDs is nil) scopes to every property
+// the client user is linked to. Only properties with at least one expiring lease are
 // returned, sorted by count descending.
 func (r *leaseRepository) GroupExpiringByProperty(
 	ctx context.Context,
 	propertyIDs *[]string,
-	clientID *string,
+	clientUserID *string,
 	from time.Time,
 	to time.Time,
 ) ([]PropertyAggregate, error) {
@@ -388,8 +390,8 @@ func (r *leaseRepository) GroupExpiringByProperty(
 
 	if propertyIDs != nil {
 		db = db.Where("units.property_id IN (?)", *propertyIDs)
-	} else if clientID != nil {
-		db = db.Where("properties.client_id = ?", *clientID)
+	} else if clientUserID != nil {
+		db = db.Where("units.property_id IN (SELECT property_id FROM client_user_properties WHERE client_user_id = ? AND deleted_at IS NULL)", *clientUserID)
 	}
 
 	var rows []PropertyAggregate

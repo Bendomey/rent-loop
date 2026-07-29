@@ -433,7 +433,7 @@ func (h *InvoiceHandler) ListInvoicesAcrossProperties(w http.ResponseWriter, r *
 		return
 	}
 
-	propertyIDs, _, scopeOk := ResolvePropertyScopeFilter(w, r, h.appCtx)
+	propertyIDs, currentUserID, scopeOk := ValidateRequestedPropertyAccess(w, r, h.appCtx)
 	if !scopeOk {
 		return
 	}
@@ -442,6 +442,7 @@ func (h *InvoiceHandler) ListInvoicesAcrossProperties(w http.ResponseWriter, r *
 	input := repository.ListInvoicesFilter{
 		FilterQuery:               *filterQuery,
 		ClientID:                  &clientID,
+		ClientUserID:              &currentUserID,
 		PropertyIDs:               propertyIDs,
 		PayerType:                 lib.NullOrString(r.URL.Query().Get("payer_type")),
 		PayerClientID:             lib.NullOrString(r.URL.Query().Get("payer_client_id")),

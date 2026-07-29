@@ -10,7 +10,7 @@ import (
 
 type ListExpensesFilter struct {
 	PropertyIDs                 *[]string
-	ClientID                    *string
+	ClientUserID                *string
 	ContextLeaseID              *string
 	ContextMaintenanceRequestID *string
 	ContextType                 *string
@@ -47,14 +47,14 @@ func expensePropertyIDsScope(propertyIDs *[]string) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
-func expenseClientScope(clientID *string) func(db *gorm.DB) *gorm.DB {
+func expenseClientUserAccessScope(clientUserID *string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		if clientID == nil {
+		if clientUserID == nil {
 			return db
 		}
 		return db.Where(
-			"expenses.property_id IN (SELECT id FROM properties WHERE client_id = ? AND deleted_at IS NULL)",
-			*clientID,
+			"expenses.property_id IN (?)",
+			accessiblePropertyIDsSubQuery(db, *clientUserID),
 		)
 	}
 }
@@ -118,7 +118,7 @@ func (r *expenseRepository) List(
 			DateRangeScope("expenses", filterQuery.DateRange),
 			SearchScope("expenses", filterQuery.Search),
 			expensePropertyIDsScope(filters.PropertyIDs),
-			expenseClientScope(filters.ClientID),
+			expenseClientUserAccessScope(filters.ClientUserID),
 			expenseLeaseScope(filters.ContextLeaseID),
 			expenseMaintenanceRequestScope(filters.ContextMaintenanceRequestID),
 			expenseContextTypeScope(filters.ContextType),
@@ -151,7 +151,7 @@ func (r *expenseRepository) Count(
 			DateRangeScope("expenses", filterQuery.DateRange),
 			SearchScope("expenses", filterQuery.Search),
 			expensePropertyIDsScope(filters.PropertyIDs),
-			expenseClientScope(filters.ClientID),
+			expenseClientUserAccessScope(filters.ClientUserID),
 			expenseLeaseScope(filters.ContextLeaseID),
 			expenseMaintenanceRequestScope(filters.ContextMaintenanceRequestID),
 			expenseContextTypeScope(filters.ContextType),

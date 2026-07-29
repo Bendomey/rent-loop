@@ -106,6 +106,7 @@ type ListInvoicesFilter struct {
 	Status                     *[]string
 	Active                     *bool
 	PropertyIDs                *[]string
+	ClientUserID               *string
 	ClientID                   *string
 	ContextLeaseID             *string
 	ContextTenantApplicationID *string
@@ -130,6 +131,7 @@ func (r *invoiceRepository) List(ctx context.Context, filterQuery ListInvoicesFi
 		SearchScope("invoices", filterQuery.Search),
 		invoiceActiveScope(filterQuery.Active),
 		invoicePropertyIDsScope(filterQuery.PropertyIDs),
+		invoiceClientUserAccessScope(filterQuery.ClientUserID),
 		invoiceClientIDScope(filterQuery.ClientID),
 		invoiceLeaseContextScope(filterQuery.ContextLeaseID, filterQuery.ContextTenantApplicationID),
 
@@ -169,6 +171,7 @@ func (r *invoiceRepository) Count(ctx context.Context, filterQuery ListInvoicesF
 			invoiceStatusScope(filterQuery.Status),
 			invoiceActiveScope(filterQuery.Active),
 			invoicePropertyIDsScope(filterQuery.PropertyIDs),
+			invoiceClientUserAccessScope(filterQuery.ClientUserID),
 			invoiceClientIDScope(filterQuery.ClientID),
 			invoiceLeaseContextScope(filterQuery.ContextLeaseID, filterQuery.ContextTenantApplicationID),
 
@@ -366,6 +369,22 @@ func invoicePropertyIDsScope(propertyIDs *[]string) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
+// invoiceClientUserAccessScope bounds invoices to the properties the given
+// client user is linked to — the access boundary for the cross-property list.
+// Applied alongside (not instead of) invoiceClientIDScope, which stays a
+// business-level client bound. See accessiblePropertyIDsSubQuery.
+func invoiceClientUserAccessScope(clientUserID *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if clientUserID == nil {
+			return db
+		}
+		return db.Where(
+			"invoices.property_id IN (?)",
+			accessiblePropertyIDsSubQuery(db, *clientUserID),
+		)
+	}
+}
+
 func invoiceClientIDScope(clientID *string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if clientID == nil {
@@ -533,7 +552,7 @@ func (r *invoiceRepository) ListForReminders(ctx context.Context) (*[]models.Inv
 func (r *invoiceRepository) GroupOutstandingByProperty(
 	ctx context.Context,
 	propertyIDs *[]string,
-	clientID *string,
+	clientUserID *string,
 ) ([]PropertyAggregate, error) {
 	db := lib.ResolveDB(ctx, r.DB).WithContext(ctx).
 		Model(&models.Invoice{}).
@@ -547,8 +566,8 @@ func (r *invoiceRepository) GroupOutstandingByProperty(
 
 	if propertyIDs != nil {
 		db = db.Where("invoices.property_id IN (?)", *propertyIDs)
-	} else if clientID != nil {
-		db = db.Where("properties.client_id = ?", *clientID)
+	} else if clientUserID != nil {
+		db = db.Where("invoices.property_id IN (SELECT property_id FROM client_user_properties WHERE client_user_id = ? AND deleted_at IS NULL)", *clientUserID)
 	}
 
 	var rows []PropertyAggregate

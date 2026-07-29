@@ -301,7 +301,7 @@ func (h *LeaseHandler) ListLeasesAcrossProperties(w http.ResponseWriter, r *http
 		return
 	}
 
-	propertyIDs, unrestrictedClientID, scopeOk := ResolvePropertyScopeFilter(w, r, h.appCtx)
+	propertyIDs, currentUserID, scopeOk := ValidateRequestedPropertyAccess(w, r, h.appCtx)
 	if !scopeOk {
 		return
 	}
@@ -309,7 +309,7 @@ func (h *LeaseHandler) ListLeasesAcrossProperties(w http.ResponseWriter, r *http
 	input := repository.ListLeasesFilter{
 		FilterQuery:                *filterQuery,
 		PropertyIDs:                propertyIDs,
-		ClientID:                   unrestrictedClientID,
+		ClientUserID:               &currentUserID,
 		Status:                     lib.NullOrString(r.URL.Query().Get("status")),
 		ParentLeaseID:              lib.NullOrString(r.URL.Query().Get("parent_lease_id")),
 		PaymentFrequency:           lib.NullOrString(r.URL.Query().Get("payment_frequency")),

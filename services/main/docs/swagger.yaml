@@ -15153,6 +15153,196 @@ paths:
       summary: Get property by slug (Admin)
       tags:
       - Properties
+  /api/v1/admin/clients/{client_id}/tenant-applications:
+    get:
+      consumes:
+      - application/json
+      description: List lease applications across every property the caller is linked
+        to, optionally narrowed with one or more property_id query values
+      parameters:
+      - description: Client ID
+        in: path
+        name: client_id
+        type: string
+      - collectionFormat: multi
+        description: Property ID(s) to narrow results to; omit to see every property
+          the caller is linked to
+        in: query
+        items:
+          type: string
+        name: property_id
+        type: array
+      - collectionFormat: multi
+        description: Desired unit ID(s) to narrow results to
+        in: query
+        items:
+          type: string
+        name: desired_unit_id
+        type: array
+      - example: 72432ce6-5620-4ecf-a862-4bf2140556a1
+        in: query
+        name: created_by_id
+        type: string
+      - example: 72432ce6-5620-4ecf-a862-4bf2140556a1
+        in: query
+        name: desired_unit_id
+        type: string
+      - collectionFormat: multi
+        example:
+        - john.doe@example.com
+        - email@example.com
+        in: query
+        items:
+          type: string
+        name: email
+        type: array
+      - in: query
+        name: end_date
+        type: string
+      - enum:
+        - MALE
+        - FEMALE
+        in: query
+        name: gender
+        type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
+      - enum:
+        - ONLINE
+        - CASH
+        - EXTERNAL
+        in: query
+        name: initial_deposit_payment_method
+        type: string
+      - enum:
+        - SINGLE
+        - MARRIED
+        - DIVORCED
+        - WIDOWED
+        in: query
+        name: marital_status
+        type: string
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - enum:
+        - HOURLY
+        - DAILY
+        - MONTHLY
+        - QUARTERLY
+        - BIANNUALLY
+        - ANNUALLY
+        - ONETIME
+        in: query
+        name: payment_frequency
+        type: string
+      - collectionFormat: multi
+        example:
+        - "+233281234569"
+        - "+233281234569"
+        in: query
+        items:
+          type: string
+        name: phone
+        type: array
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - enum:
+        - ONLINE
+        - CASH
+        - EXTERNAL
+        in: query
+        name: security_deposit_payment_method
+        type: string
+      - in: query
+        name: start_date
+        type: string
+      - enum:
+        - TenantApplication.Status.InProgress
+        - TenantApplication.Status.Cancelled
+        - TenantApplication.Status.Completed
+        in: query
+        name: status
+        type: string
+      - enum:
+        - HOURS
+        - DAYS
+        - MONTHS
+        in: query
+        name: stay_duration_frequency
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lease applications
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputAdminTenantApplication'
+                    type: array
+                type: object
+            type: object
+        "400":
+          description: Error occurred when fetching lease applications
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "403":
+          description: Requested property_id is outside the caller's linked properties
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List lease applications across properties (Admin, mobile)
+      tags:
+      - TenantApplication
   /api/v1/admin/clients/{client_id}/tenants:
     get:
       consumes:

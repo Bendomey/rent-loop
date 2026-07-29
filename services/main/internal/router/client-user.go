@@ -404,20 +404,17 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 					})
 				})
 
-				// cross-property (mobile) routes — property_id is an optional, repeatable
-				// query filter here instead of a required URL segment; results are always
-				// bounded by InjectPropertyAccessScopeMiddleware's resolved access scope.
-				r.Group(func(r chi.Router) {
-					r.Use(middlewares.InjectPropertyAccessScopeMiddleware(appCtx))
-
-					r.Get("/leases", handlers.LeaseHandler.ListLeasesAcrossProperties)
-					r.Get("/tenants", handlers.TenantHandler.ListTenantsAcrossProperties)
-					r.Get("/invoices", handlers.InvoiceHandler.ListInvoicesAcrossProperties)
-					r.Get("/maintenance-requests", handlers.MaintenanceRequestHandler.ListAcrossProperties)
-					r.Get("/expenses", handlers.ExpenseHandler.ListExpensesAcrossProperties)
-					r.Get("/insights/risk-properties", handlers.InsightsHandler.ListRiskProperties)
-					r.Get("/units", handlers.UnitHandler.ListUnitsAcrossProperties)
-				})
+				r.Get("/leases", handlers.LeaseHandler.ListLeasesAcrossProperties)
+				r.Get("/tenants", handlers.TenantHandler.ListTenantsAcrossProperties)
+				r.Get("/invoices", handlers.InvoiceHandler.ListInvoicesAcrossProperties)
+				r.Get("/maintenance-requests", handlers.MaintenanceRequestHandler.ListAcrossProperties)
+				r.Get("/expenses", handlers.ExpenseHandler.ListExpensesAcrossProperties)
+				r.Get("/insights/risk-properties", handlers.InsightsHandler.ListRiskProperties)
+				r.Get("/units", handlers.UnitHandler.ListUnitsAcrossProperties)
+				r.Get(
+					"/tenant-applications",
+					handlers.TenantApplicationHandler.ListTenantApplicationsAcrossProperties,
+				)
 
 				// global announcements. Only GET / (the cross-property/mobile list) needs
 				// InjectPropertyAccessScopeMiddleware — scoped to just that route rather than

@@ -155,9 +155,9 @@ func (r *tenantRepository) Count(ctx context.Context, filterQuery ListTenantsFil
 
 type ListTenantsByPropertyFilter struct {
 	lib.FilterQuery
-	PropertyIDs *[]string
-	ClientID    *string
-	Status      *string // "ACTIVE" | "EXPIRED"
+	PropertyIDs  *[]string
+	ClientUserID *string
+	Status       *string // "ACTIVE" | "EXPIRED"
 }
 
 func (r *tenantRepository) ListTenantsByProperty(
@@ -167,7 +167,7 @@ func (r *tenantRepository) ListTenantsByProperty(
 	var tenants []models.Tenant
 
 	db := r.DB.WithContext(ctx).Scopes(
-		propertyTenantsWithStatusScope(filterQuery.PropertyIDs, filterQuery.ClientID, filterQuery.Status),
+		propertyTenantsWithStatusScope(filterQuery.PropertyIDs, filterQuery.ClientUserID, filterQuery.Status),
 		IDsFilterScope("tenants", filterQuery.IDs),
 		DateRangeScope("tenants", filterQuery.DateRange),
 		SearchScope("tenants", filterQuery.Search),
@@ -176,8 +176,8 @@ func (r *tenantRepository) ListTenantsByProperty(
 	)
 
 	db = db.
-		Preload("Leases", recentLeasePreloadScope(filterQuery.PropertyIDs, filterQuery.ClientID)).
-		Preload("Bookings", recentBookingPreloadScope(filterQuery.PropertyIDs, filterQuery.ClientID))
+		Preload("Leases", recentLeasePreloadScope(filterQuery.PropertyIDs, filterQuery.ClientUserID)).
+		Preload("Bookings", recentBookingPreloadScope(filterQuery.PropertyIDs, filterQuery.ClientUserID))
 
 	if filterQuery.Populate != nil {
 		for _, field := range *filterQuery.Populate {
@@ -200,7 +200,7 @@ func (r *tenantRepository) CountTenantsByProperty(
 	var count int64
 
 	result := r.DB.WithContext(ctx).Model(&models.Tenant{}).Scopes(
-		propertyTenantsWithStatusScope(filterQuery.PropertyIDs, filterQuery.ClientID, filterQuery.Status),
+		propertyTenantsWithStatusScope(filterQuery.PropertyIDs, filterQuery.ClientUserID, filterQuery.Status),
 		DateRangeScope("tenants", filterQuery.DateRange),
 		SearchScope("tenants", filterQuery.Search),
 	).Count(&count)
@@ -216,14 +216,20 @@ func (r *tenantRepository) CountTenantsByProperty(
 // belongs to the resolved property scope" — used inside propertyTenantsWithStatusScope to
 // avoid duplicating the IN-list / client-wide-join logic across its three status branches and
 // two source tables (leases via units, bookings directly).
-func propertyMatchCondition(column string, propertyIDs *[]string, clientID *string) (string, []any) {
+func propertyMatchCondition(
+	column string,
+	propertyIDs *[]string,
+	clientUserID *string,
+) (string, []any) {
 	if propertyIDs != nil {
 		return fmt.Sprintf("%s IN (?)", column), []any{*propertyIDs}
 	}
+	// Access boundary: the properties this client user is linked to. No OWNER
+	// special case — see accessiblePropertyIDsSubQuery.
 	return fmt.Sprintf(
-		"%s IN (SELECT id FROM properties WHERE client_id = ? AND deleted_at IS NULL)",
+		"%s IN (SELECT property_id FROM client_user_properties WHERE client_user_id = ? AND deleted_at IS NULL)",
 		column,
-	), []any{*clientID}
+	), []any{*clientUserID}
 }
 
 // propertyTenantsWithStatusScope scopes tenants to those that have a lease or booking in the
@@ -234,16 +240,16 @@ func propertyMatchCondition(column string, propertyIDs *[]string, clientID *stri
 // tenant has any lease or booking in scope, past or present.
 func propertyTenantsWithStatusScope(
 	propertyIDs *[]string,
-	clientID *string,
+	clientUserID *string,
 	status *string,
 ) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		if propertyIDs == nil && clientID == nil {
+		if propertyIDs == nil && clientUserID == nil {
 			return db
 		}
 
-		unitsCond, unitsArgs := propertyMatchCondition("units.property_id", propertyIDs, clientID)
-		bookingsCond, bookingsArgs := propertyMatchCondition("bookings.property_id", propertyIDs, clientID)
+		unitsCond, unitsArgs := propertyMatchCondition("units.property_id", propertyIDs, clientUserID)
+		bookingsCond, bookingsArgs := propertyMatchCondition("bookings.property_id", propertyIDs, clientUserID)
 
 		if status != nil && *status == "ACTIVE" {
 			query := fmt.Sprintf(
@@ -297,9 +303,9 @@ func propertyTenantsWithStatusScope(
 // whole batch, not each tenant), so this uses a ROW_NUMBER() window function
 // over a derived table, filtered to the first row per tenant, wrapped so
 // GORM's own tenant_id-matching still works.
-func recentLeasePreloadScope(propertyIDs *[]string, clientID *string) func(db *gorm.DB) *gorm.DB {
+func recentLeasePreloadScope(propertyIDs *[]string, clientUserID *string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		cond, args := propertyMatchCondition("units.property_id", propertyIDs, clientID)
+		cond, args := propertyMatchCondition("units.property_id", propertyIDs, clientUserID)
 		sub := db.Session(&gorm.Session{NewDB: true}).
 			Table("leases").
 			Select(
@@ -317,9 +323,9 @@ func recentLeasePreloadScope(propertyIDs *[]string, clientID *string) func(db *g
 // otherwise the booking with the most recent check-in date. See
 // recentLeasePreloadScope for why the ROW_NUMBER derived-table technique is
 // needed.
-func recentBookingPreloadScope(propertyIDs *[]string, clientID *string) func(db *gorm.DB) *gorm.DB {
+func recentBookingPreloadScope(propertyIDs *[]string, clientUserID *string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		cond, args := propertyMatchCondition("bookings.property_id", propertyIDs, clientID)
+		cond, args := propertyMatchCondition("bookings.property_id", propertyIDs, clientUserID)
 		sub := db.Session(&gorm.Session{NewDB: true}).
 			Table("bookings").
 			Select(

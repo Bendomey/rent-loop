@@ -15374,6 +15374,286 @@
                 }
             }
         },
+        "/api/v1/admin/clients/{client_id}/tenant-applications": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List lease applications across every property the caller is linked to, optionally narrowed with one or more property_id query values",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "TenantApplication"
+                ],
+                "summary": "List lease applications across properties (Admin, mobile)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "Property ID(s) to narrow results to; omit to see every property the caller is linked to",
+                        "name": "property_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "Desired unit ID(s) to narrow results to",
+                        "name": "desired_unit_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "72432ce6-5620-4ecf-a862-4bf2140556a1",
+                        "name": "created_by_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "72432ce6-5620-4ecf-a862-4bf2140556a1",
+                        "name": "desired_unit_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "john.doe@example.com",
+                            "email@example.com"
+                        ],
+                        "name": "email",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "MALE",
+                            "FEMALE"
+                        ],
+                        "type": "string",
+                        "name": "gender",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                        ],
+                        "name": "ids",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "ONLINE",
+                            "CASH",
+                            "EXTERNAL"
+                        ],
+                        "type": "string",
+                        "name": "initial_deposit_payment_method",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "SINGLE",
+                            "MARRIED",
+                            "DIVORCED",
+                            "WIDOWED"
+                        ],
+                        "type": "string",
+                        "name": "marital_status",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "HOURLY",
+                            "DAILY",
+                            "MONTHLY",
+                            "QUARTERLY",
+                            "BIANNUALLY",
+                            "ANNUALLY",
+                            "ONETIME"
+                        ],
+                        "type": "string",
+                        "name": "payment_frequency",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "+233281234569",
+                            "+233281234569"
+                        ],
+                        "name": "phone",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "search_fields",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "ONLINE",
+                            "CASH",
+                            "EXTERNAL"
+                        ],
+                        "type": "string",
+                        "name": "security_deposit_payment_method",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "TenantApplication.Status.InProgress",
+                            "TenantApplication.Status.Cancelled",
+                            "TenantApplication.Status.Completed"
+                        ],
+                        "type": "string",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "HOURS",
+                            "DAYS",
+                            "MONTHS"
+                        ],
+                        "type": "string",
+                        "name": "stay_duration_frequency",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lease applications",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.OutputAdminTenantApplication"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when fetching lease applications",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Requested property_id is outside the caller's linked properties",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/clients/{client_id}/tenants": {
             "get": {
                 "security": [

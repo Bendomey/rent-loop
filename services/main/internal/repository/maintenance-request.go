@@ -81,6 +81,7 @@ type GetMaintenanceRequestQuery struct {
 type ListMaintenanceRequestsFilter struct {
 	ClientID          *string
 	PropertyIDs       *[]string
+	ClientUserID      *string
 	UnitIDs           *[]string
 	LeaseID           *string
 	Statuses          []string
@@ -144,6 +145,7 @@ func (r *maintenanceRequestRepository) List(
 			SearchScope("maintenance_requests", filterQuery.Search),
 			mrClientIDScope(filters.ClientID),
 			mrPropertyIDsScope(filters.PropertyIDs),
+			mrClientUserAccessScope(filters.ClientUserID),
 			mrUnitIDsScope(filters.UnitIDs),
 			mrLeaseIDScope(filters.LeaseID),
 			mrStatusScope(filters.Statuses),
@@ -183,6 +185,7 @@ func (r *maintenanceRequestRepository) Count(
 			SearchScope("maintenance_requests", filterQuery.Search),
 			mrClientIDScope(filters.ClientID),
 			mrPropertyIDsScope(filters.PropertyIDs),
+			mrClientUserAccessScope(filters.ClientUserID),
 			mrUnitIDsScope(filters.UnitIDs),
 			mrLeaseIDScope(filters.LeaseID),
 			mrStatusScope(filters.Statuses),
@@ -423,6 +426,22 @@ func mrClientIDScope(clientID *string) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
+func mrClientUserAccessScope(clientUserID *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if clientUserID == nil {
+			return db
+		}
+		unitsSubQuery := db.Session(&gorm.Session{NewDB: true}).
+			Table("units").
+			Select("id").
+			Where(
+				"property_id IN (?) AND deleted_at IS NULL",
+				accessiblePropertyIDsSubQuery(db, *clientUserID),
+			)
+		return db.Where("maintenance_requests.unit_id IN (?)", unitsSubQuery)
+	}
+}
+
 func mrPropertyIDsScope(propertyIDs *[]string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if propertyIDs == nil {
@@ -595,6 +614,7 @@ func (r *maintenanceRequestRepository) CountByStatus(
 		Scopes(
 			mrClientIDScope(filters.ClientID),
 			mrPropertyIDsScope(filters.PropertyIDs),
+			mrClientUserAccessScope(filters.ClientUserID),
 			mrUnitIDsScope(filters.UnitIDs),
 			mrLeaseIDScope(filters.LeaseID),
 			mrTenantScope(filters.TenantID),
@@ -620,7 +640,7 @@ func (r *maintenanceRequestRepository) CountByStatus(
 func (r *maintenanceRequestRepository) GroupOpenByProperty(
 	ctx context.Context,
 	propertyIDs *[]string,
-	clientID *string,
+	clientUserID *string,
 ) ([]PropertyAggregate, error) {
 	db := lib.ResolveDB(ctx, r.DB).WithContext(ctx).
 		Model(&models.MaintenanceRequest{}).
@@ -634,8 +654,8 @@ func (r *maintenanceRequestRepository) GroupOpenByProperty(
 
 	if propertyIDs != nil {
 		db = db.Where("units.property_id IN (?)", *propertyIDs)
-	} else if clientID != nil {
-		db = db.Where("properties.client_id = ?", *clientID)
+	} else if clientUserID != nil {
+		db = db.Where("units.property_id IN (SELECT property_id FROM client_user_properties WHERE client_user_id = ? AND deleted_at IS NULL)", *clientUserID)
 	}
 
 	var rows []PropertyAggregate

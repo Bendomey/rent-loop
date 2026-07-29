@@ -54,12 +54,17 @@ func (h *InsightsHandler) ListRiskProperties(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	propertyIDs, clientID, scopeOk := ResolvePropertyScopeFilter(w, r, h.appCtx)
+	propertyIDs, currentUserID, scopeOk := ValidateRequestedPropertyAccess(w, r, h.appCtx)
 	if !scopeOk {
 		return
 	}
 
-	aggregates, err := h.service.ListRiskProperties(r.Context(), riskType, propertyIDs, clientID)
+	aggregates, err := h.service.ListRiskProperties(
+		r.Context(),
+		riskType,
+		propertyIDs,
+		&currentUserID,
+	)
 	if err != nil {
 		HandleErrorResponse(w, err)
 		return

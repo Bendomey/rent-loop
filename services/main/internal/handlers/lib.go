@@ -82,6 +82,67 @@ func HandleErrorResponse[T error](w http.ResponseWriter, err T) {
 	}
 }
 
+func ValidateRequestedPropertyAccess(
+	w http.ResponseWriter,
+	r *http.Request,
+	appCtx pkg.AppContext,
+) (propertyIDs *[]string, clientUserID string, ok bool) {
+	currentUser, userOk := lib.ClientUserFromContext(r.Context())
+	if !userOk || currentUser == nil {
+		http.Error(w, "AuthorizationFailed", http.StatusUnauthorized)
+		return nil, "", false
+	}
+
+	requested := r.URL.Query()["property_id"]
+	if len(requested) == 0 {
+		return nil, currentUser.ID, true
+	}
+
+	deduped := make([]string, 0, len(requested))
+	seen := make(map[string]bool, len(requested))
+	for _, id := range requested {
+		if id != "" && !seen[id] {
+			seen[id] = true
+			deduped = append(deduped, id)
+		}
+	}
+	if len(deduped) == 0 {
+		return nil, currentUser.ID, true
+	}
+
+	// Bounded by how many ids were requested, not by how many properties the
+	// caller can reach. Reading the ids back rather than counting them keeps
+	// this independent of how COUNT(DISTINCT ...) is emitted, and duplicate
+	// link rows cannot inflate the result into a false pass.
+	var linked []string
+	if err := appCtx.DB.Model(&models.ClientUserProperty{}).
+		Where(
+			"client_user_id = ? AND property_id IN (?) AND deleted_at IS NULL",
+			currentUser.ID,
+			deduped,
+		).
+		Distinct().
+		Pluck("property_id", &linked).Error; err != nil {
+		HandleErrorResponse(w, pkg.InternalServerError(err.Error(), nil))
+		return nil, "", false
+	}
+
+	linkedSet := make(map[string]bool, len(linked))
+	for _, id := range linked {
+		linkedSet[id] = true
+	}
+
+	// Every requested property must be one the caller is linked to.
+	for _, id := range deduped {
+		if !linkedSet[id] {
+			http.Error(w, "Forbidden", http.StatusForbidden)
+			return nil, "", false
+		}
+	}
+
+	return &deduped, currentUser.ID, true
+}
+
 // ResolvePropertyScopeFilter reads any ?property_id query values off the request, validates
 // them against the caller's resolved PropertyAccessScope (set by
 // middlewares.InjectPropertyAccessScopeMiddleware), and returns the concrete filter to apply.

@@ -318,14 +318,14 @@ func (h *ExpenseHandler) ListExpensesAcrossProperties(w http.ResponseWriter, r *
 		return
 	}
 
-	propertyIDs, unrestrictedClientID, scopeOk := ResolvePropertyScopeFilter(w, r, h.appCtx)
+	propertyIDs, currentUserID, scopeOk := ValidateRequestedPropertyAccess(w, r, h.appCtx)
 	if !scopeOk {
 		return
 	}
 
 	filters := repository.ListExpensesFilter{
-		PropertyIDs: propertyIDs,
-		ClientID:    unrestrictedClientID,
+		PropertyIDs:  propertyIDs,
+		ClientUserID: &currentUserID,
 	}
 
 	expenses, listErr := h.service.ListExpenses(r.Context(), *filterQuery, filters)

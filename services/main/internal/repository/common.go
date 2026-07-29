@@ -86,3 +86,10 @@ func IDsFilterScope(tableName string, ids *[]string) func(db *gorm.DB) *gorm.DB 
 		return db.Where(fmt.Sprintf("%s.id IN (?)", tableName), *ids)
 	}
 }
+
+func accessiblePropertyIDsSubQuery(db *gorm.DB, clientUserID string) *gorm.DB {
+	return db.Session(&gorm.Session{NewDB: true}).
+		Table("client_user_properties").
+		Select("property_id").
+		Where("client_user_id = ? AND deleted_at IS NULL", clientUserID)
+}

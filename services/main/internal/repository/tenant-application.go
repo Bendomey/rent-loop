@@ -44,7 +44,10 @@ type ListTenantApplicationsQuery struct {
 	MaritalStatus                *string
 	CreatedById                  *string
 	DesiredUnitId                *string
+	DesiredUnitIDs               *[]string
 	PropertyId                   *string
+	PropertyIDs                  *[]string
+	ClientUserID                 *string
 	Email                        *[]string
 	Phone                        *[]string
 }
@@ -66,7 +69,10 @@ func (r *tenantApplicationRepository) List(
 		tenantApplicationFilterScope("marital_status", filterQuery.MaritalStatus),
 		tenantApplicationFilterScope("created_by_id", filterQuery.CreatedById),
 		tenantApplicationFilterScope("desired_unit_id", filterQuery.DesiredUnitId),
+		tenantApplicationDesiredUnitIdsFilterScope(filterQuery.DesiredUnitIDs),
 		tenantApplicationPropertyIdFilterScope(filterQuery.PropertyId),
+		tenantApplicationPropertyIdsFilterScope(filterQuery.PropertyIDs),
+		tenantApplicationClientUserAccessScope(filterQuery.ClientUserID),
 		tenantAplicationArrayFilterScope("email", filterQuery.Email),
 		tenantAplicationArrayFilterScope("phone", filterQuery.Phone),
 		DateRangeScope("tenant_applications", filterQuery.DateRange),
@@ -108,7 +114,10 @@ func (r *tenantApplicationRepository) Count(
 		DateRangeScope("tenant_applications", filterQuery.DateRange),
 		SearchScope("tenant_applications", filterQuery.Search),
 		tenantApplicationFilterScope("desired_unit_id", filterQuery.DesiredUnitId),
+		tenantApplicationDesiredUnitIdsFilterScope(filterQuery.DesiredUnitIDs),
 		tenantApplicationPropertyIdFilterScope(filterQuery.PropertyId),
+		tenantApplicationPropertyIdsFilterScope(filterQuery.PropertyIDs),
+		tenantApplicationClientUserAccessScope(filterQuery.ClientUserID),
 		tenantAplicationArrayFilterScope("email", filterQuery.Email),
 		tenantAplicationArrayFilterScope("phone", filterQuery.Phone),
 	).Count(&count)
@@ -139,6 +148,39 @@ func tenantAplicationArrayFilterScope(field string, value *[]string) func(db *go
 
 		query := fmt.Sprintf("tenant_applications.%s IN (?)", field)
 		return db.Where(query, *value)
+	}
+}
+
+func tenantApplicationClientUserAccessScope(clientUserID *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if clientUserID == nil {
+			return db
+		}
+		subQuery := db.Session(&gorm.Session{NewDB: true}).
+			Table("client_user_properties").
+			Select("property_id").
+			Where("client_user_id = ? AND deleted_at IS NULL", *clientUserID)
+		return db.Where("tenant_applications.property_id IN (?)", subQuery)
+	}
+}
+
+func tenantApplicationPropertyIdsFilterScope(propertyIDs *[]string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if propertyIDs == nil {
+			return db
+		}
+
+		return db.Where("tenant_applications.property_id IN (?)", *propertyIDs)
+	}
+}
+
+func tenantApplicationDesiredUnitIdsFilterScope(unitIDs *[]string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if unitIDs == nil {
+			return db
+		}
+
+		return db.Where("tenant_applications.desired_unit_id IN (?)", *unitIDs)
 	}
 }
 

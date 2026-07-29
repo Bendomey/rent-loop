@@ -240,7 +240,7 @@ func (h *MaintenanceRequestHandler) ListAcrossProperties(w http.ResponseWriter, 
 		return
 	}
 
-	propertyIDs, _, scopeOk := ResolvePropertyScopeFilter(w, r, h.appCtx)
+	propertyIDs, currentUserID, scopeOk := ValidateRequestedPropertyAccess(w, r, h.appCtx)
 	if !scopeOk {
 		return
 	}
@@ -248,6 +248,7 @@ func (h *MaintenanceRequestHandler) ListAcrossProperties(w http.ResponseWriter, 
 	clientID := currentUser.ClientID
 	filters := repository.ListMaintenanceRequestsFilter{
 		ClientID:          &clientID,
+		ClientUserID:      &currentUserID,
 		PropertyIDs:       propertyIDs,
 		Statuses:          r.URL.Query()["status"],
 		Priority:          lib.NullOrString(r.URL.Query().Get("priority")),
