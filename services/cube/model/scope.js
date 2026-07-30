@@ -22,6 +22,16 @@
  * These predicates are constant-size and reflect grants, revocations and role
  * changes immediately.
  *
+ * IMPORTANT — import path: cube files import this as `'./scope'`, NOT
+ * `'../scope'`, even though they live one directory down in `model/cubes/`.
+ * Cube's schema compiler resolves imports relative to the **model root**, not
+ * relative to the importing file. `'../scope'` escapes the model directory,
+ * falls through to Node's `require`, and fails with
+ * `Cannot find module '<repo>/services/cube/scope'` — which aborts compilation
+ * of the *entire* schema, so every cube in every dashboard starts returning
+ * errors, not just the ones that changed. There is a test in
+ * `cube.test.mjs` pinning the specifier for exactly this reason.
+ *
  * IMPORTANT: `cube.js`'s `contextToAppId` must also key on `clientUserId`, or
  * Cube caches one compiled schema per *client* and the first caller's scope is
  * reused for everyone else in that client. That half lives in `cube.js` and is

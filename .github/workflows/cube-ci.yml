@@ -13,7 +13,7 @@ on:
 
 jobs:
     code-checks:
-        name: 🧪 Tests
+        name: 🧪 Tests & 🏗️ Schema
         runs-on: ubuntu-latest
         defaults:
           run:
@@ -44,3 +44,13 @@ jobs:
 
             - name: 🧪 Test
               run: yarn test
+
+            # Catches what unit tests structurally cannot: the data model is
+            # compiled by Cube, not by Node, so a bad import specifier or a
+            # malformed cube only surfaces when the schema is actually built.
+            # A single bad import aborts compilation of the ENTIRE schema and
+            # takes every dashboard down, so this runs on every change.
+            # No database required — Cube compiles the model before it
+            # connects, and the check points at an unreachable port on purpose.
+            - name: 🏗️ Schema compiles
+              run: yarn check:schema
