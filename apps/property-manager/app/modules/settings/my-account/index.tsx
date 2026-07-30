@@ -1,187 +1,100 @@
-import { Separator } from '@radix-ui/react-separator'
 import { useState } from 'react'
+import { ProfileTab } from './components/profile-tab'
+import RemovePhotoModal from './components/remove-photo'
+import { SecurityTab } from './components/security-tab'
+import { SessionsTab } from './components/sessions-tab'
+import {
+	SignOutAllSessionsModal,
+	SignOutSessionModal,
+} from './components/sign-out-session'
 import UpdateClientProfileModal from './components/update-name'
 import UpdatePasswordModal from './components/update-password'
-import { UpdateClientEmail } from './update-email'
-import { Avatar, AvatarFallback } from '~/components/ui/avatar'
-import { Button } from '~/components/ui/button'
-import { Field, FieldGroup, FieldLabel } from '~/components/ui/field'
-import { Input } from '~/components/ui/input'
-import { TypographyH3 } from '~/components/ui/typography'
-import { useSendOtp } from '~/hooks/use-send-otp'
+import UploadPhotoModal from './components/upload-photo'
+import { PLACEHOLDER_SESSIONS, type AccountSession } from './placeholder-data'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
 import { getNameInitials } from '~/lib/misc'
 import { safeString } from '~/lib/strings'
 import { useAuth } from '~/providers/auth-provider'
 
+const TABS = [
+	{ value: 'profile', label: 'Profile', sub: 'Photo, name and email' },
+	{ value: 'security', label: 'Security', sub: 'Password and 2FA' },
+	{ value: 'sessions', label: 'Sessions', sub: 'Signed-in devices' },
+]
+
 export function MyAccountSettingsModule() {
-	const [openUpdatePasswordModal, setOpenUpdatePasswordModal] = useState(false)
-	const [openUpdateClientEmailModal, setOpenUpdateClientEmailModal] =
-		useState(false)
+	const { currentUser } = useAuth()
+
+	const [tab, setTab] = useState('profile')
+
+	// Flows already wired to the API
 	const [openUpdateClientProfileModal, setOpenUpdateClientProfileModal] =
 		useState(false)
-	const { currentUser } = useAuth()
-	const { sendOtp, isSendingOtp } = useSendOtp()
+	const [openUpdatePasswordModal, setOpenUpdatePasswordModal] = useState(false)
+
+	// New UI — nothing behind these yet
+	const [openUploadPhotoModal, setOpenUploadPhotoModal] = useState(false)
+	const [openRemovePhotoModal, setOpenRemovePhotoModal] = useState(false)
+	const [openSignOutAllModal, setOpenSignOutAllModal] = useState(false)
+	const [sessionToSignOut, setSessionToSignOut] = useState<AccountSession>()
+	const [sessions, setSessions] =
+		useState<AccountSession[]>(PLACEHOLDER_SESSIONS)
+
+	const name = safeString(currentUser?.name)
+	const email = safeString(currentUser?.email)
+	const initials = getNameInitials(name)
+	const activeTab = TABS.find((t) => t.value === tab)
 
 	return (
-		<div className="mx-auto max-w-3xl px-4 py-4">
-			<TypographyH3 className="">My Profile</TypographyH3>
-			<Separator className="bg-muted mt-2 mb-4 h-0.5" />
+		<div className="mx-auto max-w-4xl">
+			<header>
+				<h1 className="font-serif text-3xl tracking-tight">My Account</h1>
+				<p className="text-muted-foreground mt-1.5 text-[15px]">
+					Manage your personal details, how you sign in, and where you&rsquo;re
+					signed in.
+				</p>
+			</header>
 
-			<section className="mx-auto mb-5 space-y-10">
-				<div className="mb-8 flex items-center">
-					<Avatar className="size-20">
-						{/* <AvatarImage src="https://github.com/shadcn.png" alt="profile image" /> */}
-						<AvatarFallback className="bg-rose-500 text-white">
-							{getNameInitials(safeString(currentUser?.name))}
-						</AvatarFallback>
-					</Avatar>
+			<Tabs value={tab} onValueChange={setTab} className="mt-6">
+				<TabsList>
+					{TABS.map((t) => (
+						<TabsTrigger key={t.value} value={t.value}>
+							{t.label}
+						</TabsTrigger>
+					))}
+				</TabsList>
 
-					{/* <div className="ml-3.5 flex flex-col">
-						<div className="flex flex-wrap items-center gap-3 md:flex-row">
-							<Button variant="outline" size="sm">
-								<Plus /> Change Image
-							</Button>
-							<Button
-								variant="default"
-								className="bg-rose-600 hover:bg-rose-700"
-							>
-								Remove Image
-							</Button>
-						</div>
-						<TypographyP className="!mt-2 text-xs text-gray-400">
-							We support PNGs, JPEGs, and GIFs under 2MB
-						</TypographyP>
-					</div> */}
-				</div>
+				<p className="text-muted-foreground mt-3 mb-5 text-sm">
+					{activeTab?.sub}
+				</p>
 
-				<div className="flex items-baseline-last justify-between">
-					<FieldGroup className="w-2/5 space-y-4">
-						<Field>
-							<FieldLabel htmlFor="full_name">Full Name</FieldLabel>
-							<Input
-								id="full_name"
-								type="text"
-								placeholder="Enter your full name"
-								value={safeString(currentUser?.name)}
-								disabled
-							/>
-						</Field>
-					</FieldGroup>
+				<TabsContent value="profile">
+					<ProfileTab
+						name={name}
+						email={email}
+						initials={initials}
+						onChangeName={() => setOpenUpdateClientProfileModal(true)}
+						onUploadPhoto={() => setOpenUploadPhotoModal(true)}
+						onRemovePhoto={() => setOpenRemovePhotoModal(true)}
+					/>
+				</TabsContent>
 
-					<Button
-						type="button"
-						variant="secondary"
-						size="sm"
-						onClick={() => setOpenUpdateClientProfileModal(true)}
-					>
-						Change Name
-					</Button>
-				</div>
-			</section>
+				<TabsContent value="security">
+					<SecurityTab
+						onChangePassword={() => setOpenUpdatePasswordModal(true)}
+					/>
+				</TabsContent>
 
-			<TypographyH3 className="mt-8">Account Security</TypographyH3>
-			<Separator className="bg-muted mt-2 mb-4 h-0.5" />
+				<TabsContent value="sessions">
+					<SessionsTab
+						sessions={sessions}
+						onSignOutOne={setSessionToSignOut}
+						onSignOutAll={() => setOpenSignOutAllModal(true)}
+					/>
+				</TabsContent>
+			</Tabs>
 
-			<section className="mx-auto mb-5 space-y-6">
-				<div className="mb-6 flex items-baseline-last justify-between">
-					<Field className="w-2/5">
-						<FieldLabel htmlFor="email">Email</FieldLabel>
-						<Input
-							id="email"
-							type="email"
-							placeholder="account@email.com"
-							value={currentUser?.email ?? ''}
-							disabled
-						/>
-					</Field>
-					<Button
-						size="sm"
-						variant="secondary"
-						onClick={() => {
-							sendOtp({ channel: 'EMAIL', email: currentUser?.email ?? '' })
-							setOpenUpdateClientEmailModal(true)
-						}}
-					>
-						{isSendingOtp ? 'Sending...' : 'Change email'}
-					</Button>
-				</div>
-
-				<div className="mb-6 flex items-baseline-last justify-between">
-					<Field className="w-2/5">
-						<FieldLabel htmlFor="password">Password</FieldLabel>
-						<Input
-							id="password"
-							type="password"
-							placeholder="••••••••"
-							disabled
-						/>
-					</Field>
-					<Button
-						size="sm"
-						variant="secondary"
-						onClick={() => setOpenUpdatePasswordModal(true)}
-					>
-						Change password
-					</Button>
-				</div>
-				{/* <div className="">
-					<Field orientation="horizontal" className="flex items-baseline-last">
-						<FieldContent>
-							<FieldLabel htmlFor="2fa">2-Step Verifications</FieldLabel>
-							<FieldDescription>
-								Add an additional layer of security to your account during
-								login.
-							</FieldDescription>
-						</FieldContent>
-						<Switch id="2fa" checked />
-					</Field>
-				</div> */}
-			</section>
-
-			{/* <TypographyH3 className="mt-12">Support Access</TypographyH3>
-			<Separator className="bg-muted mt-2 mb-4 h-0.5" />
-
-			<section className="mx-auto mb-5 space-y-6">
-				<div className="flex items-center justify-between">
-					<Field className="">
-						<FieldLabel htmlFor="support_access">Support Access</FieldLabel>
-						<FieldDescription>
-							Allow support agents to access your account to help troubleshoot
-							issues.
-						</FieldDescription>
-					</Field>
-					<Switch id="support_access" />
-				</div>
-
-				<div className="flex items-center justify-between">
-					<Field className="">
-						<FieldLabel htmlFor="logout_all_devices">
-							Log out of all devices
-						</FieldLabel>
-						<FieldDescription>
-							Log out of all other active sessions when changing your password.
-						</FieldDescription>
-					</Field>
-					<Button size="sm" variant="secondary">
-						Log out
-					</Button>
-				</div>
-
-				<div className="flex items-center justify-between">
-					<Field className="">
-						<FieldLabel htmlFor="delete_account" className="text-rose-600">
-							Delete my Account
-						</FieldLabel>
-						<FieldDescription>
-							Permanetly delete your account and all associated data.
-						</FieldDescription>
-					</Field>
-					<Button size="sm" variant="secondary">
-						Delete Account
-					</Button>
-				</div>
-			</section> */}
-
+			{/* Existing, API-backed flows */}
 			<UpdateClientProfileModal
 				opened={openUpdateClientProfileModal}
 				setOpened={setOpenUpdateClientProfileModal}
@@ -191,9 +104,33 @@ export function MyAccountSettingsModule() {
 				opened={openUpdatePasswordModal}
 				setOpened={setOpenUpdatePasswordModal}
 			/>
-			<UpdateClientEmail
-				opened={openUpdateClientEmailModal}
-				setOpened={setOpenUpdateClientEmailModal}
+
+			{/* New UI, not yet wired to the API */}
+			<UploadPhotoModal
+				opened={openUploadPhotoModal}
+				setOpened={setOpenUploadPhotoModal}
+			/>
+			<RemovePhotoModal
+				opened={openRemovePhotoModal}
+				setOpened={setOpenRemovePhotoModal}
+				initials={initials}
+			/>
+			<SignOutSessionModal
+				session={sessionToSignOut}
+				setSession={setSessionToSignOut}
+				onConfirm={(session) => {
+					setSessions((prev) => prev.filter((s) => s.id !== session.id))
+					setSessionToSignOut(undefined)
+				}}
+			/>
+			<SignOutAllSessionsModal
+				opened={openSignOutAllModal}
+				setOpened={setOpenSignOutAllModal}
+				count={sessions.filter((s) => !s.current).length}
+				onConfirm={() => {
+					setSessions((prev) => prev.filter((s) => s.current))
+					setOpenSignOutAllModal(false)
+				}}
 			/>
 		</div>
 	)
