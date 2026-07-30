@@ -1,4 +1,4 @@
-import { propertyScopeSql } from '../scope';
+import { propertyScopeSql } from './scope';
 
 /**
  * Expenses cube — scoped to the authenticated client via properties, then

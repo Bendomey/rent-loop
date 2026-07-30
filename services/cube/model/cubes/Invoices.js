@@ -1,4 +1,4 @@
-import { propertyScopeSql } from '../scope';
+import { propertyScopeSql } from './scope';
 
 /**
  * Invoices cube — scoped to the authenticated client's receivable invoices,

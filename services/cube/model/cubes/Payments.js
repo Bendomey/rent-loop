@@ -1,4 +1,4 @@
-import { propertyScopeSql } from '../scope';
+import { propertyScopeSql } from './scope';
 
 /**
  * Payments cube — actual money received (vs. Invoices, which track what's owed).
