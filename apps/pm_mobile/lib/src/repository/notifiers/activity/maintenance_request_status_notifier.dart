@@ -6,6 +6,7 @@ import 'package:rentloop_manager/src/architecture/current_workspace/current_work
 import 'package:rentloop_manager/src/lib/api_error_messages.dart';
 import 'package:rentloop_manager/src/repository/api_state.dart';
 import 'package:rentloop_manager/src/repository/models/maintenance_request_model.dart';
+import 'package:rentloop_manager/src/repository/providers/activity/activity_counts_provider.dart';
 
 part 'maintenance_request_status_notifier.g.dart';
 
@@ -50,6 +51,11 @@ class MaintenanceRequestStatusNotifier
             statusLabel: toStatusLabel,
             cancellationReason: cancellationReason,
           );
+      // The Activity badge counts open statuses only, so any move into or
+      // out of Resolved/Cancelled changes it. Invalidating here covers both
+      // entry points — the board's drag-and-drop and the detail screen's
+      // status actions.
+      ref.invalidate(activityCountsProvider);
       state = MaintenanceRequestStatusState(status: ApiStatus.success);
       return true;
     } on ApiException catch (e) {

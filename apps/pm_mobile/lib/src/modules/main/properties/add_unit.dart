@@ -130,7 +130,7 @@ class _AddUnitScreenState extends ConsumerState<AddUnitScreen> {
           type: _type,
           status: _status,
           rentFee: cedisToPesewas(rent),
-          rentFeeCurrency: 'GHS',
+          rentFeeCurrency: defaultCurrencyCode,
           paymentFrequency:
               _paymentFrequency ?? (isLease ? 'MONTHLY' : 'DAILY'),
           maxOccupantsAllowed: _maxOccupants,
@@ -459,7 +459,7 @@ class _AddUnitScreenState extends ConsumerState<AddUnitScreen> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
-                                'GHS',
+                                currencySymbol(defaultCurrencyCode),
                                 style: TextStyle(
                                   fontFamily: RLTokens.fontSans,
                                   fontSize: 14,

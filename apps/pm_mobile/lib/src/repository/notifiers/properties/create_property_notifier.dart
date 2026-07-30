@@ -6,6 +6,7 @@ import 'package:rentloop_manager/src/api/root.dart';
 import 'package:rentloop_manager/src/api/unit_api.dart';
 import 'package:rentloop_manager/src/architecture/current_workspace/current_workspace_notifier.dart';
 import 'package:rentloop_manager/src/lib/api_error_messages.dart';
+import 'package:rentloop_manager/src/lib/money.dart';
 import 'package:rentloop_manager/src/repository/api_state.dart';
 
 part 'create_property_notifier.g.dart';
@@ -101,7 +102,7 @@ class CreatePropertyNotifier extends _$CreatePropertyNotifier {
               type: 'HOUSE',
               status: 'Unit.Status.Draft',
               rentFee: 1000,
-              rentFeeCurrency: 'GHS',
+              rentFeeCurrency: defaultCurrencyCode,
               paymentFrequency: 'MONTHLY',
               maxOccupantsAllowed: 1,
             );

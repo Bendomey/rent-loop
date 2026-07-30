@@ -93,18 +93,6 @@ const _months = [
 String formatApplicationDate(DateTime d) =>
     '${_months[d.month - 1]} ${d.day}, ${d.year}';
 
-/// `GH₵ 6,000.00` from an integer pesewas amount.
-String formatPesewas(int? pesewas, {String currency = 'GH₵'}) {
-  if (pesewas == null) return '—';
-  final cedis = pesewasToCedis(pesewas);
-  final parts = cedis.toStringAsFixed(2).split('.');
-  final whole = parts[0].replaceAllMapped(
-    RegExp(r'\B(?=(\d{3})+(?!\d))'),
-    (_) => ',',
-  );
-  return '$currency $whole.${parts[1]}';
-}
-
 // ── Sub-models ───────────────────────────────────────────────────────────────
 
 @immutable
@@ -601,7 +589,7 @@ class ApplicationDetailData {
               type: desiredUnit!.type,
               status: desiredUnit!.status,
               rentFee: desiredUnit!.rentFee ?? 0,
-              rentFeeCurrency: 'GHS',
+              rentFeeCurrency: defaultCurrencyCode,
               paymentFrequency: desiredUnit!.paymentFrequency,
             ),
       desiredMoveInDate: moveIn.desiredMoveInDate,

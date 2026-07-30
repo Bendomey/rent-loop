@@ -5,6 +5,7 @@ import 'package:rentloop_manager/src/api/user_api.dart';
 import 'package:rentloop_manager/src/architecture/app_startup/app_startup_notifier.dart';
 import 'package:rentloop_manager/src/architecture/token_manager/token_manager.dart';
 import 'package:rentloop_manager/src/lib/api_error_messages.dart';
+import 'package:rentloop_manager/src/lib/email.dart';
 import 'package:rentloop_manager/src/lib/session_metadata.dart';
 import 'package:rentloop_manager/src/repository/api_state.dart';
 
@@ -22,13 +23,21 @@ class LoginNotifier extends _$LoginNotifier {
   Future<void> submit({required String email, required String password}) async {
     state = LoginState(status: ApiStatus.pending);
 
+    // Normalised here rather than at the field, so the screen can keep showing
+    // what was typed and no caller can submit a cased address by accident.
+    final normalisedEmail = normalizeEmail(email);
+
     try {
       // Cosmetic and best-effort: collectSessionMetadata never throws, so this
       // cannot stop someone signing in.
       final metadata = await collectSessionMetadata();
       final result = await ref
           .read(userApiProvider)
-          .login(email: email, password: password, metadata: metadata);
+          .login(
+            email: normalisedEmail,
+            password: password,
+            metadata: metadata,
+          );
       final tokenManager = ref.read(tokenManagerProvider);
       await tokenManager.save(result.token);
       await tokenManager.saveRefresh(result.refreshToken);

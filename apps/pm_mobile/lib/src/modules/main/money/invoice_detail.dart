@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:rentloop_manager/src/lib/money.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
@@ -295,7 +296,7 @@ class _LineItemsCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '₵${_fmt(l.amount)}',
+                    '${currencySymbol(defaultCurrencyCode)} ${_fmt(l.amount)}',
                     style: const TextStyle(
                       fontFamily: RLTokens.fontSans,
                       fontSize: 13.5,
@@ -323,7 +324,7 @@ class _LineItemsCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '₵${_fmt(total)}',
+                  '${currencySymbol(defaultCurrencyCode)} ${_fmt(total)}',
                   style: const TextStyle(
                     fontFamily: RLTokens.fontSans,
                     fontSize: 14,
@@ -378,7 +379,7 @@ class _PaymentHistoryCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '₵${_fmt(inv.paid)} received',
+                          '${currencySymbol(defaultCurrencyCode)} ${_fmt(inv.paid)} received',
                           style: const TextStyle(
                             fontFamily: RLTokens.fontSans,
                             fontSize: 14,

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:rentloop_manager/src/architecture/current_user/current_user_notifier.dart';
 import 'package:rentloop_manager/src/architecture/current_workspace/current_workspace_notifier.dart';
+import 'package:rentloop_manager/src/lib/money.dart';
 import 'package:rentloop_manager/src/lib/workspace_resolution.dart';
 import 'package:rentloop_manager/src/modules/main/checklist_sheet.dart';
 import 'package:rentloop_manager/src/modules/main/workspace_sheet.dart';
@@ -374,9 +375,9 @@ class _NeedsAttentionSection extends StatelessWidget {
                 ),
                 title: 'Invoice overdue',
                 subtitle: 'INV-2041 · Ama Boateng',
-                trailing: const Text(
-                  '₵4,200',
-                  style: TextStyle(
+                trailing: Text(
+                  '${currencySymbol(defaultCurrencyCode)} 4,200',
+                  style: const TextStyle(
                     fontFamily: RLTokens.fontSans,
                     fontWeight: RLTokens.bold,
                     fontSize: 13.5,

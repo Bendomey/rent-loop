@@ -497,11 +497,8 @@ List<Widget> _buildLeaseDetails(String propertyId, LeaseModel lease) {
   ];
 }
 
-String _moneyLabel(int pesewas, String currency) {
-  final amount = pesewasToCedis(pesewas);
-  final symbol = currency.toUpperCase() == 'GHS' ? 'GH₵' : currency;
-  return '$symbol ${amount.toStringAsFixed(2)}';
-}
+String _moneyLabel(int pesewas, String currency) =>
+    formatPesewas(pesewas, code: currency);
 
 List<Widget> _buildTenantProfile(TenantModel? tenant) {
   if (tenant == null) {

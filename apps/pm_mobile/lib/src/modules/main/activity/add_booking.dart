@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:rentloop_manager/src/lib/money.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
@@ -274,7 +275,7 @@ class _AddBookingScreenState extends State<AddBookingScreen> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  'GHS ${_rateCtrl.text.isEmpty ? '0' : _rateCtrl.text} × $nights night${nights == 1 ? '' : 's'}',
+                                  '${currencySymbol(defaultCurrencyCode)} ${_rateCtrl.text.isEmpty ? '0' : _rateCtrl.text} × $nights night${nights == 1 ? '' : 's'}',
                                   style: const TextStyle(
                                     fontFamily: RLTokens.fontSans,
                                     fontSize: 13,
@@ -515,7 +516,10 @@ class _AddBookingScreenState extends State<AddBookingScreen> {
 
                       // Nightly rate
                       const SizedBox(height: 18),
-                      _FormLabel(label: 'Nightly rate (GHS)'),
+                      _FormLabel(
+                        label:
+                            'Nightly rate (${currencySymbol(defaultCurrencyCode)})',
+                      ),
                       const SizedBox(height: 8),
                       _InputField(
                         controller: _rateCtrl,

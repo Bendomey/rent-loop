@@ -165,11 +165,7 @@ void main() {
   });
 
   group('formatting', () {
-    test('pesewas render as grouped cedis', () {
-      expect(formatPesewas(600000), 'GH₵ 6,000.00');
-      expect(formatPesewas(50000), 'GH₵ 500.00');
-      expect(formatPesewas(null), '—');
-    });
+    // formatPesewas moved to lib/money.dart — see test/lib/money_test.dart
 
     test('period labels pluralise off the stay frequency', () {
       expect(periodLabel('MONTHLY', 1), 'month');

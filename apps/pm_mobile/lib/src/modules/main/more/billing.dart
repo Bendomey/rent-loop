@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:rentloop_manager/src/lib/money.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
@@ -291,7 +292,7 @@ class _InvoiceCard extends StatelessWidget {
 
           // Amount
           Text(
-            '${invoice.amount}',
+            '${currencySymbol(defaultCurrencyCode)} ${invoice.amount}',
             style: const TextStyle(
               fontFamily: RLTokens.fontSerif,
               fontSize: 19,

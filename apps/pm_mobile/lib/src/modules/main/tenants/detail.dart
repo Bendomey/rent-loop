@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:rentloop_manager/src/lib/money.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
@@ -178,7 +179,8 @@ class TenantDetailScreen extends StatelessWidget {
                       Expanded(
                         child: _StatCard(
                           label: 'Monthly rent',
-                          value: '₵${_fmt(t.rent)}',
+                          value:
+                              '${currencySymbol(defaultCurrencyCode)} ${_fmt(t.rent)}',
                           valueColor: RLTokens.ink,
                         ),
                       ),
@@ -186,7 +188,9 @@ class TenantDetailScreen extends StatelessWidget {
                       Expanded(
                         child: _StatCard(
                           label: 'Balance',
-                          value: t.balance > 0 ? '₵${_fmt(t.balance)}' : '₵0',
+                          value: t.balance > 0
+                              ? '${currencySymbol(defaultCurrencyCode)} ${_fmt(t.balance)}'
+                              : '${currencySymbol(defaultCurrencyCode)} 0',
                           valueColor: t.balance > 0
                               ? RLTokens.crimson
                               : RLTokens.success,

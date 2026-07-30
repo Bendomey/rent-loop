@@ -209,7 +209,11 @@ class _UnitDetailContentState extends State<_UnitDetailContent> {
             v: paymentFrequencyLabel(unit.paymentFrequency ?? '—'),
           ),
           _FieldRow(k: 'Unit Type', v: unitTypeLabel(unit.type)),
-          _FieldRow(k: 'Currency', v: unit.rentFeeCurrency, last: true),
+          _FieldRow(
+            k: 'Currency',
+            v: currencySymbol(unit.rentFeeCurrency),
+            last: true,
+          ),
         ],
       ),
       RLLabel('Timeline'),

@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 
 import 'package:rentloop_manager/src/lib/maintenance_utils.dart';
+import 'package:rentloop_manager/src/lib/money.dart';
 import 'package:rentloop_manager/src/repository/models/maintenance_activity_log_model.dart';
 import 'package:rentloop_manager/src/repository/models/maintenance_comment_model.dart';
 import 'package:rentloop_manager/src/repository/models/maintenance_expense_model.dart';
@@ -714,7 +715,7 @@ class _ExpenseRow extends StatelessWidget {
 /// figures, which are integer pesewas), and are shown to the pesewa rather
 /// than rounded — a repair bill's decimals matter.
 String _money(num amount, String currency) {
-  final symbol = currency == 'GHS' ? 'GH₵' : currency;
+  final symbol = currencySymbol(currency);
   return '$symbol ${NumberFormat('#,##0.00').format(amount)}';
 }
 

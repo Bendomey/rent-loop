@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:rentloop_manager/src/lib/money.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
@@ -503,7 +504,7 @@ class _InvoiceCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  _fmt(inv.amount),
+                  '${currencySymbol(defaultCurrencyCode)} ${_fmt(inv.amount)}',
                   style: const TextStyle(
                     fontFamily: RLTokens.fontSerif,
                     fontSize: 20,
@@ -514,7 +515,7 @@ class _InvoiceCard extends StatelessWidget {
                 if (inv.paid > 0 && inv.paid < inv.amount) ...[
                   const SizedBox(height: 2),
                   Text(
-                    '₵${_fmt(inv.paid)} paid',
+                    '${currencySymbol(defaultCurrencyCode)} ${_fmt(inv.paid)} paid',
                     style: TextStyle(
                       fontFamily: RLTokens.fontSans,
                       fontSize: 11,
@@ -648,7 +649,7 @@ class _ExpensesTab extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        '₵${_fmt(e.amount)}',
+                        '${currencySymbol(defaultCurrencyCode)} ${_fmt(e.amount)}',
                         style: const TextStyle(
                           fontFamily: RLTokens.fontSans,
                           fontSize: 15,

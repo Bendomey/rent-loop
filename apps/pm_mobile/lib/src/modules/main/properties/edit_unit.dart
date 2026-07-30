@@ -73,7 +73,7 @@ class _EditUnitScreenState extends ConsumerState<EditUnitScreen> {
     _type = unit.type;
     _nameCtrl.text = unit.name;
     _descriptionCtrl.text = unit.description ?? '';
-    _rentFeeCtrl.text = pesewasToCedis(unit.rentFee).toString();
+    _rentFeeCtrl.text = pesewasToCedis(unit.rentFee).toStringAsFixed(2);
     _maxOccupants = unit.maxOccupantsAllowed ?? 1;
     _paymentFrequency = unit.paymentFrequency;
     _images = unit.images ?? [];
@@ -112,7 +112,7 @@ class _EditUnitScreenState extends ConsumerState<EditUnitScreen> {
           images: _images,
           type: _type,
           rentFee: isRentalInfoEditable ? cedisToPesewas(rent!) : null,
-          rentFeeCurrency: isRentalInfoEditable ? 'GHS' : null,
+          rentFeeCurrency: isRentalInfoEditable ? defaultCurrencyCode : null,
           paymentFrequency: isRentalInfoEditable ? _paymentFrequency : null,
           maxOccupantsAllowed: isRentalInfoEditable ? _maxOccupants : null,
         );
@@ -464,7 +464,7 @@ class _EditUnitScreenState extends ConsumerState<EditUnitScreen> {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
-                                  'GHS',
+                                  currencySymbol(defaultCurrencyCode),
                                   style: TextStyle(
                                     fontFamily: RLTokens.fontSans,
                                     fontSize: 14,

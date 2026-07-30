@@ -3,6 +3,7 @@
 
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:rentloop_manager/src/lib/money.dart';
 import 'tokens.dart';
 
 // ── Card ─────────────────────────────────────────────────────────────────────
@@ -256,16 +257,7 @@ class RLMoney extends StatelessWidget {
     );
   }
 
-  String _format(num v) {
-    // Simple thousands separator without intl dependency
-    final s = v.round().toString();
-    final buf = StringBuffer();
-    for (var i = 0; i < s.length; i++) {
-      if (i > 0 && (s.length - i) % 3 == 0) buf.write(',');
-      buf.write(s[i]);
-    }
-    return buf.toString();
-  }
+  String _format(num v) => formatCedis(v);
 }
 
 // ── Metric tile ──────────────────────────────────────────────────────────────

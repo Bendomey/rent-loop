@@ -6,7 +6,7 @@ import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 import 'package:rentloop_manager/src/modules/main/activity/applications_list.dart';
 import 'package:rentloop_manager/src/modules/main/activity/maintenance_board.dart';
-import 'package:rentloop_manager/src/repository/notifiers/activity/tenant_applications_notifier.dart';
+import 'package:rentloop_manager/src/repository/providers/activity/activity_counts_provider.dart';
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
@@ -22,10 +22,6 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final applicationsCount = ref.watch(
-      tenantApplicationsNotifierProvider.select((s) => s.total),
-    );
-
     return Scaffold(
       backgroundColor: RLTokens.surface,
       floatingActionButton: FloatingActionButton.extended(
@@ -33,13 +29,15 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen> {
         onPressed: () async {
           await Haptics.vibrate(HapticsType.medium);
           if (!context.mounted) return;
-          if (_tab == 'maint') {
-            context.push('/activity/maintenances/add');
-          } else if (_tab == 'apps') {
-            context.push('/activity/applications/add');
-          } else if (_tab == 'bookings') {
-            context.push('/activity/bookings/add');
-          }
+          final path = switch (_tab) {
+            'apps' => '/activity/applications/add',
+            'bookings' => '/activity/bookings/add',
+            _ => '/activity/maintenances/add',
+          };
+          // Anything created in the add flow lands in an open status, so it
+          // moves a badge — drop the cached counts once the flow pops.
+          await context.push(path);
+          ref.invalidate(activityCountsProvider);
         },
         backgroundColor: RLTokens.crimson,
         foregroundColor: Colors.white,
@@ -63,7 +61,6 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen> {
         children: [
           _Header(
             selectedTab: _tab,
-            applicationsCount: applicationsCount,
             onTabChanged: (v) async {
               await Haptics.vibrate(HapticsType.selection);
               setState(() => _tab = v);
@@ -87,21 +84,17 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen> {
 
 // ── Header ────────────────────────────────────────────────────────────────────
 
-class _Header extends StatelessWidget {
-  const _Header({
-    required this.selectedTab,
-    required this.onTabChanged,
-    required this.applicationsCount,
-  });
+class _Header extends ConsumerWidget {
+  const _Header({required this.selectedTab, required this.onTabChanged});
   final String selectedTab;
   final ValueChanged<String> onTabChanged;
 
-  /// Real total from the applications notifier. Maintenance and Bookings are
-  /// still hardcoded — out of scope for this change.
-  final int applicationsCount;
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Null while the first Cube round-trip is in flight, or if it failed —
+    // RLSegmentItem then hides the badge rather than flashing a placeholder
+    // zero that reads as "nothing to do here".
+    final counts = ref.watch(activityCountsProvider).valueOrNull;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -154,13 +147,21 @@ class _Header extends StatelessWidget {
             value: selectedTab,
             onChanged: onTabChanged,
             items: [
-              const RLSegmentItem(key: 'maint', label: 'Maintenance', count: 9),
+              RLSegmentItem(
+                key: 'maint',
+                label: 'Maintenance',
+                count: counts?.maintenance,
+              ),
               RLSegmentItem(
                 key: 'apps',
                 label: 'Applications',
-                count: applicationsCount,
+                count: counts?.applications,
               ),
-              const RLSegmentItem(key: 'bookings', label: 'Bookings', count: 4),
+              RLSegmentItem(
+                key: 'bookings',
+                label: 'Bookings',
+                count: counts?.bookings,
+              ),
             ],
           ),
         ),
