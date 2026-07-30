@@ -67,7 +67,6 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 			r.Route("/v1/admin/clients/{client_id}", func(r chi.Router) {
 				r.Use(middlewares.ValidateClientMembershipMiddleware(appCtx))
 
-				// analytics
 				r.Get("/analytics/token", handlers.AnalyticsHandler.GetToken)
 
 				// client management

@@ -1,7 +1,22 @@
+import { propertyScopeSql } from '../scope';
+
 /**
  * Payments cube — actual money received (vs. Invoices, which track what's owed).
- * Scoped to the authenticated client via the underlying invoice's payee.
+ * Scoped to the authenticated client via the underlying invoice's payee, then
+ * narrowed to the caller's permitted properties (see `../scope.js`).
  */
+
+// Mirrors the `propertyId` dimension below, but resolved off the base SQL's
+// existing `invoices i` join rather than re-querying invoices — one less
+// correlated subquery per row than the dimension's version.
+const PAYMENT_PROPERTY_ID_SQL = `COALESCE(
+  (SELECT u.property_id::text FROM tenant_applications ta JOIN units u ON ta.desired_unit_id = u.id WHERE ta.id = i.context_tenant_application_id LIMIT 1),
+  (SELECT u.property_id::text FROM leases l JOIN units u ON l.unit_id = u.id WHERE l.id = i.context_lease_id LIMIT 1),
+  (SELECT b.property_id::text FROM bookings b WHERE b.id = i.context_booking_id LIMIT 1),
+  (SELECT e.property_id::text FROM expenses e WHERE e.id = i.context_expense_id LIMIT 1),
+  i.payer_property_id::text
+)`;
+
 cube(`Payments`, {
   sql: `
     SELECT p.*
@@ -12,6 +27,7 @@ cube(`Payments`, {
       AND ${COMPILE_CONTEXT.securityContext?.clientId
         ? `i.payee_client_id = '${COMPILE_CONTEXT.securityContext.clientId}'::uuid`
         : '1 = 0'}
+      AND ${propertyScopeSql(COMPILE_CONTEXT.securityContext, PAYMENT_PROPERTY_ID_SQL)}
   `,
 
   measures: {

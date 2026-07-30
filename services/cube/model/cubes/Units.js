@@ -1,5 +1,8 @@
+import { propertyScopeSql } from '../scope';
+
 /**
- * Units cube — scoped to the authenticated client via properties.
+ * Units cube — scoped to the authenticated client via properties, then
+ * narrowed to the caller's permitted properties (see `../scope.js`).
  */
 cube(`Units`, {
   sql: `
@@ -10,6 +13,7 @@ cube(`Units`, {
       AND ${COMPILE_CONTEXT.securityContext?.clientId
         ? `p.client_id = '${COMPILE_CONTEXT.securityContext.clientId}'::uuid`
         : '1 = 0'}
+      AND ${propertyScopeSql(COMPILE_CONTEXT.securityContext, 'u.property_id::text')}
   `,
 
   measures: {

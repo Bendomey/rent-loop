@@ -1,0 +1,46 @@
+name: Cube CI
+
+on:
+  push:
+    paths:
+      - 'services/cube/**'
+    branches:
+      - main
+      - prod
+  pull_request:
+    paths:
+      - 'services/cube/**'
+
+jobs:
+    code-checks:
+        name: 🧪 Tests
+        runs-on: ubuntu-latest
+        defaults:
+          run:
+            working-directory: services/cube
+        steps:
+            - name: ⬇️ Checkout repo
+              uses: actions/checkout@v4
+
+            - name: ⎔ Setup node
+              uses: actions/setup-node@v4
+              with:
+                node-version-file: services/cube/.nvmrc
+                cache: 'yarn'
+                cache-dependency-path: 'services/cube/yarn.lock'
+
+            - name: 📦 Cache node_modules
+              id: cache-node-modules
+              uses: actions/cache@v4
+              with:
+                path: services/cube/node_modules
+                key: ${{ runner.os }}-cube-node-modules-${{ hashFiles('services/cube/yarn.lock') }}
+                restore-keys: |
+                  ${{ runner.os }}-cube-node-modules-
+
+            - name: 📥 Download deps
+              if: steps.cache-node-modules.outputs.cache-hit != 'true'
+              run: yarn install --frozen-lockfile
+
+            - name: 🧪 Test
+              run: yarn test

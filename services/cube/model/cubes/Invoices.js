@@ -1,11 +1,41 @@
+import { propertyScopeSql } from '../scope';
+
 /**
- * Invoices cube — scoped to the authenticated client's receivable invoices.
- * Security context (clientId) is injected via a signed JWT from the Go backend.
+ * Invoices cube — scoped to the authenticated client's receivable invoices,
+ * then narrowed to the caller's permitted properties (see `../scope.js`).
+ * Security context is injected via a signed JWT from the Go backend.
  */
+
+// Property derivation for the security scope, written against the raw
+// `invoices` table so it can be used inside the cube's base SQL (the
+// dimension's `${CUBE}` alias only exists at query time).
+//
+// This intentionally includes a `context_booking_id` branch that the
+// `propertyId` dimension below does **not** have — the Payments cube's
+// equivalent dimension does include it, so the omission there looks like an
+// oversight rather than a decision. Leaving the dimension alone (changing it
+// would move existing Insights numbers, which is not this change's job) but
+// covering bookings here, because under-deriving in a *security* predicate
+// silently hides booking-only invoices from restricted users. Worth
+// reconciling the dimension separately.
+const INVOICE_PROPERTY_ID_SQL = `COALESCE(
+  (SELECT u.property_id::text FROM tenant_applications ta JOIN units u ON ta.desired_unit_id = u.id WHERE ta.id = invoices.context_tenant_application_id LIMIT 1),
+  (SELECT u.property_id::text FROM leases l JOIN units u ON l.unit_id = u.id WHERE l.id = invoices.context_lease_id LIMIT 1),
+  (SELECT b.property_id::text FROM bookings b WHERE b.id = invoices.context_booking_id LIMIT 1),
+  (SELECT e.property_id::text FROM expenses e WHERE e.id = invoices.context_expense_id LIMIT 1),
+  invoices.payer_property_id::text
+)`;
+
 cube(`Invoices`, {
   // Only invoices where the authenticated client is the payee (revenue they receive).
   // Uses 1=0 when clientId is absent so unauthenticated requests return zero rows
   // without triggering a uuid cast error.
+  //
+  // Note on the property scope for a *restricted* caller: an invoice whose
+  // property cannot be derived (no TA/lease/expense context and no
+  // payer_property_id) yields NULL, and `NULL IN (...)` is not true, so the row
+  // is excluded. That is the intended direction — there is no property through
+  // which such an invoice could have been granted.
   sql: `
     SELECT *
     FROM invoices
@@ -14,6 +44,7 @@ cube(`Invoices`, {
       AND ${COMPILE_CONTEXT.securityContext?.clientId
         ? `payee_client_id = '${COMPILE_CONTEXT.securityContext.clientId}'::uuid`
         : '1 = 0'}
+      AND ${propertyScopeSql(COMPILE_CONTEXT.securityContext, INVOICE_PROPERTY_ID_SQL)}
   `,
 
   measures: {
