@@ -129,7 +129,14 @@ class _TopHeader extends ConsumerWidget {
             if (context.mounted) context.push('/notifications');
           },
         ),
-        RLAvatar(managerName, size: 38, crimsonTone: true),
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () async {
+            await Haptics.vibrate(HapticsType.selection);
+            if (context.mounted) context.push('/more/my-profile');
+          },
+          child: RLAvatar(managerName, size: 38, crimsonTone: true),
+        ),
       ],
     );
   }

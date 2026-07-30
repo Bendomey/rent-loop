@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-07-30 — Home avatar opens My Account
+- **The manager avatar in Home's `_TopHeader` was inert** — a bare `RLAvatar` with no tap handling, even though it reads as the standard "go to your profile" affordance. Wrapped in a `GestureDetector` that pushes `/more/my-profile`, matching the notification button directly beside it (haptic → `context.mounted` guard → `context.push`)
+- Tapping it lands on `MyAccountScreen`, the same destination as More's profile card — one profile entry point, two ways in
+- **The `GestureDetector` needs `behavior: HitTestBehavior.opaque`** — `RLAvatar` paints itself with a `BoxDecoration`, and `RenderDecoratedBox.hitTestSelf` is false, so the default `deferToChild` made only the centred initials tappable and the avatar read as broken. This is the same reason `RLRow` sets it. Worth remembering for any future `GestureDetector` wrapped around a decoration-only widget — `RLIconBtn` has the same latent shape (its live area is just the icon glyph, not the full 38×38 box)
+- Affected modules: `modules/main/home/`
+
+## 2026-07-30 — My Account redesign (UI only)
+- **`more/my_profile.dart` deleted, replaced by the `more/my_account/` module** — the old screen was a flat, fully-hardcoded mock (name and email were string literals). The redesign mirrors the web portal's Settings › My Account: a hub listing three categories, each pushing its own page rather than one long scroll — Profile (photo, name, email) · Security (password, 2FA, delete account) · Sessions (signed-in devices, revoke one or all others)
+- **The route path `/more/my-profile` was kept**, now building `MyAccountScreen`, so `more/root.dart`'s profile card needed no change
+- **Real data is limited to identity and sign-out** — name/email/role come from `currentUserNotifierProvider`, and "Sign out of this device" calls the real `appStartupNotifierProvider.logout()`. Everything else is UI against `placeholder_data.dart`: the 4-device session list is a fixture (revoking filters local state, nothing is sent), and the email-verified badge / password-last-changed date are constants
+- **Two-factor, email updates and account deletion are deliberately unbuilt** — rather than shipping dialogs that can't submit, each control stays visible with a "Coming soon" pill and fires `showAccountComingSoon(ref, feature)`. This matches the web portal, where the same three were parked in the same pass
+- **New shared pieces**: `sheets.dart`'s `_AccountSheet` chrome follows `properties/edit_sheets.dart`'s `_PSSheet` convention (drag handle, title/desc, scrolling body, footer); `_PasswordMeter` ports the web `PwMeter` scoring verbatim; `widgets.dart`'s `AccountField` is the label-above/value+action-below row used by Profile and Security
+- Affected modules: `modules/main/more/` (new `my_account/`, `my_profile.dart` removed), `navigation/routes.dart` (import + builder)
+
 ## 2026-07-30 — Money always shows two decimals; login email normalised
 - **`formatCedis(num)` added to `lib/money.dart`** — thousands separators and always two decimals. Converting pesewas → cedis is arithmetic (`pesewasToCedis`); deciding how the result *looks* now has exactly one home instead of three divergent ones
 - **`RLMoney` was rounding to whole cedis** (`v.round()`), so a rent of 600050 pesewas displayed as `6,001` — both decimal-less and *wrong by half a cedi*. It now delegates to `formatCedis`. This is the visible change: rent figures on the lease hero card, start-lease sheet, unit detail and property detail (plus the seed-backed home/booking/invoice totals) go from `6,000` to `6,000.00`
