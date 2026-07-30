@@ -23,6 +23,7 @@ import { PwaUpdatePrompt } from './components/pwa-update-prompt'
 import { TopbarLoader } from './components/top-bar-loader'
 import { Toaster } from './components/ui/sonner'
 import { getAuthSession } from './lib/actions/auth.session.server'
+import { resolveAuthToken } from './lib/actions/auth.token.server'
 import { environmentVariables } from './lib/actions/env.server'
 import { safeString } from './lib/strings'
 import { NotFoundModule } from './modules'
@@ -529,14 +530,14 @@ export const links: Route.LinksFunction = () => [
 	},
 ]
 
-export async function loader({ request }: Route.LoaderArgs) {
+export async function loader({ request, context }: Route.LoaderArgs) {
 	const env = environmentVariables()
 	const authSession = await getAuthSession(request.headers.get('Cookie'))
 
 	return {
 		ENV: {
 			API_ADDRESS: env.API_ADDRESS,
-			AUTH_TOKEN: authSession.get('authToken'),
+			AUTH_TOKEN: await resolveAuthToken(request, context),
 			GOOGLE_MAPS_API_KEY: env.GOOGLE_MAPS_API_KEY,
 			CUBEJS_API_URL: env.CUBEJS_API_URL,
 			GOOGLE_ANALYTICS_ID: env.GOOGLE_ANALYTICS_ID,

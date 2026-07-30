@@ -1,5 +1,5 @@
 import { redirect, type MiddlewareFunction } from 'react-router'
-import { getAuthSession } from './auth.session.server'
+import { resolveAuthToken } from './auth.token.server'
 import { clientContext } from './client.context.server'
 import { environmentVariables } from './env.server'
 import { propertyContext } from './property.context.server'
@@ -11,8 +11,7 @@ export const propertyMiddleware: MiddlewareFunction = async ({
 	params,
 }) => {
 	const baseUrl = environmentVariables().API_ADDRESS
-	const authSession = await getAuthSession(request.headers.get('Cookie'))
-	const authToken = authSession.get('authToken')
+	const authToken = await resolveAuthToken(request, context)
 	if (!authToken) {
 		return redirect('/login')
 	}
