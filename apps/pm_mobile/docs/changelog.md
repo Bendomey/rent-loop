@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-07-31 — Sessions list shows when you signed in, not when the token last refreshed
+- The row's mono meta line showed only the IP; the web portal's equivalent showed `last_used_at`, which the backend advances on every token refresh — so it read "a few seconds ago" for any live session and told the reader nothing.
+- `SessionModel` gained a `signedInLabel` getter built from `signed_in_at` (the session row's `created_at`, stable for the life of the session). The row now renders `41.66.0.1 · Signed in 3 days ago`, with either half omitted when absent.
+- Added a private `_ago`/`_plural` pair in `session_model.dart` for coarse relative time (just now → minutes → hours → days → weeks → months → years). Future timestamps collapse to "just now" rather than rendering a negative age; an unparseable timestamp renders as nothing.
+- Added `test/repository/models/session_model_test.dart` (6 tests) covering the unit thresholds, the future-clock and unparseable cases, and the `fromJson` wire format.
+- Same field swap applied to the web portal at `apps/property-manager/app/modules/settings/my-account/components/sessions-tab.tsx`.
+- Modules affected: `repository/models/session_model.dart`, `modules/main/more/my_account/sessions_page.dart`
+
 ## 2026-07-31 — Fix: Sessions page failed layout on open
 - The account shell (`my_account/root.dart`) wrapped every sub-page in a `SingleChildScrollView`. That suits Profile and Security, which are plain `Column`s, but the Sessions page brings its own `ListView` for pull-to-refresh — a scrollable inside a scrollable, so the inner viewport got unbounded height and threw on layout the moment the page opened. Both the loaded list and the shimmer skeleton hit it.
 - `_AccountSubPage` gained a `scrollable` flag (default `true`); Sessions is pushed with `scrollable: false` and now owns the gutter padding itself, so its `RefreshIndicator` works as intended.

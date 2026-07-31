@@ -106,6 +106,18 @@ class SessionModel {
     return [osLabel, place].where((p) => p.isNotEmpty).join(' · ');
   }
 
+  /// "Signed in 3 days ago", or '' when the timestamp will not parse.
+  ///
+  /// Deliberately built from [signedInAt] rather than [lastUsedAt]: the latter
+  /// advances on every token refresh, so it reads as "just now" for any live
+  /// session and tells the reader nothing. When the session began is the fact
+  /// worth showing.
+  String get signedInLabel {
+    final at = DateTime.tryParse(signedInAt);
+    if (at == null) return '';
+    return 'Signed in ${_ago(DateTime.now().toUtc().difference(at.toUtc()))}';
+  }
+
   bool get isClientReportedLocation =>
       locationSource == 'CLIENT' &&
       locationCity != null &&
@@ -116,3 +128,20 @@ class SessionModel {
 
   Map<String, dynamic> toJson() => _$SessionModelToJson(this);
 }
+
+/// Coarse relative time — "just now", "4 hours ago", "3 days ago".
+///
+/// A sessions list is read at a glance, so the unit carries the meaning and the
+/// exact minute never does. Anything in the future (a device with a skewed
+/// clock, say) collapses to "just now" rather than rendering a negative age.
+String _ago(Duration d) {
+  if (d.isNegative || d.inMinutes < 1) return 'just now';
+  if (d.inMinutes < 60) return _plural(d.inMinutes, 'minute');
+  if (d.inHours < 24) return _plural(d.inHours, 'hour');
+  if (d.inDays < 7) return _plural(d.inDays, 'day');
+  if (d.inDays < 30) return _plural(d.inDays ~/ 7, 'week');
+  if (d.inDays < 365) return _plural(d.inDays ~/ 30, 'month');
+  return _plural(d.inDays ~/ 365, 'year');
+}
+
+String _plural(int n, String unit) => '$n $unit${n == 1 ? '' : 's'} ago';

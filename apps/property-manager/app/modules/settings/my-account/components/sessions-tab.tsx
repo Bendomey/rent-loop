@@ -154,7 +154,10 @@ function SessionRow({
 				) : null}
 
 				<div className="text-muted-foreground/70 mt-1 font-mono text-xs">
-					{[session.ip_address, dayjs(session.last_used_at).fromNow()]
+					{[
+						session.ip_address,
+						`Signed in ${dayjs(session.signed_in_at).fromNow()}`,
+					]
 						.filter(Boolean)
 						.join(' · ')}
 				</div>

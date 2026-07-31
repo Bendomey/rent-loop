@@ -238,6 +238,13 @@ class _SessionRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final context_ = session.displayContext;
+    // signedInAt, not lastUsedAt: the latter advances on every token refresh,
+    // so it would read as "just now" for every live session. When the sign-in
+    // happened is the fact worth the line.
+    final meta = [
+      session.ipAddress,
+      session.signedInLabel,
+    ].where((p) => p != null && p.isNotEmpty).join(' · ');
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 15),
@@ -279,10 +286,10 @@ class _SessionRow extends StatelessWidget {
                     ),
                   ),
                 ],
-                if (session.ipAddress != null) ...[
+                if (meta.isNotEmpty) ...[
                   const SizedBox(height: 3),
                   Text(
-                    session.ipAddress!,
+                    meta,
                     style: const TextStyle(
                       fontFamily: RLTokens.fontMono,
                       fontSize: 10.5,
