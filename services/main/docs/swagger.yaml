@@ -1537,6 +1537,12 @@ definitions:
     type: object
   handlers.RefreshTokenRequest:
     properties:
+      metadata:
+        description: |-
+          Metadata optionally refreshes the session's device and reported location
+          (see lib.SessionDeviceInfo). Omit it and the previously recorded values
+          are left untouched. Same untrusted, display-only blob as on login.
+        type: object
       refresh_token:
         example: 3f2504e0-4f89-11d3-9a0c-0305e82c3301:sSx1
         type: string
@@ -4601,6 +4607,62 @@ definitions:
       updated_at:
         example: "2023-01-01T00:00:00Z"
         format: date-time
+        type: string
+    type: object
+  transformations.OutputSession:
+    properties:
+      client_name:
+        example: Chrome
+        type: string
+      client_version:
+        example: "141.0"
+        type: string
+      device_kind:
+        example: LAPTOP
+        type: string
+      device_name:
+        example: MacBook Pro
+        type: string
+      expires_at:
+        example: "2026-10-28T09:14:22Z"
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      ip_address:
+        example: 154.160.22.14
+        type: string
+      is_current:
+        example: true
+        type: boolean
+      last_used_at:
+        example: "2026-07-30T09:14:22Z"
+        type: string
+      location_city:
+        example: Accra
+        type: string
+      location_country:
+        example: Ghana
+        type: string
+      location_source:
+        description: |-
+          LocationSource is CLIENT when the place was reported by the device — which
+          means it is spoofable and should be shown as reported rather than
+          verified — or SERVER when derived from the observed IP. Null when no
+          location is known.
+        example: CLIENT
+        type: string
+      os:
+        example: macOS
+        type: string
+      os_version:
+        example: "15.3"
+        type: string
+      signed_in_at:
+        example: "2026-07-04T18:02:11Z"
+        type: string
+      timezone:
+        example: Africa/Accra
         type: string
     type: object
   transformations.OutputSigningToken:
@@ -15977,6 +16039,105 @@ paths:
       summary: Update the currently authenticated user's password (Admin)
       tags:
       - Users
+  /api/v1/admin/users/me/sessions:
+    get:
+      description: Every device currently signed in as you — one entry per sign-in,
+        most recently used first. `is_current` marks the session making this request.
+        `location_city`/`location_country` are null until a GeoIP database is configured,
+        and the device fields are null when the client sent no metadata and its User-Agent
+        could not be parsed.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Sessions retrieved successfully
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/transformations.OutputSession'
+                type: array
+            type: object
+        "401":
+          description: Authorization failed
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List your active sessions
+      tags:
+      - Sessions
+  /api/v1/admin/users/me/sessions/{session_id}:
+    delete:
+      description: Ends the given session and every refresh token under it. Idempotent
+        — an already-revoked session still returns 204. A session belonging to another
+        user reports 404 rather than 403, so this cannot be used to probe which session
+        ids exist. Revoking your own current session is allowed and is equivalent
+        to logging out.
+      parameters:
+      - description: Session ID
+        in: path
+        name: session_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Session revoked successfully
+        "401":
+          description: Authorization failed
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "404":
+          description: Session not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Sign out one session
+      tags:
+      - Sessions
+  /api/v1/admin/users/me/sessions:revoke-others:
+    post:
+      description: Ends every session for you except the one making this request,
+        which stays signed in. Returns how many were ended. Requires an access token
+        carrying a session claim — tokens issued before sessions existed cannot identify
+        which one to keep and are rejected.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Other sessions revoked successfully
+          schema:
+            properties:
+              data:
+                properties:
+                  revoked_count:
+                    type: integer
+                type: object
+            type: object
+        "401":
+          description: Authorization failed
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Sign out all other sessions
+      tags:
+      - Sessions
   /api/v1/admin/users/refresh:
     post:
       consumes:

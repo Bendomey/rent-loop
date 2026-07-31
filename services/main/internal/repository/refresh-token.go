@@ -18,10 +18,16 @@ type RefreshTokenRepository interface {
 	// can both validate the same token before either revokes it.
 	GetByIDForUpdate(ctx context.Context, id string) (*models.RefreshToken, error)
 	Update(ctx context.Context, token *models.RefreshToken) error
-	// RevokeChainFrom revokes the given row and every token descended from it
-	// via replaced_by_id, returning how many rows it changed. Used only by
-	// reuse detection, to kill an entire compromised session line.
-	RevokeChainFrom(ctx context.Context, id string, revokedAt time.Time) (int64, error)
+	// RevokeAllForSession retires every live token belonging to a session.
+	// Replaces the old replaced_by_id chain walk: session membership is now
+	// explicit, so killing a compromised session is one indexed UPDATE rather
+	// than a recursive CTE.
+	RevokeAllForSession(ctx context.Context, sessionID string, revokedAt time.Time) (int64, error)
+	// DeleteRetiredBefore prunes spent credentials past the reuse-detection
+	// window. Safe to run on a schedule — the session they belonged to lives in
+	// its own table and is untouched, which is exactly what the old single-table
+	// design made impossible.
+	DeleteRetiredBefore(ctx context.Context, cutoff time.Time) (int64, error)
 }
 
 type refreshTokenRepository struct {
@@ -55,28 +61,28 @@ func (r *refreshTokenRepository) Update(ctx context.Context, token *models.Refre
 	return lib.ResolveDB(ctx, r.DB).WithContext(ctx).Save(token).Error
 }
 
-func (r *refreshTokenRepository) RevokeChainFrom(
+func (r *refreshTokenRepository) RevokeAllForSession(
 	ctx context.Context,
-	id string,
+	sessionID string,
 	revokedAt time.Time,
 ) (int64, error) {
-	// One recursive CTE instead of a read-then-update loop: the chain can be
-	// arbitrarily long, and every extra round-trip is time the compromised
-	// session stays usable.
-	const query = `
-		WITH RECURSIVE chain AS (
-			SELECT id, replaced_by_id FROM refresh_tokens WHERE id = ?
-			UNION ALL
-			SELECT rt.id, rt.replaced_by_id
-			FROM refresh_tokens rt
-			INNER JOIN chain c ON rt.id = c.replaced_by_id
-		)
-		UPDATE refresh_tokens
-		SET revoked_at = ?, updated_at = ?
-		WHERE id IN (SELECT id FROM chain) AND revoked_at IS NULL
-	`
 	result := lib.ResolveDB(ctx, r.DB).WithContext(ctx).
-		Exec(query, id, revokedAt, revokedAt)
+		Model(&models.RefreshToken{}).
+		Where("session_id = ? AND revoked_at IS NULL", sessionID).
+		Updates(map[string]any{"revoked_at": revokedAt, "updated_at": revokedAt})
+	if result.Error != nil {
+		return 0, result.Error
+	}
+	return result.RowsAffected, nil
+}
+
+func (r *refreshTokenRepository) DeleteRetiredBefore(
+	ctx context.Context,
+	cutoff time.Time,
+) (int64, error) {
+	result := lib.ResolveDB(ctx, r.DB).WithContext(ctx).
+		Where("revoked_at IS NOT NULL AND revoked_at < ?", cutoff).
+		Delete(&models.RefreshToken{})
 	if result.Error != nil {
 		return 0, result.Error
 	}

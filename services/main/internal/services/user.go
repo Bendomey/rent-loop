@@ -119,18 +119,9 @@ func (s *userService) LoginUser(ctx context.Context, input LoginUserInput) (*Log
 		})
 	}
 
-	accessTTL := time.Duration(s.appCtx.Config.AuthTokenTTL.AccessTokenHours) * time.Hour
-	token, err := signjwt.SignJWT(jwt.MapClaims{
-		"id":  user.ID,
-		"exp": time.Now().Add(accessTTL).Unix(),
-	}, s.appCtx.Config.TokenSecrets.ClientUserSecret)
-	if err != nil {
-		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err:      err,
-			Metadata: map[string]string{"function": "LoginUser", "action": "signing token"},
-		})
-	}
-
+	// The session must exist before the access token is signed: the token
+	// carries the session id, which is what lets a later request identify
+	// which of the user's sessions it belongs to.
 	refresh, refreshErr := s.refreshTokenService.Issue(ctx, IssueRefreshTokenInput{
 		UserID:    user.ID.String(),
 		UserAgent: input.UserAgent,
@@ -139,6 +130,19 @@ func (s *userService) LoginUser(ctx context.Context, input LoginUserInput) (*Log
 	})
 	if refreshErr != nil {
 		return nil, refreshErr
+	}
+
+	accessTTL := time.Duration(s.appCtx.Config.AuthTokenTTL.AccessTokenHours) * time.Hour
+	token, err := signjwt.SignJWT(jwt.MapClaims{
+		"id":  user.ID,
+		"sid": refresh.SessionID,
+		"exp": time.Now().Add(accessTTL).Unix(),
+	}, s.appCtx.Config.TokenSecrets.ClientUserSecret)
+	if err != nil {
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err:      err,
+			Metadata: map[string]string{"function": "LoginUser", "action": "signing token"},
+		})
 	}
 
 	return &LoginUserResponse{

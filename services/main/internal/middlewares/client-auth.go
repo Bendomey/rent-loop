@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"slices"
+	"time"
 
 	"github.com/Bendomey/goutilities/pkg/validatetoken"
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
@@ -24,6 +25,12 @@ func InjectUserAuthMiddleware(appCtx pkg.AppContext) func(http.Handler) http.Han
 					http.Error(w, "AuthorizationFailed", http.StatusUnauthorized)
 					return
 				}
+
+				if user.SessionID != "" && !sessionIsLive(appCtx, user.SessionID) {
+					http.Error(w, "AuthorizationFailed", http.StatusUnauthorized)
+					return
+				}
+
 				ctx := lib.WithUser(r.Context(), user)
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return
@@ -109,9 +116,34 @@ func userFromJWT(unattendedToken string, secret string) (*lib.UserFromToken, err
 		return nil, errors.New("AuthorizationFailed")
 	}
 
+	// sid is optional: access tokens minted before sessions existed don't have
+	// it, and rejecting them would sign out everyone at deploy time.
+	sessionID := ""
+	if sidVal, sidFound := claims["sid"]; sidFound {
+		if sid, sidOk := sidVal.(string); sidOk {
+			sessionID = sid
+		}
+	}
+
 	return &lib.UserFromToken{
-		ID: id,
+		ID:        id,
+		SessionID: sessionID,
 	}, nil
+}
+
+// sessionIsLive reports whether a session can still authenticate. It fails
+// CLOSED — a database error reads as "not live" rather than waving the request
+// through, since the whole point is that a revoked session stops working.
+func sessionIsLive(appCtx pkg.AppContext, sessionID string) bool {
+	var count int64
+	result := appCtx.DB.
+		Model(&models.Session{}).
+		Where("id = ? AND revoked_at IS NULL AND expires_at > ?", sessionID, time.Now()).
+		Count(&count)
+	if result.Error != nil {
+		return false
+	}
+	return count > 0
 }
 
 func ValidateRoleClientUserMiddleware(_ pkg.AppContext, allowedRoles ...string) func(http.Handler) http.Handler {

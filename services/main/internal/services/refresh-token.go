@@ -44,39 +44,60 @@ type IssueRefreshTokenInput struct {
 	UserAgent *string
 	IPAddress *string
 	// Metadata is the client's self-description of the device starting this
-	// session. Carried forward unchanged by rotation, so it survives for the
-	// life of the session line.
+	// session — see lib.SessionDeviceInfo. Merged with User-Agent parsing and
+	// promoted onto the session's display columns.
 	Metadata *datatypes.JSON
 }
 
 type IssuedRefreshToken struct {
 	Token     string
 	ExpiresAt time.Time
+	SessionID string
+}
+
+// RotateRefreshTokenInput carries the request's network identity so the
+// session's last-seen IP and User-Agent advance with use. Without these the
+// sessions list would show where a session started rather than where it is
+// now, which is the opposite of what "sign out anything you don't recognise"
+// needs.
+type RotateRefreshTokenInput struct {
+	Presented string
+	UserAgent *string
+	IPAddress *string
+	// Metadata is optional on refresh. Location is client-reported, so it can
+	// only stay current if the client resends it — a session whose place was
+	// frozen at login would show where it started rather than where it is,
+	// which is the opposite of what the sessions screen is for. Clients that
+	// send nothing keep whatever was recorded last.
+	Metadata *datatypes.JSON
 }
 
 type RotatedRefreshToken struct {
 	UserID    string
+	SessionID string
 	Token     string
 	ExpiresAt time.Time
 }
 
 type RefreshTokenService interface {
 	Issue(ctx context.Context, input IssueRefreshTokenInput) (*IssuedRefreshToken, error)
-	Rotate(ctx context.Context, presented string) (*RotatedRefreshToken, error)
+	Rotate(ctx context.Context, input RotateRefreshTokenInput) (*RotatedRefreshToken, error)
 	Revoke(ctx context.Context, presented string) error
 	TTL() time.Duration
 }
 
 type refreshTokenService struct {
-	appCtx pkg.AppContext
-	repo   repository.RefreshTokenRepository
+	appCtx      pkg.AppContext
+	repo        repository.RefreshTokenRepository
+	sessionRepo repository.SessionRepository
 }
 
 func NewRefreshTokenService(
 	appCtx pkg.AppContext,
 	repo repository.RefreshTokenRepository,
+	sessionRepo repository.SessionRepository,
 ) RefreshTokenService {
-	return &refreshTokenService{appCtx, repo}
+	return &refreshTokenService{appCtx, repo, sessionRepo}
 }
 
 func (s *refreshTokenService) TTL() time.Duration {
@@ -144,8 +165,9 @@ func (s *refreshTokenService) recallReplacement(
 	return &entry, true
 }
 
-// Issue mints a brand-new session row. It intentionally does not open its own
-// transaction so it can join the caller's (login) if there is one.
+// Issue starts a brand-new session and mints its first refresh token. It
+// intentionally does not open its own transaction so it can join the caller's
+// (login) if there is one.
 func (s *refreshTokenService) Issue(
 	ctx context.Context,
 	input IssueRefreshTokenInput,
@@ -162,16 +184,37 @@ func (s *refreshTokenService) Issue(
 	}
 
 	now := time.Now()
-	token := &models.RefreshToken{
-		UserID:     input.UserID,
-		TokenHash:  lib.HashRefreshTokenSecret(secret),
-		UserAgent:  input.UserAgent,
-		IPAddress:  input.IPAddress,
-		Metadata:   input.Metadata,
-		ExpiresAt:  now.Add(s.TTL()),
-		LastUsedAt: now,
+	device := lib.ResolveDevice(input.Metadata, input.UserAgent)
+
+	session := &models.Session{
+		UserID:          input.UserID,
+		LastUsedAt:      now,
+		ExpiresAt:       now.Add(s.TTL()),
+		IPAddress:       input.IPAddress,
+		UserAgent:       input.UserAgent,
+		DeviceName:      device.DeviceName,
+		DeviceKind:      device.DeviceKind,
+		OS:              device.OS,
+		OSVersion:       device.OSVersion,
+		ClientName:      device.ClientName,
+		ClientVersion:   device.ClientVersion,
+		Timezone:        device.Timezone,
+		LocationCity:    device.LocationCity,
+		LocationCountry: device.LocationCountry,
+		LocationSource:  device.LocationSource,
+		Metadata:        input.Metadata,
+	}
+	if createErr := s.sessionRepo.Create(ctx, session); createErr != nil {
+		return nil, pkg.InternalServerError(createErr.Error(), &pkg.RentLoopErrorParams{
+			Err:      createErr,
+			Metadata: map[string]string{"function": "Issue", "action": "creating session"},
+		})
 	}
 
+	token := &models.RefreshToken{
+		SessionID: session.ID.String(),
+		TokenHash: lib.HashRefreshTokenSecret(secret),
+	}
 	if createErr := s.repo.Create(ctx, token); createErr != nil {
 		return nil, pkg.InternalServerError(createErr.Error(), &pkg.RentLoopErrorParams{
 			Err:      createErr,
@@ -181,19 +224,35 @@ func (s *refreshTokenService) Issue(
 
 	return &IssuedRefreshToken{
 		Token:     lib.ComposeRefreshToken(token.ID.String(), secret),
-		ExpiresAt: token.ExpiresAt,
+		ExpiresAt: session.ExpiresAt,
+		SessionID: session.ID.String(),
 	}, nil
+}
+
+// killSession ends a session and every credential under it. Used by reuse
+// detection, where the point is to evict whoever is holding the live token —
+// not merely to reject the request that gave them away.
+func (s *refreshTokenService) killSession(
+	ctx context.Context,
+	sessionID string,
+	reason string,
+	at time.Time,
+) error {
+	if _, err := s.repo.RevokeAllForSession(ctx, sessionID, at); err != nil {
+		return err
+	}
+	return s.sessionRepo.Revoke(ctx, sessionID, reason, at)
 }
 
 // Rotate validates a presented token and swaps it for a fresh one. The whole
 // sequence runs in one transaction holding a row lock, so two concurrent
-// refreshes of the same token cannot both succeed and fork the chain — the
-// loser blocks, then sees revoked_at already set and trips reuse detection.
+// refreshes of the same token cannot both succeed — the loser blocks, then
+// sees revoked_at already set and falls into the replay path.
 func (s *refreshTokenService) Rotate(
 	ctx context.Context,
-	presented string,
+	input RotateRefreshTokenInput,
 ) (*RotatedRefreshToken, error) {
-	id, secret, parseErr := lib.ParseRefreshToken(presented)
+	id, secret, parseErr := lib.ParseRefreshToken(input.Presented)
 	if parseErr != nil {
 		return nil, invalidRefreshToken()
 	}
@@ -235,22 +294,29 @@ func (s *refreshTokenService) Rotate(
 			// Same answer as the first caller got. Nothing is written: no new
 			// row, no re-rotation, no revocation.
 			tx.Rollback()
+			session, sessionErr := s.sessionRepo.GetByID(ctx, row.SessionID)
+			if sessionErr != nil {
+				return nil, invalidRefreshToken()
+			}
 			return &RotatedRefreshToken{
-				UserID:    row.UserID,
+				UserID:    session.UserID,
+				SessionID: session.ID.String(),
 				Token:     entry.Token,
 				ExpiresAt: entry.ExpiresAt,
 			}, nil
 		}
 
-		// Outside the window: a genuine replay. Kill the entire descendant
-		// chain, not just this row.
-		if _, cascadeErr := s.repo.RevokeChainFrom(txCtx, row.ID.String(), now); cascadeErr != nil {
+		// Outside the window: a genuine replay. End the whole session, not just
+		// this credential — the attacker is holding the live one.
+		if cascadeErr := s.killSession(
+			txCtx, row.SessionID, models.SessionRevokedByReuse, now,
+		); cascadeErr != nil {
 			tx.Rollback()
 			return nil, pkg.InternalServerError(cascadeErr.Error(), &pkg.RentLoopErrorParams{
 				Err: cascadeErr,
 				Metadata: map[string]string{
 					"function": "Rotate",
-					"action":   "revoking compromised token chain",
+					"action":   "revoking compromised session",
 				},
 			})
 		}
@@ -259,16 +325,28 @@ func (s *refreshTokenService) Rotate(
 				Err: commitErr,
 				Metadata: map[string]string{
 					"function": "Rotate",
-					"action":   "committing chain revocation",
+					"action":   "committing session revocation",
 				},
 			})
 		}
 		return nil, invalidRefreshToken()
 	}
 
-	// Plain inactivity timeout. NOT a security signal — no cascade, the session
-	// just ends.
-	if row.ExpiresAt.Before(now) {
+	session, sessionErr := s.sessionRepo.GetByID(txCtx, row.SessionID)
+	if sessionErr != nil {
+		tx.Rollback()
+		if errors.Is(sessionErr, gorm.ErrRecordNotFound) {
+			return nil, invalidRefreshToken()
+		}
+		return nil, pkg.InternalServerError(sessionErr.Error(), &pkg.RentLoopErrorParams{
+			Err:      sessionErr,
+			Metadata: map[string]string{"function": "Rotate", "action": "loading session"},
+		})
+	}
+
+	// The session was signed out from another device, or slid past its window.
+	// Neither is a security signal — no cascade, the session is simply over.
+	if !session.IsActive(now) {
 		tx.Rollback()
 		return nil, invalidRefreshToken()
 	}
@@ -286,13 +364,8 @@ func (s *refreshTokenService) Rotate(
 	}
 
 	replacement := &models.RefreshToken{
-		UserID:     row.UserID,
-		TokenHash:  lib.HashRefreshTokenSecret(newSecret),
-		UserAgent:  row.UserAgent,
-		IPAddress:  row.IPAddress,
-		Metadata:   row.Metadata,
-		ExpiresAt:  now.Add(s.TTL()),
-		LastUsedAt: now,
+		SessionID: session.ID.String(),
+		TokenHash: lib.HashRefreshTokenSecret(newSecret),
 	}
 	if createErr := s.repo.Create(txCtx, replacement); createErr != nil {
 		tx.Rollback()
@@ -302,10 +375,7 @@ func (s *refreshTokenService) Rotate(
 		})
 	}
 
-	replacementID := replacement.ID.String()
 	row.RevokedAt = &now
-	row.ReplacedByID = &replacementID
-	row.LastUsedAt = now
 	if updateErr := s.repo.Update(txCtx, row); updateErr != nil {
 		tx.Rollback()
 		return nil, pkg.InternalServerError(updateErr.Error(), &pkg.RentLoopErrorParams{
@@ -314,10 +384,39 @@ func (s *refreshTokenService) Rotate(
 		})
 	}
 
+	// The session row itself is updated in place — this is the whole point of
+	// splitting it out. Expiry slides, activity advances, and the network
+	// identity catches up with wherever the client is now.
+	//
+	// Location is not derived here — it is whatever the client reported, and
+	// only changes when the client sends fresh metadata.
+	activity := repository.SessionActivity{
+		LastUsedAt: now,
+		ExpiresAt:  now.Add(s.TTL()),
+		IPAddress:  input.IPAddress,
+		UserAgent:  input.UserAgent,
+	}
+	if input.Metadata != nil {
+		device := lib.ResolveDevice(input.Metadata, input.UserAgent)
+		activity.Timezone = device.Timezone
+		activity.LocationCity = device.LocationCity
+		activity.LocationCountry = device.LocationCountry
+		activity.LocationSource = device.LocationSource
+	}
+
+	if touchErr := s.sessionRepo.TouchActivity(txCtx, session.ID.String(), activity); touchErr != nil {
+		tx.Rollback()
+		return nil, pkg.InternalServerError(touchErr.Error(), &pkg.RentLoopErrorParams{
+			Err:      touchErr,
+			Metadata: map[string]string{"function": "Rotate", "action": "updating session activity"},
+		})
+	}
+
 	rotated := &RotatedRefreshToken{
-		UserID:    row.UserID,
+		UserID:    session.UserID,
+		SessionID: session.ID.String(),
 		Token:     lib.ComposeRefreshToken(replacement.ID.String(), newSecret),
-		ExpiresAt: replacement.ExpiresAt,
+		ExpiresAt: now.Add(s.TTL()),
 	}
 
 	// Written BEFORE the commit on purpose. The commit is what releases the row
@@ -341,11 +440,12 @@ func (s *refreshTokenService) Rotate(
 	return rotated, nil
 }
 
-// Revoke ends one session. It runs the same full validation as Rotate — id
-// lookup AND secret comparison — so holding only the id half (far likelier to
-// leak, e.g. into a log) is not enough to end someone else's session.
-// Every failure is silent: logout must never block a client from clearing its
-// own local state, and there is nothing useful to tell the caller.
+// Revoke ends the session behind a presented token. It runs the same full
+// validation as Rotate — id lookup AND secret comparison — so holding only the
+// id half (far likelier to leak, e.g. into a log) is not enough to end someone
+// else's session. Every failure is silent: logout must never block a client
+// from clearing its own local state, and there is nothing useful to tell the
+// caller.
 func (s *refreshTokenService) Revoke(ctx context.Context, presented string) error {
 	id, secret, parseErr := lib.ParseRefreshToken(presented)
 	if parseErr != nil {
@@ -379,12 +479,11 @@ func (s *refreshTokenService) Revoke(ctx context.Context, presented string) erro
 	}
 
 	now := time.Now()
-	row.RevokedAt = &now
-	if updateErr := s.repo.Update(txCtx, row); updateErr != nil {
+	if killErr := s.killSession(txCtx, row.SessionID, models.SessionRevokedByLogout, now); killErr != nil {
 		tx.Rollback()
-		return pkg.InternalServerError(updateErr.Error(), &pkg.RentLoopErrorParams{
-			Err:      updateErr,
-			Metadata: map[string]string{"function": "Revoke", "action": "revoking refresh token"},
+		return pkg.InternalServerError(killErr.Error(), &pkg.RentLoopErrorParams{
+			Err:      killErr,
+			Metadata: map[string]string{"function": "Revoke", "action": "revoking session"},
 		})
 	}
 
