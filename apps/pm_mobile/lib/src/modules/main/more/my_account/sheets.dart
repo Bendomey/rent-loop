@@ -30,13 +30,19 @@ void showRemovePhotoSheet(BuildContext context, {required String initials}) {
 
 void showSignOutDeviceSheet(
   BuildContext context, {
-  required AccountSession session,
+  required String deviceLabel,
+  String? where,
+  String? lastUsed,
+  String? deviceKind,
   required VoidCallback onConfirm,
 }) {
   _openSheet(
     context,
     (close) => _SignOutDeviceSheet(
-      session: session,
+      deviceLabel: deviceLabel,
+      where: where,
+      lastUsed: lastUsed,
+      deviceKind: deviceKind,
       onClose: close,
       onConfirm: onConfirm,
     ),
@@ -659,20 +665,31 @@ class _RemovePhotoSheet extends StatelessWidget {
 
 // ── Sign out one device ───────────────────────────────────────────────────────
 
-IconData deviceIcon(SessionKind kind) => switch (kind) {
-  SessionKind.laptop => Icons.laptop_mac_rounded,
-  SessionKind.phone => Icons.smartphone_rounded,
-  SessionKind.tablet => Icons.tablet_mac_rounded,
+/// Maps the backend's device_kind onto an icon. Falls back to a laptop for
+/// UNKNOWN and for null — the backend leaves the field empty when a client sent
+/// no metadata and its User-Agent was unparseable, and a generic computer reads
+/// better there than a blank slot.
+IconData deviceIconFor(String? kind) => switch (kind) {
+  'PHONE' => Icons.smartphone_rounded,
+  'TABLET' => Icons.tablet_mac_rounded,
+  'DESKTOP' => Icons.desktop_mac_rounded,
+  _ => Icons.laptop_mac_rounded,
 };
 
 class _SignOutDeviceSheet extends StatelessWidget {
   const _SignOutDeviceSheet({
-    required this.session,
+    required this.deviceLabel,
     required this.onClose,
     required this.onConfirm,
+    this.where,
+    this.lastUsed,
+    this.deviceKind,
   });
 
-  final AccountSession session;
+  final String deviceLabel;
+  final String? where;
+  final String? lastUsed;
+  final String? deviceKind;
   final VoidCallback onClose;
   final VoidCallback onConfirm;
 
@@ -681,7 +698,7 @@ class _SignOutDeviceSheet extends StatelessWidget {
     return _AccountSheet(
       title: 'Sign out this device?',
       desc:
-          'We’ll end the session on ${session.device}. Signing back in needs the password again.',
+          'We’ll end the session on $deviceLabel. Signing back in needs the password again.',
       onClose: onClose,
       footer: _twoButtonFooter(
         confirmLabel: 'Sign out device',
@@ -699,14 +716,14 @@ class _SignOutDeviceSheet extends StatelessWidget {
         ),
         child: Row(
           children: [
-            RLIconTile(icon: deviceIcon(session.kind), tone: RLTone.neutral),
+            RLIconTile(icon: deviceIconFor(deviceKind), tone: RLTone.neutral),
             const SizedBox(width: 13),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    session.device,
+                    deviceLabel,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontFamily: RLTokens.fontSans,
@@ -717,7 +734,10 @@ class _SignOutDeviceSheet extends StatelessWidget {
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    '${session.where} · ${session.last}',
+                    [
+                      where,
+                      lastUsed,
+                    ].where((p) => p != null && p.isNotEmpty).join(' · '),
                     style: const TextStyle(
                       fontFamily: RLTokens.fontSans,
                       fontSize: 12.5,

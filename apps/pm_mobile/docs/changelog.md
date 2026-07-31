@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-07-31 — Sessions page is real
+- **`api/session_api.dart`** — `getSessions()`, `revokeSession(id)`, `revokeOtherSessions()` against the self-scoped `/users/me/sessions` routes (no client_id: a session belongs to the person, not a workspace membership)
+- **`repository/models/session_model.dart`** — `SessionModel`, with almost every field nullable because the backend returns one only when it genuinely knows it. `displayName`/`displayContext` join what's present and omit what isn't, rather than filling gaps with placeholders
+- **`repository/providers/sessions_provider.dart`** + **`notifiers/auth/revoke_session_notifier.dart`** — query and mutation. Deliberately not keepAlive: the list goes stale the moment another device signs in or out
+- **`my_account/sessions_page.dart`** rewritten off the fixture — shimmer skeleton on first load only (`hasValue`/`isLoading`, not `.when()`), pull-to-refresh, and `ref.invalidate` after each revoke
+- The hub's "N signed-in devices" subtitle now watches the same provider, so it can't disagree with the page it opens
+- A client-reported location carries a "Reported by device" pill — `location_source: CLIENT` means spoofable, and this screen exists for spotting access that isn't yours
+- Revoke-all reports the count the **server** returns, not the local list length; the two differ if a session expired in between
+- Affected modules: `api/`, `repository/models|providers|notifiers/`, `modules/main/more/my_account/`
+
 ## 2026-07-31 — Session metadata carries locale and a reported place
 - **`collectSessionMetadata` now sends `locale`** — `language` from `PlatformDispatcher`, and `timezone` (IANA, e.g. `Africa/Accra`) from the new **`flutter_timezone`** dependency. The backend derives a representative city from the zone, so a session shows a place without a permission prompt, a paid IP lookup, or any third-party call
 - **`app.name` is now sent.** A native client has no browser to name it, so without this the sessions list showed no client at all — only a version

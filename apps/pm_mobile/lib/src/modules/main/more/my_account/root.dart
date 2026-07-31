@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:rentloop_manager/src/architecture/app_startup/app_startup_notifier.dart';
 import 'package:rentloop_manager/src/architecture/current_user/current_user_notifier.dart';
-import 'package:rentloop_manager/src/modules/main/more/my_account/placeholder_data.dart';
+import 'package:rentloop_manager/src/repository/providers/sessions_provider.dart';
 import 'package:rentloop_manager/src/modules/main/more/my_account/profile_page.dart';
 import 'package:rentloop_manager/src/modules/main/more/my_account/security_page.dart';
 import 'package:rentloop_manager/src/modules/main/more/my_account/sessions_page.dart';
@@ -33,6 +33,9 @@ class MyAccountScreen extends ConsumerWidget {
         ? user!.clientUsers.first.role
         : null;
     final initials = _initials(name);
+    // Watched rather than read: the hub rebuilds when a device is revoked on
+    // the Sessions page, so the count never lags behind the list.
+    final sessionCount = ref.watch(sessionsProvider).valueOrNull?.length;
 
     return Scaffold(
       backgroundColor: RLTokens.paper,
@@ -161,8 +164,11 @@ class MyAccountScreen extends ConsumerWidget {
                           tone: RLTone.warning,
                         ),
                         title: 'Sessions',
-                        subtitle:
-                            '${kPlaceholderSessions.length} signed-in devices',
+                        // Live count, so the hub can't disagree with the page
+                        // it opens. Null while loading rather than a guess.
+                        subtitle: sessionCount == null
+                            ? 'Signed-in devices'
+                            : '$sessionCount signed-in ${sessionCount == 1 ? 'device' : 'devices'}',
                         last: true,
                         onTap: () => _push(
                           context,

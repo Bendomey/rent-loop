@@ -10,7 +10,6 @@ import {
 import UpdateClientProfileModal from './components/update-name'
 import UpdatePasswordModal from './components/update-password'
 import UploadPhotoModal from './components/upload-photo'
-import { PLACEHOLDER_SESSIONS, type AccountSession } from './placeholder-data'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
 import { getNameInitials } from '~/lib/misc'
 import { safeString } from '~/lib/strings'
@@ -36,9 +35,10 @@ export function MyAccountSettingsModule() {
 	const [openUploadPhotoModal, setOpenUploadPhotoModal] = useState(false)
 	const [openRemovePhotoModal, setOpenRemovePhotoModal] = useState(false)
 	const [openSignOutAllModal, setOpenSignOutAllModal] = useState(false)
-	const [sessionToSignOut, setSessionToSignOut] = useState<AccountSession>()
-	const [sessions, setSessions] =
-		useState<AccountSession[]>(PLACEHOLDER_SESSIONS)
+	const [sessionToSignOut, setSessionToSignOut] = useState<Session>()
+	// How many others the confirm dialog should name. Set when opening it, from
+	// the list the user is actually looking at.
+	const [otherSessionCount, setOtherSessionCount] = useState(0)
 
 	const name = safeString(currentUser?.name)
 	const email = safeString(currentUser?.email)
@@ -87,9 +87,11 @@ export function MyAccountSettingsModule() {
 
 				<TabsContent value="sessions">
 					<SessionsTab
-						sessions={sessions}
 						onSignOutOne={setSessionToSignOut}
-						onSignOutAll={() => setOpenSignOutAllModal(true)}
+						onSignOutAll={(others) => {
+							setOtherSessionCount(others)
+							setOpenSignOutAllModal(true)
+						}}
 					/>
 				</TabsContent>
 			</Tabs>
@@ -105,7 +107,7 @@ export function MyAccountSettingsModule() {
 				setOpened={setOpenUpdatePasswordModal}
 			/>
 
-			{/* New UI, not yet wired to the API */}
+			{/* Photo actions remain UI-only; sessions below are live */}
 			<UploadPhotoModal
 				opened={openUploadPhotoModal}
 				setOpened={setOpenUploadPhotoModal}
@@ -118,19 +120,11 @@ export function MyAccountSettingsModule() {
 			<SignOutSessionModal
 				session={sessionToSignOut}
 				setSession={setSessionToSignOut}
-				onConfirm={(session) => {
-					setSessions((prev) => prev.filter((s) => s.id !== session.id))
-					setSessionToSignOut(undefined)
-				}}
 			/>
 			<SignOutAllSessionsModal
 				opened={openSignOutAllModal}
 				setOpened={setOpenSignOutAllModal}
-				count={sessions.filter((s) => !s.current).length}
-				onConfirm={() => {
-					setSessions((prev) => prev.filter((s) => s.current))
-					setOpenSignOutAllModal(false)
-				}}
+				count={otherSessionCount}
 			/>
 		</div>
 	)
