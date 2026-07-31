@@ -1,0 +1,54 @@
+name: PM Mobile CI
+
+on:
+  push:
+    paths:
+      - 'apps/pm_mobile/**'
+      - '.github/workflows/pm-mobile-ci.yml'
+    branches:
+      - main
+      - prod
+  pull_request:
+    paths:
+      - 'apps/pm_mobile/**'
+      - '.github/workflows/pm-mobile-ci.yml'
+
+jobs:
+  code-checks:
+    name: 🔬 Analyze & 🧪 Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/pm_mobile
+
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v4
+
+      - name: ⎔ Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          # Pinned rather than 'stable': an analyzer that moves under us turns
+          # an unrelated PR red for reasons nobody changed.
+          flutter-version: '3.32.6'
+          channel: stable
+          cache: true
+
+      - name: 📥 Download deps
+        run: flutter pub get
+
+      # .env is a declared asset in pubspec.yaml but is gitignored, so it never
+      # exists on a fresh checkout. Without it BOTH analyze and test fail —
+      # test included, since a missing declared asset breaks the bundle. The
+      # committed example carries the expected keys with no real values.
+      - name: 🔑 Create .env from example
+        run: cp .env.example .env
+
+      # --no-fatal-infos: the only infos today are `deprecated_member_use` from
+      # riverpod_generator's own .g.dart output — not ours to fix, and failing
+      # on them would mean CI is red on arrival. Warnings and errors still fail.
+      - name: 🔬 Analyze
+        run: flutter analyze --no-fatal-infos
+
+      - name: 🧪 Test
+        run: flutter test
