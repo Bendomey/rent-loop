@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-07-31 — Session metadata carries locale and a reported place
+- **`collectSessionMetadata` now sends `locale`** — `language` from `PlatformDispatcher`, and `timezone` (IANA, e.g. `Africa/Accra`) from the new **`flutter_timezone`** dependency. The backend derives a representative city from the zone, so a session shows a place without a permission prompt, a paid IP lookup, or any third-party call
+- **`app.name` is now sent.** A native client has no browser to name it, so without this the sessions list showed no client at all — only a version
+- Location is client-reported and the backend stamps it `location_source: CLIENT`, so the UI must present it as reported by the device, never as verified
+- The locale block is wrapped like the others: `flutter_timezone` has no test-host implementation and always throws there, which must degrade to "no locale" rather than failing a login. Covered by a regression test
+- Affected modules: `lib/src/lib/session_metadata.dart`, `pubspec.yaml`
+
 ## 2026-07-30 — Home avatar opens My Account
 - **The manager avatar in Home's `_TopHeader` was inert** — a bare `RLAvatar` with no tap handling, even though it reads as the standard "go to your profile" affordance. Wrapped in a `GestureDetector` that pushes `/more/my-profile`, matching the notification button directly beside it (haptic → `context.mounted` guard → `context.push`)
 - Tapping it lands on `MyAccountScreen`, the same destination as More's profile card — one profile entry point, two ways in

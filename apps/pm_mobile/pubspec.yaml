@@ -28,6 +28,7 @@ dependencies:
   flutter_dotenv: ^5.2.1
   device_info_plus: ^11.2.0
   package_info_plus: ^8.1.2
+  flutter_timezone: ^5.1.0
 
 dev_dependencies:
   flutter_test:

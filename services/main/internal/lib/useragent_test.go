@@ -121,34 +121,87 @@ func TestParseUserAgentEmptyAndUnknown(t *testing.T) {
 	}
 }
 
-func TestResolveDeviceClientMetadataWins(t *testing.T) {
-	// A phone knows its own model; the UA only knows "iPhone". The client's
-	// value must win, and fields it omits must still be filled from the UA.
-	ua := "Mozilla/5.0 (iPhone; CPU iPhone OS 19_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148"
-	metadata := jsonBlob(t, `{"device_name":"iPhone 16 Pro Max","client_name":"Rentloop Manager"}`)
+func TestResolveDeviceParsesRealWebPayload(t *testing.T) {
+	// Verbatim shape from apps/property-manager collectDeviceMetadata(). A
+	// previous flat struct failed to unmarshal this and dropped every field,
+	// so this test exists to keep the wire format and the struct in step.
+	metadata := jsonBlob(t, `{
+      "platform":"web",
+      "device_type":"desktop",
+      "browser":{"name":"Chrome","version":"141"},
+      "os":{"name":"macOS","version":"15.0.0"},
+      "app":{"name":"Rentloop Property Manager","version":"1.0.0"},
+      "locale":{"language":"en-GB","timezone":"Africa/Accra"}
+    }`)
 
-	got := ResolveDevice(metadata, &ua)
+	got := ResolveDevice(metadata, nil)
 
-	if deref(got.DeviceName) != "iPhone 16 Pro Max" {
-		t.Errorf("DeviceName = %q, want client-supplied value", deref(got.DeviceName))
+	if deref(got.ClientName) != "Chrome" {
+		t.Errorf("ClientName = %q, want Chrome", deref(got.ClientName))
 	}
-	if deref(got.ClientName) != "Rentloop Manager" {
-		t.Errorf("ClientName = %q, want client-supplied value", deref(got.ClientName))
+	if deref(got.ClientVersion) != "141" {
+		t.Errorf("ClientVersion = %q, want 141", deref(got.ClientVersion))
 	}
-	if deref(got.OS) != "iOS" {
-		t.Errorf("OS = %q, want UA fallback %q", deref(got.OS), "iOS")
+	if deref(got.OS) != "macOS" {
+		t.Errorf("OS = %q, want macOS", deref(got.OS))
 	}
-	if deref(got.DeviceKind) != DeviceKindPhone {
-		t.Errorf("DeviceKind = %q, want UA fallback", deref(got.DeviceKind))
+	if deref(got.OSVersion) != "15.0.0" {
+		t.Errorf("OSVersion = %q, want 15.0.0", deref(got.OSVersion))
+	}
+	if deref(got.DeviceKind) != DeviceKindLaptop {
+		t.Errorf("DeviceKind = %q, want %q", deref(got.DeviceKind), DeviceKindLaptop)
+	}
+	if deref(got.Timezone) != "Africa/Accra" {
+		t.Errorf("Timezone = %q", deref(got.Timezone))
+	}
+	// Derived from the zone, since no browser can name its own city.
+	if deref(got.LocationCity) != "Accra" {
+		t.Errorf("LocationCity = %q, want Accra derived from timezone", deref(got.LocationCity))
+	}
+	if deref(got.LocationSource) != LocationSourceClient {
+		t.Errorf("LocationSource = %q, want %q", deref(got.LocationSource), LocationSourceClient)
 	}
 }
 
-func TestResolveDeviceRejectsUnknownKind(t *testing.T) {
-	// An unrecognised kind must not reach the column — the clients switch on it.
-	metadata := jsonBlob(t, `{"device_kind":"TOASTER"}`)
+func TestResolveDeviceNativePayload(t *testing.T) {
+	// A native client knows its hardware and names itself through `app`,
+	// having no browser.
+	metadata := jsonBlob(t, `{
+      "platform":"ios",
+      "device_type":"mobile",
+      "device":{"manufacturer":"Apple","model":"iPhone 16 Pro Max"},
+      "os":{"name":"iOS","version":"19.1"},
+      "app":{"name":"Rentloop Manager","version":"2.4.0"},
+      "locale":{"timezone":"Africa/Accra"},
+      "location":{"city":"Accra","country":"Ghana"}
+    }`)
+
 	got := ResolveDevice(metadata, nil)
-	if deref(got.DeviceKind) != DeviceKindUnknown {
-		t.Errorf("DeviceKind = %q, want %q", deref(got.DeviceKind), DeviceKindUnknown)
+
+	if deref(got.DeviceName) != "iPhone 16 Pro Max" {
+		t.Errorf("DeviceName = %q", deref(got.DeviceName))
+	}
+	if deref(got.ClientName) != "Rentloop Manager" {
+		t.Errorf("ClientName = %q, want the app name", deref(got.ClientName))
+	}
+	if deref(got.DeviceKind) != DeviceKindPhone {
+		t.Errorf("DeviceKind = %q", deref(got.DeviceKind))
+	}
+	// An explicit city must win over the timezone-derived one.
+	if deref(got.LocationCity) != "Accra" || deref(got.LocationCountry) != "Ghana" {
+		t.Errorf("location = %q/%q", deref(got.LocationCity), deref(got.LocationCountry))
+	}
+}
+
+func TestResolveDeviceFallsBackToUserAgent(t *testing.T) {
+	// Nothing supplied → UA parsing still fills the row.
+	ua := "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36"
+	got := ResolveDevice(nil, &ua)
+	if deref(got.OS) != "macOS" || deref(got.ClientName) != "Chrome" {
+		t.Errorf("UA fallback failed: %+v", got)
+	}
+	if got.LocationSource != nil {
+		t.Errorf("no location claimed, so source must stay nil, got %q", deref(got.LocationSource))
 	}
 }
 
@@ -162,60 +215,50 @@ func TestResolveDeviceSurvivesMalformedMetadata(t *testing.T) {
 	}
 }
 
-// jsonBlob builds a datatypes.JSON from a literal, failing the test on bad input.
+func TestTimezoneCity(t *testing.T) {
+	cases := map[string]string{
+		"Africa/Accra":                   "Accra",
+		"America/New_York":               "New York",
+		"America/Argentina/Buenos_Aires": "Buenos Aires",
+		"Europe/London":                  "London",
+		// Not places — must yield nothing rather than a fake city.
+		"UTC":       "",
+		"Etc/GMT+3": "",
+		"":          "",
+	}
+	for zone, want := range cases {
+		if got := TimezoneCity(zone); got != want {
+			t.Errorf("TimezoneCity(%q) = %q, want %q", zone, got, want)
+		}
+	}
+}
+
+// jsonBlob builds a datatypes.JSON from a literal.
 func jsonBlob(t *testing.T, raw string) *datatypes.JSON {
 	t.Helper()
 	blob := datatypes.JSON([]byte(raw))
 	return &blob
 }
 
-func TestResolveDeviceCapturesClientLocation(t *testing.T) {
-	metadata := jsonBlob(t, `{"timezone":"Africa/Accra","location_city":"Accra","location_country":"Ghana"}`)
+func TestResolveDevicePrefersMarketingName(t *testing.T) {
+	// iOS reports "iPhone16,2"; the app maps it to something a person
+	// recognises. The readable name must win.
+	metadata := jsonBlob(t, `{
+      "platform":"ios",
+      "device":{"manufacturer":"Apple","model":"iPhone16,2","marketing_name":"iPhone 15 Pro Max"},
+      "app":{"name":"Rentloop Manager","version":"2.4.0"}
+    }`)
 	got := ResolveDevice(metadata, nil)
-
-	if deref(got.Timezone) != "Africa/Accra" {
-		t.Errorf("Timezone = %q", deref(got.Timezone))
-	}
-	if deref(got.LocationCity) != "Accra" {
-		t.Errorf("LocationCity = %q", deref(got.LocationCity))
-	}
-	if deref(got.LocationCountry) != "Ghana" {
-		t.Errorf("LocationCountry = %q", deref(got.LocationCountry))
-	}
-	// The marker is the whole point: a place the client chose must never be
-	// presented as if the server verified it.
-	if deref(got.LocationSource) != LocationSourceClient {
-		t.Errorf("LocationSource = %q, want %q", deref(got.LocationSource), LocationSourceClient)
+	if deref(got.DeviceName) != "iPhone 15 Pro Max" {
+		t.Errorf("DeviceName = %q, want the marketing name", deref(got.DeviceName))
 	}
 }
 
-func TestResolveDeviceTimezoneAloneMarksSource(t *testing.T) {
-	// A browser can always supply a timezone even when it knows no city.
-	metadata := jsonBlob(t, `{"timezone":"Europe/London"}`)
+func TestResolveDeviceFallsBackToModelCode(t *testing.T) {
+	// Unknown model → the raw code is still better than nothing.
+	metadata := jsonBlob(t, `{"device":{"model":"SM-X999Z"}}`)
 	got := ResolveDevice(metadata, nil)
-	if deref(got.LocationSource) != LocationSourceClient {
-		t.Errorf("LocationSource = %q, want it set from timezone alone", deref(got.LocationSource))
-	}
-	if got.LocationCity != nil {
-		t.Errorf("LocationCity should stay nil, got %q", deref(got.LocationCity))
-	}
-}
-
-func TestResolveDeviceNoLocationLeavesSourceNil(t *testing.T) {
-	// No location claimed → no source. A null source is how the API says
-	// "we don't know where this is" rather than "the client said nothing".
-	metadata := jsonBlob(t, `{"device_name":"iPhone 16 Pro Max"}`)
-	got := ResolveDevice(metadata, nil)
-	if got.LocationSource != nil {
-		t.Errorf("LocationSource = %q, want nil", deref(got.LocationSource))
-	}
-}
-
-func TestResolveDeviceBlankLocationIsNotAClaim(t *testing.T) {
-	// Whitespace must not occupy a column that reads as "we know this".
-	metadata := jsonBlob(t, `{"location_city":"   ","timezone":""}`)
-	got := ResolveDevice(metadata, nil)
-	if got.LocationCity != nil || got.Timezone != nil || got.LocationSource != nil {
-		t.Errorf("blank values should be dropped, got %+v", got)
+	if deref(got.DeviceName) != "SM-X999Z" {
+		t.Errorf("DeviceName = %q, want the model code", deref(got.DeviceName))
 	}
 }

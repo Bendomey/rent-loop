@@ -7,10 +7,6 @@ import (
 	"gorm.io/datatypes"
 )
 
-// Device kinds. Closed set — the clients map each to an icon, so an
-// unrecognised value must degrade to DeviceKindUnknown rather than render
-// nothing. Defined here rather than in models because the User-Agent parser
-// and the metadata merger both live in this package, and models imports lib.
 // Where a session's location came from. Client-reported places are spoofable
 // and must be labelled as such wherever they are shown; a server-derived place
 // (from the IP the server observed) is not, and should always win.
@@ -19,6 +15,10 @@ const (
 	LocationSourceServer = "SERVER"
 )
 
+// Device kinds. Closed set — the clients map each to an icon, so an
+// unrecognised value must degrade to DeviceKindUnknown rather than render
+// nothing. Defined here rather than in models because the User-Agent parser
+// and the metadata merger both live in this package, and models imports lib.
 const (
 	DeviceKindLaptop  = "LAPTOP"
 	DeviceKindDesktop = "DESKTOP"
@@ -31,40 +31,75 @@ const (
 // optionally on refresh. Every field is optional and every value is untrusted
 // — it is stored for display only and never drives authorisation.
 //
-// Mobile can fill the device fields from device_info_plus + package_info_plus.
-// A browser cannot know its hardware, so the web portal sends what it has and
-// the server fills the rest by parsing the User-Agent.
+// The shape is nested because that is what the web portal already sends
+// (apps/property-manager/app/lib/device-info.ts). An earlier flat version of
+// this struct silently discarded the whole blob: `os` arrives as an object, so
+// unmarshalling it into a string errored and every field fell back to
+// User-Agent parsing. The nesting is the wire format, not decoration.
+//
+// Native clients fill Device (the OS exposes make and model); browsers cannot
+// and omit it. Browsers fill Browser; native clients identify themselves
+// through App instead.
 //
 // Location is client-reported and therefore SPOOFABLE. That matters more here
 // than the rest of this struct: the sessions screen exists so people can spot
-// access that isn't theirs, and a session can claim to be anywhere. Sessions
-// carrying a client-reported place are stamped LocationSourceClient so the UI
-// can say "as reported by this device" rather than presenting it as verified.
-// A server-side lookup, when one exists, must overwrite this and stamp
-// LocationSourceServer.
-//
-// Timezone (IANA, e.g. "Africa/Accra") is the cheapest honest signal a client
-// has: no permission prompt, no third-party call, nothing to block, and it
-// cannot fail. It is kept alongside city/country because it is often the only
-// one a browser can supply.
+// access that isn't theirs, and a session can claim to be anywhere. Anything
+// carrying a client-reported place is stamped LocationSourceClient so the UI
+// can say "as reported by this device" rather than implying it was verified.
 type SessionDeviceInfo struct {
-	DeviceName      *string `json:"device_name"`
-	DeviceKind      *string `json:"device_kind"`
-	OS              *string `json:"os"`
-	OSVersion       *string `json:"os_version"`
-	ClientName      *string `json:"client_name"`
-	ClientVersion   *string `json:"client_version"`
-	Timezone        *string `json:"timezone"`
-	LocationCity    *string `json:"location_city"`
-	LocationCountry *string `json:"location_country"`
+	Platform   *string `json:"platform"`
+	DeviceType *string `json:"device_type"`
+
+	Device *struct {
+		Manufacturer *string `json:"manufacturer"`
+		Model        *string `json:"model"`
+		// MarketingName is the human name for a model code the OS reports as
+		// something like "iPhone16,2". Preferred when present — nobody
+		// recognises their phone by its internal identifier.
+		MarketingName *string `json:"marketing_name"`
+	} `json:"device"`
+
+	Browser *struct {
+		Name    *string `json:"name"`
+		Version *string `json:"version"`
+	} `json:"browser"`
+
+	OS *struct {
+		Name    *string `json:"name"`
+		Version *string `json:"version"`
+	} `json:"os"`
+
+	App *struct {
+		Name    *string `json:"name"`
+		Version *string `json:"version"`
+	} `json:"app"`
+
+	Locale *struct {
+		Language *string `json:"language"`
+		Timezone *string `json:"timezone"`
+	} `json:"locale"`
+
+	// Location is what the device claims about where it is. A browser can
+	// rarely fill this — see TimezoneCity for how a place is still derived
+	// from the IANA zone alone.
+	Location *struct {
+		City    *string `json:"city"`
+		Country *string `json:"country"`
+	} `json:"location"`
 }
 
-var validDeviceKinds = map[string]bool{
-	DeviceKindLaptop:  true,
-	DeviceKindDesktop: true,
-	DeviceKindPhone:   true,
-	DeviceKindTablet:  true,
-	DeviceKindUnknown: true,
+// deviceTypeToKind maps the client's coarse form factor onto the icon set.
+//
+// "desktop" becomes LAPTOP rather than DESKTOP for the same reason the
+// User-Agent parser does: neither a browser nor a UA string can tell a laptop
+// from a desktop, and the clients render one computer icon for both.
+// DeviceKindDesktop stays available for a client that genuinely knows.
+var deviceTypeToKind = map[string]string{
+	"desktop": DeviceKindLaptop,
+	"laptop":  DeviceKindLaptop,
+	"mobile":  DeviceKindPhone,
+	"phone":   DeviceKindPhone,
+	"tablet":  DeviceKindTablet,
 }
 
 // ResolvedDevice is the merged result of client metadata and UA parsing.
@@ -118,23 +153,97 @@ func ResolveDevice(metadata *datatypes.JSON, userAgent *string) ResolvedDevice {
 		return resolved
 	}
 
-	resolved.DeviceName = preferSupplied(supplied.DeviceName, resolved.DeviceName)
-	resolved.DeviceKind = preferSupplied(supplied.DeviceKind, resolved.DeviceKind)
-	resolved.OS = preferSupplied(supplied.OS, resolved.OS)
-	resolved.OSVersion = preferSupplied(supplied.OSVersion, resolved.OSVersion)
-	resolved.ClientName = preferSupplied(supplied.ClientName, resolved.ClientName)
-	resolved.ClientVersion = preferSupplied(supplied.ClientVersion, resolved.ClientVersion)
-	resolved.DeviceKind = normaliseDeviceKind(resolved.DeviceKind)
+	// Hardware: only a native client can report this.
+	if supplied.Device != nil {
+		name := preferSupplied(
+			trimmedOrNil(supplied.Device.MarketingName),
+			trimmedOrNil(supplied.Device.Model),
+		)
+		resolved.DeviceName = preferSupplied(name, resolved.DeviceName)
+	}
 
-	resolved.Timezone = trimmedOrNil(supplied.Timezone)
-	resolved.LocationCity = trimmedOrNil(supplied.LocationCity)
-	resolved.LocationCountry = trimmedOrNil(supplied.LocationCountry)
+	if supplied.DeviceType != nil {
+		key := strings.ToLower(strings.TrimSpace(*supplied.DeviceType))
+		if kind, known := deviceTypeToKind[key]; known {
+			resolved.DeviceKind = &kind
+		}
+	}
+
+	if supplied.OS != nil {
+		resolved.OS = preferSupplied(trimmedOrNil(supplied.OS.Name), resolved.OS)
+		resolved.OSVersion = preferSupplied(trimmedOrNil(supplied.OS.Version), resolved.OSVersion)
+	}
+
+	// A browser identifies itself as the client; a native app has no browser
+	// and identifies itself through App instead.
+	if supplied.Browser != nil {
+		resolved.ClientName = preferSupplied(trimmedOrNil(supplied.Browser.Name), resolved.ClientName)
+		resolved.ClientVersion = preferSupplied(
+			trimmedOrNil(supplied.Browser.Version), resolved.ClientVersion,
+		)
+	}
+	if supplied.App != nil && (supplied.Browser == nil || supplied.Browser.Name == nil) {
+		resolved.ClientName = preferSupplied(trimmedOrNil(supplied.App.Name), resolved.ClientName)
+		resolved.ClientVersion = preferSupplied(
+			trimmedOrNil(supplied.App.Version), resolved.ClientVersion,
+		)
+	}
+
+	if supplied.Locale != nil {
+		resolved.Timezone = trimmedOrNil(supplied.Locale.Timezone)
+	}
+	if supplied.Location != nil {
+		resolved.LocationCity = trimmedOrNil(supplied.Location.City)
+		resolved.LocationCountry = trimmedOrNil(supplied.Location.Country)
+	}
+
+	// A browser can almost never name its city, but it always knows its IANA
+	// zone, and those encode a representative city ("Africa/Accra"). Deriving
+	// it here rather than in each client keeps one implementation, and means a
+	// web session shows a place instead of nothing.
+	if resolved.LocationCity == nil && resolved.Timezone != nil {
+		if city := TimezoneCity(*resolved.Timezone); city != "" {
+			resolved.LocationCity = &city
+		}
+	}
+
 	if resolved.Timezone != nil || resolved.LocationCity != nil || resolved.LocationCountry != nil {
 		source := LocationSourceClient
 		resolved.LocationSource = &source
 	}
 
+	resolved.DeviceKind = normaliseDeviceKind(resolved.DeviceKind)
 	return resolved
+}
+
+// TimezoneCity pulls the representative city out of an IANA zone name:
+// "Africa/Accra" → "Accra", "America/Argentina/Buenos_Aires" → "Buenos Aires".
+//
+// Returns "" for zones that name no place ("UTC", "Etc/GMT+3") rather than
+// inventing one. This approximates where someone is; it is not a claim about
+// it — which is exactly why the result is only ever stamped CLIENT-sourced.
+func TimezoneCity(zone string) string {
+	trimmed := strings.TrimSpace(zone)
+	if trimmed == "" {
+		return ""
+	}
+	// Etc/* zones are fixed offsets, not places.
+	if strings.HasPrefix(trimmed, "Etc/") || !strings.Contains(trimmed, "/") {
+		return ""
+	}
+	segments := strings.Split(trimmed, "/")
+	last := segments[len(segments)-1]
+	if last == "" {
+		return ""
+	}
+	return strings.ReplaceAll(last, "_", " ")
+}
+
+func preferSupplied(supplied, fallback *string) *string {
+	if supplied != nil && *supplied != "" {
+		return supplied
+	}
+	return fallback
 }
 
 // trimmedOrNil normalises a client-supplied string: whitespace-only values
@@ -150,11 +259,12 @@ func trimmedOrNil(v *string) *string {
 	return &trimmed
 }
 
-func preferSupplied(supplied, fallback *string) *string {
-	if supplied != nil && *supplied != "" {
-		return supplied
-	}
-	return fallback
+var validDeviceKinds = map[string]bool{
+	DeviceKindLaptop:  true,
+	DeviceKindDesktop: true,
+	DeviceKindPhone:   true,
+	DeviceKindTablet:  true,
+	DeviceKindUnknown: true,
 }
 
 // normaliseDeviceKind guarantees the column only ever holds a value the

@@ -2,7 +2,13 @@ import 'dart:io' show Platform;
 import 'dart:ui' show PlatformDispatcher;
 
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+
+/// Shown as the client name on the sessions list, mirroring the web portal's
+/// APP_DISPLAY_NAME. Not taken from PackageInfo.appName, which is the launcher
+/// label and gets localised.
+const String _appDisplayName = 'Rentloop Manager';
 
 /// Marketing names for the handsets we see most. Deliberately small and
 /// deliberately optional: a miss simply omits `marketing_name`, leaving the
@@ -54,11 +60,29 @@ Future<Map<String, dynamic>> collectSessionMetadata() async {
   try {
     final package = await PackageInfo.fromPlatform();
     metadata['app'] = {
+      // `name` is what the sessions list shows as the client — a native app
+      // has no browser to name it, so without this the row reads as unknown.
+      'name': _appDisplayName,
       'version': package.version,
       'build': package.buildNumber,
     };
   } catch (_) {
     // app info unavailable; carry on with what we have
+  }
+
+  // Locale, and through the IANA zone a rough place. This is the only location
+  // signal available without a permission prompt or a paid lookup: the backend
+  // reads a representative city out of the zone ("Africa/Accra" -> "Accra")
+  // and records it as CLIENT-reported, never as verified.
+  try {
+    final locale = <String, dynamic>{
+      'language': PlatformDispatcher.instance.locale.toLanguageTag(),
+    };
+    final zone = await FlutterTimezone.getLocalTimezone();
+    if (zone.identifier.isNotEmpty) locale['timezone'] = zone.identifier;
+    metadata['locale'] = locale;
+  } catch (_) {
+    // timezone unavailable; the session simply carries no place
   }
 
   try {
