@@ -16559,6 +16559,147 @@
                 }
             }
         },
+        "/api/v1/admin/users/me/sessions": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Every device currently signed in as you — one entry per sign-in, most recently used first. `is_current` marks the session making this request. `location_city`/`location_country` are null until a GeoIP database is configured, and the device fields are null when the client sent no metadata and its User-Agent could not be parsed.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sessions"
+                ],
+                "summary": "List your active sessions",
+                "responses": {
+                    "200": {
+                        "description": "Sessions retrieved successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/transformations.OutputSession"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Authorization failed",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/users/me/sessions/{session_id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Ends the given session and every refresh token under it. Idempotent — an already-revoked session still returns 204. A session belonging to another user reports 404 rather than 403, so this cannot be used to probe which session ids exist. Revoking your own current session is allowed and is equivalent to logging out.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sessions"
+                ],
+                "summary": "Sign out one session",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session ID",
+                        "name": "session_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Session revoked successfully"
+                    },
+                    "401": {
+                        "description": "Authorization failed",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Session not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/users/me/sessions:revoke-others": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Ends every session for you except the one making this request, which stays signed in. Returns how many were ended. Requires an access token carrying a session claim — tokens issued before sessions existed cannot identify which one to keep and are rejected.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sessions"
+                ],
+                "summary": "Sign out all other sessions",
+                "responses": {
+                    "200": {
+                        "description": "Other sessions revoked successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "revoked_count": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Authorization failed",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/users/refresh": {
             "post": {
                 "description": "Rotates the presented refresh token and returns a new access token plus a new refresh token. No Authorization header is required — the refresh token itself is the credential. (Admin)",
@@ -22400,6 +22541,10 @@
                 "refresh_token"
             ],
             "properties": {
+                "metadata": {
+                    "description": "Metadata optionally refreshes the session's device and reported location\n(see lib.SessionDeviceInfo). Omit it and the previously recorded values\nare left untouched. Same untrusted, display-only blob as on login.",
+                    "type": "object"
+                },
                 "refresh_token": {
                     "type": "string",
                     "example": "3f2504e0-4f89-11d3-9a0c-0305e82c3301:sSx1"
@@ -26658,6 +26803,76 @@
                     "type": "string",
                     "format": "date-time",
                     "example": "2023-01-01T00:00:00Z"
+                }
+            }
+        },
+        "transformations.OutputSession": {
+            "type": "object",
+            "properties": {
+                "client_name": {
+                    "type": "string",
+                    "example": "Chrome"
+                },
+                "client_version": {
+                    "type": "string",
+                    "example": "141.0"
+                },
+                "device_kind": {
+                    "type": "string",
+                    "example": "LAPTOP"
+                },
+                "device_name": {
+                    "type": "string",
+                    "example": "MacBook Pro"
+                },
+                "expires_at": {
+                    "type": "string",
+                    "example": "2026-10-28T09:14:22Z"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "ip_address": {
+                    "type": "string",
+                    "example": "154.160.22.14"
+                },
+                "is_current": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "last_used_at": {
+                    "type": "string",
+                    "example": "2026-07-30T09:14:22Z"
+                },
+                "location_city": {
+                    "type": "string",
+                    "example": "Accra"
+                },
+                "location_country": {
+                    "type": "string",
+                    "example": "Ghana"
+                },
+                "location_source": {
+                    "description": "LocationSource is CLIENT when the place was reported by the device — which\nmeans it is spoofable and should be shown as reported rather than\nverified — or SERVER when derived from the observed IP. Null when no\nlocation is known.",
+                    "type": "string",
+                    "example": "CLIENT"
+                },
+                "os": {
+                    "type": "string",
+                    "example": "macOS"
+                },
+                "os_version": {
+                    "type": "string",
+                    "example": "15.3"
+                },
+                "signed_in_at": {
+                    "type": "string",
+                    "example": "2026-07-04T18:02:11Z"
+                },
+                "timezone": {
+                    "type": "string",
+                    "example": "Africa/Accra"
                 }
             }
         },

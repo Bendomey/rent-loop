@@ -28,6 +28,7 @@ import { environmentVariables } from './lib/actions/env.server'
 import { safeString } from './lib/strings'
 import { NotFoundModule } from './modules'
 import { Providers } from './providers'
+import { rememberBrowserTimezone } from '~/lib/session-timezone'
 
 dayjs.locale('en-gb')
 dayjs.extend(localizedFormat)
@@ -633,6 +634,14 @@ export default function App() {
 		if ('serviceWorker' in navigator) {
 			void navigator.serviceWorker.register('/sw.js', { scope: '/' })
 		}
+	}, [])
+
+	// Token refresh runs in server middleware, which cannot see the browser's
+	// timezone — it would read the host's. Recording it here on every load
+	// gives that path a browser-derived value to forward, and keeps a
+	// travelling session's reported place current.
+	useEffect(() => {
+		rememberBrowserTimezone()
 	}, [])
 
 	return (

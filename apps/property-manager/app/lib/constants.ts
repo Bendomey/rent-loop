@@ -13,6 +13,7 @@ export const COMING_SOON_ROUTE = '/coming-soon'
 
 export const QUERY_KEYS = {
 	CURRENT_USER: 'current-user',
+	SESSIONS: 'sessions',
 	CLIENT_USER: 'client-user',
 	DOCUMENTS: 'documents',
 	PROPERTIES: 'properties',

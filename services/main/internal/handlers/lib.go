@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"net"
 	"net/http"
 	"strings"
 
@@ -24,23 +25,75 @@ func GetPopulateFields(r *http.Request) *[]string {
 	return populateFields
 }
 
-// ClientIPFromRequest resolves the caller's IP, preferring the proxy-set
-// X-Forwarded-For (we sit behind Fly's proxy, so RemoteAddr is the proxy).
-// Returns nil rather than an empty string so the column stays NULL when
-// nothing usable is present.
+// ClientIPFromRequest resolves the caller's IP.
+//
+// We sit behind Fly's proxy, so RemoteAddr is the proxy and a forwarded header
+// is the only way to see the real caller. That makes header handling security-
+// relevant rather than cosmetic: this value is stored on the session row and
+// shown on My Account → Sessions, where people decide whether access is theirs.
+//
+// Trust model — exactly one proxy hop (Fly's edge) sits in front of us:
+//
+//   - Fly-Client-IP is set by that proxy and overwrites whatever the client
+//     sent, so it is the one header a client cannot forge. Preferred.
+//   - X-Forwarded-For is a chain the client can seed. A caller sending
+//     "X-Forwarded-For: 8.8.8.8" gets "8.8.8.8, <their real ip>" once Fly
+//     appends. The LAST entry is the one our trusted proxy added; the first is
+//     whatever the client chose to claim. So we read from the right, not the
+//     left — the usual "take the leftmost" advice assumes you are counting
+//     hops through proxies you control, and is spoofable here.
+//   - RemoteAddr is the fallback for local development, where nothing is in
+//     front of us. It carries a port, which must be stripped.
+//
+// Candidates that don't parse as an IP are skipped rather than stored, so a
+// junk header can't poison the column or the geo lookup. Returns nil when
+// nothing usable is present, leaving the column NULL.
 func ClientIPFromRequest(r *http.Request) *string {
-	ip := r.Header.Get("X-Forwarded-For")
-	if ip == "" {
-		ip = r.RemoteAddr
-	} else if idx := strings.Index(ip, ","); idx != -1 {
-		// X-Forwarded-For is a comma-separated chain; the first entry is the
-		// original client.
-		ip = strings.TrimSpace(ip[:idx])
+	if ip := normaliseIP(r.Header.Get("Fly-Client-IP")); ip != "" {
+		return &ip
 	}
-	if ip == "" {
-		return nil
+
+	// Right-to-left: the rightmost entry is the one Fly appended.
+	if forwarded := r.Header.Get("X-Forwarded-For"); forwarded != "" {
+		parts := strings.Split(forwarded, ",")
+		for i := len(parts) - 1; i >= 0; i-- {
+			if ip := normaliseIP(parts[i]); ip != "" {
+				return &ip
+			}
+		}
 	}
-	return &ip
+
+	if ip := normaliseIP(r.Header.Get("X-Real-IP")); ip != "" {
+		return &ip
+	}
+
+	// Local development: no proxy, and RemoteAddr is "host:port".
+	if host, _, err := net.SplitHostPort(r.RemoteAddr); err == nil {
+		if ip := normaliseIP(host); ip != "" {
+			return &ip
+		}
+	}
+	if ip := normaliseIP(r.RemoteAddr); ip != "" {
+		return &ip
+	}
+
+	return nil
+}
+
+// normaliseIP trims a candidate and returns it only if it is a real IP
+// address. IPv6 values sometimes arrive bracketed ("[::1]"), which net.ParseIP
+// rejects, so those are unwrapped first.
+func normaliseIP(raw string) string {
+	candidate := strings.TrimSpace(raw)
+	if candidate == "" {
+		return ""
+	}
+	candidate = strings.TrimPrefix(candidate, "[")
+	candidate = strings.TrimSuffix(candidate, "]")
+	if net.ParseIP(candidate) == nil {
+		return ""
+	}
+	return candidate
 }
 
 // UserAgentFromRequest returns nil rather than an empty string so the column

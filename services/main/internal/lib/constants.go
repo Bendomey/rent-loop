@@ -18,6 +18,10 @@ type ClientUserFromToken struct {
 
 type UserFromToken struct {
 	ID string `json:"id"`
+	// SessionID is the sign-in this access token was minted for. Empty on
+	// tokens issued before sessions existed — those keep working until they
+	// expire, they just cannot identify themselves in the sessions list.
+	SessionID string `json:"session_id"`
 }
 
 const userTokenContextKey contextKey = "rentloop-user"

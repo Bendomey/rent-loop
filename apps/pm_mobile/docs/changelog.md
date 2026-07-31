@@ -1,5 +1,36 @@
 # Changelog
 
+## 2026-07-31 — Sessions page is real
+- **`api/session_api.dart`** — `getSessions()`, `revokeSession(id)`, `revokeOtherSessions()` against the self-scoped `/users/me/sessions` routes (no client_id: a session belongs to the person, not a workspace membership)
+- **`repository/models/session_model.dart`** — `SessionModel`, with almost every field nullable because the backend returns one only when it genuinely knows it. `displayName`/`displayContext` join what's present and omit what isn't, rather than filling gaps with placeholders
+- **`repository/providers/sessions_provider.dart`** + **`notifiers/auth/revoke_session_notifier.dart`** — query and mutation. Deliberately not keepAlive: the list goes stale the moment another device signs in or out
+- **`my_account/sessions_page.dart`** rewritten off the fixture — shimmer skeleton on first load only (`hasValue`/`isLoading`, not `.when()`), pull-to-refresh, and `ref.invalidate` after each revoke
+- The hub's "N signed-in devices" subtitle now watches the same provider, so it can't disagree with the page it opens
+- A client-reported location carries a "Reported by device" pill — `location_source: CLIENT` means spoofable, and this screen exists for spotting access that isn't yours
+- Revoke-all reports the count the **server** returns, not the local list length; the two differ if a session expired in between
+- Affected modules: `api/`, `repository/models|providers|notifiers/`, `modules/main/more/my_account/`
+
+## 2026-07-31 — Session metadata carries locale and a reported place
+- **`collectSessionMetadata` now sends `locale`** — `language` from `PlatformDispatcher`, and `timezone` (IANA, e.g. `Africa/Accra`) from the new **`flutter_timezone`** dependency. The backend derives a representative city from the zone, so a session shows a place without a permission prompt, a paid IP lookup, or any third-party call
+- **`app.name` is now sent.** A native client has no browser to name it, so without this the sessions list showed no client at all — only a version
+- Location is client-reported and the backend stamps it `location_source: CLIENT`, so the UI must present it as reported by the device, never as verified
+- The locale block is wrapped like the others: `flutter_timezone` has no test-host implementation and always throws there, which must degrade to "no locale" rather than failing a login. Covered by a regression test
+- Affected modules: `lib/src/lib/session_metadata.dart`, `pubspec.yaml`
+
+## 2026-07-30 — Home avatar opens My Account
+- **The manager avatar in Home's `_TopHeader` was inert** — a bare `RLAvatar` with no tap handling, even though it reads as the standard "go to your profile" affordance. Wrapped in a `GestureDetector` that pushes `/more/my-profile`, matching the notification button directly beside it (haptic → `context.mounted` guard → `context.push`)
+- Tapping it lands on `MyAccountScreen`, the same destination as More's profile card — one profile entry point, two ways in
+- **The `GestureDetector` needs `behavior: HitTestBehavior.opaque`** — `RLAvatar` paints itself with a `BoxDecoration`, and `RenderDecoratedBox.hitTestSelf` is false, so the default `deferToChild` made only the centred initials tappable and the avatar read as broken. This is the same reason `RLRow` sets it. Worth remembering for any future `GestureDetector` wrapped around a decoration-only widget — `RLIconBtn` has the same latent shape (its live area is just the icon glyph, not the full 38×38 box)
+- Affected modules: `modules/main/home/`
+
+## 2026-07-30 — My Account redesign (UI only)
+- **`more/my_profile.dart` deleted, replaced by the `more/my_account/` module** — the old screen was a flat, fully-hardcoded mock (name and email were string literals). The redesign mirrors the web portal's Settings › My Account: a hub listing three categories, each pushing its own page rather than one long scroll — Profile (photo, name, email) · Security (password, 2FA, delete account) · Sessions (signed-in devices, revoke one or all others)
+- **The route path `/more/my-profile` was kept**, now building `MyAccountScreen`, so `more/root.dart`'s profile card needed no change
+- **Real data is limited to identity and sign-out** — name/email/role come from `currentUserNotifierProvider`, and "Sign out of this device" calls the real `appStartupNotifierProvider.logout()`. Everything else is UI against `placeholder_data.dart`: the 4-device session list is a fixture (revoking filters local state, nothing is sent), and the email-verified badge / password-last-changed date are constants
+- **Two-factor, email updates and account deletion are deliberately unbuilt** — rather than shipping dialogs that can't submit, each control stays visible with a "Coming soon" pill and fires `showAccountComingSoon(ref, feature)`. This matches the web portal, where the same three were parked in the same pass
+- **New shared pieces**: `sheets.dart`'s `_AccountSheet` chrome follows `properties/edit_sheets.dart`'s `_PSSheet` convention (drag handle, title/desc, scrolling body, footer); `_PasswordMeter` ports the web `PwMeter` scoring verbatim; `widgets.dart`'s `AccountField` is the label-above/value+action-below row used by Profile and Security
+- Affected modules: `modules/main/more/` (new `my_account/`, `my_profile.dart` removed), `navigation/routes.dart` (import + builder)
+
 ## 2026-07-30 — Money always shows two decimals; login email normalised
 - **`formatCedis(num)` added to `lib/money.dart`** — thousands separators and always two decimals. Converting pesewas → cedis is arithmetic (`pesewasToCedis`); deciding how the result *looks* now has exactly one home instead of three divergent ones
 - **`RLMoney` was rounding to whole cedis** (`v.round()`), so a rent of 600050 pesewas displayed as `6,001` — both decimal-less and *wrong by half a cedi*. It now delegates to `formatCedis`. This is the visible change: rent figures on the lease hero card, start-lease sheet, unit detail and property detail (plus the seed-backed home/booking/invoice totals) go from `6,000` to `6,000.00`

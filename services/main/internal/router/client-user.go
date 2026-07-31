@@ -51,6 +51,12 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 				r.Patch("/me", handlers.UserHandler.UpdateMe)
 				r.Patch("/me/password", handlers.UserHandler.UpdatePassword)
 				r.Post("/reset-password", handlers.UserHandler.ResetPassword)
+				r.Get("/me/sessions", handlers.SessionHandler.ListSessions)
+				r.Delete("/me/sessions/{session_id}", handlers.SessionHandler.RevokeSession)
+				r.Post(
+					"/me/sessions:revoke-others",
+					handlers.SessionHandler.RevokeOtherSessions,
+				)
 			})
 
 			// user-scoped routes (no client_id needed in URL)

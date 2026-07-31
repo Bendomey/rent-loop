@@ -7,6 +7,7 @@ type Repository struct {
 	ClientApplicationRepository            ClientApplicationRepository
 	UserRepository                         UserRepository
 	RefreshTokenRepository                 RefreshTokenRepository
+	SessionRepository                      SessionRepository
 	ClientUserRepository                   ClientUserRepository
 	ClientRepository                       ClientRepository
 	PropertyRepository                     PropertyRepository
@@ -44,6 +45,7 @@ func NewRepository(db *gorm.DB) Repository {
 	clientApplicationRepository := NewClientApplicationRepository(db)
 	userRepository := NewUserRepository(db)
 	refreshTokenRepository := NewRefreshTokenRepository(db)
+	sessionRepository := NewSessionRepository(db)
 	clientUserRepository := NewClientUserRepository(db)
 	clientRepository := NewClientRepository(db)
 	propertyRepository := NewPropertyRepository(db)
@@ -80,6 +82,7 @@ func NewRepository(db *gorm.DB) Repository {
 		ClientApplicationRepository:            clientApplicationRepository,
 		UserRepository:                         userRepository,
 		RefreshTokenRepository:                 refreshTokenRepository,
+		SessionRepository:                      sessionRepository,
 		ClientUserRepository:                   clientUserRepository,
 		ClientRepository:                       clientRepository,
 		PropertyRepository:                     propertyRepository,

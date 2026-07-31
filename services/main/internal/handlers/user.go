@@ -99,7 +99,11 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 type RefreshTokenRequest struct {
-	RefreshToken string `json:"refresh_token" validate:"required" example:"3f2504e0-4f89-11d3-9a0c-0305e82c3301:sSx1"`
+	RefreshToken string `json:"refresh_token"      validate:"required" example:"3f2504e0-4f89-11d3-9a0c-0305e82c3301:sSx1"`
+	// Metadata optionally refreshes the session's device and reported location
+	// (see lib.SessionDeviceInfo). Omit it and the previously recorded values
+	// are left untouched. Same untrusted, display-only blob as on login.
+	Metadata json.RawMessage `json:"metadata,omitempty"                                                                         swaggertype:"object"`
 }
 
 // RefreshToken godoc
@@ -127,7 +131,22 @@ func (h *UserHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rotated, err := h.refreshTokenService.Rotate(r.Context(), body.RefreshToken)
+	// Same guard as login: oversized or malformed metadata is dropped rather
+	// than rejected, since it is cosmetic and failing a token refresh over a
+	// display string would sign the user out.
+	var refreshMetadata *datatypes.JSON
+	if len(body.Metadata) > 0 && len(body.Metadata) <= maxSessionMetadataBytes &&
+		json.Valid(body.Metadata) {
+		decoded := datatypes.JSON(body.Metadata)
+		refreshMetadata = &decoded
+	}
+
+	rotated, err := h.refreshTokenService.Rotate(r.Context(), services.RotateRefreshTokenInput{
+		Presented: body.RefreshToken,
+		UserAgent: UserAgentFromRequest(r),
+		IPAddress: ClientIPFromRequest(r),
+		Metadata:  refreshMetadata,
+	})
 	if err != nil {
 		HandleErrorResponse(w, err)
 		return
@@ -136,6 +155,7 @@ func (h *UserHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	accessTTL := time.Duration(h.appCtx.Config.AuthTokenTTL.AccessTokenHours) * time.Hour
 	token, signErr := signjwt.SignJWT(jwt.MapClaims{
 		"id":  rotated.UserID,
+		"sid": rotated.SessionID,
 		"exp": time.Now().Add(accessTTL).Unix(),
 	}, h.appCtx.Config.TokenSecrets.ClientUserSecret)
 	if signErr != nil {

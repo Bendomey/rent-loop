@@ -18,6 +18,7 @@ func updateMigration(db *gorm.DB) error {
 		&models.ClientApplication{},
 		&models.Client{},
 		&models.User{},
+		&models.Session{},
 		&models.RefreshToken{},
 		&models.ClientUser{},
 		&models.PaymentAccount{},
@@ -124,6 +125,7 @@ func ServiceAutoMigration(db *gorm.DB) error {
 		jobs.AddLeaseRemindersSent(),
 		jobs.FixLeaseMoveOutDateFrequencyMismatch(),
 		jobs.AddPropertyArchiveFields(),
+		jobs.SplitSessionsFromRefreshTokens(),
 	})
 	if err := m.Migrate(); err != nil {
 		return fmt.Errorf("[Migration.Migrate]: %v", err)
