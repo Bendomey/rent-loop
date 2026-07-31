@@ -15,6 +15,13 @@ import 'package:rentloop_manager/src/shared/widgets.dart';
 /// Backed by `GET /users/me/sessions`. Revoking is immediate server-side: the
 /// auth middleware checks the session on every request, so a signed-out device
 /// stops working at once rather than when its access token expires.
+const _pagePadding = EdgeInsets.fromLTRB(
+  RLTokens.gutter,
+  0,
+  RLTokens.gutter,
+  40,
+);
+
 class AccountSessionsPage extends ConsumerWidget {
   const AccountSessionsPage({super.key});
 
@@ -29,9 +36,12 @@ class AccountSessionsPage extends ConsumerWidget {
     }
 
     if (sessionsAsync.hasError && !sessionsAsync.hasValue) {
-      return RLSectionError(
-        title: "Couldn't load your sessions",
-        onRetry: () => ref.invalidate(sessionsProvider),
+      return Padding(
+        padding: _pagePadding,
+        child: RLSectionError(
+          title: "Couldn't load your sessions",
+          onRetry: () => ref.invalidate(sessionsProvider),
+        ),
       );
     }
 
@@ -43,7 +53,9 @@ class AccountSessionsPage extends ConsumerWidget {
       onRefresh: () => ref.refresh(sessionsProvider.future),
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: EdgeInsets.zero,
+        // This page scrolls itself, so it owns the gutter the account shell
+        // applies to the non-scrolling pages.
+        padding: _pagePadding,
         children: [
           const SizedBox(height: 8),
           RLCard(
@@ -318,7 +330,7 @@ class _SessionsSkeleton extends StatelessWidget {
       highlightColor: RLTokens.paper,
       child: ListView(
         physics: const NeverScrollableScrollPhysics(),
-        padding: EdgeInsets.zero,
+        padding: _pagePadding,
         children: [
           const SizedBox(height: 8),
           _skeletonBlock(height: 118),

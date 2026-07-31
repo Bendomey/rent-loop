@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-07-31 — Fix: Sessions page failed layout on open
+- The account shell (`my_account/root.dart`) wrapped every sub-page in a `SingleChildScrollView`. That suits Profile and Security, which are plain `Column`s, but the Sessions page brings its own `ListView` for pull-to-refresh — a scrollable inside a scrollable, so the inner viewport got unbounded height and threw on layout the moment the page opened. Both the loaded list and the shimmer skeleton hit it.
+- `_AccountSubPage` gained a `scrollable` flag (default `true`); Sessions is pushed with `scrollable: false` and now owns the gutter padding itself, so its `RefreshIndicator` works as intended.
+- Added `test/modules/main/more/my_account/sessions_page_test.dart` — opens Sessions from the hub and asserts no layout exception, loaded and loading. Both cases reproduce the crash when the shell fix is reverted.
+- Modules affected: `modules/main/more/my_account/` (`root.dart`, `sessions_page.dart`)
+
 ## 2026-07-31 — Sessions page is real
 - **`api/session_api.dart`** — `getSessions()`, `revokeSession(id)`, `revokeOtherSessions()` against the self-scoped `/users/me/sessions` routes (no client_id: a session belongs to the person, not a workspace membership)
 - **`repository/models/session_model.dart`** — `SessionModel`, with almost every field nullable because the backend returns one only when it genuinely knows it. `displayName`/`displayContext` join what's present and omit what isn't, rather than filling gaps with placeholders

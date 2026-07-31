@@ -170,10 +170,13 @@ class MyAccountScreen extends ConsumerWidget {
                             ? 'Signed-in devices'
                             : '$sessionCount signed-in ${sessionCount == 1 ? 'device' : 'devices'}',
                         last: true,
+                        // Owns its own ListView for pull-to-refresh, so the
+                        // shell must not wrap it in a second scroll view.
                         onTap: () => _push(
                           context,
                           'Sessions',
                           const AccountSessionsPage(),
+                          scrollable: false,
                         ),
                       ),
                     ],
@@ -200,10 +203,16 @@ class MyAccountScreen extends ConsumerWidget {
     );
   }
 
-  static void _push(BuildContext context, String title, Widget body) {
+  static void _push(
+    BuildContext context,
+    String title,
+    Widget body, {
+    bool scrollable = true,
+  }) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => _AccountSubPage(title: title, body: body),
+        builder: (_) =>
+            _AccountSubPage(title: title, body: body, scrollable: scrollable),
       ),
     );
   }
@@ -216,11 +225,21 @@ class MyAccountScreen extends ConsumerWidget {
 }
 
 /// Shared chrome for the three category pages.
+///
+/// Most bodies are plain [Column]s and lean on the scroll view here. A body
+/// that scrolls itself (pull-to-refresh needs its own [ListView]) must pass
+/// `scrollable: false` — nesting one scrollable inside another leaves the
+/// inner one with unbounded height and fails layout.
 class _AccountSubPage extends StatelessWidget {
-  const _AccountSubPage({required this.title, required this.body});
+  const _AccountSubPage({
+    required this.title,
+    required this.body,
+    this.scrollable = true,
+  });
 
   final String title;
   final Widget body;
+  final bool scrollable;
 
   @override
   Widget build(BuildContext context) {
@@ -236,15 +255,17 @@ class _AccountSubPage extends StatelessWidget {
             },
           ),
           Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(
-                RLTokens.gutter,
-                0,
-                RLTokens.gutter,
-                40,
-              ),
-              child: body,
-            ),
+            child: scrollable
+                ? SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(
+                      RLTokens.gutter,
+                      0,
+                      RLTokens.gutter,
+                      40,
+                    ),
+                    child: body,
+                  )
+                : body,
           ),
         ],
       ),
