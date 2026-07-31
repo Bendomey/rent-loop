@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 
 import 'package:rentloop_manager/src/constants.dart';
 import 'package:rentloop_manager/src/lib/auth_event_bus.dart';
+import 'package:rentloop_manager/src/lib/session_metadata.dart';
 import 'package:rentloop_manager/src/lib/token_manager.dart';
 
 abstract class AbstractApi {
@@ -90,12 +91,32 @@ abstract class AbstractApi {
     if (refreshToken == null) return false;
 
     try {
+      // Re-describe the device on every refresh so the session's reported
+      // place follows it. Collected fresh rather than cached: the timezone is
+      // the one field that genuinely moves, when someone travels or crosses a
+      // DST boundary.
+      //
+      // Bounded and swallowed — collectSessionMetadata never throws, but a
+      // wedged platform channel must not be able to stall a token refresh and
+      // with it every request behind it. Cosmetic data is never worth that.
+      Map<String, dynamic>? metadata;
+      try {
+        metadata = await collectSessionMetadata().timeout(
+          const Duration(seconds: 2),
+        );
+      } catch (_) {
+        metadata = null;
+      }
+
       // authRequired: false — this call IS the credential, and routing it
       // through the 401 branch above would recurse.
       final response = await _send(
         method: 'POST',
         path: '/api/v1/admin/users/refresh',
-        body: {'refresh_token': refreshToken},
+        body: {
+          'refresh_token': refreshToken,
+          if (metadata != null) 'metadata': metadata,
+        },
         authRequired: false,
       );
       if (response.statusCode >= 400) return false;

@@ -262,3 +262,27 @@ func TestResolveDeviceFallsBackToModelCode(t *testing.T) {
 		t.Errorf("DeviceName = %q, want the model code", deref(got.DeviceName))
 	}
 }
+
+func TestResolveDeviceTimezoneOnlyRefreshPayload(t *testing.T) {
+	// What the web portal sends on token refresh: the browser's zone alone,
+	// forwarded from a cookie because the refresh runs server-side. It must
+	// still produce a place, and must not need any other field to do so.
+	metadata := jsonBlob(t, `{"locale":{"timezone":"Europe/London"}}`)
+
+	got := ResolveDevice(metadata, nil)
+
+	if deref(got.Timezone) != "Europe/London" {
+		t.Errorf("Timezone = %q", deref(got.Timezone))
+	}
+	if deref(got.LocationCity) != "London" {
+		t.Errorf("LocationCity = %q, want London", deref(got.LocationCity))
+	}
+	if deref(got.LocationSource) != LocationSourceClient {
+		t.Errorf("LocationSource = %q", deref(got.LocationSource))
+	}
+	// Device fields stay empty — a refresh payload carrying only a zone must
+	// not blank out what login recorded. Rotate only writes location columns.
+	if got.DeviceName != nil || got.OS != nil {
+		t.Errorf("device fields should stay empty, got %+v", got)
+	}
+}

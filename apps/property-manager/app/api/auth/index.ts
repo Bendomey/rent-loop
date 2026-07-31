@@ -79,6 +79,12 @@ export const getCurrentUser = async (
 
 export interface RefreshTokenInput {
 	refresh_token: string
+	/**
+	 * Optionally re-describes the device, same untrusted display-only blob as
+	 * on login. Omitted keys leave the recorded values untouched, so a partial
+	 * object (just the timezone, say) updates only the reported location.
+	 */
+	metadata?: unknown
 }
 
 /**

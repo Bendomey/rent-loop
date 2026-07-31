@@ -9,6 +9,7 @@ import { authTokenContext } from './auth.token.server'
 import { USER_CACHE_KEY, userCache } from './cache.server'
 import { environmentVariables } from './env.server'
 import { getCurrentUser, refreshAuthToken } from '~/api/auth'
+import { timezoneFromRequest } from '~/lib/session-timezone'
 
 export const authMiddleware: MiddlewareFunction<Response> = async (
 	{ request, context },
@@ -46,8 +47,19 @@ export const authMiddleware: MiddlewareFunction<Response> = async (
 			return endSession()
 		}
 
+		// The browser stashes its IANA zone in a cookie precisely so this
+		// server-side path can forward it — reading the zone here would
+		// resolve to the Fly host, not the person. Absent cookie means we
+		// simply send no metadata and the recorded place stands.
+		const browserTimezone = timezoneFromRequest(request)
+
 		const pair = await refreshAuthToken(
-			{ refresh_token: refreshToken },
+			{
+				refresh_token: refreshToken,
+				...(browserTimezone
+					? { metadata: { locale: { timezone: browserTimezone } } }
+					: {}),
+			},
 			{ baseUrl },
 		)
 		if (!pair) {
