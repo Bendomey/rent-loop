@@ -23,7 +23,7 @@ import (
 // start being pruned.
 func SplitSessionsFromRefreshTokens() *gormigrate.Migration {
 	return &gormigrate.Migration{
-		ID: "202607300001_SPLIT_SESSIONS_FROM_REFRESH_TOKENS",
+		ID: "202607310001_SPLIT_SESSIONS_FROM_REFRESH_TOKENS_V2",
 		Migrate: func(db *gorm.DB) error {
 			// The sessions table itself is created by AutoMigrate from the
 			// models.Session struct, which runs before these jobs.

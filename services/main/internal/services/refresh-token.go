@@ -211,8 +211,9 @@ func (s *refreshTokenService) Issue(
 		})
 	}
 
+	sessionID := session.ID.String()
 	token := &models.RefreshToken{
-		SessionID: session.ID.String(),
+		SessionID: &sessionID,
 		TokenHash: lib.HashRefreshTokenSecret(secret),
 	}
 	if createErr := s.repo.Create(ctx, token); createErr != nil {
@@ -289,12 +290,20 @@ func (s *refreshTokenService) Rotate(
 	// away. That is usually theft — but it is also what one honest client looks
 	// like when two of its own requests refresh at the same instant. Check the
 	// grace window before reaching for the cascade.
+	// A token with no session predates the split, or could not be attributed
+	// during the backfill. It cannot be rotated — there is nothing to slide or
+	// revoke — so it reads as invalid, which forces a clean re-login.
+	if row.SessionID == nil {
+		tx.Rollback()
+		return nil, invalidRefreshToken()
+	}
+
 	if row.RevokedAt != nil {
 		if entry, hit := s.recallReplacement(ctx, row.TokenHash); hit {
 			// Same answer as the first caller got. Nothing is written: no new
 			// row, no re-rotation, no revocation.
 			tx.Rollback()
-			session, sessionErr := s.sessionRepo.GetByID(ctx, row.SessionID)
+			session, sessionErr := s.sessionRepo.GetByID(ctx, *row.SessionID)
 			if sessionErr != nil {
 				return nil, invalidRefreshToken()
 			}
@@ -309,7 +318,7 @@ func (s *refreshTokenService) Rotate(
 		// Outside the window: a genuine replay. End the whole session, not just
 		// this credential — the attacker is holding the live one.
 		if cascadeErr := s.killSession(
-			txCtx, row.SessionID, models.SessionRevokedByReuse, now,
+			txCtx, *row.SessionID, models.SessionRevokedByReuse, now,
 		); cascadeErr != nil {
 			tx.Rollback()
 			return nil, pkg.InternalServerError(cascadeErr.Error(), &pkg.RentLoopErrorParams{
@@ -332,7 +341,7 @@ func (s *refreshTokenService) Rotate(
 		return nil, invalidRefreshToken()
 	}
 
-	session, sessionErr := s.sessionRepo.GetByID(txCtx, row.SessionID)
+	session, sessionErr := s.sessionRepo.GetByID(txCtx, *row.SessionID)
 	if sessionErr != nil {
 		tx.Rollback()
 		if errors.Is(sessionErr, gorm.ErrRecordNotFound) {
@@ -363,8 +372,9 @@ func (s *refreshTokenService) Rotate(
 		})
 	}
 
+	replacementSessionID := session.ID.String()
 	replacement := &models.RefreshToken{
-		SessionID: session.ID.String(),
+		SessionID: &replacementSessionID,
 		TokenHash: lib.HashRefreshTokenSecret(newSecret),
 	}
 	if createErr := s.repo.Create(txCtx, replacement); createErr != nil {
@@ -479,7 +489,13 @@ func (s *refreshTokenService) Revoke(ctx context.Context, presented string) erro
 	}
 
 	now := time.Now()
-	if killErr := s.killSession(txCtx, row.SessionID, models.SessionRevokedByLogout, now); killErr != nil {
+	if row.SessionID == nil {
+		// Nothing to revoke; logout must still succeed silently.
+		tx.Rollback()
+		return nil
+	}
+
+	if killErr := s.killSession(txCtx, *row.SessionID, models.SessionRevokedByLogout, now); killErr != nil {
 		tx.Rollback()
 		return pkg.InternalServerError(killErr.Error(), &pkg.RentLoopErrorParams{
 			Err:      killErr,

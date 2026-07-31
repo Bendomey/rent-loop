@@ -15,7 +15,7 @@ import (
 type RefreshToken struct {
 	BaseModel
 
-	SessionID string `gorm:"not null;index"`
+	SessionID *string `gorm:"index"`
 	Session   Session
 
 	// TokenHash is unique purely as defence-in-depth against an implementation
