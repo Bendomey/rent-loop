@@ -21,13 +21,20 @@ MaintenanceRequestModel _fixture() => MaintenanceRequestModel(
   category: 'ELECTRICAL',
   priority: 'MEDIUM',
   status: 'RESOLVED',
-  unitId: 'unit1',
-  unit: MaintenanceUnitModel(
-    id: 'unit1',
-    name: "Domey's Residence",
-    slug: 'domeys-residence',
-    propertyId: _propertyId,
-  ),
+  propertyId: _propertyId,
+  assets: [
+    MaintenanceAssetModel(
+      id: 'asset1',
+      assetType: 'UNIT',
+      unitId: 'unit1',
+      unit: MaintenanceUnitModel(
+        id: 'unit1',
+        name: "Domey's Residence",
+        slug: 'domeys-residence',
+        propertyId: _propertyId,
+      ),
+    ),
+  ],
   leaseId: 'lease1',
   visibility: 'TENANT_VISIBLE',
   createdByClientUserId: 'm1',

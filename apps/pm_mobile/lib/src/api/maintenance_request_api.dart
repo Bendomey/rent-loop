@@ -24,7 +24,8 @@ class MaintenanceRequestApi extends AbstractApi {
   MaintenanceRequestApi({required super.tokenManager});
 
   static const _populate =
-      'Unit,AssignedWorker,AssignedWorker.User,AssignedManager,AssignedManager.User';
+      'Assets,Assets.Unit,Assets.PropertyBlock,AssignedWorker,'
+      'AssignedWorker.User,AssignedManager,AssignedManager.User';
 
   /// `GET .../maintenance-requests` — the cross-property "mobile" route
   /// (`ListAcrossProperties` on the backend), built specifically for an
@@ -94,7 +95,8 @@ class MaintenanceRequestApi extends AbstractApi {
   /// creator paths (absent from the board's [_populate]) drive the "opened
   /// by" attribution the detail hero shows.
   static const _detailPopulate =
-      'Unit,AssignedWorker,AssignedWorker.User,AssignedManager,'
+      'Assets,Assets.Unit,Assets.PropertyBlock,AssignedWorker,'
+      'AssignedWorker.User,AssignedManager,'
       'AssignedManager.User,CreatedByTenant,CreatedByClientUser.User';
 
   /// `GET .../properties/{propertyId}/maintenance-requests/{requestId}` — the
@@ -215,9 +217,9 @@ class MaintenanceRequestApi extends AbstractApi {
   /// `PATCH .../properties/{propertyId}/maintenance-requests/{requestId}/status`
   /// — this is a per-property route (unlike the cross-property list above),
   /// matching web's `useUpdateMaintenanceRequestStatus`. [propertyId] comes
-  /// from the request's own `unit.propertyId` (populated via the `Unit`
-  /// populate path above, backed by the backend fix that makes `property_id`
-  /// present on that nested object).
+  /// from the request's own `propertyId`, which the API returns directly — a
+  /// request can target several units and blocks, so there is no single nested
+  /// unit to read it from.
   Future<void> updateStatus({
     required String clientId,
     required String propertyId,
