@@ -1,7 +1,7 @@
 import {
+	ArrowLeftRight,
 	BadgeCheck,
 	Bell,
-	ChevronsUpDown,
 	CreditCard,
 	LogOut,
 	Map,
@@ -90,7 +90,7 @@ export function NavUser() {
 											</span>
 										</Badge>
 									</div>
-									<ChevronsUpDown className="ml-auto size-4" />
+									<ArrowLeftRight className="text-muted-foreground ml-auto size-4" />
 								</SidebarMenuButton>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent

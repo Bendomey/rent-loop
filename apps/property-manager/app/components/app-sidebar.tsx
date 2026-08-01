@@ -1,12 +1,10 @@
 import {
-	GalleryVerticalEnd,
-	Settings2,
+	Settings,
 	LifeBuoy,
 	Megaphone,
-	// PieChart,
 	House,
-	BookOpenText,
-	LayoutDashboard,
+	FileText,
+	LayoutGrid,
 } from 'lucide-react'
 import * as React from 'react'
 
@@ -31,7 +29,7 @@ const data = {
 			title: 'Overview',
 			isHome: true,
 			url: '/',
-			icon: LayoutDashboard,
+			icon: LayoutGrid,
 			id: 'tour-nav-overview',
 		},
 		// {
@@ -73,7 +71,7 @@ const data = {
 		{
 			title: 'Settings',
 			url: '/settings',
-			icon: Settings2,
+			icon: Settings,
 			id: 'tour-nav-settings',
 		},
 	],
@@ -89,7 +87,7 @@ const data = {
 		{
 			title: 'Changelog',
 			url: '/changelog',
-			icon: BookOpenText,
+			icon: FileText,
 		},
 	],
 }
@@ -103,19 +101,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 				<Link to="/" className="-m-1.5 ml-1 p-1.5">
 					{sidebarState.open ? (
 						<>
-							<div className="flex flex-row items-end">
-								<span className="text-4xl font-extrabold text-rose-700 dark:text-rose-500">
-									{APP_NAME.slice(0, 4)}
-								</span>
-								<span className="text-4xl font-extrabold">
-									{APP_NAME.slice(4)}
-								</span>
+							<div className="text-primary text-[27px] leading-none font-extrabold tracking-[-1px]">
+								{APP_NAME}
 							</div>
-							<span className="text-xs">Property Manager Portal</span>
+							<span className="text-foreground-soft mt-1 block text-[13px]">
+								Property Manager Portal
+							</span>
 						</>
 					) : (
-						<div>
-							<GalleryVerticalEnd className="mt-1 -ml-1 size-6 text-rose-600" />
+						/* collapsed: the brand mark — a crimson tile carrying the
+						   house glyph, mirroring the app icon */
+						<div className="bg-primary flex size-8 items-center justify-center rounded-lg">
+							<House className="size-[18px] text-white" />
 						</div>
 					)}
 				</Link>
