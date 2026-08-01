@@ -17,6 +17,8 @@ type PAYMENT_RAIL = 'MOMO' | 'BANK_TRANSFER' | 'OFFLINE' | 'CARD'
 interface Invoice {
 	id: string
 	code: string
+	property_id: Nullable<string>
+	property: Nullable<Property>
 	payer_type: 'TENANT' | 'TENANT_APPLICATION' | 'PROPERTY_OWNER'
 	payer_client_id: Nullable<string>
 	payer_client: Nullable<Client>
@@ -27,6 +29,8 @@ interface Invoice {
 	payee_type: 'PROPERTY_OWNER' | 'RENTLOOP'
 	payee_client_id: Nullable<string>
 	payee_client: Nullable<Client>
+	payee_tenant_id: Nullable<string>
+	payee_tenant: Nullable<Tenant>
 	context_type:
 		| 'TENANT_APPLICATION'
 		| 'LEASE_RENT'

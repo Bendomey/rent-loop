@@ -414,7 +414,6 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 				r.Get("/invoices", handlers.InvoiceHandler.ListInvoicesAcrossProperties)
 				r.Get("/maintenance-requests", handlers.MaintenanceRequestHandler.ListAcrossProperties)
 				r.Get("/expenses", handlers.ExpenseHandler.ListExpensesAcrossProperties)
-				r.Get("/insights/risk-properties", handlers.InsightsHandler.ListRiskProperties)
 				r.Get("/units", handlers.UnitHandler.ListUnitsAcrossProperties)
 				r.Get(
 					"/tenant-applications",

@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query'
 import { QUERY_KEYS } from '~/lib/constants'
 import { getQueryParams } from '~/lib/get-param'
 import { fetchClient } from '~/lib/transport'
@@ -368,3 +368,47 @@ const verifyOfflinePayment = async ({
 
 export const useVerifyOfflinePayment = () =>
 	useMutation({ mutationFn: verifyOfflinePayment })
+
+/**
+ * GET invoices across every property the caller can access (paginated).
+ * Callers own all params — pagination, filters, ordering, populate.
+ */
+const getInvoicesAcrossProperties = async (
+	clientId: string,
+	props: FetchMultipleDataInputParams<Record<string, unknown>>,
+) => {
+	try {
+		const params = getQueryParams<Record<string, unknown>>(props)
+		const response = await fetchClient<
+			ApiResponse<FetchMultipleDataResponse<Invoice>>
+		>(`/v1/admin/clients/${clientId}/invoices?${params.toString()}`)
+		return response.parsedBody.data
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+
+export const useGetInvoicesAcrossPropertiesInfinite = (
+	clientId: string,
+	query: FetchMultipleDataInputParams<Record<string, unknown>>,
+	enabled = true,
+) =>
+	useInfiniteQuery({
+		queryKey: [QUERY_KEYS.INVOICES, 'across-properties', clientId, query],
+		queryFn: ({ pageParam }: { pageParam: number }) =>
+			getInvoicesAcrossProperties(clientId, {
+				...query,
+				pagination: { ...query.pagination, page: pageParam },
+			}),
+		initialPageParam: 1,
+		getNextPageParam: (lastPage) =>
+			lastPage?.meta?.has_next_page ? lastPage.meta.page + 1 : undefined,
+		enabled: enabled && !!clientId,
+	})
