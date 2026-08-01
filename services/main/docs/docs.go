@@ -24125,6 +24125,9 @@ const docTemplate = `{
                 "priority": {
                     "type": "string"
                 },
+                "property": {
+                    "$ref": "#/definitions/transformations.OutputProperty"
+                },
                 "property_id": {
                     "type": "string"
                 },

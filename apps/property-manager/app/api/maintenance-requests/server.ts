@@ -7,7 +7,7 @@ export const getMaintenanceRequestForServer = async (
 ) => {
 	try {
 		const response = await fetchServer<ApiResponse<MaintenanceRequest>>(
-			`${apiConfig.baseUrl}/v1/admin/clients/${clientId}/properties/${props.property_id}/maintenance-requests/${props.request_id}?populate=Unit,AssignedWorker,AssignedWorker.User,AssignedManager,AssignedManager.User,CreatedByTenant,CreatedByClientUser.User`,
+			`${apiConfig.baseUrl}/v1/admin/clients/${clientId}/properties/${props.property_id}/maintenance-requests/${props.request_id}?populate=Assets,Assets.Unit,Assets.PropertyBlock,AssignedWorker,AssignedWorker.User,AssignedManager,AssignedManager.User,CreatedByTenant,CreatedByClientUser.User`,
 			{ ...apiConfig },
 		)
 		return response.parsedBody.data

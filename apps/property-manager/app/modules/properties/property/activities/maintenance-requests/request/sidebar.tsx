@@ -500,15 +500,28 @@ export function MaintenanceRequestSidebar({ mr, propertyId }: SidebarProps) {
 								</SelectContent>
 							</Select>
 						</SidebarRow>
-						{mr.unit && (
-							<SidebarRow label="Unit">
-								<Link
-									to={`/properties/${propertyId}/assets/units/${mr.unit_id}`}
-									className="text-xs text-blue-600 hover:underline dark:text-blue-400"
-								>
-									{mr.unit.name}
-								</Link>
-							</SidebarRow>
+						{mr.assets?.map((asset) =>
+							asset.asset_type === 'UNIT' ? (
+								<SidebarRow key={asset.id} label="Unit">
+									<Link
+										to={`/properties/${propertyId}/assets/units/${asset.unit_id}`}
+										className="text-xs text-blue-600 hover:underline dark:text-blue-400"
+									>
+										{asset.unit?.name ?? 'View unit'}
+									</Link>
+								</SidebarRow>
+							) : (
+								// No block detail route exists — only list, new and
+								// $blockId/edit — so link to the list.
+								<SidebarRow key={asset.id} label="Block">
+									<Link
+										to={`/properties/${propertyId}/assets/blocks`}
+										className="text-xs text-blue-600 hover:underline dark:text-blue-400"
+									>
+										{asset.property_block?.name ?? 'View block'}
+									</Link>
+								</SidebarRow>
+							),
 						)}
 						{mr.lease_id && (
 							<SidebarRow label="Lease">

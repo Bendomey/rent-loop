@@ -1,8 +1,18 @@
+interface MaintenanceRequestAsset {
+	id: string
+	asset_type: 'UNIT' | 'BLOCK'
+	unit_id?: string
+	unit?: PropertyUnit
+	property_block_id?: string
+	property_block?: PropertyBlock
+}
+
 interface MaintenanceRequest {
 	id: string
 	code: string
-	unit_id: string
-	unit?: PropertyUnit
+	property_id: string
+	property?: Property
+	assets: MaintenanceRequestAsset[]
 	lease_id: Nullable<string>
 	created_by_tenant_id: Nullable<string>
 	created_by_tenant?: Nullable<Tenant>
@@ -65,7 +75,6 @@ interface MaintenanceRequestActivityLog {
 	performed_by_tenant_id: Nullable<string>
 	performed_by_tenant: Nullable<Tenant>
 	metadata: Nullable<Record<string, unknown>>
-	metadata: Nullable<Record<string, unknown>>
 	created_at: string
 	updated_at: string
 }
@@ -101,6 +110,7 @@ interface FetchMaintenanceRequestFilter {
 	tenant_id?: string
 	property_id?: string
 	unit_id?: string
+	block_id?: string
 	assigned_worker_id?: string
 	assigned_manager_id?: string
 }

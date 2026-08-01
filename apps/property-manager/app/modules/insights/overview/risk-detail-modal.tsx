@@ -40,6 +40,19 @@ function fullName(
 	return `${safeString(first)} ${safeString(last)}`.trim()
 }
 
+// A request can cover several units and blocks, so the subtitle names the first
+// asset and counts the rest rather than pretending there is a single unit.
+function assetSummary(assets: MaintenanceRequestAsset[] | undefined): string {
+	const first = assets?.[0]
+	if (!first) return ''
+	const label =
+		first.asset_type === 'UNIT'
+			? (first.unit?.name ?? 'Unit')
+			: (first.property_block?.name ?? 'Block')
+	const rest = (assets?.length ?? 0) - 1
+	return rest > 0 ? `${label} +${rest}` : label
+}
+
 function useRiskRecords(
 	type: InsightsRiskType,
 	open: boolean,
@@ -93,7 +106,7 @@ function useRiskRecords(
 		clientId,
 		{
 			pagination: { page: 1, per: PAGE_SIZE },
-			populate: ['Unit', 'Unit.Property'],
+			populate: ['Property', 'Assets', 'Assets.Unit', 'Assets.PropertyBlock'],
 			filters: {
 				status: ['NEW', 'IN_PROGRESS', 'IN_REVIEW'],
 				property_id: propertyId,
@@ -154,10 +167,13 @@ function useRiskRecords(
 			for (const request of page?.rows ?? []) {
 				records.push({
 					id: request.id,
-					propertyId: safeString(request.unit?.property_id),
-					propertyName: safeString(request.unit?.property?.name),
+					// The request carries its own property now, so this no longer
+					// depends on a unit being populated — a block-only request has
+					// no unit at all.
+					propertyId: safeString(request.property_id),
+					propertyName: safeString(request.property?.name),
 					title: request.title,
-					subtitle: safeString(request.unit?.name),
+					subtitle: assetSummary(request.assets),
 					value: request.priority,
 				})
 			}

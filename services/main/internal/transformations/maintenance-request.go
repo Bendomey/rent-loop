@@ -10,6 +10,7 @@ type AdminOutputMaintenanceRequest struct {
 	ID                    string                          `json:"id"`
 	Code                  string                          `json:"code"`
 	PropertyID            string                          `json:"property_id"`
+	Property              OutputProperty                  `json:"property,omitempty"`
 	Assets                []OutputMaintenanceRequestAsset `json:"assets"`
 	LeaseID               *string                         `json:"lease_id,omitempty"`
 	CreatedByTenantID     *string                         `json:"created_by_tenant_id,omitempty"`
@@ -106,6 +107,7 @@ func DBMaintenanceRequestToRest(mr *models.MaintenanceRequest) any {
 		"id":                        mr.ID.String(),
 		"code":                      mr.Code,
 		"property_id":               mr.PropertyID,
+		"property":                  DBPropertyToRest(&mr.Property),
 		"assets":                    assets,
 		"lease_id":                  mr.LeaseID,
 		"created_by_tenant_id":      mr.CreatedByTenantID,

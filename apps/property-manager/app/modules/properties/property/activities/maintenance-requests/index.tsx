@@ -96,6 +96,7 @@ export function PropertyActivitiesMaintenanceRequestsModule() {
 	const assignedWorkerId = searchParams.get('assigned_worker') ?? undefined
 	const assignedManagerId = searchParams.get('assigned_manager') ?? undefined
 	const unitId = searchParams.get('unit') ?? undefined
+	const blockId = searchParams.get('block') ?? undefined
 
 	const columnParams = (status: MaintenanceRequestStatus) => ({
 		filters: {
@@ -105,10 +106,13 @@ export function PropertyActivitiesMaintenanceRequestsModule() {
 			assigned_worker_id: assignedWorkerId,
 			assigned_manager_id: assignedManagerId,
 			unit_id: unitId,
+			block_id: blockId,
 		},
 		pagination: { page: 1, per: 50 },
 		populate: [
-			'Unit',
+			'Assets',
+			'Assets.Unit',
+			'Assets.PropertyBlock',
 			'AssignedWorker',
 			'AssignedWorker.User',
 			'AssignedManager',
