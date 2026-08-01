@@ -2,9 +2,9 @@ import { useQueryClient } from '@tanstack/react-query'
 import { LogOut, TriangleAlert } from 'lucide-react'
 import type { Dispatch, SetStateAction } from 'react'
 import { toast } from 'sonner'
-import { AccountIconTile } from './account-ui'
 import { deviceIcon } from './device-icon'
 import { useRevokeOtherSessions, useRevokeSession } from '~/api/sessions'
+import { SettingsIconTile } from '~/components/blocks/settings-ui'
 import {
 	AlertDialog,
 	AlertDialogCancel,
@@ -77,7 +77,7 @@ export function SignOutSessionModal({ session, setSession }: SignOutOneProps) {
 
 				{session ? (
 					<div className="flex items-center gap-3.5 rounded-xl border p-3.5">
-						<AccountIconTile icon={deviceIcon(session.device_kind)} />
+						<SettingsIconTile icon={deviceIcon(session.device_kind)} />
 						<div className="min-w-0">
 							<div className="truncate text-sm font-semibold">
 								{describeDevice(session)}

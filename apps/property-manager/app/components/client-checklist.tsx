@@ -48,7 +48,7 @@ export function ClientChecklist({
 		<Dialog>
 			<form>
 				<DialogTrigger asChild>
-					<Alert className="mx-5 mt-4 w-full cursor-pointer border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-50">
+					<Alert className="mx-5 mt-4 w-auto cursor-pointer border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-50">
 						<AlertTriangleIcon />
 						<AlertTitle>Complete your checklist</AlertTitle>
 						<AlertDescription>

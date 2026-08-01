@@ -7,7 +7,7 @@
  *
  * Three actions are built but not released yet — two-factor auth, email
  * updates and account deletion. Their controls stay visible and toast via
- * comingSoon() (components/account-ui.tsx) instead of opening anything.
+ * comingSoon() (~/components/blocks/settings-ui) instead of opening anything.
  * The dialogs are parked, not deleted, ready to re-wire when each lands:
  *   - components/enable-two-factor.tsx (uses the setup key below)
  *   - components/delete-account.tsx
