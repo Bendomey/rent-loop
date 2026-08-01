@@ -48,6 +48,7 @@ func updateMigration(db *gorm.DB) error {
 		&models.MaintenanceRequest{},
 		&models.MaintenanceRequestActivityLog{},
 		&models.MaintenanceRequestComment{},
+		&models.MaintenanceRequestAsset{},
 		&models.Expense{},
 		&models.Agreement{},
 		&models.AgreementAcceptance{},
@@ -126,6 +127,7 @@ func ServiceAutoMigration(db *gorm.DB) error {
 		jobs.FixLeaseMoveOutDateFrequencyMismatch(),
 		jobs.AddPropertyArchiveFields(),
 		jobs.SplitSessionsFromRefreshTokens(),
+		jobs.AddMaintenanceRequestAssets(),
 	})
 	if err := m.Migrate(); err != nil {
 		return fmt.Errorf("[Migration.Migrate]: %v", err)

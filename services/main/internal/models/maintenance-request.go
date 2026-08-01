@@ -15,8 +15,10 @@ type MaintenanceRequest struct {
 	BaseModelSoftDelete
 	Code string `gorm:"not null;uniqueIndex;"` // unique maintenance request code
 
-	UnitID string `gorm:"not null;index;"`
-	Unit   Unit
+	PropertyID string `gorm:"not null;index;"`
+	Property   Property
+
+	Assets []MaintenanceRequestAsset
 
 	// should only exist if user created it
 	LeaseID *string
@@ -70,6 +72,24 @@ func (mr *MaintenanceRequest) BeforeCreate(tx *gorm.DB) error {
 	}
 	mr.Code = *uniqueCode
 	return nil
+}
+
+// MaintenanceRequestAsset links a maintenance request to one asset it concerns.
+// Exactly one of UnitID / PropertyBlockID is set, matching AssetType. That rule
+// is enforced by a CHECK constraint added in the migration, because the Go type
+// alone cannot express it.
+type MaintenanceRequestAsset struct {
+	BaseModelSoftDelete
+	MaintenanceRequestID string `gorm:"not null;index;"`
+	MaintenanceRequest   MaintenanceRequest
+
+	AssetType string `gorm:"not null;index;"` // UNIT | BLOCK
+
+	UnitID *string
+	Unit   *Unit
+
+	PropertyBlockID *string
+	PropertyBlock   *PropertyBlock
 }
 
 type MaintenanceRequestComment struct {

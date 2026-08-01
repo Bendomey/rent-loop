@@ -856,8 +856,14 @@ definitions:
         items:
           type: string
         type: array
+      block_ids:
+        items:
+          type: string
+        type: array
       category:
         type: string
+      create_separate_requests:
+        type: boolean
       description:
         type: string
       priority:
@@ -869,8 +875,13 @@ definitions:
         type: string
       title:
         type: string
-      unit_id:
-        type: string
+      unit_ids:
+        description: |-
+          At least one of UnitIDs / BlockIDs must be non-empty. That rule cannot be
+          expressed in struct tags, so the service enforces it.
+        items:
+          type: string
+        type: array
       visibility:
         enum:
         - TENANT_VISIBLE
@@ -881,7 +892,6 @@ definitions:
     - description
     - priority
     - title
-    - unit_id
     - visibility
     type: object
   handlers.CreateOfflinePaymentRequest:
@@ -2616,6 +2626,10 @@ definitions:
         items:
           $ref: '#/definitions/transformations.OutputMaintenanceActivityLog'
         type: array
+      assets:
+        items:
+          $ref: '#/definitions/transformations.OutputMaintenanceRequestAsset'
+        type: array
       assigned_manager:
         $ref: '#/definitions/transformations.OutputClientUser'
       assigned_manager_id:
@@ -2658,6 +2672,8 @@ definitions:
         type: string
       priority:
         type: string
+      property_id:
+        type: string
       resolved_at:
         type: string
       reviewed_at:
@@ -2667,10 +2683,6 @@ definitions:
       status:
         type: string
       title:
-        type: string
-      unit:
-        $ref: '#/definitions/transformations.AdminOutputUnit'
-      unit_id:
         type: string
       updated_at:
         type: string
@@ -4313,6 +4325,10 @@ definitions:
         items:
           $ref: '#/definitions/transformations.OutputMaintenanceActivityLog'
         type: array
+      assets:
+        items:
+          $ref: '#/definitions/transformations.OutputMaintenanceRequestAsset'
+        type: array
       attachments:
         items:
           type: string
@@ -4337,6 +4353,8 @@ definitions:
         type: string
       priority:
         type: string
+      property_id:
+        type: string
       resolved_at:
         type: string
       started_at:
@@ -4345,11 +4363,20 @@ definitions:
         type: string
       title:
         type: string
-      unit:
-        $ref: '#/definitions/transformations.OutputUnit'
-      unit_id:
-        type: string
       updated_at:
+        type: string
+    type: object
+  transformations.OutputMaintenanceRequestAsset:
+    properties:
+      asset_type:
+        type: string
+      id:
+        type: string
+      property_block: {}
+      property_block_id:
+        type: string
+      unit: {}
+      unit_id:
         type: string
     type: object
   transformations.OutputMaintenanceRequestComment:
@@ -7707,6 +7734,12 @@ paths:
       - in: query
         name: assigned_worker_id
         type: string
+      - collectionFormat: multi
+        in: query
+        items:
+          type: string
+        name: block_id
+        type: array
       - in: query
         name: category
         type: string
@@ -12058,6 +12091,12 @@ paths:
       - in: query
         name: assigned_worker_id
         type: string
+      - collectionFormat: multi
+        in: query
+        items:
+          type: string
+        name: block_id
+        type: array
       - in: query
         name: category
         type: string
@@ -12166,7 +12205,11 @@ paths:
     post:
       consumes:
       - application/json
-      description: Create a new maintenance request (Admin)
+      description: |-
+        Create maintenance request(s) against one or more units and/or blocks (Admin).
+        Always responds with an array: one request normally, or one per selected asset
+        when create_separate_requests is true. A request covering more than one asset,
+        or any block, is forced to INTERNAL_ONLY.
       parameters:
       - description: Property ID
         in: path
@@ -12183,11 +12226,13 @@ paths:
       - application/json
       responses:
         "201":
-          description: Maintenance request created successfully
+          description: Maintenance request(s) created successfully
           schema:
             properties:
               data:
-                $ref: '#/definitions/transformations.AdminOutputMaintenanceRequest'
+                items:
+                  $ref: '#/definitions/transformations.AdminOutputMaintenanceRequest'
+                type: array
             type: object
         "400":
           description: Error occurred when creating maintenance request
@@ -12207,7 +12252,7 @@ paths:
             type: string
       security:
       - BearerAuth: []
-      summary: Create a maintenance request (Admin)
+      summary: Create maintenance request(s) (Admin)
       tags:
       - MaintenanceRequests
   /api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests/{maintenance_request_id}:

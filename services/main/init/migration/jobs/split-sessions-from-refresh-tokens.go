@@ -28,6 +28,30 @@ func SplitSessionsFromRefreshTokens() *gormigrate.Migration {
 			// The sessions table itself is created by AutoMigrate from the
 			// models.Session struct, which runs before these jobs.
 
+			// 0. Bail out if the split has already happened.
+			//
+			//    Two ways a database arrives here already in the target shape:
+			//    it ran this migration under its previous ID
+			//    (202607300001_SPLIT_SESSIONS_FROM_REFRESH_TOKENS, before the
+			//    ID was bumped to _V2), or it is brand new and AutoMigrate
+			//    built refresh_tokens straight from models.RefreshToken, which
+			//    no longer has UserID.
+			//
+			//    In both cases the body below would fail on refresh_tokens.user_id
+			//    — the very column step 5 drops — and take every later migration
+			//    down with it. The absence of that column IS the completion
+			//    marker, so detect it and no-op.
+			var legacyUserIDColumns int64
+			if err := db.Raw(`
+				SELECT count(*) FROM information_schema.columns
+				WHERE table_name = 'refresh_tokens' AND column_name = 'user_id'
+			`).Scan(&legacyUserIDColumns).Error; err != nil {
+				return err
+			}
+			if legacyUserIDColumns == 0 {
+				return nil
+			}
+
 			// 1. Add session_id to refresh_tokens, nullable for the backfill.
 			if err := db.Exec(
 				`ALTER TABLE refresh_tokens ADD COLUMN IF NOT EXISTS session_id UUID`,
