@@ -13,6 +13,9 @@ class ClientModel {
   final String? city;
   final String? region;
   final String? country;
+  final String? description;
+  @JsonKey(name: 'registration_number')
+  final String? registrationNumber;
   @JsonKey(name: 'support_email')
   final String? supportEmail;
   @JsonKey(name: 'support_phone')
@@ -23,6 +26,10 @@ class ClientModel {
   final String? idType;
   @JsonKey(name: 'id_number')
   final String? idNumber;
+  @JsonKey(name: 'id_expiry')
+  final String? idExpiry;
+  @JsonKey(name: 'id_document_url')
+  final String? idDocumentUrl;
   @JsonKey(name: 'created_at')
   final String? createdAt;
   @JsonKey(name: 'updated_at')
@@ -37,11 +44,15 @@ class ClientModel {
     this.city,
     this.region,
     this.country,
+    this.description,
+    this.registrationNumber,
     this.supportEmail,
     this.supportPhone,
     this.websiteUrl,
     this.idType,
     this.idNumber,
+    this.idExpiry,
+    this.idDocumentUrl,
     this.createdAt,
     this.updatedAt,
   });
