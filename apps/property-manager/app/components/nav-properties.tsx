@@ -1,4 +1,4 @@
-import { Eye, Frame, PlusCircleIcon } from 'lucide-react'
+import { ArrowRight, Building2, Plus } from 'lucide-react'
 import { Link } from 'react-router'
 
 import { PermissionGuard } from './permissions/permission-guard'
@@ -40,7 +40,7 @@ export function NavProperties() {
 			<PermissionGuard roles={['ADMIN', 'OWNER']}>
 				<Link to="/properties/new">
 					<SidebarGroupAction title="Add Properties">
-						<PlusCircleIcon /> <span className="sr-only">Add Property</span>
+						<Plus /> <span className="sr-only">Add Property</span>
 					</SidebarGroupAction>
 				</Link>
 			</PermissionGuard>
@@ -49,7 +49,7 @@ export function NavProperties() {
 					<SidebarMenuItem key={item.id}>
 						<SidebarMenuButton asChild>
 							<Link to={`/properties/${item?.property?.id}`}>
-								<Frame />
+								<Building2 />
 								<span>{item?.property?.name}</span>
 							</Link>
 						</SidebarMenuButton>
@@ -59,7 +59,7 @@ export function NavProperties() {
 					<SidebarMenuItem>
 						<Link to="/properties">
 							<SidebarMenuButton className="text-sidebar-foreground/70">
-								<Eye className="text-sidebar-foreground/70" />
+								<ArrowRight className="text-sidebar-foreground/70" />
 								<span className="text-xs">View all...</span>
 							</SidebarMenuButton>
 						</Link>

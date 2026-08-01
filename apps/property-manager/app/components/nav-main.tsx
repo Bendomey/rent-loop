@@ -109,7 +109,15 @@ export function NavMain({
 
 												return (
 													<SidebarMenuSubItem key={subItem.title}>
-														<SidebarMenuSubButton asChild isActive={isActive}>
+														<SidebarMenuSubButton
+														asChild
+														isActive={isActive}
+														className={
+															isActive
+																? 'bg-primary/8 text-primary hover:bg-primary/12 hover:text-primary font-bold'
+																: ''
+														}
+													>
 															<Link to={link}>
 																<span>{subItem.title}</span>
 																{subItem.isComingSoon ? (
@@ -155,7 +163,7 @@ export function NavMain({
 								id={item.id}
 								className={
 									isActive
-										? 'text-primary-foreground hover:text-primary-foreground bg-rose-600 hover:bg-rose-700 dark:text-white dark:hover:bg-rose-700'
+										? 'bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90 hover:text-sidebar-primary-foreground active:bg-sidebar-primary active:text-sidebar-primary-foreground font-bold'
 										: ''
 								}
 								tooltip={item.title}

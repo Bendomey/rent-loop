@@ -1,4 +1,4 @@
-import { Check, ChevronsUpDown, Frame, FrameIcon, Plus } from 'lucide-react'
+import { ArrowLeftRight, Building2, Check, Plus } from 'lucide-react'
 import * as React from 'react'
 import { Link, useParams } from 'react-router'
 
@@ -62,7 +62,7 @@ export function PropertySwitcher() {
 							className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground mx-auto"
 						>
 							<div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-								<FrameIcon className="size-4" />
+								<Building2 className="size-4" />
 							</div>
 							<div className="grid flex-1 text-left text-sm leading-tight">
 								<span className="truncate font-medium">
@@ -72,7 +72,7 @@ export function PropertySwitcher() {
 									{activeProperty?.property?.slug}
 								</span>
 							</div>
-							<ChevronsUpDown className="ml-auto" />
+							<ArrowLeftRight className="ml-auto" />
 						</SidebarMenuButton>
 					</DropdownMenuTrigger>
 					<DropdownMenuContent
@@ -98,7 +98,7 @@ export function PropertySwitcher() {
 										)}
 									>
 										<div className="flex size-6 items-center justify-center rounded-md border">
-											<Frame className="size-3.5 shrink-0" />
+											<Building2 className="size-3.5 shrink-0" />
 										</div>
 										<span className="flex-1 truncate">
 											{clientUserProperty?.property?.name}
