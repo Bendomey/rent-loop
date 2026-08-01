@@ -1,6 +1,4 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router'
-import { getRiskLinkPath } from '../lib/risk-link'
 import { RiskDetailModal } from '../overview/risk-detail-modal'
 import { Badge } from '~/components/ui/badge'
 import {
@@ -132,21 +130,13 @@ export function RiskSummaryCard({
 	scopedPropertyIds,
 	showPropertyCount = true,
 }: RiskSummaryCardProps) {
-	const navigate = useNavigate()
 	const [openType, setOpenType] = useState<InsightsRiskType | null>(null)
 
-	// Scoped to exactly one property: we already know which property needs
-	// attention, so skip the "which property?" modal and go straight to the
-	// page that resolves it.
-	const singlePropertyId =
-		scopedPropertyIds?.length === 1 ? scopedPropertyIds[0] : undefined
-
+	// The modal lists the actual records needing attention and links straight
+	// to each one, so it is worth opening in every scope — including a single
+	// property, which previously jumped to a list page instead.
 	const handleViewDetails = (stat: RiskStat) => {
-		if (singlePropertyId) {
-			void navigate(getRiskLinkPath(stat.type, singlePropertyId))
-		} else {
-			setOpenType(stat.type)
-		}
+		setOpenType(stat.type)
 	}
 
 	const allPending = stats.every((stat) => stat.isPending)
@@ -206,7 +196,6 @@ export function RiskSummaryCard({
 					label={openStat.label}
 					description={openStat.modalDescription}
 					totalValue={openStat.value}
-					propertyCount={openStat.propertyCount}
 					open={openType !== null}
 					onOpenChange={(open) => setOpenType(open ? openStat.type : null)}
 					scopedPropertyIds={scopedPropertyIds}

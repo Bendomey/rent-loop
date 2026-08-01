@@ -3,15 +3,35 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 	"github.com/sirupsen/logrus"
 )
+
+// ParseDateParam reads a date query param that may arrive either as a full
+// RFC3339 timestamp or as a bare YYYY-MM-DD. An empty string means "not
+// supplied" and yields (nil, nil); anything unparseable is an error so the
+// caller can reject the request instead of silently dropping the filter.
+func ParseDateParam(value string) (*time.Time, error) {
+	if value == "" {
+		return nil, nil
+	}
+
+	for _, layout := range []string{time.RFC3339, "2006-01-02"} {
+		if parsed, err := time.Parse(layout, value); err == nil {
+			return &parsed, nil
+		}
+	}
+
+	return nil, fmt.Errorf("invalid date %q: want RFC3339 or YYYY-MM-DD", value)
+}
 
 func GetPopulateFields(r *http.Request) *[]string {
 	var populateFields *[]string = nil

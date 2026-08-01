@@ -137,7 +137,9 @@ type ListLeasesQuery struct {
 	PaymentFrequency           *string   `json:"payment_frequency,omitempty"             validate:"omitempty,oneof=HOURLY DAILY MONTHLY QUARTERLY BIANNUALLY ANNUALLY ONETIME"                                                     example:"HOURLY"                               description:"Frequency of rent payments"`
 	StayDurationFrequency      *string   `json:"stay_duration_frequency,omitempty"       validate:"omitempty,oneof=HOURS DAYS MONTHS"                                                                                              example:"HOURS"                                description:"Unit of stay duration (e.g., months, years)"`
 	LeaseAgreementDocumentMode *string   `json:"lease_agreement_document_mode,omitempty" validate:"omitempty,oneof=MANUAL ONLINE"                                                                                                  example:"MANUAL"                               description:"Mode of lease agreement document (e.g., digital, paper)"`
-	UnitIds                    *[]string `json:"unit_ids,omitempty"                      validate:"omitempty,dive,uuid4"                                                                                                           example:"a8098c1a-f86e-11da-bd1a-00112444be1e" description:"List of unit IDs to filter by"                           collectionFormat:"multi"`
+	UnitIds                    *[]string `json:"unit_ids,omitempty"                      validate:"omitempty,dive,uuid4"                                                                                                           example:"a8098c1a-f86e-11da-bd1a-00112444be1e" description:"List of unit IDs to filter by"                                                     collectionFormat:"multi"`
+	MoveOutDateFrom            *string   `json:"move_out_date_from,omitempty"            validate:"omitempty"                                                                                                                      example:"2026-08-01"                           description:"Only leases whose move-out date is on or after this date (RFC3339 or YYYY-MM-DD)"`
+	MoveOutDateTo              *string   `json:"move_out_date_to,omitempty"              validate:"omitempty"                                                                                                                      example:"2026-09-30"                           description:"Only leases whose move-out date is on or before this date (RFC3339 or YYYY-MM-DD)"`
 }
 
 // ListLeasesByTenant godoc
@@ -172,6 +174,18 @@ func (h *LeaseHandler) ListLeasesByTenant(w http.ResponseWriter, r *http.Request
 	propertyID := chi.URLParam(r, "property_id")
 	propertyIDs := []string{propertyID}
 
+	moveOutFrom, moveOutFromErr := ParseDateParam(r.URL.Query().Get("move_out_date_from"))
+	if moveOutFromErr != nil {
+		http.Error(w, "InvalidMoveOutDateFrom", http.StatusBadRequest)
+		return
+	}
+
+	moveOutTo, moveOutToErr := ParseDateParam(r.URL.Query().Get("move_out_date_to"))
+	if moveOutToErr != nil {
+		http.Error(w, "InvalidMoveOutDateTo", http.StatusBadRequest)
+		return
+	}
+
 	input := repository.ListLeasesFilter{
 		FilterQuery:                *filterQuery,
 		TenantID:                   &tenantID,
@@ -182,6 +196,8 @@ func (h *LeaseHandler) ListLeasesByTenant(w http.ResponseWriter, r *http.Request
 		StayDurationFrequency:      lib.NullOrString(r.URL.Query().Get("stay_duration_frequency")),
 		LeaseAgreementDocumentMode: lib.NullOrString(r.URL.Query().Get("lease_agreement_document_mode")),
 		UnitIds:                    lib.NullOrStringArray(r.URL.Query()["unit_ids"]),
+		MoveOutDateFrom:            moveOutFrom,
+		MoveOutDateTo:              moveOutTo,
 	}
 
 	leases, leasesErr := h.service.ListLeases(r.Context(), input)
@@ -238,6 +254,18 @@ func (h *LeaseHandler) ListLeasesByProperty(w http.ResponseWriter, r *http.Reque
 	propertyID := chi.URLParam(r, "property_id")
 	propertyIDs := []string{propertyID}
 
+	moveOutFrom, moveOutFromErr := ParseDateParam(r.URL.Query().Get("move_out_date_from"))
+	if moveOutFromErr != nil {
+		http.Error(w, "InvalidMoveOutDateFrom", http.StatusBadRequest)
+		return
+	}
+
+	moveOutTo, moveOutToErr := ParseDateParam(r.URL.Query().Get("move_out_date_to"))
+	if moveOutToErr != nil {
+		http.Error(w, "InvalidMoveOutDateTo", http.StatusBadRequest)
+		return
+	}
+
 	input := repository.ListLeasesFilter{
 		FilterQuery:                *filterQuery,
 		PropertyIDs:                &propertyIDs,
@@ -247,6 +275,8 @@ func (h *LeaseHandler) ListLeasesByProperty(w http.ResponseWriter, r *http.Reque
 		StayDurationFrequency:      lib.NullOrString(r.URL.Query().Get("stay_duration_frequency")),
 		LeaseAgreementDocumentMode: lib.NullOrString(r.URL.Query().Get("lease_agreement_document_mode")),
 		UnitIds:                    lib.NullOrStringArray(r.URL.Query()["unit_ids"]),
+		MoveOutDateFrom:            moveOutFrom,
+		MoveOutDateTo:              moveOutTo,
 	}
 
 	leases, leasesErr := h.service.ListLeases(r.Context(), input)
@@ -306,6 +336,18 @@ func (h *LeaseHandler) ListLeasesAcrossProperties(w http.ResponseWriter, r *http
 		return
 	}
 
+	moveOutFrom, moveOutFromErr := ParseDateParam(r.URL.Query().Get("move_out_date_from"))
+	if moveOutFromErr != nil {
+		http.Error(w, "InvalidMoveOutDateFrom", http.StatusBadRequest)
+		return
+	}
+
+	moveOutTo, moveOutToErr := ParseDateParam(r.URL.Query().Get("move_out_date_to"))
+	if moveOutToErr != nil {
+		http.Error(w, "InvalidMoveOutDateTo", http.StatusBadRequest)
+		return
+	}
+
 	input := repository.ListLeasesFilter{
 		FilterQuery:                *filterQuery,
 		PropertyIDs:                propertyIDs,
@@ -316,6 +358,8 @@ func (h *LeaseHandler) ListLeasesAcrossProperties(w http.ResponseWriter, r *http
 		StayDurationFrequency:      lib.NullOrString(r.URL.Query().Get("stay_duration_frequency")),
 		LeaseAgreementDocumentMode: lib.NullOrString(r.URL.Query().Get("lease_agreement_document_mode")),
 		UnitIds:                    lib.NullOrStringArray(r.URL.Query()["unit_ids"]),
+		MoveOutDateFrom:            moveOutFrom,
+		MoveOutDateTo:              moveOutTo,
 	}
 
 	leases, leasesErr := h.service.ListLeases(r.Context(), input)
@@ -373,6 +417,18 @@ func (h *LeaseHandler) ListLeasesByTenantAccount(w http.ResponseWriter, r *http.
 		return
 	}
 
+	moveOutFrom, moveOutFromErr := ParseDateParam(r.URL.Query().Get("move_out_date_from"))
+	if moveOutFromErr != nil {
+		http.Error(w, "InvalidMoveOutDateFrom", http.StatusBadRequest)
+		return
+	}
+
+	moveOutTo, moveOutToErr := ParseDateParam(r.URL.Query().Get("move_out_date_to"))
+	if moveOutToErr != nil {
+		http.Error(w, "InvalidMoveOutDateTo", http.StatusBadRequest)
+		return
+	}
+
 	input := repository.ListLeasesFilter{
 		FilterQuery:                *filterQuery,
 		TenantAccountID:            &tenantAccount.ID,
@@ -382,6 +438,8 @@ func (h *LeaseHandler) ListLeasesByTenantAccount(w http.ResponseWriter, r *http.
 		StayDurationFrequency:      lib.NullOrString(r.URL.Query().Get("stay_duration_frequency")),
 		LeaseAgreementDocumentMode: lib.NullOrString(r.URL.Query().Get("lease_agreement_document_mode")),
 		UnitIds:                    lib.NullOrStringArray(r.URL.Query()["unit_ids"]),
+		MoveOutDateFrom:            moveOutFrom,
+		MoveOutDateTo:              moveOutTo,
 	}
 
 	leases, leasesErr := h.service.ListLeases(r.Context(), input)

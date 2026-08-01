@@ -25,13 +25,6 @@ type LeaseRepository interface {
 	ListDueForBilling(ctx context.Context) (*[]models.Lease, error)
 	ListForMoveOutReminders(ctx context.Context) (*[]models.Lease, error)
 	ListDueForCompletion(ctx context.Context) (*[]models.Lease, error)
-	GroupExpiringByProperty(
-		ctx context.Context,
-		propertyIDs *[]string,
-		clientID *string,
-		from time.Time,
-		to time.Time,
-	) ([]PropertyAggregate, error)
 }
 
 type leaseRepository struct {
@@ -106,6 +99,8 @@ type ListLeasesFilter struct {
 	StayDurationFrequency      *string
 	LeaseAgreementDocumentMode *string
 	UnitIds                    *[]string
+	MoveOutDateFrom            *time.Time
+	MoveOutDateTo              *time.Time
 }
 
 func (r *leaseRepository) List(ctx context.Context, filterQuery ListLeasesFilter) (*[]models.Lease, error) {
@@ -121,6 +116,7 @@ func (r *leaseRepository) List(ctx context.Context, filterQuery ListLeasesFilter
 		leaseFilterScope("stay_duration_frequency", filterQuery.StayDurationFrequency),
 		leaseFilterScope("lease_agreement_document_mode", filterQuery.LeaseAgreementDocumentMode),
 		leaseArrayFilterScope("unit_id", filterQuery.UnitIds),
+		leaseMoveOutDateRangeScope(filterQuery.MoveOutDateFrom, filterQuery.MoveOutDateTo),
 		IDsFilterScope("leases", filterQuery.IDs),
 		DateRangeScope("leases", filterQuery.DateRange),
 		SearchScope("leases", filterQuery.Search),
@@ -155,6 +151,7 @@ func (r *leaseRepository) Count(ctx context.Context, filterQuery ListLeasesFilte
 		leaseFilterScope("stay_duration_frequency", filterQuery.StayDurationFrequency),
 		leaseFilterScope("lease_agreement_document_mode", filterQuery.LeaseAgreementDocumentMode),
 		leaseArrayFilterScope("unit_id", filterQuery.UnitIds),
+		leaseMoveOutDateRangeScope(filterQuery.MoveOutDateFrom, filterQuery.MoveOutDateTo),
 		IDsFilterScope("leases", filterQuery.IDs),
 		DateRangeScope("leases", filterQuery.DateRange),
 		SearchScope("leases", filterQuery.Search),
@@ -202,6 +199,22 @@ func propertyLeasesScope(propertyIDs *[]string, clientUserID *string) func(db *g
 					"units.property_id IN (SELECT property_id FROM client_user_properties WHERE client_user_id = ? AND deleted_at IS NULL)",
 					*clientUserID,
 				)
+		}
+		return db
+	}
+}
+
+// leaseMoveOutDateRangeScope narrows to leases whose move-out falls inside the
+// given window — the query behind the Insights "leases expiring" drill-down.
+// Each bound applies independently so callers may supply either or both. The
+// column is table-qualified because propertyLeasesScope joins units.
+func leaseMoveOutDateRangeScope(from, to *time.Time) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if from != nil {
+			db = db.Where("leases.move_out_date >= ?", *from)
+		}
+		if to != nil {
+			db = db.Where("leases.move_out_date <= ?", *to)
 		}
 		return db
 	}
@@ -362,44 +375,4 @@ func (r *leaseRepository) ListDueForCompletion(ctx context.Context) (*[]models.L
 		return nil, result.Error
 	}
 	return &leases, nil
-}
-
-// GroupExpiringByProperty counts active leases whose MoveOutDate falls within
-// [from, to] per property, for the Insights risk-summary "leases expiring"
-// breakdown. propertyIDs narrows to an exact set (cross-property mobile
-// scope); clientUserID (used when propertyIDs is nil) scopes to every property
-// the client user is linked to. Only properties with at least one expiring lease are
-// returned, sorted by count descending.
-func (r *leaseRepository) GroupExpiringByProperty(
-	ctx context.Context,
-	propertyIDs *[]string,
-	clientUserID *string,
-	from time.Time,
-	to time.Time,
-) ([]PropertyAggregate, error) {
-	db := lib.ResolveDB(ctx, r.DB).WithContext(ctx).
-		Model(&models.Lease{}).
-		Select(
-			"properties.id AS property_id, properties.name AS property_name, "+
-				"properties.address AS property_address, COUNT(*) AS value",
-		).
-		Joins("INNER JOIN units ON leases.unit_id = units.id AND units.deleted_at IS NULL").
-		Joins("INNER JOIN properties ON units.property_id = properties.id AND properties.deleted_at IS NULL").
-		Where("leases.status = ?", "Lease.Status.Active").
-		Where("leases.move_out_date BETWEEN ? AND ?", from, to)
-
-	if propertyIDs != nil {
-		db = db.Where("units.property_id IN (?)", *propertyIDs)
-	} else if clientUserID != nil {
-		db = db.Where("units.property_id IN (SELECT property_id FROM client_user_properties WHERE client_user_id = ? AND deleted_at IS NULL)", *clientUserID)
-	}
-
-	var rows []PropertyAggregate
-	err := db.Group("properties.id, properties.name, properties.address").
-		Order("value DESC").
-		Find(&rows).Error
-	if err != nil {
-		return nil, err
-	}
-	return rows, nil
 }

@@ -97,3 +97,42 @@ func TestClientIPReturnsNilWhenUnusable(t *testing.T) {
 		t.Errorf("expected nil so the column stays NULL, got %q", *got)
 	}
 }
+
+func TestParseDateParamEmptyIsNil(t *testing.T) {
+	got, err := ParseDateParam("")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != nil {
+		t.Errorf("got %v, want nil for an absent param", got)
+	}
+}
+
+func TestParseDateParamAcceptsDateOnly(t *testing.T) {
+	got, err := ParseDateParam("2026-08-01")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got == nil || got.Format("2006-01-02") != "2026-08-01" {
+		t.Errorf("got %v, want 2026-08-01", got)
+	}
+}
+
+func TestParseDateParamAcceptsRFC3339(t *testing.T) {
+	got, err := ParseDateParam("2026-08-01T00:00:00Z")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got == nil || got.Format("2006-01-02") != "2026-08-01" {
+		t.Errorf("got %v, want 2026-08-01", got)
+	}
+}
+
+// A malformed date must be rejected rather than dropped. Silently ignoring it
+// would widen the query to every lease, which surfaces as "nothing is
+// expiring" — wrong in the direction that hides work from a manager.
+func TestParseDateParamRejectsGarbage(t *testing.T) {
+	if _, err := ParseDateParam("last tuesday"); err == nil {
+		t.Error("got nil error, want a parse failure")
+	}
+}

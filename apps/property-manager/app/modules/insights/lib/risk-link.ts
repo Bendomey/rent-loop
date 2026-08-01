@@ -1,16 +1,17 @@
-// Where clicking a property for a risk category should send the manager —
-// the table where they can actually act on that risk category. Shared by
-// RiskDetailModal (one row per affected property) and RiskSummaryCard (which
-// skips the modal and navigates straight here when scoped to one property).
-export function getRiskLinkPath(
+// Where clicking a record in a risk drill-down should send the manager — the
+// record's own detail page, where they can act on it. Every risk category
+// resolves to a property-scoped route, which is why propertyId is required.
+export function getRiskRecordPath(
 	type: InsightsRiskType,
 	propertyId: string,
+	recordId: string,
 ): string {
 	switch (type) {
 		case 'maintenance':
-			return `/properties/${propertyId}/activities/maintenance-requests`
+			return `/properties/${propertyId}/activities/maintenance-requests/${recordId}`
 		case 'expiring_leases':
+			return `/properties/${propertyId}/occupancy/leases/${recordId}`
 		case 'outstanding_rent':
-			return `/properties/${propertyId}/occupancy/leases`
+			return `/properties/${propertyId}/financials/invoices/${recordId}`
 	}
 }

@@ -475,3 +475,52 @@ const deleteMaintenanceRequestComment = async ({
 
 export const useDeleteMaintenanceRequestComment = () =>
 	useMutation({ mutationFn: deleteMaintenanceRequestComment })
+
+/**
+ * GET maintenance requests across every property the caller can access
+ * (paginated). Callers own all params.
+ */
+const getMaintenanceRequestsAcrossProperties = async (
+	clientId: string,
+	props: FetchMultipleDataInputParams<Record<string, unknown>>,
+) => {
+	try {
+		const params = getQueryParams<Record<string, unknown>>(props)
+		const response = await fetchClient<
+			ApiResponse<FetchMultipleDataResponse<MaintenanceRequest>>
+		>(`/v1/admin/clients/${clientId}/maintenance-requests?${params.toString()}`)
+		return response.parsedBody.data
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+
+export const useGetMaintenanceRequestsAcrossPropertiesInfinite = (
+	clientId: string,
+	query: FetchMultipleDataInputParams<Record<string, unknown>>,
+	enabled = true,
+) =>
+	useInfiniteQuery({
+		queryKey: [
+			QUERY_KEYS.MAINTENANCE_REQUESTS,
+			'across-properties',
+			clientId,
+			query,
+		],
+		queryFn: ({ pageParam }: { pageParam: number }) =>
+			getMaintenanceRequestsAcrossProperties(clientId, {
+				...query,
+				pagination: { ...query.pagination, page: pageParam },
+			}),
+		initialPageParam: 1,
+		getNextPageParam: (lastPage) =>
+			lastPage?.meta?.has_next_page ? lastPage.meta.page + 1 : undefined,
+		enabled: enabled && !!clientId,
+	})
