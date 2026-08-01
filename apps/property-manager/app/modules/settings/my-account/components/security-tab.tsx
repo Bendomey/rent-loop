@@ -1,13 +1,13 @@
 import { Pencil, ShieldCheck, TriangleAlert } from 'lucide-react'
 import { PLACEHOLDER_PASSWORD_CHANGED } from '../placeholder-data'
 import {
-	AccountBlurb,
-	AccountIconTile,
-	AccountPanel,
-	AccountRow,
+	SettingsBlurb,
+	SettingsIconTile,
+	SettingsPanel,
+	SettingsRow,
 	MutedBadge,
 	comingSoon,
-} from './account-ui'
+} from '~/components/blocks/settings-ui'
 import { Button } from '~/components/ui/button'
 import { Switch } from '~/components/ui/switch'
 
@@ -18,8 +18,8 @@ interface Props {
 export function SecurityTab({ onChangePassword }: Props) {
 	return (
 		<div className="flex flex-col gap-5">
-			<AccountPanel caption="Sign-in password" className="pb-1">
-				<AccountRow
+			<SettingsPanel caption="Sign-in password" className="pb-1">
+				<SettingsRow
 					label="Password"
 					sub={`Last changed ${PLACEHOLDER_PASSWORD_CHANGED}`}
 					value="••••••••••"
@@ -30,12 +30,12 @@ export function SecurityTab({ onChangePassword }: Props) {
 					}
 					last
 				/>
-			</AccountPanel>
+			</SettingsPanel>
 
-			<AccountPanel caption="Two-factor authentication">
+			<SettingsPanel caption="Two-factor authentication">
 				<div className="flex items-center gap-4">
-					<AccountIconTile icon={ShieldCheck} />
-					<AccountBlurb
+					<SettingsIconTile icon={ShieldCheck} />
+					<SettingsBlurb
 						title="Authenticator app"
 						description="Require a code from your phone in addition to your password when signing in."
 						tone={<MutedBadge>Coming soon</MutedBadge>}
@@ -47,14 +47,14 @@ export function SecurityTab({ onChangePassword }: Props) {
 						aria-label="Enable two-factor authentication"
 					/>
 				</div>
-			</AccountPanel>
+			</SettingsPanel>
 
-			<AccountPanel
+			<SettingsPanel
 				caption="Danger zone"
 				className="border-primary/25 bg-primary/5"
 			>
 				<div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-					<AccountBlurb
+					<SettingsBlurb
 						title="Delete my account"
 						description="Permanently closes your account and removes you from this workspace. Properties you own must be transferred first."
 						tone={<MutedBadge>Coming soon</MutedBadge>}
@@ -68,7 +68,7 @@ export function SecurityTab({ onChangePassword }: Props) {
 						<TriangleAlert /> Delete account
 					</Button>
 				</div>
-			</AccountPanel>
+			</SettingsPanel>
 		</div>
 	)
 }

@@ -1,12 +1,12 @@
 import { Camera, Pencil } from 'lucide-react'
 import { PLACEHOLDER_EMAIL_VERIFIED } from '../placeholder-data'
 import {
-	AccountPanel,
-	AccountRow,
+	SettingsPanel,
+	SettingsRow,
 	MutedBadge,
 	SuccessBadge,
 	comingSoon,
-} from './account-ui'
+} from '~/components/blocks/settings-ui'
 import { Avatar, AvatarFallback } from '~/components/ui/avatar'
 import { Button } from '~/components/ui/button'
 
@@ -29,7 +29,7 @@ export function ProfileTab({
 }: Props) {
 	return (
 		<div className="flex flex-col gap-5">
-			<AccountPanel caption="Profile photo">
+			<SettingsPanel caption="Profile photo">
 				<div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center">
 					<div className="relative shrink-0">
 						<Avatar className="size-23">
@@ -62,10 +62,10 @@ export function ProfileTab({
 						</div>
 					</div>
 				</div>
-			</AccountPanel>
+			</SettingsPanel>
 
-			<AccountPanel caption="Basic information" className="pb-1">
-				<AccountRow
+			<SettingsPanel caption="Basic information" className="pb-1">
+				<SettingsRow
 					label="Full name"
 					value={name}
 					action={
@@ -74,7 +74,7 @@ export function ProfileTab({
 						</Button>
 					}
 				/>
-				<AccountRow
+				<SettingsRow
 					label="Email address"
 					value={email}
 					tone={
@@ -95,7 +95,7 @@ export function ProfileTab({
 					}
 					last
 				/>
-			</AccountPanel>
+			</SettingsPanel>
 		</div>
 	)
 }

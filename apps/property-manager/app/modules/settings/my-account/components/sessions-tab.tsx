@@ -1,15 +1,15 @@
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import { Lock, LogOut, TriangleAlert } from 'lucide-react'
-import {
-	AccountBlurb,
-	AccountIconTile,
-	AccountPanel,
-	MutedBadge,
-	SuccessBadge,
-} from './account-ui'
 import { deviceIcon } from './device-icon'
 import { useGetSessions } from '~/api/sessions'
+import {
+	SettingsBlurb,
+	SettingsIconTile,
+	SettingsPanel,
+	MutedBadge,
+	SuccessBadge,
+} from '~/components/blocks/settings-ui'
 import { Button } from '~/components/ui/button'
 import { Skeleton } from '~/components/ui/skeleton'
 import { cn } from '~/lib/utils'
@@ -28,13 +28,13 @@ export function SessionsTab({ onSignOutOne, onSignOutAll }: Props) {
 
 	if (isError) {
 		return (
-			<AccountPanel>
+			<SettingsPanel>
 				<p className="text-muted-foreground text-sm">
 					{error instanceof Error
 						? error.message
 						: 'Could not load your sessions.'}
 				</p>
-			</AccountPanel>
+			</SettingsPanel>
 		)
 	}
 
@@ -43,10 +43,10 @@ export function SessionsTab({ onSignOutOne, onSignOutAll }: Props) {
 
 	return (
 		<div className="flex flex-col gap-5">
-			<AccountPanel>
+			<SettingsPanel>
 				<div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-					<AccountIconTile icon={Lock} />
-					<AccountBlurb
+					<SettingsIconTile icon={Lock} />
+					<SettingsBlurb
 						title={`${list.length} active ${list.length === 1 ? 'session' : 'sessions'}`}
 						description="Everywhere you're signed in. If you see something you don't recognise, sign it out and change your password."
 					/>
@@ -65,9 +65,9 @@ export function SessionsTab({ onSignOutOne, onSignOutAll }: Props) {
 						</span>
 					)}
 				</div>
-			</AccountPanel>
+			</SettingsPanel>
 
-			<AccountPanel caption="Signed-in devices" className="pb-2">
+			<SettingsPanel caption="Signed-in devices" className="pb-2">
 				{list.map((session, index) => (
 					<SessionRow
 						key={session.id}
@@ -82,7 +82,7 @@ export function SessionsTab({ onSignOutOne, onSignOutAll }: Props) {
 						No active sessions.
 					</p>
 				) : null}
-			</AccountPanel>
+			</SettingsPanel>
 
 			{list.length === 1 && list[0]?.is_current ? (
 				<p className="text-muted-foreground text-center text-sm">
@@ -131,7 +131,7 @@ function SessionRow({
 				last ? '' : 'border-b',
 			)}
 		>
-			<AccountIconTile
+			<SettingsIconTile
 				icon={Icon}
 				tone={session.is_current ? 'success' : 'muted'}
 			/>
@@ -184,7 +184,7 @@ function SessionRow({
 function SessionsSkeleton() {
 	return (
 		<div className="flex flex-col gap-5">
-			<AccountPanel>
+			<SettingsPanel>
 				<div className="flex items-center gap-4">
 					<Skeleton className="size-11 rounded-xl" />
 					<div className="flex-1 space-y-2">
@@ -192,9 +192,9 @@ function SessionsSkeleton() {
 						<Skeleton className="h-3 w-full max-w-md" />
 					</div>
 				</div>
-			</AccountPanel>
+			</SettingsPanel>
 
-			<AccountPanel caption="Signed-in devices" className="pb-2">
+			<SettingsPanel caption="Signed-in devices" className="pb-2">
 				{[0, 1, 2].map((i) => (
 					<div
 						key={i}
@@ -212,7 +212,7 @@ function SessionsSkeleton() {
 						<Skeleton className="h-8 w-24" />
 					</div>
 				))}
-			</AccountPanel>
+			</SettingsPanel>
 		</div>
 	)
 }

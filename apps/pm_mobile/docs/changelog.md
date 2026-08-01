@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-08-01 — General Settings redesigned; reads are live, edits are not
+- `more/settings.dart` (1,571 lines, every value hardcoded, not one API call) deleted and replaced by `more/general/` — hub plus one page per category, matching the My Account redesign and the web portal's new five-tab Settings › General.
+- Categories: Profile · Company · Location · Branding · Preferences, with **Identity taking Company's slot for individual accounts** — the same type-dependent swap the web page makes, so neither account type sees a section that can't apply to it.
+- **Reads are now real.** Every value comes off `currentUserNotifierProvider` → `clientUsers.first.client` instead of the old fixture. `ClientModel` gained `description`, `registration_number`, `id_expiry` and `id_document_url` (all already returned by the API, just never mapped) so Company and Identity aren't half-empty; `build_runner` regenerated.
+- **Nothing saves.** The app has no client API class — there is no mobile equivalent of the web's `PATCH /v1/admin/clients`. Rather than keep the old silent no-op Save, each sheet closes and fires a "coming soon" toast, the same treatment My Account gives 2FA and email updates.
+- Branding and Preferences are unbacked on *both* clients: no logo, accent colour, currency, time zone, date format or language field exists on the `Client` model anywhere. Built to the design so they're ready to wire, and honest about it in the meantime.
+- New `shared/sheet_kit.dart` — `RLSheet` chrome, `RLSheetField`/`TextArea`/`Select`/`Note`/`Bullets` and `rlSheetFooter`, extracted so the ten new sheets didn't fork a third private copy. My Account still has its own; it can migrate when next touched.
+- Route `/more/settings` now builds `GeneralSettingsScreen`; the path is unchanged, so no caller moved.
+- Modules affected: `modules/main/more/general/` (new), `modules/main/more/settings.dart` (deleted), `shared/sheet_kit.dart` (new), `repository/models/client_model.dart`, `navigation/routes.dart`
+
 ## 2026-07-31 — Sessions list shows when you signed in, not when the token last refreshed
 - The row's mono meta line showed only the IP; the web portal's equivalent showed `last_used_at`, which the backend advances on every token refresh — so it read "a few seconds ago" for any live session and told the reader nothing.
 - `SessionModel` gained a `signedInLabel` getter built from `signed_in_at` (the session row's `created_at`, stable for the life of the session). The row now renders `41.66.0.1 · Signed in 3 days ago`, with either half omitted when absent.

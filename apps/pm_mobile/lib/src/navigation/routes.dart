@@ -35,7 +35,7 @@ import 'package:rentloop_manager/src/modules/main/more/my_account/root.dart';
 import 'package:rentloop_manager/src/modules/main/more/members.dart';
 import 'package:rentloop_manager/src/modules/main/more/payment_accounts.dart';
 import 'package:rentloop_manager/src/modules/main/more/root.dart';
-import 'package:rentloop_manager/src/modules/main/more/settings.dart';
+import 'package:rentloop_manager/src/modules/main/more/general/root.dart';
 import 'package:rentloop_manager/src/modules/main/leases/detail.dart';
 import 'package:rentloop_manager/src/modules/main/leases/root.dart';
 import 'package:rentloop_manager/src/modules/main/more/archived_properties.dart';
@@ -362,7 +362,7 @@ GoRouter buildRoutes(WidgetRef ref) {
       GoRoute(path: '/more/billing', builder: (_, __) => const BillingScreen()),
       GoRoute(
         path: '/more/settings',
-        builder: (_, __) => const SettingsScreen(),
+        builder: (_, __) => const GeneralSettingsScreen(),
       ),
       GoRoute(
         path: '/more/tenants',

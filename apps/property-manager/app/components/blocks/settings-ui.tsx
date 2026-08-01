@@ -5,15 +5,16 @@ import { Badge } from '~/components/ui/badge'
 import { cn } from '~/lib/utils'
 
 /**
- * Shared building blocks for the My Account settings screens: a bordered
- * panel with a small mono caption, the label/value/action row used by the
- * Profile and Security tabs, and the tone pills.
+ * Shared building blocks for the Settings screens (My Account, General): a
+ * bordered panel with a small mono caption, the label/value/action row, the
+ * read-only key/value field used in the detail grids, and the tone pills.
  */
 
 /**
- * Several actions on this page are built but not released yet (two-factor
- * auth, email updates, account deletion). Their controls stay visible and
- * clickable, but say so instead of doing anything.
+ * Several actions across Settings are built but not released yet (two-factor
+ * auth, email updates, account deletion, branding, regional preferences).
+ * Their controls stay visible and clickable, but say so instead of doing
+ * anything.
  */
 export function comingSoon(feature: string) {
 	return () => toast.info(`${feature} is coming soon.`)
@@ -24,23 +25,51 @@ interface PanelProps {
 	className?: string
 }
 
-export function AccountPanel({
+export function SettingsPanel({
 	caption,
 	className,
 	children,
 }: PropsWithChildren<PanelProps>) {
 	return (
 		<div className={cn('bg-card rounded-xl border p-6', className)}>
-			{caption ? <AccountCaption>{caption}</AccountCaption> : null}
+			{caption ? <SettingsCaption>{caption}</SettingsCaption> : null}
 			{children}
 		</div>
 	)
 }
 
-export function AccountCaption({ children }: PropsWithChildren) {
+export function SettingsCaption({ children }: PropsWithChildren) {
 	return (
 		<div className="text-muted-foreground mb-5 font-mono text-[11px] font-medium tracking-wider uppercase">
 			{children}
+		</div>
+	)
+}
+
+/**
+ * Panel heading for the read-only detail grids: caption, a line of supporting
+ * copy, and a single trailing action that opens the edit dialog.
+ */
+export function SettingsPanelHeader({
+	caption,
+	description,
+	action,
+}: {
+	caption: string
+	description?: string
+	action?: ReactNode
+}) {
+	return (
+		<div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-5">
+			<div className="flex-1">
+				<SettingsCaption>{caption}</SettingsCaption>
+				{description ? (
+					<p className="text-muted-foreground -mt-3 max-w-lg text-[15px] leading-relaxed">
+						{description}
+					</p>
+				) : null}
+			</div>
+			{action ? <div className="shrink-0">{action}</div> : null}
 		</div>
 	)
 }
@@ -54,7 +83,7 @@ interface RowProps {
 	last?: boolean
 }
 
-export function AccountRow({
+export function SettingsRow({
 	label,
 	sub,
 	value,
@@ -89,9 +118,41 @@ export function AccountRow({
 }
 
 /**
+ * Read-only key/value pair for the detail grids — a small mono caption above
+ * the value, with an em-dash standing in for anything not filled in yet.
+ */
+export function SettingField({
+	label,
+	value,
+	className,
+}: {
+	label: string
+	value?: ReactNode
+	className?: string
+}) {
+	const isEmpty = value === null || value === undefined || value === ''
+
+	return (
+		<div className={cn('min-w-0', className)}>
+			<div className="text-muted-foreground font-mono text-[10.5px] font-medium tracking-[0.07em] uppercase">
+				{label}
+			</div>
+			<div
+				className={cn(
+					'mt-1.5 text-[15px] leading-relaxed font-semibold break-words',
+					isEmpty && 'text-muted-foreground/60 font-normal',
+				)}
+			>
+				{isEmpty ? '—' : value}
+			</div>
+		</div>
+	)
+}
+
+/**
  * A rounded icon tile — used to head the 2FA, sessions and device rows.
  */
-export function AccountIconTile({
+export function SettingsIconTile({
 	icon: Icon,
 	tone = 'muted',
 	className,
@@ -135,7 +196,7 @@ export function MutedBadge({ children }: PropsWithChildren) {
  * Headline + supporting copy used at the top of each panel that isn't a
  * label/value list (2FA, danger zone, sessions summary).
  */
-export function AccountBlurb({
+export function SettingsBlurb({
 	title,
 	description,
 	tone,
