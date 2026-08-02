@@ -82,7 +82,7 @@ void main() {
       expect(api.paths.single, isNot(contains('populate=')));
     });
 
-    test('the single request populates unit, assignees and creators', () async {
+    test('the single request populates assets, assignees and creators', () async {
       final api = _RecordingApi()
         ..nextBody = {
           'data': {
@@ -92,7 +92,7 @@ void main() {
             'category': 'OTHER',
             'priority': 'LOW',
             'status': 'NEW',
-            'unit_id': 'u1',
+            'property_id': 'p1',
           },
         };
       await api.getMaintenanceRequest(
@@ -103,7 +103,9 @@ void main() {
 
       final path = api.paths.single;
       for (final relation in [
-        'Unit',
+        'Assets',
+        'Assets.Unit',
+        'Assets.PropertyBlock',
         'AssignedWorker.User',
         'AssignedManager.User',
         'CreatedByTenant',

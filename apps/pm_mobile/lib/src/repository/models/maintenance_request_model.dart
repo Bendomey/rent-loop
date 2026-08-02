@@ -46,6 +46,61 @@ class MaintenanceUnitModel {
   Map<String, dynamic> toJson() => _$MaintenanceUnitModelToJson(this);
 }
 
+@JsonSerializable()
+class MaintenanceBlockModel {
+  final String id;
+  final String name;
+
+  MaintenanceBlockModel({required this.id, required this.name});
+
+  factory MaintenanceBlockModel.fromJson(Map<String, dynamic> json) =>
+      _$MaintenanceBlockModelFromJson(json);
+
+  Map<String, dynamic> toJson() => _$MaintenanceBlockModelToJson(this);
+}
+
+/// One asset a maintenance request concerns. Exactly one of [unit] /
+/// [propertyBlock] is populated, matching [assetType]. A block asset is
+/// common-area work that belongs to no unit, so a request can legitimately
+/// have no units at all.
+@JsonSerializable()
+class MaintenanceAssetModel {
+  final String id;
+  @JsonKey(name: 'asset_type')
+  final String assetType; // UNIT | BLOCK
+  @JsonKey(name: 'unit_id')
+  final String? unitId;
+  final MaintenanceUnitModel? unit;
+  @JsonKey(name: 'property_block_id')
+  final String? propertyBlockId;
+  @JsonKey(name: 'property_block')
+  final MaintenanceBlockModel? propertyBlock;
+
+  MaintenanceAssetModel({
+    required this.id,
+    required this.assetType,
+    this.unitId,
+    this.unit,
+    this.propertyBlockId,
+    this.propertyBlock,
+  });
+
+  bool get isUnit => assetType == 'UNIT';
+  bool get isBlock => assetType == 'BLOCK';
+
+  /// Display label, falling back to the asset type so a row is never blank
+  /// when the API returned the association without populating the relation.
+  String get label {
+    if (isUnit) return unit?.name ?? 'Unit';
+    return propertyBlock?.name ?? 'Block';
+  }
+
+  factory MaintenanceAssetModel.fromJson(Map<String, dynamic> json) =>
+      _$MaintenanceAssetModelFromJson(json);
+
+  Map<String, dynamic> toJson() => _$MaintenanceAssetModelToJson(this);
+}
+
 /// The tenant who raised a request, when one did. Only the name is modelled —
 /// the History timeline is the sole consumer and it just needs someone to
 /// attribute "Submitted by …" to.
@@ -80,9 +135,9 @@ class MaintenanceRequestModel {
   final String category;
   final String priority;
   final String status;
-  @JsonKey(name: 'unit_id')
-  final String unitId;
-  final MaintenanceUnitModel? unit;
+  @JsonKey(name: 'property_id')
+  final String propertyId;
+  final List<MaintenanceAssetModel>? assets;
   @JsonKey(name: 'lease_id')
   final String? leaseId;
 
@@ -147,8 +202,8 @@ class MaintenanceRequestModel {
     required this.category,
     required this.priority,
     required this.status,
-    required this.unitId,
-    this.unit,
+    required this.propertyId,
+    this.assets,
     this.leaseId,
     this.createdByTenantId,
     this.createdByTenant,
@@ -167,6 +222,25 @@ class MaintenanceRequestModel {
     this.createdAt,
     this.updatedAt,
   });
+
+  /// Unit assets only, never null. Screens iterate these directly.
+  List<MaintenanceAssetModel> get unitAssets =>
+      assets?.where((a) => a.isUnit).toList() ?? const [];
+
+  /// Block assets only, never null. A block-only request is common-area work
+  /// and has no units.
+  List<MaintenanceAssetModel> get blockAssets =>
+      assets?.where((a) => a.isBlock).toList() ?? const [];
+
+  /// Compact label for list/board cards: names the first asset and counts the
+  /// rest, so a request covering six units reads "A1 +5" rather than a wall
+  /// of names.
+  String get assetSummary {
+    final all = assets ?? const <MaintenanceAssetModel>[];
+    if (all.isEmpty) return '—';
+    final first = all.first.label;
+    return all.length > 1 ? '$first +${all.length - 1}' : first;
+  }
 
   factory MaintenanceRequestModel.fromJson(Map<String, dynamic> json) =>
       _$MaintenanceRequestModelFromJson(json);

@@ -31,8 +31,10 @@ class MaintenanceRequestStatusNotifier
     String? cancellationReason,
   }) async {
     final clientId = ref.read(currentWorkspaceNotifierProvider)?.clientId;
-    final propertyId = request.unit?.propertyId;
-    if (clientId == null || propertyId == null) {
+    // The request carries its own property, so this no longer fails when the
+    // unit relation was not populated.
+    final propertyId = request.propertyId;
+    if (clientId == null) {
       state = MaintenanceRequestStatusState(
         status: ApiStatus.failed,
         errorMessage: translateApiErrorMessage(),

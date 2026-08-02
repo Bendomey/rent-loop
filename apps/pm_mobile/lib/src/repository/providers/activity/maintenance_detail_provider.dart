@@ -50,8 +50,7 @@ Future<String> maintenanceRequestPropertyId(
       .getMaintenanceRequests(clientId: clientId, pageSize: _scanPageSize);
 
   for (final row in page.rows) {
-    final propertyId = row.unit?.propertyId;
-    if (row.id == requestId && propertyId != null) return propertyId;
+    if (row.id == requestId) return row.propertyId;
   }
 
   throw StateError('Could not locate this request. Open it from the board.');

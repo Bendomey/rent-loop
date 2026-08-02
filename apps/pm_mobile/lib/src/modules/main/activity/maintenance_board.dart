@@ -83,7 +83,7 @@ class _MaintCard extends StatelessWidget {
           if (context.mounted) {
             context.push(
               '/activity/maintenances/${m.id}',
-              extra: m.unit?.propertyId,
+              extra: m.propertyId,
             );
           }
         },
@@ -159,7 +159,7 @@ class _CardBody extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            m.unit?.name ?? '—',
+            m.assetSummary,
             style: const TextStyle(
               fontFamily: RLTokens.fontSans,
               fontSize: 12.5,
@@ -667,8 +667,7 @@ class _MaintenanceBoardState extends ConsumerState<MaintenanceBoard> {
     for (final status in kMaintenanceStatusOrder) {
       final state = ref.read(maintenanceRequestsNotifierProvider(status));
       for (final item in state.items) {
-        final propertyId = item.unit?.propertyId;
-        if (propertyId != null) propertyIds.add(propertyId);
+        propertyIds.add(item.propertyId);
       }
     }
     if (propertyIds.isNotEmpty) {

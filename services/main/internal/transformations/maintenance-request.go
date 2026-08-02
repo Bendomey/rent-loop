@@ -7,35 +7,74 @@ import (
 )
 
 type AdminOutputMaintenanceRequest struct {
-	ID                    string                         `json:"id"`
-	Code                  string                         `json:"code"`
-	UnitID                string                         `json:"unit_id"`
-	Unit                  AdminOutputUnit                `json:"unit,omitempty"`
-	LeaseID               *string                        `json:"lease_id,omitempty"`
-	CreatedByTenantID     *string                        `json:"created_by_tenant_id,omitempty"`
-	CreatedByTenant       *OutputAdminTenant             `json:"created_by_tenant,omitempty"`
-	CreatedByClientUserID *string                        `json:"created_by_client_user_id,omitempty"`
-	CreatedByClientUser   *OutputClientUser              `json:"created_by_client_user,omitempty"`
-	Title                 string                         `json:"title"`
-	Description           string                         `json:"description"`
-	Attachments           []string                       `json:"attachments"`
-	Priority              string                         `json:"priority"`
-	Category              string                         `json:"category"`
-	Status                string                         `json:"status"`
-	Visibility            string                         `json:"visibility"`
-	AssignedWorkerID      *string                        `json:"assigned_worker_id,omitempty"`
-	AssignedWorker        *OutputClientUser              `json:"assigned_worker,omitempty"`
-	AssignedManagerID     *string                        `json:"assigned_manager_id,omitempty"`
-	AssignedManager       *OutputClientUser              `json:"assigned_manager,omitempty"`
-	CancellationReason    *string                        `json:"cancellation_reason,omitempty"`
-	StartedAt             *time.Time                     `json:"started_at,omitempty"`
-	ReviewedAt            *time.Time                     `json:"reviewed_at,omitempty"`
-	ResolvedAt            *time.Time                     `json:"resolved_at,omitempty"`
-	CanceledAt            *time.Time                     `json:"canceled_at,omitempty"`
-	Expenses              []OutputExpense                `json:"expenses,omitempty"`
-	ActivityLogs          []OutputMaintenanceActivityLog `json:"activity_logs,omitempty"`
-	CreatedAt             time.Time                      `json:"created_at"`
-	UpdatedAt             time.Time                      `json:"updated_at"`
+	ID                    string                          `json:"id"`
+	Code                  string                          `json:"code"`
+	PropertyID            string                          `json:"property_id"`
+	Property              OutputProperty                  `json:"property,omitempty"`
+	Assets                []OutputMaintenanceRequestAsset `json:"assets"`
+	LeaseID               *string                         `json:"lease_id,omitempty"`
+	CreatedByTenantID     *string                         `json:"created_by_tenant_id,omitempty"`
+	CreatedByTenant       *OutputAdminTenant              `json:"created_by_tenant,omitempty"`
+	CreatedByClientUserID *string                         `json:"created_by_client_user_id,omitempty"`
+	CreatedByClientUser   *OutputClientUser               `json:"created_by_client_user,omitempty"`
+	Title                 string                          `json:"title"`
+	Description           string                          `json:"description"`
+	Attachments           []string                        `json:"attachments"`
+	Priority              string                          `json:"priority"`
+	Category              string                          `json:"category"`
+	Status                string                          `json:"status"`
+	Visibility            string                          `json:"visibility"`
+	AssignedWorkerID      *string                         `json:"assigned_worker_id,omitempty"`
+	AssignedWorker        *OutputClientUser               `json:"assigned_worker,omitempty"`
+	AssignedManagerID     *string                         `json:"assigned_manager_id,omitempty"`
+	AssignedManager       *OutputClientUser               `json:"assigned_manager,omitempty"`
+	CancellationReason    *string                         `json:"cancellation_reason,omitempty"`
+	StartedAt             *time.Time                      `json:"started_at,omitempty"`
+	ReviewedAt            *time.Time                      `json:"reviewed_at,omitempty"`
+	ResolvedAt            *time.Time                      `json:"resolved_at,omitempty"`
+	CanceledAt            *time.Time                      `json:"canceled_at,omitempty"`
+	Expenses              []OutputExpense                 `json:"expenses,omitempty"`
+	ActivityLogs          []OutputMaintenanceActivityLog  `json:"activity_logs,omitempty"`
+	CreatedAt             time.Time                       `json:"created_at"`
+	UpdatedAt             time.Time                       `json:"updated_at"`
+}
+
+type OutputMaintenanceRequestAsset struct {
+	ID              string  `json:"id"`
+	AssetType       string  `json:"asset_type"`
+	UnitID          *string `json:"unit_id,omitempty"`
+	Unit            any     `json:"unit,omitempty"`
+	PropertyBlockID *string `json:"property_block_id,omitempty"`
+	PropertyBlock   any     `json:"property_block,omitempty"`
+}
+
+// DBMaintenanceRequestAssetToRest transforms one asset row to its REST shape.
+// Exactly one of the unit / block pairs is populated, matching AssetType.
+func DBMaintenanceRequestAssetToRest(asset *models.MaintenanceRequestAsset) any {
+	if asset == nil {
+		return nil
+	}
+
+	output := map[string]any{
+		"id":         asset.ID.String(),
+		"asset_type": asset.AssetType,
+	}
+
+	if asset.UnitID != nil {
+		output["unit_id"] = *asset.UnitID
+		if asset.Unit != nil {
+			output["unit"] = DBAdminUnitToRest(asset.Unit)
+		}
+	}
+
+	if asset.PropertyBlockID != nil {
+		output["property_block_id"] = *asset.PropertyBlockID
+		if asset.PropertyBlock != nil {
+			output["property_block"] = DBPropertyBlockToRest(asset.PropertyBlock)
+		}
+	}
+
+	return output
 }
 
 // DBMaintenanceRequestToRest transforms a MaintenanceRequest model to its PM/admin REST representation.
@@ -59,11 +98,17 @@ func DBMaintenanceRequestToRest(mr *models.MaintenanceRequest) any {
 		expenses[i] = DBExpenseToRest(&mr.Expenses[i])
 	}
 
+	assets := make([]any, len(mr.Assets))
+	for i := range mr.Assets {
+		assets[i] = DBMaintenanceRequestAssetToRest(&mr.Assets[i])
+	}
+
 	return map[string]any{
 		"id":                        mr.ID.String(),
 		"code":                      mr.Code,
-		"unit_id":                   mr.UnitID,
-		"unit":                      DBAdminUnitToRest(&mr.Unit),
+		"property_id":               mr.PropertyID,
+		"property":                  DBPropertyToRest(&mr.Property),
+		"assets":                    assets,
 		"lease_id":                  mr.LeaseID,
 		"created_by_tenant_id":      mr.CreatedByTenantID,
 		"created_by_tenant":         DBTenantToRest(mr.CreatedByTenant),
@@ -93,24 +138,24 @@ func DBMaintenanceRequestToRest(mr *models.MaintenanceRequest) any {
 }
 
 type OutputMaintenanceRequest struct {
-	ID                 string                         `json:"id"`
-	Code               string                         `json:"code"`
-	UnitID             string                         `json:"unit_id"`
-	Unit               OutputUnit                     `json:"unit,omitempty"`
-	Title              string                         `json:"title"`
-	Description        string                         `json:"description"`
-	Attachments        []string                       `json:"attachments"`
-	Priority           string                         `json:"priority"`
-	Category           string                         `json:"category"`
-	Status             string                         `json:"status"`
-	StartedAt          *time.Time                     `json:"started_at,omitempty"`
-	ResolvedAt         *time.Time                     `json:"resolved_at,omitempty"`
-	CanceledAt         *time.Time                     `json:"canceled_at,omitempty"`
-	CancellationReason *string                        `json:"cancellation_reason,omitempty"`
-	Expenses           []OutputExpense                `json:"expenses,omitempty"`
-	ActivityLogs       []OutputMaintenanceActivityLog `json:"activity_logs,omitempty"`
-	CreatedAt          time.Time                      `json:"created_at"`
-	UpdatedAt          time.Time                      `json:"updated_at"`
+	ID                 string                          `json:"id"`
+	Code               string                          `json:"code"`
+	PropertyID         string                          `json:"property_id"`
+	Assets             []OutputMaintenanceRequestAsset `json:"assets"`
+	Title              string                          `json:"title"`
+	Description        string                          `json:"description"`
+	Attachments        []string                        `json:"attachments"`
+	Priority           string                          `json:"priority"`
+	Category           string                          `json:"category"`
+	Status             string                          `json:"status"`
+	StartedAt          *time.Time                      `json:"started_at,omitempty"`
+	ResolvedAt         *time.Time                      `json:"resolved_at,omitempty"`
+	CanceledAt         *time.Time                      `json:"canceled_at,omitempty"`
+	CancellationReason *string                         `json:"cancellation_reason,omitempty"`
+	Expenses           []OutputExpense                 `json:"expenses,omitempty"`
+	ActivityLogs       []OutputMaintenanceActivityLog  `json:"activity_logs,omitempty"`
+	CreatedAt          time.Time                       `json:"created_at"`
+	UpdatedAt          time.Time                       `json:"updated_at"`
 }
 
 // DBMaintenanceRequestToTenantRest transforms a MaintenanceRequest to the tenant-facing representation.
@@ -134,10 +179,16 @@ func DBMaintenanceRequestToTenantRest(mr *models.MaintenanceRequest) any {
 		expenses[i] = DBExpenseToRest(&mr.Expenses[i])
 	}
 
+	assets := make([]any, len(mr.Assets))
+	for i := range mr.Assets {
+		assets[i] = DBMaintenanceRequestAssetToRest(&mr.Assets[i])
+	}
+
 	return map[string]any{
 		"id":                  mr.ID.String(),
 		"code":                mr.Code,
-		"unit_id":             mr.UnitID,
+		"property_id":         mr.PropertyID,
+		"assets":              assets,
 		"title":               mr.Title,
 		"description":         mr.Description,
 		"attachments":         attachments,

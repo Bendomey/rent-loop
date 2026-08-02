@@ -24,6 +24,47 @@ Map<String, dynamic> _$MaintenanceUnitModelToJson(
       'property_id': instance.propertyId,
     };
 
+MaintenanceBlockModel _$MaintenanceBlockModelFromJson(
+        Map<String, dynamic> json) =>
+    MaintenanceBlockModel(
+      id: json['id'] as String,
+      name: json['name'] as String,
+    );
+
+Map<String, dynamic> _$MaintenanceBlockModelToJson(
+        MaintenanceBlockModel instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'name': instance.name,
+    };
+
+MaintenanceAssetModel _$MaintenanceAssetModelFromJson(
+        Map<String, dynamic> json) =>
+    MaintenanceAssetModel(
+      id: json['id'] as String,
+      assetType: json['asset_type'] as String,
+      unitId: json['unit_id'] as String?,
+      unit: json['unit'] == null
+          ? null
+          : MaintenanceUnitModel.fromJson(json['unit'] as Map<String, dynamic>),
+      propertyBlockId: json['property_block_id'] as String?,
+      propertyBlock: json['property_block'] == null
+          ? null
+          : MaintenanceBlockModel.fromJson(
+              json['property_block'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$MaintenanceAssetModelToJson(
+        MaintenanceAssetModel instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'asset_type': instance.assetType,
+      'unit_id': instance.unitId,
+      'unit': instance.unit,
+      'property_block_id': instance.propertyBlockId,
+      'property_block': instance.propertyBlock,
+    };
+
 MaintenanceTenantModel _$MaintenanceTenantModelFromJson(
         Map<String, dynamic> json) =>
     MaintenanceTenantModel(
@@ -50,10 +91,11 @@ MaintenanceRequestModel _$MaintenanceRequestModelFromJson(
       category: json['category'] as String,
       priority: json['priority'] as String,
       status: json['status'] as String,
-      unitId: json['unit_id'] as String,
-      unit: json['unit'] == null
-          ? null
-          : MaintenanceUnitModel.fromJson(json['unit'] as Map<String, dynamic>),
+      propertyId: json['property_id'] as String,
+      assets: (json['assets'] as List<dynamic>?)
+          ?.map(
+              (e) => MaintenanceAssetModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
       leaseId: json['lease_id'] as String?,
       createdByTenantId: json['created_by_tenant_id'] as String?,
       createdByTenant: json['created_by_tenant'] == null
@@ -89,8 +131,8 @@ Map<String, dynamic> _$MaintenanceRequestModelToJson(
       'category': instance.category,
       'priority': instance.priority,
       'status': instance.status,
-      'unit_id': instance.unitId,
-      'unit': instance.unit?.toJson(),
+      'property_id': instance.propertyId,
+      'assets': instance.assets?.map((e) => e.toJson()).toList(),
       'lease_id': instance.leaseId,
       'created_by_tenant_id': instance.createdByTenantId,
       'created_by_tenant': instance.createdByTenant?.toJson(),

@@ -14,7 +14,15 @@ void main() {
         'category': 'PLUMBING',
         'priority': 'HIGH',
         'status': 'IN_REVIEW',
-        'unit_id': 'u1',
+        'property_id': 'p1',
+        'assets': [
+          {
+            'id': 'a1',
+            'asset_type': 'UNIT',
+            'unit_id': 'u1',
+            'unit': {'id': 'u1', 'name': 'A1', 'slug': 'a1'},
+          },
+        ],
         'lease_id': 'l1',
         'attachments': ['https://cdn.test/a.jpg', 'https://cdn.test/b.pdf'],
         'visibility': 'INTERNAL_ONLY',
@@ -26,6 +34,68 @@ void main() {
       expect(model.visibility, 'INTERNAL_ONLY');
       expect(model.leaseId, 'l1');
       expect(model.reviewedAt, '2026-03-16T11:52:00Z');
+      expect(model.propertyId, 'p1');
+      expect(model.unitAssets, hasLength(1));
+      expect(model.unitAssets.first.label, 'A1');
+      expect(model.blockAssets, isEmpty);
+      expect(model.assetSummary, 'A1');
+    });
+
+    test('parses a request covering several units and a block', () {
+      final model = MaintenanceRequestModel.fromJson({
+        'id': 'mr2',
+        'code': 'MULTI',
+        'title': 'Riser serving A1-A2 plus the stairwell',
+        'category': 'PLUMBING',
+        'priority': 'HIGH',
+        'status': 'NEW',
+        'property_id': 'p1',
+        'assets': [
+          {
+            'id': 'a1',
+            'asset_type': 'UNIT',
+            'unit_id': 'u1',
+            'unit': {'id': 'u1', 'name': 'A1', 'slug': 'a1'},
+          },
+          {
+            'id': 'a2',
+            'asset_type': 'UNIT',
+            'unit_id': 'u2',
+            'unit': {'id': 'u2', 'name': 'A2', 'slug': 'a2'},
+          },
+          {
+            'id': 'a3',
+            'asset_type': 'BLOCK',
+            'property_block_id': 'b1',
+            'property_block': {'id': 'b1', 'name': 'Block A'},
+          },
+        ],
+      });
+
+      expect(model.unitAssets, hasLength(2));
+      expect(model.blockAssets, hasLength(1));
+      expect(model.blockAssets.first.label, 'Block A');
+      expect(model.assetSummary, 'A1 +2');
+    });
+
+    test('falls back to the asset type when a relation is not populated', () {
+      // The API returns the association even when the relation was not asked
+      // for, so a card must never render a blank label.
+      final model = MaintenanceRequestModel.fromJson({
+        'id': 'mr3',
+        'code': 'BARE',
+        'title': 'Unpopulated',
+        'category': 'OTHER',
+        'priority': 'LOW',
+        'status': 'NEW',
+        'property_id': 'p1',
+        'assets': [
+          {'id': 'a1', 'asset_type': 'BLOCK', 'property_block_id': 'b1'},
+        ],
+      });
+
+      expect(model.blockAssets.first.label, 'Block');
+      expect(model.assetSummary, 'Block');
     });
 
     test('defaults attachments and visibility when the API omits them', () {
@@ -38,11 +108,15 @@ void main() {
         'category': 'OTHER',
         'priority': 'LOW',
         'status': 'NEW',
-        'unit_id': 'u1',
+        'property_id': 'p1',
       });
 
       expect(model.attachments, isEmpty);
       expect(model.visibility, 'TENANT_VISIBLE');
+      // No assets key at all must not throw, and must not render blank.
+      expect(model.unitAssets, isEmpty);
+      expect(model.blockAssets, isEmpty);
+      expect(model.assetSummary, '—');
       expect(model.leaseId, isNull);
     });
   });

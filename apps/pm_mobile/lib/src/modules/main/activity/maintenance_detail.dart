@@ -566,12 +566,14 @@ class _PropertiesCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final priority = mrPriorityLabelFromApi(request.priority);
-    // Both destinations are property-scoped routes, so neither link can be
-    // offered without the unit's property id.
-    final propertyId = request.unit?.propertyId;
+    // The request carries its own property, so property-scoped links no longer
+    // depend on a unit being populated. A block-only request has no units at
+    // all and must still render.
+    final propertyId = request.propertyId;
     final leaseId = request.leaseId;
-    final canOpenUnit = propertyId != null;
-    final canOpenLease = propertyId != null && leaseId != null;
+    final unitAssets = request.unitAssets;
+    final blockAssets = request.blockAssets;
+    final canOpenLease = leaseId != null;
 
     return RLCard(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -592,17 +594,33 @@ class _PropertiesCard extends ConsumerWidget {
             label: 'Visibility',
             value: mrVisibilityLabelFromApi(request.visibility),
             onTap: () => _editSoon(context, ref, 'Changing visibility'),
-            last: !canOpenUnit && !canOpenLease,
+            last: unitAssets.isEmpty && blockAssets.isEmpty && !canOpenLease,
           ),
-          if (canOpenUnit)
+          for (final asset in unitAssets)
             _NavRow(
               label: 'Unit',
-              value: request.unit?.name ?? 'View unit',
-              last: !canOpenLease,
+              value: asset.label,
+              last:
+                  asset == unitAssets.last &&
+                  blockAssets.isEmpty &&
+                  !canOpenLease,
               onTap: () async {
                 await Haptics.vibrate(HapticsType.selection);
                 if (!context.mounted) return;
-                context.push('/properties/$propertyId/units/${request.unitId}');
+                context.push('/properties/$propertyId/units/${asset.unitId}');
+              },
+            ),
+          // There is no block detail screen, so a block row opens the
+          // property's blocks list — the closest existing destination.
+          for (final asset in blockAssets)
+            _NavRow(
+              label: 'Block',
+              value: asset.label,
+              last: asset == blockAssets.last && !canOpenLease,
+              onTap: () async {
+                await Haptics.vibrate(HapticsType.selection);
+                if (!context.mounted) return;
+                context.push('/properties/$propertyId/blocks');
               },
             ),
           if (canOpenLease)

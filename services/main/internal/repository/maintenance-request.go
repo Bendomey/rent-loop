@@ -78,6 +78,7 @@ type ListMaintenanceRequestsFilter struct {
 	PropertyIDs       *[]string
 	ClientUserID      *string
 	UnitIDs           *[]string
+	BlockIDs          *[]string
 	LeaseID           *string
 	Statuses          []string
 	Priority          *string
@@ -142,6 +143,7 @@ func (r *maintenanceRequestRepository) List(
 			mrPropertyIDsScope(filters.PropertyIDs),
 			mrClientUserAccessScope(filters.ClientUserID),
 			mrUnitIDsScope(filters.UnitIDs),
+			mrBlockIDsScope(filters.BlockIDs),
 			mrLeaseIDScope(filters.LeaseID),
 			mrStatusScope(filters.Statuses),
 			mrPriorityScope(filters.Priority),
@@ -182,6 +184,7 @@ func (r *maintenanceRequestRepository) Count(
 			mrPropertyIDsScope(filters.PropertyIDs),
 			mrClientUserAccessScope(filters.ClientUserID),
 			mrUnitIDsScope(filters.UnitIDs),
+			mrBlockIDsScope(filters.BlockIDs),
 			mrLeaseIDScope(filters.LeaseID),
 			mrStatusScope(filters.Statuses),
 			mrPriorityScope(filters.Priority),
@@ -413,11 +416,10 @@ func mrClientIDScope(clientID *string) func(db *gorm.DB) *gorm.DB {
 			return db
 		}
 		subQuery := db.Session(&gorm.Session{NewDB: true}).
-			Table("units").
-			Select("units.id").
-			Joins("JOIN properties ON properties.id = units.property_id").
-			Where("properties.client_id = ? AND units.deleted_at IS NULL AND properties.deleted_at IS NULL", *clientID)
-		return db.Where("maintenance_requests.unit_id IN (?)", subQuery)
+			Table("properties").
+			Select("properties.id").
+			Where("properties.client_id = ? AND properties.deleted_at IS NULL", *clientID)
+		return db.Where("maintenance_requests.property_id IN (?)", subQuery)
 	}
 }
 
@@ -426,14 +428,10 @@ func mrClientUserAccessScope(clientUserID *string) func(db *gorm.DB) *gorm.DB {
 		if clientUserID == nil {
 			return db
 		}
-		unitsSubQuery := db.Session(&gorm.Session{NewDB: true}).
-			Table("units").
-			Select("id").
-			Where(
-				"property_id IN (?) AND deleted_at IS NULL",
-				accessiblePropertyIDsSubQuery(db, *clientUserID),
-			)
-		return db.Where("maintenance_requests.unit_id IN (?)", unitsSubQuery)
+		return db.Where(
+			"maintenance_requests.property_id IN (?)",
+			accessiblePropertyIDsSubQuery(db, *clientUserID),
+		)
 	}
 }
 
@@ -442,20 +440,46 @@ func mrPropertyIDsScope(propertyIDs *[]string) func(db *gorm.DB) *gorm.DB {
 		if propertyIDs == nil {
 			return db
 		}
-		subQuery := db.Session(&gorm.Session{NewDB: true}).
-			Table("units").
-			Select("id").
-			Where("property_id IN (?) AND deleted_at IS NULL", *propertyIDs)
-		return db.Where("maintenance_requests.unit_id IN (?)", subQuery)
+		return db.Where("maintenance_requests.property_id IN (?)", *propertyIDs)
 	}
 }
 
+// mrUnitIDsScope matches requests that target any of the given units. EXISTS
+// rather than a join, so a request targeting two of the selected units is still
+// returned exactly once.
 func mrUnitIDsScope(unitIDs *[]string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if unitIDs == nil {
 			return db
 		}
-		return db.Where("maintenance_requests.unit_id IN (?)", *unitIDs)
+		return db.Where(
+			`EXISTS (
+				SELECT 1 FROM maintenance_request_assets a
+				WHERE a.maintenance_request_id = maintenance_requests.id
+				  AND a.asset_type = 'UNIT'
+				  AND a.unit_id IN (?)
+				  AND a.deleted_at IS NULL
+			)`,
+			*unitIDs,
+		)
+	}
+}
+
+func mrBlockIDsScope(blockIDs *[]string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if blockIDs == nil {
+			return db
+		}
+		return db.Where(
+			`EXISTS (
+				SELECT 1 FROM maintenance_request_assets a
+				WHERE a.maintenance_request_id = maintenance_requests.id
+				  AND a.asset_type = 'BLOCK'
+				  AND a.property_block_id IN (?)
+				  AND a.deleted_at IS NULL
+			)`,
+			*blockIDs,
+		)
 	}
 }
 
@@ -611,6 +635,7 @@ func (r *maintenanceRequestRepository) CountByStatus(
 			mrPropertyIDsScope(filters.PropertyIDs),
 			mrClientUserAccessScope(filters.ClientUserID),
 			mrUnitIDsScope(filters.UnitIDs),
+			mrBlockIDsScope(filters.BlockIDs),
 			mrLeaseIDScope(filters.LeaseID),
 			mrTenantScope(filters.TenantID),
 		).

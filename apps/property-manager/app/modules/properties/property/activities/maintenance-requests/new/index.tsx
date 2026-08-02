@@ -5,11 +5,13 @@ import { useForm } from 'react-hook-form'
 import { Link, useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
+import { useGetPropertyBlocks } from '~/api/blocks'
 import {
 	useCreateMaintenanceRequest,
 	type CreateMaintenanceRequestInput,
 } from '~/api/maintenance-requests'
 import { useGetPropertyUnits } from '~/api/units'
+import { MultiSelect } from '~/components/multi-select'
 import { Button } from '~/components/ui/button'
 import {
 	Form,
@@ -28,6 +30,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '~/components/ui/select'
+import { Switch } from '~/components/ui/switch'
 import { Textarea } from '~/components/ui/textarea'
 import { TypographyH3, TypographyMuted } from '~/components/ui/typography'
 import { useUploadObjectBulk } from '~/hooks/use-upload-object-bulk'
@@ -42,19 +45,33 @@ const CATEGORY_VALUES = Object.keys(CATEGORY_LABELS) as [
 	...MaintenanceRequestCategory[],
 ]
 
-const schema = z.object({
-	title: z.string().min(1, 'Title is required'),
-	description: z.string().min(1, 'Description is required'),
-	priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'EMERGENCY'], {
-		error: 'Priority is required',
-	}),
-	category: z.enum(CATEGORY_VALUES, {
-		error: 'Category is required',
-	}),
-	unit_id: z.string({ error: 'Unit is required' }).min(1, 'Unit is required'),
-	visibility: z.enum(['TENANT_VISIBLE', 'INTERNAL_ONLY']),
-	attachments: z.array(z.string()).optional(),
-})
+const schema = z
+	.object({
+		title: z.string().min(1, 'Title is required'),
+		description: z.string().min(1, 'Description is required'),
+		priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'EMERGENCY'], {
+			error: 'Priority is required',
+		}),
+		category: z.enum(CATEGORY_VALUES, {
+			error: 'Category is required',
+		}),
+		unit_ids: z.array(z.string()),
+		block_ids: z.array(z.string()),
+		create_separate_requests: z.boolean(),
+		visibility: z.enum(['TENANT_VISIBLE', 'INTERNAL_ONLY']),
+		attachments: z.array(z.string()).optional(),
+	})
+	.superRefine((values, ctx) => {
+		// A request must concern something. Reported on unit_ids so the message
+		// lands next to the units picker.
+		if (values.unit_ids.length === 0 && values.block_ids.length === 0) {
+			ctx.addIssue({
+				code: 'custom',
+				path: ['unit_ids'],
+				message: 'Select at least one block or unit',
+			})
+		}
+	})
 
 type FormValues = z.infer<typeof schema>
 
@@ -78,6 +95,14 @@ export function NewPropertyActivitiesMaintenanceRequestModule() {
 		},
 	)
 
+	const { data: blocks } = useGetPropertyBlocks(
+		safeString(clientUser?.client_id),
+		{
+			property_id: resolvedPropertyId,
+			pagination: { page: 1, per: 200 },
+		},
+	)
+
 	const { upload, remove, uploadingIds, uploadedUrls, isUploading } =
 		useUploadObjectBulk('maintenance-requests')
 
@@ -88,15 +113,51 @@ export function NewPropertyActivitiesMaintenanceRequestModule() {
 			description: '',
 			priority: undefined,
 			category: undefined,
-			unit_id: undefined,
+			unit_ids: [],
+			block_ids: [],
+			create_separate_requests: false,
 			visibility: 'TENANT_VISIBLE',
 			attachments: [],
 		},
 	})
 
+	const selectedUnitIds = form.watch('unit_ids')
+	const selectedBlockIds = form.watch('block_ids')
+	const fanOut = form.watch('create_separate_requests')
+
+	const assetCount = selectedUnitIds.length + selectedBlockIds.length
+
+	// With fan-out on, each unit becomes its own single-unit request and may stay
+	// tenant-visible; block requests are always internal. With fan-out off,
+	// anything broader than one unit is internal.
+	const forcedInternal = fanOut
+		? selectedUnitIds.length === 0
+		: selectedBlockIds.length > 0 || assetCount > 1
+
+	const blockOptions = (blocks?.rows ?? []).map((block) => ({
+		label: block.name,
+		value: block.id,
+	}))
+
+	// Units are grouped by their block so a large property stays scannable.
+	const unitGroups = (blocks?.rows ?? [])
+		.map((block) => ({
+			heading: block.name,
+			options: (units?.rows ?? [])
+				.filter((unit) => unit.property_block_id === block.id)
+				.map((unit) => ({ label: unit.name, value: unit.id })),
+		}))
+		.filter((group) => group.options.length > 0)
+
 	useEffect(() => {
 		form.setValue('attachments', uploadedUrls)
 	}, [uploadedUrls, form])
+
+	useEffect(() => {
+		if (forcedInternal) {
+			form.setValue('visibility', 'INTERNAL_ONLY')
+		}
+	}, [forcedInternal, form])
 
 	const onSubmit = async (values: FormValues) => {
 		try {
@@ -107,18 +168,31 @@ export function NewPropertyActivitiesMaintenanceRequestModule() {
 				priority: values.priority,
 				category: values.category,
 				visibility: values.visibility,
-				unit_id: values.unit_id,
+				unit_ids: values.unit_ids,
+				block_ids: values.block_ids,
+				create_separate_requests: values.create_separate_requests,
 				property_id: resolvedPropertyId,
 				attachments: values.attachments ?? [],
 			}
-			await createRequest.mutateAsync(input)
-			toast.success('Maintenance request created')
+			const created = await createRequest.mutateAsync(input)
+
 			void queryClient.invalidateQueries({
 				queryKey: [QUERY_KEYS.MAINTENANCE_REQUESTS],
 			})
-			void navigate(
-				`/properties/${resolvedPropertyId}/activities/maintenance-requests`,
-			)
+
+			const listPath = `/properties/${resolvedPropertyId}/activities/maintenance-requests`
+
+			// A single request goes straight to its detail page; a fan-out has no
+			// single destination, so land on the board instead.
+			const onlyRequest = created?.length === 1 ? created[0] : undefined
+			if (onlyRequest) {
+				toast.success('Maintenance request created')
+				void navigate(`${listPath}/${onlyRequest.id}`)
+				return
+			}
+
+			toast.success(`${created?.length ?? 0} maintenance requests created`)
+			void navigate(listPath)
 		} catch (err) {
 			toast.error(
 				err instanceof Error ? err.message : 'Failed to create request',
@@ -131,40 +205,89 @@ export function NewPropertyActivitiesMaintenanceRequestModule() {
 			<div>
 				<TypographyH3>New Maintenance Request</TypographyH3>
 				<TypographyMuted>
-					Report a new maintenance issue for a unit.
+					Report a new maintenance issue for one or more blocks or units.
 				</TypographyMuted>
 			</div>
 
 			<Form {...form}>
 				<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-					<div className="grid grid-cols-2">
+					<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 						<FormField
 							control={form.control}
-							name="unit_id"
+							name="block_ids"
 							render={({ field }) => (
-								<FormItem className="">
-									<FormLabel>
-										Unit <span className="text-red-600">*</span>
-									</FormLabel>
-									<Select onValueChange={field.onChange} value={field.value}>
-										<FormControl>
-											<SelectTrigger className="w-full">
-												<SelectValue placeholder="Select unit" />
-											</SelectTrigger>
-										</FormControl>
-										<SelectContent>
-											{units?.rows.map((unit) => (
-												<SelectItem key={unit.id} value={unit.id}>
-													{unit.name}
-												</SelectItem>
-											))}
-										</SelectContent>
-									</Select>
+								<FormItem>
+									<FormLabel>Blocks</FormLabel>
+									<FormControl>
+										<MultiSelect
+											options={blockOptions}
+											defaultValue={field.value}
+											onValueChange={field.onChange}
+											placeholder="Select blocks"
+											maxCount={3}
+											className="w-full"
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+
+						<FormField
+							control={form.control}
+							name="unit_ids"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Units</FormLabel>
+									<FormControl>
+										<MultiSelect
+											options={unitGroups}
+											defaultValue={field.value}
+											onValueChange={field.onChange}
+											placeholder="Select units"
+											maxCount={3}
+											className="w-full"
+										/>
+									</FormControl>
 									<FormMessage />
 								</FormItem>
 							)}
 						/>
 					</div>
+
+					{assetCount > 1 && (
+						<FormField
+							control={form.control}
+							name="create_separate_requests"
+							render={({ field }) => (
+								<FormItem className="flex flex-row items-start gap-3 rounded-md border p-4">
+									<FormControl>
+										<Switch
+											checked={field.value}
+											onCheckedChange={field.onChange}
+										/>
+									</FormControl>
+									<div className="space-y-1">
+										<FormLabel>Create separate requests</FormLabel>
+										<TypographyMuted>
+											Creates one request per selected asset. Each unit request
+											can still notify its tenant.
+										</TypographyMuted>
+									</div>
+								</FormItem>
+							)}
+						/>
+					)}
+
+					{forcedInternal && (
+						<div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3">
+							<TypographyMuted className="text-amber-700 dark:text-amber-400">
+								{selectedUnitIds.length === 0
+									? 'Block work has no tenant attached, so this request will be Internal Only.'
+									: 'This request covers more than one asset, so it will be Internal Only and no tenant is notified. Turn on “Create separate requests” to notify each tenant.'}
+							</TypographyMuted>
+						</div>
+					)}
 					<FormField
 						control={form.control}
 						name="title"
@@ -289,7 +412,11 @@ export function NewPropertyActivitiesMaintenanceRequestModule() {
 							name="visibility"
 							render={({ field }) => (
 								<FormItem>
-									<Select onValueChange={field.onChange} value={field.value}>
+									<Select
+										onValueChange={field.onChange}
+										value={field.value}
+										disabled={forcedInternal}
+									>
 										<FormControl>
 											<SelectTrigger className="w-full">
 												<SelectValue placeholder="Select visibility" />

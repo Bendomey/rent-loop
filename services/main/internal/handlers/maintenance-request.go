@@ -29,13 +29,17 @@ func NewMaintenanceRequestHandler(
 // ─── Request Bodies ───────────────────────────────────────────────────────────
 
 type CreateMaintenanceRequestBody struct {
-	UnitID      string   `json:"unit_id"     validate:"required,uuid4"`
-	Title       string   `json:"title"       validate:"required"`
-	Description string   `json:"description" validate:"required"`
-	Priority    string   `json:"priority"    validate:"required,oneof=LOW MEDIUM HIGH EMERGENCY"`
-	Category    string   `json:"category"    validate:"required"`
-	Visibility  string   `json:"visibility"  validate:"required,oneof=TENANT_VISIBLE INTERNAL_ONLY"`
-	Attachments []string `json:"attachments" validate:"omitempty"`
+	// At least one of UnitIDs / BlockIDs must be non-empty. That rule cannot be
+	// expressed in struct tags, so the service enforces it.
+	UnitIDs                []string `json:"unit_ids"                 validate:"omitempty,dive,uuid4"`
+	BlockIDs               []string `json:"block_ids"                validate:"omitempty,dive,uuid4"`
+	CreateSeparateRequests bool     `json:"create_separate_requests"`
+	Title                  string   `json:"title"                    validate:"required"`
+	Description            string   `json:"description"              validate:"required"`
+	Priority               string   `json:"priority"                 validate:"required,oneof=LOW MEDIUM HIGH EMERGENCY"`
+	Category               string   `json:"category"                 validate:"required"`
+	Visibility             string   `json:"visibility"               validate:"required,oneof=TENANT_VISIBLE INTERNAL_ONLY"`
+	Attachments            []string `json:"attachments"              validate:"omitempty"`
 }
 
 type UpdateMaintenanceRequestBody struct {
@@ -86,19 +90,22 @@ type TenantCreateMaintenanceRequestBody struct {
 
 // Create godoc
 //
-//	@Summary		Create a maintenance request (Admin)
-//	@Description	Create a new maintenance request (Admin)
+//	@Summary		Create maintenance request(s) (Admin)
+//	@Description	Create maintenance request(s) against one or more units and/or blocks (Admin).
+//	@Description	Always responds with an array: one request normally, or one per selected asset
+//	@Description	when create_separate_requests is true. A request covering more than one asset,
+//	@Description	or any block, is forced to INTERNAL_ONLY.
 //	@Tags			MaintenanceRequests
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			property_id	path		string														true	"Property ID"
-//	@Param			body		body		CreateMaintenanceRequestBody								true	"Request details"
-//	@Success		201			{object}	object{data=transformations.AdminOutputMaintenanceRequest}	"Maintenance request created successfully"
-//	@Failure		400			{object}	lib.HTTPError												"Error occurred when creating maintenance request"
-//	@Failure		401			{object}	string														"Invalid or absent authentication token"
-//	@Failure		422			{object}	lib.HTTPError												"Validation error"
-//	@Failure		500			{object}	string														"An unexpected error occurred"
+//	@Param			property_id	path		string															true	"Property ID"
+//	@Param			body		body		CreateMaintenanceRequestBody									true	"Request details"
+//	@Success		201			{object}	object{data=[]transformations.AdminOutputMaintenanceRequest}	"Maintenance request(s) created successfully"
+//	@Failure		400			{object}	lib.HTTPError													"Error occurred when creating maintenance request"
+//	@Failure		401			{object}	string															"Invalid or absent authentication token"
+//	@Failure		422			{object}	lib.HTTPError													"Validation error"
+//	@Failure		500			{object}	string															"An unexpected error occurred"
 //	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests [post]
 func (h *MaintenanceRequestHandler) Create(w http.ResponseWriter, r *http.Request) {
 	currentUser, ok := lib.ClientUserFromContext(r.Context())
@@ -116,24 +123,35 @@ func (h *MaintenanceRequestHandler) Create(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	mr, err := h.service.CreateByAdmin(r.Context(), services.CreateMaintenanceRequestByAdminInput{
-		UnitID:       body.UnitID,
-		ClientUserID: currentUser.ID,
-		Title:        body.Title,
-		Desc:         body.Description,
-		Priority:     body.Priority,
-		Category:     body.Category,
-		Visibility:   body.Visibility,
-		Attachments:  body.Attachments,
+	requests, err := h.service.CreateByAdmin(r.Context(), services.CreateMaintenanceRequestByAdminInput{
+		PropertyID:             chi.URLParam(r, "property_id"),
+		UnitIDs:                body.UnitIDs,
+		BlockIDs:               body.BlockIDs,
+		CreateSeparateRequests: body.CreateSeparateRequests,
+		ClientUserID:           currentUser.ID,
+		Title:                  body.Title,
+		Desc:                   body.Description,
+		Priority:               body.Priority,
+		Category:               body.Category,
+		Visibility:             body.Visibility,
+		Attachments:            body.Attachments,
 	})
 	if err != nil {
 		HandleErrorResponse(w, err)
 		return
 	}
 
+	// Always an array: one entry normally, one per asset when the caller asked
+	// for separate requests. A shape that varies by request flag would break
+	// clients silently.
+	output := make([]any, len(requests))
+	for i := range requests {
+		output[i] = transformations.DBMaintenanceRequestToRest(&requests[i])
+	}
+
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformations.DBMaintenanceRequestToRest(mr),
+		"data": output,
 	})
 }
 
@@ -145,6 +163,7 @@ type ListMaintenanceRequestsQuery struct {
 	AssignedWorkerID  *string  `json:"assigned_worker_id"  query:"assigned_worker_id"  description:"Filter by assigned worker UUID"`
 	AssignedManagerID *string  `json:"assigned_manager_id" query:"assigned_manager_id" description:"Filter by assigned manager UUID"`
 	UnitIDs           []string `json:"unit_id"             query:"unit_id"             description:"Filter by one or more unit UUIDs"                                   collectionFormat:"multi" validate:"omitempty,dive,uuid4"`
+	BlockIDs          []string `json:"block_id"            query:"block_id"            description:"Filter by one or more property block UUIDs"                         collectionFormat:"multi" validate:"omitempty,dive,uuid4"`
 	LeaseID           *string  `json:"lease_id"            query:"lease_id"            description:"Filter by lease UUID"                                                                        validate:"omitempty,uuid4"`
 	TenantID          *string  `json:"tenant_id"           query:"tenant_id"           description:"Filter by tenant UUID"                                                                       validate:"omitempty,uuid4"`
 }
@@ -189,6 +208,7 @@ func (h *MaintenanceRequestHandler) List(w http.ResponseWriter, r *http.Request)
 		AssignedManagerID: lib.NullOrString(r.URL.Query().Get("assigned_manager_id")),
 		PropertyIDs:       &propertyIDs,
 		UnitIDs:           lib.NullOrStringArray(r.URL.Query()["unit_id"]),
+		BlockIDs:          lib.NullOrStringArray(r.URL.Query()["block_id"]),
 		LeaseID:           lib.NullOrString(r.URL.Query().Get("lease_id")),
 		TenantID:          lib.NullOrString(r.URL.Query().Get("tenant_id")),
 	}
@@ -256,6 +276,7 @@ func (h *MaintenanceRequestHandler) ListAcrossProperties(w http.ResponseWriter, 
 		AssignedWorkerID:  lib.NullOrString(r.URL.Query().Get("assigned_worker_id")),
 		AssignedManagerID: lib.NullOrString(r.URL.Query().Get("assigned_manager_id")),
 		UnitIDs:           lib.NullOrStringArray(r.URL.Query()["unit_id"]),
+		BlockIDs:          lib.NullOrStringArray(r.URL.Query()["block_id"]),
 		LeaseID:           lib.NullOrString(r.URL.Query().Get("lease_id")),
 		TenantID:          lib.NullOrString(r.URL.Query().Get("tenant_id")),
 	}

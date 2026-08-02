@@ -30,6 +30,22 @@ interface RequestCardProps {
 	propertyId: string
 }
 
+// Names the first asset and counts the rest. The API returns the association
+// even when the relation was not populated, so fall back to the type rather
+// than rendering a blank chip.
+const assetSummary = (
+	assets: MaintenanceRequestAsset[] | undefined,
+): string | null => {
+	const first = assets?.[0]
+	if (!first) return null
+	const label =
+		first.asset_type === 'UNIT'
+			? (first.unit?.name ?? 'Unit')
+			: (first.property_block?.name ?? 'Block')
+	const rest = (assets?.length ?? 0) - 1
+	return rest > 0 ? `${label} +${rest}` : label
+}
+
 export function RequestCard({ item, propertyId }: RequestCardProps) {
 	const [assignDialogOpen, setAssignDialogOpen] = useState(false)
 	const [assignType, setAssignType] = useState<'worker' | 'manager'>('worker')
@@ -100,6 +116,14 @@ export function RequestCard({ item, propertyId }: RequestCardProps) {
 						>
 							{CATEGORY_LABELS[item.category]}
 						</Badge>
+						{assetSummary(item.assets) ? (
+							<Badge
+								variant="outline"
+								className="text-muted-foreground px-1.5 py-0 text-[10px] font-normal"
+							>
+								{assetSummary(item.assets)}
+							</Badge>
+						) : null}
 					</div>
 
 					{(workerInitials || managerInitials) && (

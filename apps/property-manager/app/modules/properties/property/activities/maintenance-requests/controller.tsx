@@ -1,4 +1,5 @@
 import { ToggleLeft } from 'lucide-react'
+import { getPropertyBlocks } from '~/api/blocks'
 import { getClientUserProperties } from '~/api/client-user-properties'
 import { getPropertyUnits } from '~/api/units'
 import { FilterSet } from '~/components/filter-set'
@@ -112,6 +113,36 @@ export function PropertyActivitiesMaintenanceRequestsController() {
 		},
 		...(isMultiUnit
 			? ([
+					{
+						id: 6,
+						type: 'selector',
+						selectType: 'multi',
+						label: 'Block',
+						value: {
+							onSearch: async ({ ids }) => {
+								if (!propertyId) return []
+								const data = await getPropertyBlocks(clientId, {
+									property_id: propertyId,
+									filters: {
+										ids: ids?.map((id) => id.toString()),
+									},
+									pagination: {
+										page: PAGINATION_DEFAULTS.PAGE,
+										per: PAGINATION_DEFAULTS.PER_PAGE,
+									},
+								})
+								return (
+									data?.rows.map((block) => ({
+										label: block.name,
+										value: block.id,
+									})) ?? []
+								)
+							},
+							urlParam: 'block',
+							defaultValues: [],
+						},
+						Icon: ToggleLeft,
+					},
 					{
 						id: 5,
 						type: 'selector',

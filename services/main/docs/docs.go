@@ -3912,6 +3912,15 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "name": "block_id",
+                        "in": "query"
+                    },
+                    {
                         "type": "string",
                         "name": "category",
                         "in": "query"
@@ -10819,6 +10828,15 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "name": "block_id",
+                        "in": "query"
+                    },
+                    {
                         "type": "string",
                         "name": "category",
                         "in": "query"
@@ -10978,7 +10996,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Create a new maintenance request (Admin)",
+                "description": "Create maintenance request(s) against one or more units and/or blocks (Admin).\nAlways responds with an array: one request normally, or one per selected asset\nwhen create_separate_requests is true. A request covering more than one asset,\nor any block, is forced to INTERNAL_ONLY.",
                 "consumes": [
                     "application/json"
                 ],
@@ -10988,7 +11006,7 @@ const docTemplate = `{
                 "tags": [
                     "MaintenanceRequests"
                 ],
-                "summary": "Create a maintenance request (Admin)",
+                "summary": "Create maintenance request(s) (Admin)",
                 "parameters": [
                     {
                         "type": "string",
@@ -11009,12 +11027,15 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "201": {
-                        "description": "Maintenance request created successfully",
+                        "description": "Maintenance request(s) created successfully",
                         "schema": {
                             "type": "object",
                             "properties": {
                                 "data": {
-                                    "$ref": "#/definitions/transformations.AdminOutputMaintenanceRequest"
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/transformations.AdminOutputMaintenanceRequest"
+                                    }
                                 }
                             }
                         }
@@ -21589,7 +21610,6 @@ const docTemplate = `{
                 "description",
                 "priority",
                 "title",
-                "unit_id",
                 "visibility"
             ],
             "properties": {
@@ -21599,8 +21619,17 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "block_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "category": {
                     "type": "string"
+                },
+                "create_separate_requests": {
+                    "type": "boolean"
                 },
                 "description": {
                     "type": "string"
@@ -21617,8 +21646,12 @@ const docTemplate = `{
                 "title": {
                     "type": "string"
                 },
-                "unit_id": {
-                    "type": "string"
+                "unit_ids": {
+                    "description": "At least one of UnitIDs / BlockIDs must be non-empty. That rule cannot be\nexpressed in struct tags, so the service enforces it.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "visibility": {
                     "type": "string",
@@ -24023,6 +24056,12 @@ const docTemplate = `{
                         "$ref": "#/definitions/transformations.OutputMaintenanceActivityLog"
                     }
                 },
+                "assets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/transformations.OutputMaintenanceRequestAsset"
+                    }
+                },
                 "assigned_manager": {
                     "$ref": "#/definitions/transformations.OutputClientUser"
                 },
@@ -24086,6 +24125,12 @@ const docTemplate = `{
                 "priority": {
                     "type": "string"
                 },
+                "property": {
+                    "$ref": "#/definitions/transformations.OutputProperty"
+                },
+                "property_id": {
+                    "type": "string"
+                },
                 "resolved_at": {
                     "type": "string"
                 },
@@ -24099,12 +24144,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "title": {
-                    "type": "string"
-                },
-                "unit": {
-                    "$ref": "#/definitions/transformations.AdminOutputUnit"
-                },
-                "unit_id": {
                     "type": "string"
                 },
                 "updated_at": {
@@ -26368,6 +26407,12 @@ const docTemplate = `{
                         "$ref": "#/definitions/transformations.OutputMaintenanceActivityLog"
                     }
                 },
+                "assets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/transformations.OutputMaintenanceRequestAsset"
+                    }
+                },
                 "attachments": {
                     "type": "array",
                     "items": {
@@ -26404,6 +26449,9 @@ const docTemplate = `{
                 "priority": {
                     "type": "string"
                 },
+                "property_id": {
+                    "type": "string"
+                },
                 "resolved_at": {
                     "type": "string"
                 },
@@ -26416,13 +26464,26 @@ const docTemplate = `{
                 "title": {
                     "type": "string"
                 },
-                "unit": {
-                    "$ref": "#/definitions/transformations.OutputUnit"
-                },
-                "unit_id": {
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "transformations.OutputMaintenanceRequestAsset": {
+            "type": "object",
+            "properties": {
+                "asset_type": {
                     "type": "string"
                 },
-                "updated_at": {
+                "id": {
+                    "type": "string"
+                },
+                "property_block": {},
+                "property_block_id": {
+                    "type": "string"
+                },
+                "unit": {},
+                "unit_id": {
                     "type": "string"
                 }
             }
