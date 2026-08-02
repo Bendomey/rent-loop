@@ -11,7 +11,7 @@ import { Link, useLoaderData, useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 import { PropertyDocumentsController } from './controller'
 import { useDeleteDocument, useGetDocuments } from '~/api/documents'
-import { DataTable } from '~/components/datatable'
+import { DataTable, useDataTableSort } from '~/components/datatable'
 import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
 import { Alert, AlertDescription } from '~/components/ui/alert'
 import {
@@ -45,10 +45,24 @@ import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 import type { loader } from '~/routes/_auth._dashboard.settings.documents'
 
+/**
+ * Fields the API may order by. `order_by` reaches the backend's ORDER BY
+ * clause, so only these — never a raw URL value — are forwarded.
+ */
+const SORTABLE_FIELDS = [
+	'documents.title',
+	'documents.updated_at',
+	'documents.created_at',
+]
+
 export function PropertyDocumentsSettingsModule() {
 	const { documentTemplates, error: documentError } =
 		useLoaderData<typeof loader>()
 	const [searchParams] = useSearchParams()
+	const sorter = useDataTableSort(SORTABLE_FIELDS, {
+		sort_by: 'documents.created_at',
+		sort: 'desc',
+	})
 	const { clientUser } = useClient()
 	const { clientUserProperty } = useProperty()
 	const queryClient = useQueryClient()
@@ -75,7 +89,7 @@ export function PropertyDocumentsSettingsModule() {
 			},
 			pagination: { page, per },
 			populate: ['CreatedBy', 'CreatedBy.User'],
-			sorter: { sort: 'desc', sort_by: 'created_at' },
+			sorter,
 			search: {
 				query: searchParams.get('query') ?? undefined,
 				fields: ['title'],
@@ -104,6 +118,8 @@ export function PropertyDocumentsSettingsModule() {
 			{
 				accessorKey: 'name',
 				header: 'Name',
+				enableSorting: true,
+				meta: { sortKey: 'documents.title' },
 				cell: ({ row }) => (
 					<div className="flex min-w-32 flex-col items-start gap-1">
 						<Link
@@ -145,6 +161,8 @@ export function PropertyDocumentsSettingsModule() {
 			{
 				accessorKey: 'updated_at',
 				header: 'Last Updated',
+				enableSorting: true,
+				meta: { sortKey: 'documents.updated_at' },
 				cell: ({ getValue }) => (
 					<div className="min-w-32">
 						<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">

@@ -3,7 +3,7 @@ import { ChevronRight, Copy, Plus } from 'lucide-react'
 import { useEffect, useMemo } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 import { useGetPropertyAnnouncements } from '~/api/announcements'
-import { DataTable } from '~/components/datatable'
+import { DataTable, useDataTableSort } from '~/components/datatable'
 import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
@@ -51,12 +51,26 @@ function getStatusBadge(status: Announcement['status']) {
 	)
 }
 
+/**
+ * Fields the API may order by. `order_by` reaches the backend's ORDER BY
+ * clause, so only these — never a raw URL value — are forwarded.
+ */
+const SORTABLE_FIELDS = [
+	'announcements.title',
+	'announcements.published_at',
+	'announcements.created_at',
+]
+
 export function PropertyActivitiesAnnouncementsModule() {
 	const { clientUserProperty } = useProperty()
 	const { clientUser } = useClient()
 	const propertyId = clientUserProperty?.property?.id
 	const navigate = useNavigate()
 	const [searchParams] = useSearchParams()
+	const sorter = useDataTableSort(SORTABLE_FIELDS, {
+		sort_by: 'announcements.created_at',
+		sort: 'desc',
+	})
 
 	const { startTour, hasCompletedTour } = useTour(
 		TOUR_KEYS.ANNOUNCEMENTS,
@@ -77,7 +91,7 @@ export function PropertyActivitiesAnnouncementsModule() {
 	const { data, isPending, isRefetching, error, refetch } =
 		useGetPropertyAnnouncements(safeString(clientUser?.client_id), propertyId, {
 			pagination: { page, per },
-			sorter: { sort: 'desc', sort_by: 'created_at' },
+			sorter,
 		})
 
 	const isLoading = isPending || isRefetching
@@ -87,7 +101,11 @@ export function PropertyActivitiesAnnouncementsModule() {
 			{
 				accessorKey: 'title',
 				header: 'Title',
-				meta: { className: 'w-full' },
+				// Titles are the point of this table, so the column is sized to
+				// dominate; `w-full` lets it take any slack left over on top.
+				size: 520,
+				enableSorting: true,
+				meta: { className: 'w-full', sortKey: 'announcements.title' },
 				cell: ({ row }) => (
 					<div className="flex items-center gap-2">
 						<span className="text-sm font-medium">{row.original.title}</span>
@@ -98,6 +116,9 @@ export function PropertyActivitiesAnnouncementsModule() {
 			{
 				accessorKey: 'published_at',
 				header: 'Publish Date',
+				size: 170,
+				enableSorting: true,
+				meta: { sortKey: 'announcements.published_at' },
 				cell: ({ row }) => (
 					<span className="text-muted-foreground min-w-32 text-xs">
 						{row.original.published_at

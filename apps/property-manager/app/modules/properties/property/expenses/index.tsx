@@ -5,7 +5,7 @@ import { Link, useSearchParams } from 'react-router'
 import { PropertyExpenseAnalyticsCards } from './components/cards'
 import { PropertyExpensesController } from './controller'
 import { useGetPropertyExpenses } from '~/api/expenses'
-import { DataTable } from '~/components/datatable'
+import { DataTable, useDataTableSort } from '~/components/datatable'
 import { Badge } from '~/components/ui/badge'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
@@ -16,8 +16,24 @@ import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 
+/**
+ * Fields the API may order by. `order_by` reaches the backend's ORDER BY
+ * clause, so only these — never a raw URL value — are forwarded.
+ */
+const SORTABLE_FIELDS = [
+	'expenses.code',
+	'expenses.description',
+	'expenses.context_type',
+	'expenses.amount',
+	'expenses.created_at',
+]
+
 export function PropertyExpensesModule() {
 	const [searchParams] = useSearchParams()
+	const sorter = useDataTableSort(SORTABLE_FIELDS, {
+		sort_by: 'expenses.created_at',
+		sort: 'desc',
+	})
 	const { clientUserProperty } = useProperty()
 	const { clientUser } = useClient()
 
@@ -38,7 +54,7 @@ export function PropertyExpensesModule() {
 		useGetPropertyExpenses(safeString(clientUser?.client_id), propertyId, {
 			filters: contextType ? { context_type: contextType } : {},
 			pagination: { page, per },
-			sorter: { sort: 'desc', sort_by: 'created_at' },
+			sorter,
 			populate: ['Invoices'],
 		})
 
@@ -47,15 +63,13 @@ export function PropertyExpensesModule() {
 	const columns: ColumnDef<Expense>[] = useMemo(() => {
 		return [
 			{
-				id: 'icon',
-				header: () => null,
-				cell: () => <Receipt className="text-muted-foreground size-5" />,
-			},
-			{
 				accessorKey: 'code',
 				header: 'Expense #',
+				enableSorting: true,
+				meta: { sortKey: 'expenses.code' },
 				cell: ({ row }) => (
-					<span className="truncate text-xs font-medium">
+					<span className="flex flex-row items-center gap-2 truncate text-xs font-medium">
+						<Receipt className="text-muted-foreground size-5" />
 						{row.original.code}
 					</span>
 				),
@@ -63,6 +77,8 @@ export function PropertyExpensesModule() {
 			{
 				accessorKey: 'description',
 				header: 'Description',
+				enableSorting: true,
+				meta: { sortKey: 'expenses.description' },
 				cell: ({ getValue }) => (
 					<span className="truncate text-xs text-zinc-700 dark:text-zinc-300">
 						{getValue<string>()}
@@ -72,6 +88,8 @@ export function PropertyExpensesModule() {
 			{
 				accessorKey: 'context_type',
 				header: 'Type',
+				enableSorting: true,
+				meta: { sortKey: 'expenses.context_type' },
 				cell: ({ row }) => {
 					const isLease =
 						row.original.context_type === 'LEASE' &&
@@ -96,6 +114,8 @@ export function PropertyExpensesModule() {
 			{
 				accessorKey: 'amount',
 				header: 'Amount',
+				enableSorting: true,
+				meta: { sortKey: 'expenses.amount' },
 				cell: ({ getValue, row }) => (
 					<span className="truncate text-xs font-semibold text-zinc-800 dark:text-white">
 						{formatAmount(getValue<number>() / 100, row.original.currency)}
@@ -149,6 +169,8 @@ export function PropertyExpensesModule() {
 			{
 				accessorKey: 'created_at',
 				header: 'Created On',
+				enableSorting: true,
+				meta: { sortKey: 'expenses.created_at' },
 				cell: ({ getValue }) => (
 					<div className="min-w-32">
 						<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">
@@ -173,30 +195,28 @@ export function PropertyExpensesModule() {
 
 			<PropertyExpensesController isLoading={isLoading} refetch={refetch} />
 
-			<div className="bg-background space-y-4 rounded-lg border p-3 sm:p-5">
-				<div className="h-full w-full">
-					<DataTable
-						columns={columns}
-						isLoading={isLoading}
-						refetch={refetch}
-						error={error ? 'Failed to load expenses.' : undefined}
-						dataResponse={{
-							rows: data?.rows ?? [],
-							total: data?.meta?.total ?? 0,
-							page,
-							page_size: per,
-							order: data?.meta?.order ?? 'desc',
-							order_by: data?.meta?.order_by ?? 'created_at',
-							has_prev_page: data?.meta?.has_prev_page ?? false,
-							has_next_page: data?.meta?.has_next_page ?? false,
-						}}
-						empty={{
-							message: 'No expenses found',
-							description:
-								'Expenses will appear here once created from leases or maintenance requests.',
-						}}
-					/>
-				</div>
+			<div className="h-full w-full">
+				<DataTable
+					columns={columns}
+					isLoading={isLoading}
+					refetch={refetch}
+					error={error ? 'Failed to load expenses.' : undefined}
+					dataResponse={{
+						rows: data?.rows ?? [],
+						total: data?.meta?.total ?? 0,
+						page,
+						page_size: per,
+						order: data?.meta?.order ?? 'desc',
+						order_by: data?.meta?.order_by ?? 'created_at',
+						has_prev_page: data?.meta?.has_prev_page ?? false,
+						has_next_page: data?.meta?.has_next_page ?? false,
+					}}
+					empty={{
+						message: 'No expenses found',
+						description:
+							'Expenses will appear here once created from leases or maintenance requests.',
+					}}
+				/>
 			</div>
 		</div>
 	)

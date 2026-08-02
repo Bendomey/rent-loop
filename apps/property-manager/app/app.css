@@ -202,6 +202,15 @@
 	--neutral: var(--rl-neutral);
 	--neutral-bg: var(--rl-neutral-bg);
 
+	/*
+	 * Table row states, pre-composited against the row surface so they are fully
+	 * opaque. A sticky (pinned) cell paints in its own layer, so it cannot sit on
+	 * the row's background — it needs its own, and a translucent tint would let
+	 * the columns scrolling beneath show through.
+	 */
+	--row-hover: color-mix(in oklab, var(--muted) 50%, var(--card));
+	--row-selected: color-mix(in oklab, var(--primary) 5%, var(--card));
+
 	--sidebar: var(--rl-surface);
 	--sidebar-foreground: var(--rl-ink);
 	/* the active nav pill: solid crimson, white label */
@@ -256,6 +265,10 @@
 	--danger-bg: rgba(200, 0, 58, 0.22);
 	--neutral: var(--rl-muted-soft-inverse);
 	--neutral-bg: rgba(250, 250, 248, 0.08);
+
+	/* recomposited against the dark surface — see the light-mode note above */
+	--row-hover: color-mix(in oklab, var(--muted) 50%, var(--card));
+	--row-selected: color-mix(in oklab, var(--primary) 12%, var(--card));
 
 	--sidebar: var(--rl-surface-dark);
 	--sidebar-foreground: var(--rl-ink-inverse);

@@ -13,7 +13,7 @@ import CancelTenantApplicationModal from './cancel'
 import { PropertyTenantApplicationsController } from './controller'
 import DeleteTenantApplicationModal from './delete'
 import { useGetPropertyTenantApplications } from '~/api/tenant-applications'
-import { DataTable } from '~/components/datatable'
+import { DataTable, useDataTableSort } from '~/components/datatable'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import {
@@ -30,8 +30,22 @@ import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 
+/**
+ * Fields the API may order by. `order_by` reaches the backend's ORDER BY
+ * clause, so only these — never a raw URL value — are forwarded.
+ */
+const SORTABLE_FIELDS = [
+	'tenant_applications.code',
+	'tenant_applications.status',
+	'tenant_applications.created_at',
+]
+
 export function PropertyTenantApplicationsModule() {
 	const [searchParams] = useSearchParams()
+	const sorter = useDataTableSort(SORTABLE_FIELDS, {
+		sort_by: 'tenant_applications.created_at',
+		sort: 'desc',
+	})
 	const { clientUserProperty } = useProperty()
 	const { clientUser } = useClient()
 	const [openApproveModal, setOpenApproveModal] = useState(false)
@@ -64,7 +78,7 @@ export function PropertyTenantApplicationsModule() {
 				},
 				pagination: { page, per },
 				populate: ['DesiredUnit'],
-				sorter: { sort: 'desc', sort_by: 'created_at' },
+				sorter,
 				search: {
 					query: searchParams.get('query') ?? undefined,
 					fields: ['first_name', 'last_name', 'email', 'phone'],
@@ -77,42 +91,36 @@ export function PropertyTenantApplicationsModule() {
 	const columns: ColumnDef<TenantApplication>[] = useMemo(() => {
 		return [
 			{
-				id: 'id',
-				header: () => null,
-				cell: ({ row }) => {
-					if (row.original.profile_photo_url) {
-						return (
-							<img
-								src={row.original.profile_photo_url}
-								alt="Profile Photo"
-								className="h-8 w-8 rounded-full object-cover"
-							/>
-						)
-					} else {
-						return <User />
-					}
-				},
-			},
-			{
 				accessorKey: 'name',
 				header: 'Name',
 				cell: ({ row }) => {
 					const hasName = row.original.first_name || row.original.last_name
 					return (
-						<div className="flex min-w-32 flex-col">
-							{hasName && (
-								<span className="e truncate text-xs">
-									{`${row.original.first_name ?? ''} ${row.original.other_names ? row.original.other_names + ' ' : ''}${row.original.last_name ?? ''}`.trim()}
-								</span>
+						<div className="flex min-w-32 items-center gap-2">
+							{row.original.profile_photo_url ? (
+								<img
+									src={row.original.profile_photo_url}
+									alt="Profile Photo"
+									className="h-8 w-8 rounded-full object-cover"
+								/>
+							) : (
+								<User />
 							)}
-							<Link
-								to={`/properties/${clientUserProperty?.property_id}/occupancy/applications/${row.original.id}`}
-								aria-label={`View details for application`}
-							>
-								<span className="truncate text-xs text-blue-600 hover:underline dark:text-blue-500">
-									{row.original.code}
-								</span>
-							</Link>
+							<div className="flex min-w-32 flex-col">
+								{hasName && (
+									<span className="e truncate text-xs">
+										{`${row.original.first_name ?? ''} ${row.original.other_names ? row.original.other_names + ' ' : ''}${row.original.last_name ?? ''}`.trim()}
+									</span>
+								)}
+								<Link
+									to={`/properties/${clientUserProperty?.property_id}/occupancy/applications/${row.original.id}`}
+									aria-label={`View details for application`}
+								>
+									<span className="truncate text-xs text-blue-600 hover:underline dark:text-blue-500">
+										{row.original.code}
+									</span>
+								</Link>
+							</div>
 						</div>
 					)
 				},
@@ -149,6 +157,8 @@ export function PropertyTenantApplicationsModule() {
 			{
 				accessorKey: 'status',
 				header: 'Status',
+				enableSorting: true,
+				meta: { sortKey: 'tenant_applications.status' },
 				cell: ({ getValue }) => (
 					<Badge variant="outline" className="text-muted-foreground px-1.5">
 						{getValue<string>() === 'TenantApplication.Status.InProgress' ? (
@@ -169,6 +179,8 @@ export function PropertyTenantApplicationsModule() {
 			{
 				accessorKey: 'created_at',
 				header: 'Created On',
+				enableSorting: true,
+				meta: { sortKey: 'tenant_applications.created_at' },
 				cell: ({ getValue }) => (
 					<div className="min-w-32">
 						<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">
