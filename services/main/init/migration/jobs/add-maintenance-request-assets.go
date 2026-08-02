@@ -11,7 +11,7 @@ import (
 // access control do not have to reach through units on every query.
 func AddMaintenanceRequestAssets() *gormigrate.Migration {
 	return &gormigrate.Migration{
-		ID: "202608010001_ADD_MAINTENANCE_REQUEST_ASSETS",
+		ID: "202608010001_ADD_MAINTENANCE_REQUEST_ASSETS_V2",
 		Migrate: func(db *gorm.DB) error {
 			return db.Transaction(func(tx *gorm.DB) error {
 				statements := []string{
@@ -55,23 +55,34 @@ func AddMaintenanceRequestAssets() *gormigrate.Migration {
 
 					`ALTER TABLE maintenance_requests ADD COLUMN IF NOT EXISTS property_id UUID`,
 
-					// Backfill: one UNIT asset per existing request.
-					`INSERT INTO maintenance_request_assets
-						(id, created_at, updated_at, maintenance_request_id, asset_type, unit_id)
-					 SELECT uuid_generate_v4(), NOW(), NOW(), mr.id, 'UNIT', mr.unit_id
-					 FROM maintenance_requests mr
-					 WHERE mr.unit_id IS NOT NULL
-					   AND NOT EXISTS (
-						 SELECT 1 FROM maintenance_request_assets a
-						 WHERE a.maintenance_request_id = mr.id AND a.unit_id = mr.unit_id
-					   )`,
+					// Backfill only applies to databases that still carry the old
+					// single unit_id column. On a freshly created schema the column
+					// never existed, so the whole block is skipped — referencing
+					// mr.unit_id unguarded would fail to parse there.
+					`DO $$
+					BEGIN
+						IF EXISTS (
+							SELECT 1 FROM information_schema.columns
+							WHERE table_name = 'maintenance_requests' AND column_name = 'unit_id'
+						) THEN
+							-- One UNIT asset per existing request.
+							INSERT INTO maintenance_request_assets
+								(id, created_at, updated_at, maintenance_request_id, asset_type, unit_id)
+							SELECT uuid_generate_v4(), NOW(), NOW(), mr.id, 'UNIT', mr.unit_id
+							FROM maintenance_requests mr
+							WHERE mr.unit_id IS NOT NULL
+							  AND NOT EXISTS (
+								SELECT 1 FROM maintenance_request_assets a
+								WHERE a.maintenance_request_id = mr.id AND a.unit_id = mr.unit_id
+							  );
 
-					`UPDATE maintenance_requests mr
-					 SET property_id = u.property_id
-					 FROM units u
-					 WHERE u.id = mr.unit_id AND mr.property_id IS NULL`,
+							UPDATE maintenance_requests mr
+							SET property_id = u.property_id
+							FROM units u
+							WHERE u.id = mr.unit_id AND mr.property_id IS NULL;
+						END IF;
+					END $$;`,
 
-					`ALTER TABLE maintenance_requests ALTER COLUMN property_id SET NOT NULL`,
 					`CREATE INDEX IF NOT EXISTS idx_mr_property_id
 						ON maintenance_requests (property_id)`,
 

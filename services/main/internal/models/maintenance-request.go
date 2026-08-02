@@ -15,7 +15,9 @@ type MaintenanceRequest struct {
 	BaseModelSoftDelete
 	Code string `gorm:"not null;uniqueIndex;"` // unique maintenance request code
 
-	PropertyID string `gorm:"not null;index;"`
+	// Nullable: pre-existing requests migrated from the single unit_id model may
+	// not resolve to a property, so the column cannot be NOT NULL.
+	PropertyID string `gorm:"index;"`
 	Property   Property
 
 	Assets []MaintenanceRequestAsset
