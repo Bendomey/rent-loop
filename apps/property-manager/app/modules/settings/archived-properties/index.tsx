@@ -5,15 +5,25 @@ import { useSearchParams } from 'react-router'
 import { ArchivedPropertiesController } from './controller'
 import { RestoreFlow } from './restore-flow'
 import { useGetProperties } from '~/api/properties'
-import { DataTable } from '~/components/datatable'
+import { DataTable, useDataTableSort } from '~/components/datatable'
 import { PermissionGuard } from '~/components/permissions/permission-guard'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
 
+/**
+ * Fields the API may order by. `order_by` reaches the backend's ORDER BY
+ * clause, so only these — never a raw URL value — are forwarded.
+ */
+const SORTABLE_FIELDS = ['properties.name', 'properties.created_at']
+
 export function ArchivedPropertiesModule() {
 	const [searchParams] = useSearchParams()
+	const sorter = useDataTableSort(SORTABLE_FIELDS, {
+		sort_by: 'properties.created_at',
+		sort: 'desc',
+	})
 	const { clientUser } = useClient()
 
 	const page = searchParams.get('page')
@@ -29,7 +39,7 @@ export function ArchivedPropertiesModule() {
 			filters: { archived: true },
 			pagination: { page, per },
 			populate: ['DeletedBy.User'],
-			sorter: { sort: 'desc', sort_by: 'created_at' },
+			sorter,
 			search: {
 				query: searchParams.get('query') ?? undefined,
 				fields: ['name', 'address'],
@@ -42,21 +52,22 @@ export function ArchivedPropertiesModule() {
 	const columns: ColumnDef<Property>[] = useMemo(() => {
 		return [
 			{
-				id: 'drag',
-				header: () => null,
-				cell: () => <Building />,
-			},
-			{
 				accessorKey: 'name',
 				header: 'Name',
+				enableSorting: true,
+				meta: { sortKey: 'properties.name' },
 				cell: ({ getValue, row }) => (
-					<div className="flex max-w-48 min-w-32 flex-col items-start gap-1">
-						<span className="w-full truncate text-xs text-zinc-600 dark:text-white">
-							{getValue<string>()}
-						</span>
-						<span className="text-muted-foreground w-full truncate text-xs">
-							{row.original.address} · {row.original.type}
-						</span>
+					<div className="flex min-w-32 items-center gap-2">
+						<Building />
+
+						<div className="flex max-w-48 min-w-32 flex-col items-start gap-1">
+							<span className="w-full truncate text-xs text-zinc-600 dark:text-white">
+								{getValue<string>()}
+							</span>
+							<span className="text-muted-foreground w-full truncate text-xs">
+								{row.original.address} · {row.original.type}
+							</span>
+						</div>
 					</div>
 				),
 				enableHiding: false,

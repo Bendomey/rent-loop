@@ -13,7 +13,7 @@ import { Link, useSearchParams } from 'react-router'
 import { RentPaymentSectionCards } from './components/cards'
 import { PropertyFinancialsRentPaymentController } from './controller'
 import { useGetInvoices } from '~/api/invoices'
-import { DataTable } from '~/components/datatable'
+import { DataTable, useDataTableSort } from '~/components/datatable'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import {
@@ -37,8 +37,25 @@ import { INVOICES_TOUR_STEPS, TOUR_KEYS } from '~/lib/tours'
 import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 
+/**
+ * Fields the API may order by. `order_by` reaches the backend's ORDER BY
+ * clause, so only these — never a raw URL value — are forwarded.
+ */
+const SORTABLE_FIELDS = [
+	'invoices.code',
+	'invoices.total_amount',
+	'invoices.context_type',
+	'invoices.status',
+	'invoices.due_date',
+	'invoices.created_at',
+]
+
 export function PropertyFinancialsPaymentsModule() {
 	const [searchParams] = useSearchParams()
+	const sorter = useDataTableSort(SORTABLE_FIELDS, {
+		sort_by: 'invoices.created_at',
+		sort: 'desc',
+	})
 	const { clientUserProperty } = useProperty()
 	const { clientUser } = useClient()
 
@@ -71,7 +88,7 @@ export function PropertyFinancialsPaymentsModule() {
 				payee_type: payee_type,
 			},
 			pagination: { page, per },
-			sorter: { sort: 'desc', sort_by: 'created_at' },
+			sorter,
 			search: {
 				query: searchParams.get('query') ?? undefined,
 				fields: ['end_date', 'payer_lease_id', 'code'],
@@ -83,18 +100,14 @@ export function PropertyFinancialsPaymentsModule() {
 	const columns: ColumnDef<Invoice>[] = useMemo(() => {
 		return [
 			{
-				id: 'drag',
-				header: () => null,
-				cell: () => {
-					return <Receipt className="text-muted-foreground size-5" />
-				},
-			},
-			{
 				accessorKey: 'code',
 				header: 'Invoice #',
+				enableSorting: true,
+				meta: { sortKey: 'invoices.code' },
 				cell: ({ row }) => {
 					return (
-						<div className="">
+						<div className="flex flex-row items-center gap-1">
+							<Receipt className="text-muted-foreground size-5" />
 							<Link
 								to={`/properties/${clientUserProperty?.property_id}/financials/invoices/${row.original.id}`}
 								aria-label={`View details for application`}
@@ -111,6 +124,8 @@ export function PropertyFinancialsPaymentsModule() {
 			{
 				accessorKey: 'total_amount',
 				header: 'Amount',
+				enableSorting: true,
+				meta: { sortKey: 'invoices.total_amount' },
 				cell: ({ row }) => (
 					<span className="truncate text-xs font-semibold text-zinc-800 dark:text-white">
 						{formatAmount(
@@ -123,6 +138,8 @@ export function PropertyFinancialsPaymentsModule() {
 			{
 				accessorKey: 'context_type',
 				header: 'Type',
+				enableSorting: true,
+				meta: { sortKey: 'invoices.context_type' },
 				cell: ({ getValue }) => (
 					<span className="truncate text-xs text-zinc-600 dark:text-white">
 						{getInvoiceContextTypeLabel(getValue<Invoice['context_type']>())}
@@ -132,6 +149,8 @@ export function PropertyFinancialsPaymentsModule() {
 			{
 				accessorKey: 'status',
 				header: 'Status',
+				enableSorting: true,
+				meta: { sortKey: 'invoices.status' },
 				cell: ({ getValue }) => (
 					<Badge variant="outline" className="text-muted-foreground px-1.5">
 						{getValue<string>() === 'DRAFT' ? (
@@ -152,6 +171,8 @@ export function PropertyFinancialsPaymentsModule() {
 			{
 				accessorKey: 'due_date',
 				header: 'Due Date',
+				enableSorting: true,
+				meta: { sortKey: 'invoices.due_date' },
 				cell: ({ getValue }) => {
 					const date = getValue<Date | null>()
 					return (
@@ -166,6 +187,8 @@ export function PropertyFinancialsPaymentsModule() {
 			{
 				accessorKey: 'created_at',
 				header: 'Created On',
+				enableSorting: true,
+				meta: { sortKey: 'invoices.created_at' },
 				cell: ({ getValue }) => (
 					<div className="min-w-32">
 						<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">

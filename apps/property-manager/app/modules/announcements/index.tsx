@@ -3,7 +3,7 @@ import { ChevronRight, Copy, Plus } from 'lucide-react'
 import { useMemo } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 import { useGetAnnouncements } from '~/api/announcements'
-import { DataTable } from '~/components/datatable'
+import { DataTable, useDataTableSort } from '~/components/datatable'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import {
@@ -47,9 +47,24 @@ function getStatusBadge(status: Announcement['status']) {
 	)
 }
 
+/**
+ * Fields the API may order by. `order_by` reaches the backend's ORDER BY
+ * clause, so only these — never a raw URL value — are forwarded.
+ */
+const SORTABLE_FIELDS = [
+	'announcements.title',
+	'announcements.published_at',
+	'announcements.status',
+	'announcements.created_at',
+]
+
 export function AnnouncementsModule() {
 	const navigate = useNavigate()
 	const [searchParams] = useSearchParams()
+	const sorter = useDataTableSort(SORTABLE_FIELDS, {
+		sort_by: 'announcements.created_at',
+		sort: 'desc',
+	})
 	const { clientUser } = useClient()
 
 	const page = searchParams.get('page')
@@ -63,7 +78,7 @@ export function AnnouncementsModule() {
 		safeString(clientUser?.client_id),
 		{
 			pagination: { page, per },
-			sorter: { sort: 'desc', sort_by: 'created_at' },
+			sorter,
 			populate: ['Property'],
 		},
 	)
@@ -75,7 +90,11 @@ export function AnnouncementsModule() {
 			{
 				accessorKey: 'title',
 				header: 'Title',
-				meta: { className: 'w-full' },
+				// Titles are the point of this table, so the column is sized to
+				// dominate; `w-full` lets it take any slack left over on top.
+				size: 520,
+				enableSorting: true,
+				meta: { className: 'w-full', sortKey: 'announcements.title' },
 				cell: ({ row }) => (
 					<div className="flex items-center gap-2">
 						<span className="text-sm font-medium">{row.original.title}</span>
@@ -86,6 +105,9 @@ export function AnnouncementsModule() {
 			{
 				accessorKey: 'published_at',
 				header: 'Publish Date',
+				size: 170,
+				enableSorting: true,
+				meta: { sortKey: 'announcements.published_at' },
 				cell: ({ row }) => (
 					<span className="text-muted-foreground min-w-32 text-xs">
 						{row.original.published_at

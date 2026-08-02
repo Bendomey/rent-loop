@@ -4,7 +4,7 @@ import { useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { PropertyBookingsController } from './controller'
 import { useGetPropertyBookings } from '~/api/bookings'
-import { DataTable } from '~/components/datatable'
+import { DataTable, useDataTableSort } from '~/components/datatable'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
@@ -28,8 +28,23 @@ const STATUS_CONFIG: Record<BookingStatus, BookingStatusConfig> = {
 	CANCELLED: { label: 'Cancelled', className: 'bg-rose-500 text-white' },
 }
 
+/**
+ * Fields the API may order by. `order_by` reaches the backend's ORDER BY
+ * clause, so only these — never a raw URL value — are forwarded.
+ */
+const SORTABLE_FIELDS = [
+	'bookings.code',
+	'bookings.status',
+	'bookings.check_in_date',
+	'bookings.created_at',
+]
+
 export function PropertyBookingsModule() {
 	const [searchParams] = useSearchParams()
+	const sorter = useDataTableSort(SORTABLE_FIELDS, {
+		sort_by: 'bookings.created_at',
+		sort: 'desc',
+	})
 	const { clientUserProperty } = useProperty()
 	const { clientUser } = useClient()
 
@@ -50,7 +65,7 @@ export function PropertyBookingsModule() {
 			filters: { status, unit_id },
 			pagination: { page, per },
 			populate: ['Tenant', 'Unit', 'Invoice', 'Invoice.LineItems'],
-			sorter: { sort: 'desc', sort_by: 'created_at' },
+			sorter,
 		})
 
 	const isLoading = isPending || isRefetching
@@ -60,6 +75,8 @@ export function PropertyBookingsModule() {
 			{
 				id: 'code',
 				header: 'Code',
+				enableSorting: true,
+				meta: { sortKey: 'bookings.code' },
 				cell: ({ row }) => (
 					<div className="flex items-center gap-2">
 						<CalendarDays className="text-muted-foreground size-4" />
@@ -99,6 +116,8 @@ export function PropertyBookingsModule() {
 			{
 				accessorKey: 'status',
 				header: 'Status',
+				enableSorting: true,
+				meta: { sortKey: 'bookings.status' },
 				cell: ({ getValue }) => {
 					const s = getValue<BookingStatus>()
 					const cfg = STATUS_CONFIG[s]

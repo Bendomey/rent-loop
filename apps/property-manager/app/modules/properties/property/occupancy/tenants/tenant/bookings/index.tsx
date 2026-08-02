@@ -3,7 +3,7 @@ import { CalendarDays } from 'lucide-react'
 import { useMemo } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
 import { useGetTenantBookings } from '~/api/bookings'
-import { DataTable } from '~/components/datatable'
+import { DataTable, useDataTableSort } from '~/components/datatable'
 import { Badge } from '~/components/ui/badge'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
@@ -25,8 +25,23 @@ const STATUS_CONFIG: Record<BookingStatus, BookingStatusConfig> = {
 	CANCELLED: { label: 'Cancelled', className: 'bg-rose-500 text-white' },
 }
 
+/**
+ * Fields the API may order by. `order_by` reaches the backend's ORDER BY
+ * clause, so only these — never a raw URL value — are forwarded.
+ */
+const SORTABLE_FIELDS = [
+	'bookings.status',
+	'bookings.check_in_date',
+	'bookings.check_out_date',
+	'bookings.created_at',
+]
+
 export function TenantBookingsModule() {
 	const [searchParams] = useSearchParams()
+	const sorter = useDataTableSort(SORTABLE_FIELDS, {
+		sort_by: 'bookings.created_at',
+		sort: 'desc',
+	})
 	const { clientUser } = useClient()
 	const { clientUserProperty } = useProperty()
 	const { tenantId } = useParams<{ tenantId: string }>()
@@ -49,7 +64,7 @@ export function TenantBookingsModule() {
 			{
 				filters: { status },
 				pagination: { page, per },
-				sorter: { sort: 'desc', sort_by: 'created_at' },
+				sorter,
 			},
 		)
 
@@ -82,6 +97,8 @@ export function TenantBookingsModule() {
 			{
 				accessorKey: 'status',
 				header: 'Status',
+				enableSorting: true,
+				meta: { sortKey: 'bookings.status' },
 				cell: ({ getValue }) => {
 					const s = getValue<BookingStatus>()
 					const cfg = STATUS_CONFIG[s]
@@ -95,6 +112,8 @@ export function TenantBookingsModule() {
 			{
 				accessorKey: 'check_in_date',
 				header: 'Check In',
+				enableSorting: true,
+				meta: { sortKey: 'bookings.check_in_date' },
 				cell: ({ getValue }) => (
 					<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">
 						{localizedDayjs(getValue<Date>()).format('DD/MM/YYYY')}
@@ -104,6 +123,8 @@ export function TenantBookingsModule() {
 			{
 				accessorKey: 'check_out_date',
 				header: 'Check Out',
+				enableSorting: true,
+				meta: { sortKey: 'bookings.check_out_date' },
 				cell: ({ getValue }) => (
 					<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">
 						{localizedDayjs(getValue<Date>()).format('DD/MM/YYYY')}
@@ -113,6 +134,8 @@ export function TenantBookingsModule() {
 			{
 				accessorKey: 'created_at',
 				header: 'Created On',
+				enableSorting: true,
+				meta: { sortKey: 'bookings.created_at' },
 				cell: ({ getValue }) => (
 					<div className="min-w-32">
 						<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">

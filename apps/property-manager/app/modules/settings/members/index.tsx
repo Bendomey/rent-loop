@@ -4,14 +4,13 @@ import {
 	CircleCheck,
 	CircleX,
 	EllipsisVertical,
-	User,
 } from 'lucide-react'
 import { useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { MembersController } from './controller'
 import { ClientUserStatus } from './status'
 import { useGetClientUsers } from '~/api/client-users'
-import { DataTable } from '~/components/datatable'
+import { DataTable, useDataTableSort } from '~/components/datatable'
 import { Alert, AlertTitle } from '~/components/ui/alert'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
@@ -28,8 +27,22 @@ import { safeString } from '~/lib/strings'
 import { useAuth } from '~/providers/auth-provider'
 import { useClient } from '~/providers/client-provider'
 
+/**
+ * Fields the API may order by. `order_by` reaches the backend's ORDER BY
+ * clause, so only these — never a raw URL value — are forwarded.
+ */
+const SORTABLE_FIELDS = [
+	'client_users.role',
+	'client_users.status',
+	'client_users.created_at',
+]
+
 export function MembersModule() {
 	const [searchParams] = useSearchParams()
+	const sorter = useDataTableSort(SORTABLE_FIELDS, {
+		sort_by: 'client_users.created_at',
+		sort: 'desc',
+	})
 	const { currentUser } = useAuth()
 	const { clientUser } = useClient()
 
@@ -48,7 +61,7 @@ export function MembersModule() {
 			filters: { role: role, status: status },
 			pagination: { page, per },
 			populate: ['User'],
-			sorter: { sort: 'desc', sort_by: 'created_at' },
+			sorter,
 			search: {
 				query: searchParams.get('query') ?? undefined,
 				fields: ['name', 'email', 'phone_number'],
@@ -68,16 +81,11 @@ export function MembersModule() {
 	const columns: ColumnDef<ClientUser>[] = useMemo(() => {
 		return [
 			{
-				id: 'drag',
-				header: () => null,
-				cell: () => <User />,
-			},
-			{
 				accessorKey: 'user.name',
 				header: 'Name',
 				cell: ({ getValue }) => {
 					return (
-						<div className="min-w-32">
+						<div className="flex min-w-32 items-center">
 							<span className="truncate text-xs text-zinc-600 dark:text-white">
 								{getValue<string>() ?? 'No name'}
 							</span>
@@ -89,6 +97,8 @@ export function MembersModule() {
 			{
 				accessorKey: 'role',
 				header: 'Role',
+				enableSorting: true,
+				meta: { sortKey: 'client_users.role' },
 				cell: ({ getValue }) => (
 					<Badge variant="outline" className="px-1.5">
 						<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">
@@ -115,6 +125,8 @@ export function MembersModule() {
 			{
 				accessorKey: 'status',
 				header: 'Status',
+				enableSorting: true,
+				meta: { sortKey: 'client_users.status' },
 				cell: ({ getValue }) => (
 					<Badge variant="outline" className="text-muted-foreground px-1.5">
 						{getValue<string>() === 'ClientUser.Status.Active' ? (

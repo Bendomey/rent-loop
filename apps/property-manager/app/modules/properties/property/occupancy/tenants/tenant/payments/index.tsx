@@ -13,7 +13,7 @@ import { TenantPaymentSectionCards } from './cards'
 import { TenantPaymentController } from './controller'
 import { useCubeQuery, useGetAnalyticsToken } from '~/api/analytics'
 import { useGetInvoices } from '~/api/invoices'
-import { DataTable } from '~/components/datatable'
+import { DataTable, useDataTableSort } from '~/components/datatable'
 import { Badge } from '~/components/ui/badge'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
@@ -27,8 +27,25 @@ import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 
+/**
+ * Fields the API may order by. `order_by` reaches the backend's ORDER BY
+ * clause, so only these — never a raw URL value — are forwarded.
+ */
+const SORTABLE_FIELDS = [
+	'invoices.code',
+	'invoices.total_amount',
+	'invoices.context_type',
+	'invoices.status',
+	'invoices.due_date',
+	'invoices.created_at',
+]
+
 export function TenantPaymentsModule() {
 	const [searchParams] = useSearchParams()
+	const sorter = useDataTableSort(SORTABLE_FIELDS, {
+		sort_by: 'invoices.created_at',
+		sort: 'desc',
+	})
 	const { clientUser } = useClient()
 	const { clientUserProperty } = useProperty()
 	const { tenantId } = useParams()
@@ -50,7 +67,7 @@ export function TenantPaymentsModule() {
 				payer_tenant_id: safeString(tenantId),
 			},
 			pagination: { page, per },
-			sorter: { sort: 'desc', sort_by: 'created_at' },
+			sorter,
 		},
 	)
 
@@ -97,18 +114,14 @@ export function TenantPaymentsModule() {
 	const columns: ColumnDef<Invoice>[] = useMemo(() => {
 		return [
 			{
-				id: 'drag',
-				header: () => null,
-				cell: () => {
-					return <Receipt className="text-muted-foreground size-5" />
-				},
-			},
-			{
 				accessorKey: 'code',
 				header: 'Invoice #',
+				enableSorting: true,
+				meta: { sortKey: 'invoices.code' },
 				cell: ({ row }) => {
 					return (
-						<div className="">
+						<div className="flex flex-row items-center gap-1">
+							<Receipt className="text-muted-foreground size-5" />
 							<Link
 								to={`/properties/${clientUserProperty?.property_id}/financials/invoices/${row.original.id}`}
 								aria-label={`View details for application`}
@@ -125,6 +138,8 @@ export function TenantPaymentsModule() {
 			{
 				accessorKey: 'total_amount',
 				header: 'Amount',
+				enableSorting: true,
+				meta: { sortKey: 'invoices.total_amount' },
 				cell: ({ row }) => (
 					<span className="truncate text-xs font-semibold text-zinc-800 dark:text-white">
 						{formatAmount(
@@ -137,6 +152,8 @@ export function TenantPaymentsModule() {
 			{
 				accessorKey: 'context_type',
 				header: 'Type',
+				enableSorting: true,
+				meta: { sortKey: 'invoices.context_type' },
 				cell: ({ getValue }) => (
 					<span className="truncate text-xs text-zinc-600 dark:text-white">
 						{getInvoiceContextTypeLabel(getValue<Invoice['context_type']>())}
@@ -146,6 +163,8 @@ export function TenantPaymentsModule() {
 			{
 				accessorKey: 'status',
 				header: 'Status',
+				enableSorting: true,
+				meta: { sortKey: 'invoices.status' },
 				cell: ({ getValue }) => (
 					<Badge variant="outline" className="text-muted-foreground px-1.5">
 						{getValue<string>() === 'DRAFT' ? (
@@ -166,6 +185,8 @@ export function TenantPaymentsModule() {
 			{
 				accessorKey: 'due_date',
 				header: 'Due Date',
+				enableSorting: true,
+				meta: { sortKey: 'invoices.due_date' },
 				cell: ({ getValue }) => {
 					const date = getValue<Date | null>()
 					return (
@@ -180,6 +201,8 @@ export function TenantPaymentsModule() {
 			{
 				accessorKey: 'created_at',
 				header: 'Created On',
+				enableSorting: true,
+				meta: { sortKey: 'invoices.created_at' },
 				cell: ({ getValue }) => (
 					<div className="min-w-32">
 						<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">
