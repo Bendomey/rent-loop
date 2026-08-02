@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryClient } from '@tanstack/react-query'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
@@ -30,12 +30,17 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '~/components/ui/select'
-import { Switch } from '~/components/ui/switch'
 import { Textarea } from '~/components/ui/textarea'
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from '~/components/ui/tooltip'
 import { TypographyH3, TypographyMuted } from '~/components/ui/typography'
 import { useUploadObjectBulk } from '~/hooks/use-upload-object-bulk'
 import { QUERY_KEYS } from '~/lib/constants'
 import { CATEGORY_LABELS } from '~/lib/maintenance-request.utils'
+import { getPropertyUnitStatusLabel } from '~/lib/properties.utils'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
@@ -45,33 +50,51 @@ const CATEGORY_VALUES = Object.keys(CATEGORY_LABELS) as [
 	...MaintenanceRequestCategory[],
 ]
 
-const schema = z
+// The pickers live in their own object so this rule keeps running even when
+// sibling fields are still empty — an object-level refinement is skipped once a
+// field like priority fails, which would hide the message on the first submit.
+const assetsSchema = z
 	.object({
-		title: z.string().min(1, 'Title is required'),
-		description: z.string().min(1, 'Description is required'),
-		priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'EMERGENCY'], {
-			error: 'Priority is required',
-		}),
-		category: z.enum(CATEGORY_VALUES, {
-			error: 'Category is required',
-		}),
-		unit_ids: z.array(z.string()),
 		block_ids: z.array(z.string()),
-		create_separate_requests: z.boolean(),
-		visibility: z.enum(['TENANT_VISIBLE', 'INTERNAL_ONLY']),
-		attachments: z.array(z.string()).optional(),
+		unit_ids: z.array(z.string()),
 	})
-	.superRefine((values, ctx) => {
-		// A request must concern something. Reported on unit_ids so the message
-		// lands next to the units picker.
-		if (values.unit_ids.length === 0 && values.block_ids.length === 0) {
+	.superRefine((assets, ctx) => {
+		// A request must concern something. Reported on both pickers so whichever
+		// one the user is looking at carries the message.
+		if (assets.unit_ids.length > 0 || assets.block_ids.length > 0) return
+
+		for (const path of ['block_ids', 'unit_ids'] as const) {
 			ctx.addIssue({
 				code: 'custom',
-				path: ['unit_ids'],
+				path: [path],
 				message: 'Select at least one block or unit',
 			})
 		}
 	})
+
+const VISIBILITY_LABELS = {
+	TENANT_VISIBLE: 'Visible for Tenant',
+	INTERNAL_ONLY: 'Internal Only',
+} as const
+
+const VISIBILITY_VALUES = Object.keys(VISIBILITY_LABELS) as [
+	keyof typeof VISIBILITY_LABELS,
+	...Array<keyof typeof VISIBILITY_LABELS>,
+]
+
+const schema = z.object({
+	title: z.string('Title is required').min(1, 'Title is required'),
+	description: z.string().min(1, 'Description is required'),
+	priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'EMERGENCY'], {
+		error: 'Priority is required',
+	}),
+	category: z.enum(CATEGORY_VALUES, {
+		error: 'Category is required',
+	}),
+	assets: assetsSchema,
+	visibility: z.enum(VISIBILITY_VALUES),
+	attachments: z.array(z.string()).optional(),
+})
 
 type FormValues = z.infer<typeof schema>
 
@@ -113,39 +136,52 @@ export function NewPropertyActivitiesMaintenanceRequestModule() {
 			description: '',
 			priority: undefined,
 			category: undefined,
-			unit_ids: [],
-			block_ids: [],
-			create_separate_requests: false,
+			assets: { block_ids: [], unit_ids: [] },
 			visibility: 'TENANT_VISIBLE',
 			attachments: [],
 		},
 	})
 
-	const selectedUnitIds = form.watch('unit_ids')
-	const selectedBlockIds = form.watch('block_ids')
-	const fanOut = form.watch('create_separate_requests')
+	const selectedUnitIds = form.watch('assets.unit_ids')
+	const selectedBlockIds = form.watch('assets.block_ids')
+
+	// Both pickers share one rule, so revalidate the pair whenever either
+	// changes — otherwise the message lingers on the picker left untouched.
+	const revalidateAssets = () =>
+		void form.trigger(['assets.block_ids', 'assets.unit_ids'])
 
 	const assetCount = selectedUnitIds.length + selectedBlockIds.length
 
-	// With fan-out on, each unit becomes its own single-unit request and may stay
-	// tenant-visible; block requests are always internal. With fan-out off,
-	// anything broader than one unit is internal.
-	const forcedInternal = fanOut
-		? selectedUnitIds.length === 0
-		: selectedBlockIds.length > 0 || assetCount > 1
+	// RENTL-48.3 AC#3: a block, or more than one asset, forces the request
+	// internal-only and locks the control — there is no single tenant behind
+	// such a request to show it to.
+	const forcedInternal = selectedBlockIds.length > 0 || assetCount > 1
+
+	const forcedInternalReason =
+		selectedUnitIds.length === 0
+			? 'Block work has no tenant attached, so this request stays Internal Only.'
+			: 'This request covers more than one asset, so it stays Internal Only and no tenant is notified.'
 
 	const blockOptions = (blocks?.rows ?? []).map((block) => ({
 		label: block.name,
 		value: block.id,
+		description: safeString(block.description) || undefined,
+		meta: `${block.units_count}`,
 	}))
 
-	// Units are grouped by their block so a large property stays scannable.
+	// Units are grouped by their block so a large property stays scannable. The
+	// grouping is presentation only — picking a block never narrows this list,
+	// the two fields are independent selections.
 	const unitGroups = (blocks?.rows ?? [])
 		.map((block) => ({
 			heading: block.name,
 			options: (units?.rows ?? [])
 				.filter((unit) => unit.property_block_id === block.id)
-				.map((unit) => ({ label: unit.name, value: unit.id })),
+				.map((unit) => ({
+					label: unit.name,
+					value: unit.id,
+					description: getPropertyUnitStatusLabel(unit.status),
+				})),
 		}))
 		.filter((group) => group.options.length > 0)
 
@@ -153,10 +189,16 @@ export function NewPropertyActivitiesMaintenanceRequestModule() {
 		form.setValue('attachments', uploadedUrls)
 	}, [uploadedUrls, form])
 
+	// The lock overwrites whatever was chosen, so remember the manual pick and
+	// hand it back once the selection no longer forces internal-only —
+	// otherwise the field stays stuck on Internal Only after the cause is gone.
+	const chosenVisibility = useRef<FormValues['visibility']>('TENANT_VISIBLE')
+
 	useEffect(() => {
-		if (forcedInternal) {
-			form.setValue('visibility', 'INTERNAL_ONLY')
-		}
+		form.setValue(
+			'visibility',
+			forcedInternal ? 'INTERNAL_ONLY' : chosenVisibility.current,
+		)
 	}, [forcedInternal, form])
 
 	const onSubmit = async (values: FormValues) => {
@@ -168,9 +210,8 @@ export function NewPropertyActivitiesMaintenanceRequestModule() {
 				priority: values.priority,
 				category: values.category,
 				visibility: values.visibility,
-				unit_ids: values.unit_ids,
-				block_ids: values.block_ids,
-				create_separate_requests: values.create_separate_requests,
+				unit_ids: values.assets.unit_ids,
+				block_ids: values.assets.block_ids,
 				property_id: resolvedPropertyId,
 				attachments: values.attachments ?? [],
 			}
@@ -182,17 +223,14 @@ export function NewPropertyActivitiesMaintenanceRequestModule() {
 
 			const listPath = `/properties/${resolvedPropertyId}/activities/maintenance-requests`
 
-			// A single request goes straight to its detail page; a fan-out has no
-			// single destination, so land on the board instead.
-			const onlyRequest = created?.length === 1 ? created[0] : undefined
-			if (onlyRequest) {
-				toast.success('Maintenance request created')
-				void navigate(`${listPath}/${onlyRequest.id}`)
-				return
-			}
+			toast.success('Maintenance request created')
 
-			toast.success(`${created?.length ?? 0} maintenance requests created`)
-			void navigate(listPath)
+			// The API answers with a list, but a combined request is always the one
+			// record; fall back to the board if it ever comes back empty.
+			const createdRequest = created?.[0]
+			void navigate(
+				createdRequest ? `${listPath}/${createdRequest.id}` : listPath,
+			)
 		} catch (err) {
 			toast.error(
 				err instanceof Error ? err.message : 'Failed to create request',
@@ -214,17 +252,21 @@ export function NewPropertyActivitiesMaintenanceRequestModule() {
 					<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 						<FormField
 							control={form.control}
-							name="block_ids"
-							render={({ field }) => (
+							name="assets.block_ids"
+							render={({ field, fieldState }) => (
 								<FormItem>
-									<FormLabel>Blocks</FormLabel>
 									<FormControl>
 										<MultiSelect
+											label="Blocks"
 											options={blockOptions}
 											defaultValue={field.value}
-											onValueChange={field.onChange}
+											onValueChange={(value) => {
+												field.onChange(value)
+												revalidateAssets()
+											}}
 											placeholder="Select blocks"
-											maxCount={3}
+											emptyHint="No block on this property matches that name."
+											invalid={Boolean(fieldState.error)}
 											className="w-full"
 										/>
 									</FormControl>
@@ -235,17 +277,21 @@ export function NewPropertyActivitiesMaintenanceRequestModule() {
 
 						<FormField
 							control={form.control}
-							name="unit_ids"
-							render={({ field }) => (
+							name="assets.unit_ids"
+							render={({ field, fieldState }) => (
 								<FormItem>
-									<FormLabel>Units</FormLabel>
 									<FormControl>
 										<MultiSelect
+											label="Units"
 											options={unitGroups}
 											defaultValue={field.value}
-											onValueChange={field.onChange}
+											onValueChange={(value) => {
+												field.onChange(value)
+												revalidateAssets()
+											}}
 											placeholder="Select units"
-											maxCount={3}
+											emptyHint="No unit on this property matches that name."
+											invalid={Boolean(fieldState.error)}
 											className="w-full"
 										/>
 									</FormControl>
@@ -255,39 +301,6 @@ export function NewPropertyActivitiesMaintenanceRequestModule() {
 						/>
 					</div>
 
-					{assetCount > 1 && (
-						<FormField
-							control={form.control}
-							name="create_separate_requests"
-							render={({ field }) => (
-								<FormItem className="flex flex-row items-start gap-3 rounded-md border p-4">
-									<FormControl>
-										<Switch
-											checked={field.value}
-											onCheckedChange={field.onChange}
-										/>
-									</FormControl>
-									<div className="space-y-1">
-										<FormLabel>Create separate requests</FormLabel>
-										<TypographyMuted>
-											Creates one request per selected asset. Each unit request
-											can still notify its tenant.
-										</TypographyMuted>
-									</div>
-								</FormItem>
-							)}
-						/>
-					)}
-
-					{forcedInternal && (
-						<div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3">
-							<TypographyMuted className="text-amber-700 dark:text-amber-400">
-								{selectedUnitIds.length === 0
-									? 'Block work has no tenant attached, so this request will be Internal Only.'
-									: 'This request covers more than one asset, so it will be Internal Only and no tenant is notified. Turn on “Create separate requests” to notify each tenant.'}
-							</TypographyMuted>
-						</div>
-					)}
 					<FormField
 						control={form.control}
 						name="title"
@@ -412,25 +425,51 @@ export function NewPropertyActivitiesMaintenanceRequestModule() {
 							name="visibility"
 							render={({ field }) => (
 								<FormItem>
-									<Select
-										onValueChange={field.onChange}
-										value={field.value}
-										disabled={forcedInternal}
-									>
-										<FormControl>
-											<SelectTrigger className="w-full">
-												<SelectValue placeholder="Select visibility" />
-											</SelectTrigger>
-										</FormControl>
-										<SelectContent>
-											<SelectItem value="TENANT_VISIBLE">
-												Visible for Tenant
-											</SelectItem>
-											<SelectItem value="INTERNAL_ONLY">
-												Internal Only
-											</SelectItem>
-										</SelectContent>
-									</Select>
+									{/* The wrapper is always rendered: swapping it in and out
+									would remount the Select, and a freshly mounted one shows
+									no text until its items have registered. A disabled
+									trigger takes no pointer events, so the wrapper — not the
+									trigger — is what the tooltip hangs off. */}
+									<Tooltip>
+										<TooltipTrigger asChild>
+											<span
+												tabIndex={forcedInternal ? 0 : -1}
+												className="block"
+											>
+												<Select
+													onValueChange={(value) => {
+														chosenVisibility.current =
+															value as FormValues['visibility']
+														field.onChange(value)
+													}}
+													value={field.value}
+													disabled={forcedInternal}
+												>
+													<FormControl>
+														<SelectTrigger className="w-full">
+															{/* Explicit children so the label never depends
+															on whether the items have mounted. */}
+															<SelectValue placeholder="Select visibility">
+																{VISIBILITY_LABELS[field.value]}
+															</SelectValue>
+														</SelectTrigger>
+													</FormControl>
+													<SelectContent>
+														{VISIBILITY_VALUES.map((value) => (
+															<SelectItem key={value} value={value}>
+																{VISIBILITY_LABELS[value]}
+															</SelectItem>
+														))}
+													</SelectContent>
+												</Select>
+											</span>
+										</TooltipTrigger>
+										{forcedInternal && (
+											<TooltipContent className="max-w-xs">
+												{forcedInternalReason}
+											</TooltipContent>
+										)}
+									</Tooltip>
 									<FormMessage />
 								</FormItem>
 							)}

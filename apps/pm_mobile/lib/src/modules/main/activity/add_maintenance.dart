@@ -5,6 +5,8 @@ import 'package:rentloop_manager/src/shared/widgets.dart';
 
 // ── Options ───────────────────────────────────────────────────────────────────
 
+const _kBlocks = ['Cantonments Court', 'Spintex Heights'];
+
 const _kUnits = [
   'Unit 4B · Cantonments Court',
   'Unit 5A · Cantonments Court',
@@ -31,6 +33,8 @@ const _kVisibilitySubs = {
   'Hidden from Tenant': 'Internal only — staff and managers.',
 };
 
+const _kAssetError = 'Select at least one block or unit';
+
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 class AddMaintenanceScreen extends StatefulWidget {
@@ -41,7 +45,8 @@ class AddMaintenanceScreen extends StatefulWidget {
 }
 
 class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
-  String _unit = '';
+  final _blocks = <String>{};
+  final _units = <String>{};
   final _titleCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
   String _priority = '';
@@ -49,6 +54,19 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
   String _visibility = 'Visible for Tenant';
   int _photoCount = 1;
   String? _activePicker;
+  // Only raised once the manager tries to submit an empty selection, so the
+  // form doesn't scold them before they've had a go at it.
+  bool _showAssetError = false;
+
+  int get _assetCount => _blocks.length + _units.length;
+
+  // Selected assets always become one combined request, so anything broader
+  // than a single unit has no one tenant to show it to and stays internal.
+  bool get _forcedInternal => _blocks.isNotEmpty || _assetCount > 1;
+
+  String get _forcedInternalReason => _units.isEmpty
+      ? 'Block work has no tenant attached, so this request stays hidden from tenants.'
+      : 'This request covers more than one asset, so it stays hidden from tenants and no one is notified.';
 
   @override
   void dispose() {
@@ -64,11 +82,22 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
 
   void _closePicker() => setState(() => _activePicker = null);
 
+  /// Blocks and units are independent selections, so the sheet stays open and
+  /// each tap toggles one asset.
+  void _toggleAsset(String key, String value) {
+    setState(() {
+      final selection = key == 'block' ? _blocks : _units;
+      if (!selection.remove(value)) selection.add(value);
+
+      if (_assetCount > 0) _showAssetError = false;
+      if (_forcedInternal) _visibility = 'Hidden from Tenant';
+    });
+    Haptics.vibrate(HapticsType.selection);
+  }
+
   void _pick(String key, String value) {
     setState(() {
       switch (key) {
-        case 'unit':
-          _unit = value;
         case 'priority':
           _priority = value;
         case 'category':
@@ -79,6 +108,21 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
       _activePicker = null;
     });
     Haptics.vibrate(HapticsType.selection);
+  }
+
+  Future<void> _submit() async {
+    if (_assetCount == 0) {
+      setState(() => _showAssetError = true);
+      await Haptics.vibrate(HapticsType.warning);
+      return;
+    }
+    await Haptics.vibrate(HapticsType.medium);
+  }
+
+  String _assetSummary(Set<String> selection, String plural) {
+    if (selection.isEmpty) return '';
+    if (selection.length == 1) return selection.first;
+    return '${selection.length} $plural selected';
   }
 
   @override
@@ -115,7 +159,7 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
                       ),
                       const SizedBox(height: 7),
                       const Text(
-                        'Report a new maintenance issue for a unit.',
+                        'Report a new maintenance issue for one or more blocks or units.',
                         style: TextStyle(
                           fontFamily: RLTokens.fontSans,
                           fontSize: 13.5,
@@ -126,13 +170,38 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
 
                       // ── Form fields ───────────────────────────────────────
                       _FormField(
-                        label: 'Unit',
+                        label: 'Blocks',
+                        required: false,
                         child: _SelectField(
-                          value: _unit,
-                          placeholder: 'Select unit',
+                          value: _assetSummary(_blocks, 'blocks'),
+                          placeholder: 'Select blocks',
+                          hasError: _showAssetError,
+                          onTap: () => _openPicker('block'),
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      _FormField(
+                        label: 'Units',
+                        required: false,
+                        child: _SelectField(
+                          value: _assetSummary(_units, 'units'),
+                          placeholder: 'Select units',
+                          hasError: _showAssetError,
                           onTap: () => _openPicker('unit'),
                         ),
                       ),
+                      // One message for the pair — either picker satisfies it.
+                      if (_showAssetError) ...[
+                        const SizedBox(height: 8),
+                        const Text(
+                          _kAssetError,
+                          style: TextStyle(
+                            fontFamily: RLTokens.fontSans,
+                            fontSize: 12.5,
+                            color: RLTokens.danger,
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 18),
                       _FormField(
                         label: 'Title',
@@ -257,11 +326,40 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      _SelectField(
-                        value: _visibility,
-                        placeholder: 'Select visibility',
-                        onTap: () => _openPicker('vis'),
-                      ),
+                      if (_forcedInternal)
+                        // Locked, so the field itself carries the reason —
+                        // tap it to read why, no standalone banner.
+                        Tooltip(
+                          message: _forcedInternalReason,
+                          triggerMode: TooltipTriggerMode.tap,
+                          showDuration: const Duration(seconds: 4),
+                          margin: const EdgeInsets.symmetric(horizontal: 20),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: RLTokens.ink,
+                            borderRadius: BorderRadius.circular(RLTokens.rSm),
+                          ),
+                          textStyle: const TextStyle(
+                            fontFamily: RLTokens.fontSans,
+                            fontSize: 12.5,
+                            color: RLTokens.surface,
+                            height: 1.4,
+                          ),
+                          child: _SelectField(
+                            value: _visibility,
+                            placeholder: 'Select visibility',
+                            enabled: false,
+                          ),
+                        )
+                      else
+                        _SelectField(
+                          value: _visibility,
+                          placeholder: 'Select visibility',
+                          onTap: () => _openPicker('vis'),
+                        ),
                     ],
                   ),
                 ),
@@ -314,9 +412,7 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
                     label: 'Create request',
                     kind: RLBtnKind.primary,
                     icon: Icons.check_rounded,
-                    onPressed: () async {
-                      await Haptics.vibrate(HapticsType.medium);
-                    },
+                    onPressed: _submit,
                   ),
                 ],
               ),
@@ -324,12 +420,20 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
           ),
 
           // ── Picker sheets ─────────────────────────────────────────────────
+          if (_activePicker == 'block')
+            _PickerSheet(
+              title: 'Select blocks',
+              options: _kBlocks.map((l) => _PickerOption(label: l)).toList(),
+              selectedValues: _blocks,
+              onPick: (v) => _toggleAsset('block', v),
+              onClose: _closePicker,
+            ),
           if (_activePicker == 'unit')
             _PickerSheet(
-              title: 'Select unit',
+              title: 'Select units',
               options: _kUnits.map((l) => _PickerOption(label: l)).toList(),
-              selected: _unit,
-              onPick: (v) => _pick('unit', v),
+              selectedValues: _units,
+              onPick: (v) => _toggleAsset('unit', v),
               onClose: _closePicker,
             ),
           if (_activePicker == 'priority')
@@ -371,9 +475,17 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
 // ── Form field label wrapper ──────────────────────────────────────────────────
 
 class _FormField extends StatelessWidget {
-  const _FormField({required this.label, required this.child});
+  const _FormField({
+    required this.label,
+    required this.child,
+    this.required = true,
+  });
   final String label;
   final Widget child;
+
+  /// Blocks and units are each optional on their own — one of the two is
+  /// required, so neither carries the asterisk.
+  final bool required;
 
   @override
   Widget build(BuildContext context) {
@@ -391,15 +503,16 @@ class _FormField extends StatelessWidget {
                 color: RLTokens.ink,
               ),
             ),
-            const Text(
-              ' *',
-              style: TextStyle(
-                fontFamily: RLTokens.fontSans,
-                fontSize: 13.5,
-                fontWeight: RLTokens.bold,
-                color: RLTokens.crimson,
+            if (required)
+              const Text(
+                ' *',
+                style: TextStyle(
+                  fontFamily: RLTokens.fontSans,
+                  fontSize: 13.5,
+                  fontWeight: RLTokens.bold,
+                  color: RLTokens.crimson,
+                ),
               ),
-            ),
           ],
         ),
         const SizedBox(height: 8),
@@ -415,41 +528,56 @@ class _SelectField extends StatelessWidget {
   const _SelectField({
     required this.value,
     required this.placeholder,
-    required this.onTap,
+    this.onTap,
+    this.hasError = false,
+    this.enabled = true,
   });
   final String value;
   final String placeholder;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
+  final bool hasError;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
+    final isPlaceholder = value.isEmpty;
+
     return GestureDetector(
-      onTap: onTap,
+      // A null callback leaves the tap to any wrapper, so a locked field can
+      // still open its tooltip.
+      onTap: enabled ? onTap : null,
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         decoration: BoxDecoration(
-          color: RLTokens.surface,
+          color: enabled ? RLTokens.surface : RLTokens.fill,
           borderRadius: BorderRadius.circular(RLTokens.rMd),
-          border: Border.all(color: RLTokens.hairline, width: 1.5),
+          border: Border.all(
+            color: hasError ? RLTokens.danger : RLTokens.hairline,
+            width: 1.5,
+          ),
         ),
         child: Row(
           children: [
             Expanded(
               child: Text(
-                value.isEmpty ? placeholder : value,
+                isPlaceholder ? placeholder : value,
                 style: TextStyle(
                   fontFamily: RLTokens.fontSans,
                   fontSize: 15,
-                  color: value.isEmpty ? RLTokens.mutedSoft : RLTokens.ink,
+                  color: isPlaceholder || !enabled
+                      ? RLTokens.mutedSoft
+                      : RLTokens.ink,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
             ),
             const SizedBox(width: 8),
-            const Icon(
-              Icons.keyboard_arrow_down_rounded,
-              size: 18,
+            Icon(
+              enabled
+                  ? Icons.keyboard_arrow_down_rounded
+                  : Icons.lock_outline_rounded,
+              size: enabled ? 18 : 15,
               color: RLTokens.mutedSoft,
             ),
           ],
@@ -668,16 +796,25 @@ class _PickerSheet extends StatelessWidget {
   const _PickerSheet({
     required this.title,
     required this.options,
-    required this.selected,
     required this.onPick,
     required this.onClose,
+    this.selected = '',
+    this.selectedValues,
   });
 
   final String title;
   final List<_PickerOption> options;
-  final String selected;
   final ValueChanged<String> onPick;
   final VoidCallback onClose;
+
+  /// Single-select sheets track one label…
+  final String selected;
+
+  /// …while multi-select sheets stay open and toggle each tapped label.
+  final Set<String>? selectedValues;
+
+  bool _isSelected(String label) =>
+      selectedValues?.contains(label) ?? selected == label;
 
   @override
   Widget build(BuildContext context) {
@@ -730,7 +867,11 @@ class _PickerSheet extends StatelessWidget {
                           ),
                         ),
                         RLIconBtn(
-                          icon: Icons.close,
+                          // Multi-select sheets stay open while toggling, so
+                          // this button reads as "done" rather than "cancel".
+                          icon: selectedValues == null
+                              ? Icons.close
+                              : Icons.check_rounded,
                           bg: RLTokens.fill,
                           iconColor: RLTokens.inkSoft,
                           onTap: onClose,
@@ -747,7 +888,7 @@ class _PickerSheet extends StatelessWidget {
                           final i = e.key;
                           final o = e.value;
                           final isLast = i == options.length - 1;
-                          final isSelected = selected == o.label;
+                          final isSelected = _isSelected(o.label);
                           return GestureDetector(
                             onTap: () => onPick(o.label),
                             behavior: HitTestBehavior.opaque,

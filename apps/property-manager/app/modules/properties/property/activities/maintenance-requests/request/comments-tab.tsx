@@ -205,12 +205,9 @@ export function CommentsTab({ requestId, propertyId }: CommentsTabProps) {
 					No comments yet.
 				</TypographyMuted>
 			) : (
-				<div className="flex flex-col gap-3">
+				<div className="flex flex-col gap-3.5">
 					{comments.map((comment) => (
-						<div
-							key={comment.id}
-							className="bg-muted/40 rounded-lg border px-4 py-3 text-sm"
-						>
+						<div key={comment.id} className="bg-card rounded-xl border p-4">
 							{editingId === comment.id ? (
 								<form
 									onSubmit={(e) => handleEditSubmit(e, comment.id)}
@@ -244,7 +241,7 @@ export function CommentsTab({ requestId, propertyId }: CommentsTabProps) {
 							) : (
 								<>
 									{comment.created_by_client_user && (
-										<div className="mb-2">
+										<div className="mb-3">
 											<UserChip
 												name={safeString(
 													comment.created_by_client_user.user?.name,
@@ -255,11 +252,11 @@ export function CommentsTab({ requestId, propertyId }: CommentsTabProps) {
 											/>
 										</div>
 									)}
-									<p className="leading-relaxed whitespace-pre-wrap">
+									<p className="text-foreground/80 text-[15px] leading-relaxed whitespace-pre-wrap">
 										{comment.content}
 									</p>
-									<div className="mt-1.5 flex items-center justify-between gap-2">
-										<TypographyMuted className="text-xs">
+									<div className="mt-3 flex items-center justify-between gap-2">
+										<TypographyMuted className="text-sm">
 											{localizedDayjs(comment.created_at).format(
 												'MMM D, YYYY [at] h:mm A',
 											)}

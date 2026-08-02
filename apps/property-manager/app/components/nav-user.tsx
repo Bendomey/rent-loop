@@ -58,6 +58,8 @@ export function NavUser() {
 
 	return (
 		<>
+			{/* hairline that lifts the account row away from the nav above it */}
+			<div className="bg-sidebar-border mt-1 h-px group-data-[collapsible=icon]:hidden" />
 			<SidebarMenu>
 				<SidebarMenuItem>
 					<AlertDialog>
@@ -65,11 +67,11 @@ export function NavUser() {
 							<DropdownMenuTrigger asChild>
 								<SidebarMenuButton
 									size="lg"
-									className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+									className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground h-14 gap-3"
 								>
 									<div className="relative">
-										<Avatar className="h-8 w-8 rounded-lg">
-											<AvatarFallback className="rounded-lg">
+										<Avatar className="size-10 group-data-[collapsible=icon]:size-8">
+											<AvatarFallback className="text-primary bg-primary/10 font-serif text-[15px] group-data-[collapsible=icon]:text-xs">
 												{getNameInitials(currentUser?.name ?? '')}
 											</AvatarFallback>
 										</Avatar>
@@ -80,15 +82,13 @@ export function NavUser() {
 											</span>
 										)}
 									</div>
-									<div className="grid flex-1 text-left text-sm leading-tight">
-										<span className="truncate font-medium">
+									<div className="grid flex-1 gap-1 text-left leading-tight">
+										<span className="truncate text-[15px] font-bold tracking-[-0.01em]">
 											{currentUser?.name}
 										</span>
-										<Badge variant="outline" className="mt-1">
-											<span className="truncate text-xs capitalize">
-												{clientUser?.role?.toLowerCase()}
-											</span>
-										</Badge>
+										<span className="bg-muted text-muted-foreground w-fit max-w-full truncate rounded-[5px] px-1.5 py-0.5 font-mono text-[10.5px] font-medium tracking-[0.07em] uppercase">
+											{clientUser?.role?.toLowerCase()}
+										</span>
 									</div>
 									<ArrowLeftRight className="text-muted-foreground ml-auto size-4" />
 								</SidebarMenuButton>

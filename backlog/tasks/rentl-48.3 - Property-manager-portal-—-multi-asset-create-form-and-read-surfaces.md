@@ -4,7 +4,7 @@ title: Property manager portal — multi-asset create form and read surfaces
 status: In Progress
 assignee: []
 created_date: '2026-08-01 14:20'
-updated_date: '2026-08-01 15:18'
+updated_date: '2026-08-02 16:31'
 labels:
   - maintenance-requests
   - frontend
@@ -47,9 +47,9 @@ Notes for whoever picks this up:
 <!-- AC:BEGIN -->
 - [ ] #1 The create form offers independent block and unit multi-selects, with units grouped by block, and selecting a block plus a unit inside it is allowed
 - [ ] #2 The form cannot be submitted with no block and no unit selected
-- [ ] #3 When the selection forces internal-only, the form says so before submission and the visibility control is disabled
-- [ ] #4 The fan-out option appears once two or more assets are selected, is off by default, and explains that it creates one request per asset
-- [ ] #5 After creating a single request the user lands on that request's detail page; after a fan-out the user lands on the list with the created count surfaced
+- [ ] #3 When the selection forces internal-only, the visibility control is disabled and the form explains why on that control itself
+- [ ] #4 No fan-out option is offered — the selected assets always produce one combined request (decided 2026-08-02, supersedes the original fan-out criterion)
+- [ ] #5 After creating, the user lands on the created request's detail page
 - [ ] #6 The Kanban card and the request detail sidebar show all of a request's assets, with links to each unit and block
 - [ ] #7 The list can be filtered by block as well as by unit
 - [ ] #8 The unit detail maintenance tab still lists that unit's requests
@@ -82,4 +82,12 @@ Two things beyond the plan:
 
 NOT verified:
 - No browser verification. The 8 create-form cases, the asset chips/sidebar rendering, the block filter behaviour, and dark mode were all checked by types/lint/build only. Running them needs the API plus a client-user login, which I do not have. This is the remaining work before the task can close.
+
+2026-08-02 — follow-up changes on the create form:
+- Fan-out removed from the UI entirely (Switch, payload field, and the multi-request success/navigation branch). The backend still supports both modes; no client exposes the choice.
+- The forced-internal notice is no longer a standalone amber banner. AC#3 is now met by a tooltip on the visibility control, shown only while that control is locked. The tooltip hangs off a wrapper span because a disabled Radix trigger takes no pointer events.
+- Visibility now restores the manager's own last pick when the selection stops forcing internal-only, instead of leaving the field stuck on Internal Only after the cause is gone.
+- Asset validation moved into a nested `assets` object. As an object-level superRefine it never fired on a blank form: Zod 4 skips object-level refinements once a field fails with a type-level issue, which priority/category always do while undefined. Nested, it runs regardless and reports on both pickers.
+- MultiSelect rebuilt against the Claude Design 'Multi-select (web)' spec — token field with per-token remove, count badge, searchable popover with tri-state select-all, grouped sticky headings, live count footer — then rescaled onto the project's base input tokens (h-9 / rounded-md / standard focus rings) rather than the design file's larger scale.
+- Units are NOT scoped by the selected blocks. The design mock narrowed the unit list to the picked blocks; that was reverted deliberately — the two fields are independent selections.
 <!-- SECTION:NOTES:END -->

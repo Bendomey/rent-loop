@@ -283,7 +283,7 @@ function InvoiceFormSheet({
 	}
 
 	return (
-		<div className="bg-muted/30 flex flex-col gap-3 rounded-lg border p-3">
+		<div className="bg-card flex flex-col gap-3 rounded-xl border p-4">
 			<PayerForm
 				totalAmount={expenseAmount}
 				payers={payers}
@@ -522,7 +522,7 @@ export function ExpensesTab({ requestId, propertyId }: ExpensesTabProps) {
 				</div>
 
 				{showForm && (
-					<div className="bg-muted/30 rounded-lg border p-4">
+					<div className="bg-card rounded-xl border p-5">
 						<Form {...form}>
 							<form
 								onSubmit={form.handleSubmit(onSubmit)}
@@ -658,18 +658,20 @@ export function ExpensesTab({ requestId, propertyId }: ExpensesTabProps) {
 						))}
 					</div>
 				) : !expenses?.length ? (
-					<TypographyMuted className="py-4 text-center text-sm">
-						No expenses recorded.
-					</TypographyMuted>
+					<div className="border-border/60 border-t pt-8 pb-6 text-center">
+						<TypographyMuted className="text-sm">
+							No expenses recorded.
+						</TypographyMuted>
+					</div>
 				) : (
-					<div className="flex flex-col gap-2">
+					<div className="flex flex-col gap-2.5">
 						{expenses.map((expense) => {
 							const hasInvoices = expense.invoices.length > 0
 							const isGeneratingForThis = activeInvoiceExpenseId === expense.id
 
 							return (
 								<div key={expense.id} className="flex flex-col gap-2">
-									<div className="flex items-center justify-between rounded-lg border px-4 py-3">
+									<div className="bg-card flex items-center justify-between rounded-xl border px-4 py-3.5">
 										<div className="flex min-w-0 flex-col gap-0.5">
 											<p className="truncate text-sm font-medium">
 												{expense.description}

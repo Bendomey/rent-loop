@@ -114,11 +114,7 @@ func (r *maintenanceRequestRepository) GetOneWithPopulate(
 	var mr models.MaintenanceRequest
 	db := lib.ResolveDB(ctx, r.DB).WithContext(ctx).Where("maintenance_requests.id = ?", query.ID)
 
-	if query.Populate != nil {
-		for _, field := range *query.Populate {
-			db = db.Preload(field)
-		}
-	}
+	db = ApplyPopulate(db, &models.MaintenanceRequest{}, query.Populate)
 
 	result := db.First(&mr)
 	if result.Error != nil {
@@ -155,11 +151,7 @@ func (r *maintenanceRequestRepository) List(
 			OrderScope("maintenance_requests", filterQuery.OrderBy, filterQuery.Order),
 		)
 
-	if filterQuery.Populate != nil {
-		for _, field := range *filterQuery.Populate {
-			db = db.Preload(field)
-		}
-	}
+	db = ApplyPopulate(db, &models.MaintenanceRequest{}, filterQuery.Populate)
 
 	result := db.Find(&mrs)
 	if result.Error != nil {
@@ -354,11 +346,7 @@ func (r *maintenanceRequestRepository) ListComments(
 			OrderScope("maintenance_request_comments", filterQuery.OrderBy, filterQuery.Order),
 		)
 
-	if filterQuery.Populate != nil {
-		for _, field := range *filterQuery.Populate {
-			db = db.Preload(field)
-		}
-	}
+	db = ApplyPopulate(db, &models.MaintenanceRequestComment{}, filterQuery.Populate)
 
 	result := db.Find(&comments)
 	if result.Error != nil {

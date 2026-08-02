@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useLoaderData, useRevalidator } from 'react-router'
 import { toast } from 'sonner'
 import { ActivityTab } from './activity-tab'
+import { AffectedAssetsSummary } from './affected-assets'
 import { CommentsTab } from './comments-tab'
 import { ExpensesTab } from './expenses-tab'
 import { MaintenanceRequestSidebar } from './sidebar'
@@ -97,7 +98,7 @@ function InlineTitle({
 					onChange={(e) => setDraft(e.target.value)}
 					onKeyDown={handleKeyDown}
 					onBlur={save}
-					className="h-auto py-0.5 text-xl font-semibold tracking-tight"
+					className="h-auto py-0.5 font-serif text-[34px] font-normal tracking-tight"
 					disabled={update.isPending}
 				/>
 			</div>
@@ -109,11 +110,11 @@ function InlineTitle({
 			className="group flex cursor-pointer items-start gap-1"
 			onClick={startEdit}
 		>
-			<h1 className="text-xl leading-tight font-semibold tracking-tight">
+			<h1 className="font-serif text-[34px] leading-[1.15] font-normal tracking-tight">
 				{final}
 			</h1>
 			{!disabled && (
-				<Pencil className="mt-1 h-3.5 w-3.5 shrink-0 opacity-0 transition-opacity group-hover:opacity-60" />
+				<Pencil className="mt-3 h-3.5 w-3.5 shrink-0 opacity-0 transition-opacity group-hover:opacity-60" />
 			)}
 		</div>
 	)
@@ -212,7 +213,7 @@ function InlineDescription({
 
 	return (
 		<div className="group relative cursor-pointer" onClick={startEdit}>
-			<TypographyMuted className="text-muted-foreground rounded-lg text-sm leading-relaxed whitespace-pre-wrap">
+			<TypographyMuted className="text-foreground/80 rounded-lg text-base leading-relaxed whitespace-pre-wrap">
 				{final || <span className="italic">No description.</span>}
 			</TypographyMuted>
 			{!disabled && (
@@ -231,10 +232,10 @@ function AttachmentsSection({ attachments }: { attachments: string[] }) {
 		<>
 			<div className="flex flex-col gap-2">
 				<div className="flex items-center gap-1.5">
-					<Paperclip className="text-muted-foreground h-4 w-4" />
-					<TypographyH5 className="text-base">
+					<Paperclip className="text-foreground size-5" />
+					<TypographyH5 className="text-xl font-normal">
 						Attachments{' '}
-						<span className="text-muted-foreground text-sm font-normal">
+						<span className="text-muted-foreground text-base font-normal">
 							({attachments.length})
 						</span>
 					</TypographyH5>
@@ -281,6 +282,10 @@ function AttachmentsSection({ attachments }: { attachments: string[] }) {
 	)
 }
 
+// Tab strip at the mock's scale: roomier hit area, active state carries weight.
+const tabTriggerClass =
+	'rounded-[9px] px-5 py-2.5 text-[15px] font-medium data-[state=active]:font-bold'
+
 export function MaintenanceRequestDetailModule() {
 	const { mr: request, clientUserProperty } = useLoaderData<typeof loader>()
 
@@ -313,7 +318,7 @@ export function MaintenanceRequestDetailModule() {
 				{/* Header */}
 				<div id="request-title-area" className="flex flex-col gap-2">
 					<div className="flex items-center gap-2">
-						<TypographyMuted className="text-xs font-medium">
+						<TypographyMuted className="font-mono text-base tracking-wide">
 							#{request.code}
 						</TypographyMuted>
 					</div>
@@ -323,14 +328,23 @@ export function MaintenanceRequestDetailModule() {
 						propertyId={propertyId}
 						disabled={isLocked}
 					/>
-					<TypographyMuted className="text-xs">
+					<TypographyMuted className="text-base">
 						Opened {localizedDayjs(request.created_at).format('LLL')}
 					</TypographyMuted>
+					{/* Scope of the request, so its reach reads without the rail. */}
+					<div className="mt-1">
+						<AffectedAssetsSummary
+							assets={request.assets ?? []}
+							propertyId={propertyId}
+						/>
+					</div>
 				</div>
 
 				{/* Description */}
 				<div className="flex flex-col gap-1">
-					<TypographyH5 className="text-base">Description</TypographyH5>
+					<TypographyH5 className="text-xl font-normal">
+						Description
+					</TypographyH5>
 					<InlineDescription
 						value={request.description}
 						requestId={request.id}
@@ -345,10 +359,16 @@ export function MaintenanceRequestDetailModule() {
 				{/* Tabs */}
 				<div id="request-content-tabs">
 					<Tabs defaultValue="comments" className="w-full">
-						<TabsList>
-							<TabsTrigger value="history">History</TabsTrigger>
-							<TabsTrigger value="comments">Comments</TabsTrigger>
-							<TabsTrigger value="expenses">Expenses</TabsTrigger>
+						<TabsList className="h-auto rounded-[13px] p-1.5">
+							<TabsTrigger value="history" className={tabTriggerClass}>
+								History
+							</TabsTrigger>
+							<TabsTrigger value="comments" className={tabTriggerClass}>
+								Comments
+							</TabsTrigger>
+							<TabsTrigger value="expenses" className={tabTriggerClass}>
+								Expenses
+							</TabsTrigger>
 						</TabsList>
 						<TabsContent value="history" className="mt-4">
 							<ActivityTab

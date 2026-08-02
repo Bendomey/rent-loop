@@ -75,7 +75,6 @@ export interface CreateMaintenanceRequestInput {
 	category: MaintenanceRequestCategory
 	unit_ids: Array<string>
 	block_ids: Array<string>
-	create_separate_requests: boolean
 	visibility: MaintenanceRequest['visibility']
 	attachments: Array<string>
 }
@@ -86,8 +85,6 @@ const createMaintenanceRequest = async ({
 	...input
 }: CreateMaintenanceRequestInput) => {
 	try {
-		// Always an array: one request normally, one per asset when the caller
-		// asked for separate requests.
 		const response = await fetchClient<ApiResponse<MaintenanceRequest[]>>(
 			`/v1/admin/clients/${client_id}/properties/${property_id}/maintenance-requests`,
 			{
