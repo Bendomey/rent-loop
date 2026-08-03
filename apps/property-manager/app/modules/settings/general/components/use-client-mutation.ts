@@ -9,15 +9,15 @@ import { getErrorMessage } from '~/lib/error-messages'
  */
 export function useClientMutation(
 	successMessage: string,
-	onSuccess: () => void,
+	onSuccess: (updatedClient?: Client) => void,
 ) {
 	const { mutate, isPending } = useUpdateClient()
 
 	const submit = (data: Parameters<typeof mutate>[0]) => {
 		mutate(data, {
-			onSuccess: () => {
+			onSuccess: (updatedClient) => {
 				toast.success(successMessage)
-				onSuccess()
+				onSuccess(updatedClient as Client | undefined)
 			},
 			onError: (e: unknown) => {
 				toast.error(

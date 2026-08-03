@@ -60,7 +60,11 @@ export function EditCompanyDetailsDialog({
 		'Company details updated',
 		onSuccess,
 	)
-	const { upload, objectUrl, isLoading: isUploading } = useUploadObject('clients/logos')
+	const {
+		upload,
+		objectUrl,
+		isLoading: isUploading,
+	} = useUploadObject('clients/logos')
 
 	const rhf = useForm<FormSchema>({
 		resolver: zodResolver(ValidationSchema),

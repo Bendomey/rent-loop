@@ -26,6 +26,7 @@ export function BrandingTab({ client, onEdit }: Props) {
 					<div className="bg-muted/50 flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-dashed">
 						{hasLogo ? (
 							<img
+								key={client.logo_url || 'no-logo'}
 								alt={`${client.name || 'Company'} logo`}
 								className="h-full w-full object-contain p-2"
 								src={client.logo_url || undefined}

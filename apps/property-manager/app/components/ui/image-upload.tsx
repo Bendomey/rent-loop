@@ -300,11 +300,11 @@ export function ImageUpload({
 							<button
 								type="button"
 								aria-label={dismissImageAriaLabel}
-								className="absolute -top-0.5 -right-0.5 z-10 rounded-[24px] bg-white !p-0 hover:!text-gray-500"
+								className="absolute -top-0.5 -right-0.5 z-10 rounded-full border border-border bg-background p-1 text-foreground shadow-sm transition-colors hover:bg-muted"
 								data-testid="remove image"
 								onClick={dismissImage}
 							>
-								<X className="p-0" />
+								<X className="size-4" />
 							</button>
 						) : null}
 					</>
