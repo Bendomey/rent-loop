@@ -24,9 +24,13 @@ import { Input } from '~/components/ui/input'
 import { Spinner } from '~/components/ui/spinner'
 import { Textarea } from '~/components/ui/textarea'
 import { safeString } from '~/lib/strings'
+import { useUploadObject } from '~/hooks/use-upload-object'
+import { ImageUpload } from '~/components/ui/image-upload'
+import { useEffect } from 'react'
 
 const ValidationSchema = z.object({
 	description: z.string().max(500, 'Max 500 characters').optional(),
+	logo_url: z.string().url('Invalid URL').optional().or(z.literal('')),
 	registration_number: z.string().optional(),
 	support_email: z.string().email('Invalid email').optional().or(z.literal('')),
 	support_phone: z.string().optional(),
@@ -40,6 +44,8 @@ interface Props {
 	open: boolean
 	onOpenChange: (open: boolean) => void
 	onSuccess: () => void
+	title?: string
+	description?: string
 }
 
 export function EditCompanyDetailsDialog({
@@ -47,16 +53,20 @@ export function EditCompanyDetailsDialog({
 	open,
 	onOpenChange,
 	onSuccess,
+	title = 'Edit company details',
+	description = 'Support details are shown to tenants when they need to reach you. Leave a field blank to clear its value.',
 }: Props) {
 	const { submit, isPending } = useClientMutation(
 		'Company details updated',
 		onSuccess,
 	)
+	const { upload, objectUrl, isLoading: isUploading } = useUploadObject('clients/logos')
 
 	const rhf = useForm<FormSchema>({
 		resolver: zodResolver(ValidationSchema),
 		defaultValues: {
 			description: safeString(client.description),
+			logo_url: safeString(client.logo_url),
 			registration_number: safeString(client.registration_number),
 			support_email: safeString(client.support_email),
 			support_phone: safeString(client.support_phone),
@@ -64,13 +74,26 @@ export function EditCompanyDetailsDialog({
 		},
 	})
 
-	const { control } = rhf
+	// const { control } = rhf
+
+	const { control, setValue } = rhf
+
+	useEffect(() => {
+		if (objectUrl) {
+			setValue('logo_url', objectUrl, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [objectUrl, setValue])
 
 	const onSubmit = (data: FormSchema) => {
 		submit({
 			clientId: client.id,
 			// Send null to clear a field when the user leaves it blank
 			description: data.description || null,
+			logo_url: data.logo_url || null,
 			registration_number: data.registration_number || null,
 			support_email: data.support_email || null,
 			support_phone: data.support_phone || null,
@@ -82,11 +105,8 @@ export function EditCompanyDetailsDialog({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent className="max-w-lg rounded-xl">
 				<DialogHeader>
-					<DialogTitle>Edit company details</DialogTitle>
-					<DialogDescription>
-						Support details are shown to tenants when they need to reach you.
-						Leave a field blank to clear its value.
-					</DialogDescription>
+					<DialogTitle>{title}</DialogTitle>
+					<DialogDescription>{description}</DialogDescription>
 				</DialogHeader>
 
 				<Form {...rhf}>
@@ -109,6 +129,33 @@ export function EditCompanyDetailsDialog({
 									</FormDescription>
 									<FormMessage />
 								</FormItem>
+							)}
+						/>
+
+						<FormField
+							name="logo_url"
+							control={control}
+							render={({ field }) => (
+								<ImageUpload
+									shape="square"
+									hint="Optional"
+									acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
+									error={rhf.formState.errors?.logo_url?.message}
+									fileCallback={upload}
+									isUploading={isUploading}
+									dismissCallback={() => {
+										setValue('logo_url', '', {
+											shouldDirty: true,
+											shouldValidate: true,
+										})
+									}}
+									imageSrc={safeString(field.value)}
+									label="Company Logo"
+									name="logo_url"
+									validation={{
+										maxByteSize: 5120000, // 5MB
+									}}
+								/>
 							)}
 						/>
 

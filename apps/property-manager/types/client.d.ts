@@ -54,6 +54,7 @@ interface Client {
 	longitude: number
 
 	registration_number: Nullable<string>
+	logo_url: Nullable<string>
 	description: Nullable<string>
 	website_url: Nullable<string>
 	support_email: Nullable<string>
