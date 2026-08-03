@@ -19,6 +19,7 @@ type OutputClient struct {
 	Latitude            float64                  `json:"latitude"              example:"37.7749"`
 	Longitude           float64                  `json:"longitude"             example:"-122.4194"`
 	WebsiteUrl          *string                  `json:"website_url"           example:"https://www.somewebiste.com"`
+	LogoURL             *string                  `json:"logo_url"              example:"https://www.somewebiste.com/logo.png"`
 	SupportPhone        *string                  `json:"support_phone"         example:"+233551235555"`
 	SupportEmail        *string                  `json:"support_email"         example:"support@somewebiste.com"`
 	ClientApplicationId string                   `json:"client_application_id" example:"app-1234"`
@@ -45,6 +46,7 @@ func DBClientToRestClient(i *models.Client) interface{} {
 		"longitude":             i.Longitude,
 		"description":           i.Description,
 		"registration_number":   i.RegistrationNumber,
+		"logo_url":              i.LogoURL,
 		"website_url":           i.WebsiteUrl,
 		"support_phone":         i.SupportPhone,
 		"support_email":         i.SupportEmail,

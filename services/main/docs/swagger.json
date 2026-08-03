@@ -22795,89 +22795,7 @@
             }
         },
         "handlers.UpdateClientRequest": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string",
-                    "minLength": 5
-                },
-                "city": {
-                    "type": "string",
-                    "minLength": 2
-                },
-                "country": {
-                    "type": "string",
-                    "minLength": 2
-                },
-                "currency": {
-                    "type": "string",
-                    "example": "GHS"
-                },
-                "description": {
-                    "type": "string",
-                    "maxLength": 500
-                },
-                "id_document_url": {
-                    "type": "string"
-                },
-                "id_expiry": {
-                    "type": "string"
-                },
-                "id_number": {
-                    "type": "string"
-                },
-                "id_type": {
-                    "description": "individual identity fields",
-                    "type": "string",
-                    "enum": [
-                        "DRIVERS_LICENSE",
-                        "PASSPORT",
-                        "NATIONAL_ID"
-                    ]
-                },
-                "latitude": {
-                    "type": "number"
-                },
-                "longitude": {
-                    "type": "number"
-                },
-                "name": {
-                    "type": "string",
-                    "minLength": 2
-                },
-                "region": {
-                    "type": "string",
-                    "minLength": 2
-                },
-                "registration_number": {
-                    "type": "string"
-                },
-                "sub_type": {
-                    "type": "string",
-                    "enum": [
-                        "LANDLORD",
-                        "PROPERTY_MANAGER",
-                        "DEVELOPER",
-                        "AGENCY"
-                    ]
-                },
-                "support_email": {
-                    "type": "string"
-                },
-                "support_phone": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string",
-                    "enum": [
-                        "INDIVIDUAL",
-                        "COMPANY"
-                    ]
-                },
-                "website_url": {
-                    "type": "string"
-                }
-            }
+            "type": "object"
         },
         "handlers.UpdateCommentBody": {
             "type": "object",
@@ -25395,6 +25313,10 @@
                 "latitude": {
                     "type": "number",
                     "example": 37.7749
+                },
+                "logo_url": {
+                    "type": "string",
+                    "example": "https://www.somewebiste.com/logo.png"
                 },
                 "longitude": {
                     "type": "number",

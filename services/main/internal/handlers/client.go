@@ -34,6 +34,7 @@ type UpdateClientRequest struct {
 	WebsiteUrl         lib.Optional[string] `json:"website_url"         validate:"omitempty,url"                                                                                                                                                     swaggertype:"string"`
 	SupportPhone       lib.Optional[string] `json:"support_phone"                                                                                                                                                                                    swaggertype:"string"`
 	SupportEmail       lib.Optional[string] `json:"support_email"       validate:"omitempty,email"                                                                                                                                                   swaggertype:"string"`
+	LogoURL            lib.Optional[string] `json:"logo_url"            validate:"omitempty,url" 																																					swaggertype:"string"`
 	Address            *string              `json:"address"             validate:"omitempty,min=5"`
 	Country            *string              `json:"country"             validate:"omitempty,min=2"`
 	Region             *string              `json:"region"              validate:"omitempty,min=2"`
@@ -101,6 +102,7 @@ func (h *clientHandler) UpdateClient(w http.ResponseWriter, r *http.Request) {
 		WebsiteUrl:         body.WebsiteUrl,
 		SupportPhone:       body.SupportPhone,
 		SupportEmail:       body.SupportEmail,
+		LogoURL:            body.LogoURL,
 		Address:            body.Address,
 		Country:            body.Country,
 		Region:             body.Region,

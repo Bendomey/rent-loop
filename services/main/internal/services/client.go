@@ -19,6 +19,7 @@ type UpdateClientInput struct {
 	Currency           *string
 	Description        lib.Optional[string]
 	RegistrationNumber lib.Optional[string]
+	LogoURL            lib.Optional[string]
 	WebsiteUrl         lib.Optional[string]
 	SupportPhone       lib.Optional[string]
 	SupportEmail       lib.Optional[string]
@@ -125,6 +126,7 @@ func (s *clientService) UpdateClient(ctx context.Context, input UpdateClientInpu
 			if *input.Type == "INDIVIDUAL" {
 				client.Description = nil
 				client.RegistrationNumber = nil
+				client.LogoURL = nil
 				client.WebsiteUrl = nil
 				client.SupportPhone = nil
 				client.SupportEmail = nil
@@ -143,6 +145,10 @@ func (s *clientService) UpdateClient(ctx context.Context, input UpdateClientInpu
 
 	if input.RegistrationNumber.IsSet {
 		client.RegistrationNumber = input.RegistrationNumber.Ptr()
+	}
+
+	if input.LogoURL.IsSet {
+		client.LogoURL = input.LogoURL.Ptr()
 	}
 
 	if input.WebsiteUrl.IsSet {
