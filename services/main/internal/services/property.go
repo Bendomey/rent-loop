@@ -343,8 +343,20 @@ func (s *propertyService) UpdateProperty(
 		property.Currency = *input.Currency
 	}
 
-	if input.Name != nil {
+	if input.Name != nil && *input.Name != property.Name {
 		property.Name = *input.Name
+
+		slug, slugErr := lib.GenerateSlug(property.Name)
+		if slugErr != nil {
+			return nil, pkg.InternalServerError(slugErr.Error(), &pkg.RentLoopErrorParams{
+				Err: slugErr,
+				Metadata: map[string]string{
+					"function": "UpdateProperty",
+					"action":   "generating a slug",
+				},
+			})
+		}
+		property.Slug = slug
 	}
 
 	if input.Description.IsSet {
