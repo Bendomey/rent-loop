@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { BrandingTab } from './components/branding-tab'
 import { CompanyTab } from './components/company-tab'
 import { EditBusinessTypeDialog } from './components/edit-business-type'
@@ -79,8 +79,12 @@ export function GeneralSettingsModule() {
 
 	const [tab, setTab] = useState('profile')
 	const [dialog, setDialog] = useState<DialogKey>()
+	const [client, setClient] = useState<Client | undefined>(undefined)
 
-	const client = currentUser?.client
+	useEffect(() => {
+		setClient(currentUser?.client)
+	}, [currentUser?.client])
+
 	const isCompany = client?.type === 'COMPANY'
 
 	const tabs = [
@@ -96,10 +100,23 @@ export function GeneralSettingsModule() {
 
 	const closeDialog = () => setDialog(undefined)
 
-	const handleMutationSuccess = () => {
+	const handleMutationSuccess = (updatedClient?: Client) => {
 		closeDialog()
+		if (updatedClient) {
+			setClient(updatedClient)
+			void queryClient.setQueriesData(
+				{ queryKey: [QUERY_KEYS.CLIENT_USER] },
+				(prev: unknown) => {
+					if (!prev || typeof prev !== 'object') return prev
+					return {
+						...prev,
+						client: updatedClient,
+					} as typeof prev
+				},
+			)
+		}
 		void queryClient.invalidateQueries({
-			queryKey: [QUERY_KEYS.CLIENT_USER, safeString(currentUser?.id)],
+			queryKey: [QUERY_KEYS.CLIENT_USER],
 		})
 	}
 
@@ -160,10 +177,7 @@ export function GeneralSettingsModule() {
 
 				{client ? (
 					<TabsContent value="branding">
-						<BrandingTab
-							client={client}
-							onEdit={() => setDialog('branding')}
-						/>
+						<BrandingTab client={client} onEdit={() => setDialog('branding')} />
 					</TabsContent>
 				) : null}
 

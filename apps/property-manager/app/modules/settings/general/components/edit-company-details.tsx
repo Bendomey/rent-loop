@@ -43,7 +43,7 @@ interface Props {
 	client: Client
 	open: boolean
 	onOpenChange: (open: boolean) => void
-	onSuccess: () => void
+	onSuccess: (updatedClient?: Client) => void
 	title?: string
 	description?: string
 }
@@ -60,7 +60,11 @@ export function EditCompanyDetailsDialog({
 		'Company details updated',
 		onSuccess,
 	)
-	const { upload, objectUrl, isLoading: isUploading } = useUploadObject('clients/logos')
+	const {
+		upload,
+		objectUrl,
+		isLoading: isUploading,
+	} = useUploadObject('clients/logos')
 
 	const rhf = useForm<FormSchema>({
 		resolver: zodResolver(ValidationSchema),
