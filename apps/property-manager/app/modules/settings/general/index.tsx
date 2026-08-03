@@ -64,6 +64,7 @@ type DialogKey =
 	| 'businessType'
 	| 'switchType'
 	| 'company'
+	| 'branding'
 	| 'location'
 	| 'identity'
 
@@ -157,10 +158,14 @@ export function GeneralSettingsModule() {
 					<Skeleton className="h-64 w-full rounded-xl" />
 				)}
 
-				{/* Neither of these reads the client — they have no API yet. */}
-				<TabsContent value="branding">
-					<BrandingTab />
-				</TabsContent>
+				{client ? (
+					<TabsContent value="branding">
+						<BrandingTab
+							client={client}
+							onEdit={() => setDialog('branding')}
+						/>
+					</TabsContent>
+				) : null}
 
 				<TabsContent value="preferences">
 					<PreferencesTab />
@@ -200,9 +205,15 @@ export function GeneralSettingsModule() {
 							/>
 							<EditCompanyDetailsDialog
 								client={client}
-								open={dialog === 'company'}
+								open={dialog === 'company' || dialog === 'branding'}
 								onOpenChange={closeDialog}
 								onSuccess={handleMutationSuccess}
+								title={dialog === 'branding' ? 'Edit logo' : undefined}
+								description={
+									dialog === 'branding'
+										? 'Upload or replace the logo that appears on your documents and tenant portal.'
+										: undefined
+								}
 							/>
 						</>
 					) : (

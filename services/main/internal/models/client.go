@@ -16,6 +16,7 @@ type Client struct {
 	Longitude          float64 `gorm:"not null;"`
 	Description        *string
 	RegistrationNumber *string
+	LogoURL            *string
 	WebsiteUrl         *string
 	SupportPhone       *string
 	SupportEmail       *string

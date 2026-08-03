@@ -20,6 +20,7 @@ export interface UpdateClientInput {
 	id_type?: Client['id_type'] | null
 	id_number?: string | null
 	id_expiry?: string | null
+	logo_url?: string | null
 	id_document_url?: string | null
 }
 

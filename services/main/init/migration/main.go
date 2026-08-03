@@ -94,6 +94,7 @@ func ServiceAutoMigration(db *gorm.DB) error {
 		jobs.EnhanceLeaseChecklist(),
 		jobs.SeedChecklistTemplates(),
 		jobs.AddClientCompanyFields(),
+		jobs.AddClientLogoURL(),
 		jobs.AddInvoicePropertyClientPayeeTenant(),
 		jobs.DropExpenseInvoicePaidByBillable(),
 		jobs.AddInvoiceVoidedReason(),

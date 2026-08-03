@@ -1,5 +1,4 @@
-import { Building2 } from 'lucide-react'
-import { Pencil } from 'lucide-react'
+import { Building2, Pencil } from 'lucide-react'
 import { PLACEHOLDER_ACCENT_COLOUR } from '../placeholder-data'
 import {
 	comingSoon,
@@ -8,21 +7,37 @@ import {
 } from '~/components/blocks/settings-ui'
 import { Button } from '~/components/ui/button'
 
+interface Props {
+	client: Client
+	onEdit: () => void
+}
+
 /**
- * Branding has no API behind it yet — the Client model carries no logo or
- * accent colour, so both controls toast via comingSoon(). See
- * ../placeholder-data.ts.
+ * The logo is editable through the company details dialog, while the accent
+ * colour remains a placeholder until that feature is released.
  */
-export function BrandingTab() {
+export function BrandingTab({ client, onEdit }: Props) {
+	const hasLogo = Boolean(client.logo_url)
+
 	return (
 		<div className="flex flex-col gap-5">
 			<SettingsPanel caption="Logo">
 				<div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center">
-					<div className="bg-muted/50 flex size-24 shrink-0 flex-col items-center justify-center gap-1.5 rounded-2xl border border-dashed">
-						<Building2 className="text-muted-foreground/60 size-6" />
-						<span className="text-muted-foreground/60 font-mono text-[9.5px] tracking-[0.04em] uppercase">
-							No logo
-						</span>
+					<div className="bg-muted/50 flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-dashed">
+						{hasLogo ? (
+							<img
+								alt={`${client.name || 'Company'} logo`}
+								className="h-full w-full object-contain p-2"
+								src={client.logo_url || undefined}
+							/>
+						) : (
+							<div className="flex flex-col items-center justify-center gap-1.5">
+								<Building2 className="text-muted-foreground/60 size-6" />
+								<span className="text-muted-foreground/60 font-mono text-[9.5px] tracking-[0.04em] uppercase">
+									No logo
+								</span>
+							</div>
+						)}
 					</div>
 
 					<div className="flex-1">
@@ -31,8 +46,8 @@ export function BrandingTab() {
 							or wide, PNG or SVG, up to 2MB.
 						</p>
 						<div className="mt-3.5">
-							<Button size="sm" onClick={comingSoon('Logo uploads')}>
-								Upload logo
+							<Button size="sm" onClick={onEdit}>
+								{hasLogo ? 'Change logo' : 'Upload logo'}
 							</Button>
 						</div>
 					</div>

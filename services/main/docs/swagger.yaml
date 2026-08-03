@@ -1728,65 +1728,6 @@ definitions:
         type: boolean
     type: object
   handlers.UpdateClientRequest:
-    properties:
-      address:
-        minLength: 5
-        type: string
-      city:
-        minLength: 2
-        type: string
-      country:
-        minLength: 2
-        type: string
-      currency:
-        example: GHS
-        type: string
-      description:
-        maxLength: 500
-        type: string
-      id_document_url:
-        type: string
-      id_expiry:
-        type: string
-      id_number:
-        type: string
-      id_type:
-        description: individual identity fields
-        enum:
-        - DRIVERS_LICENSE
-        - PASSPORT
-        - NATIONAL_ID
-        type: string
-      latitude:
-        type: number
-      longitude:
-        type: number
-      name:
-        minLength: 2
-        type: string
-      region:
-        minLength: 2
-        type: string
-      registration_number:
-        type: string
-      sub_type:
-        enum:
-        - LANDLORD
-        - PROPERTY_MANAGER
-        - DEVELOPER
-        - AGENCY
-        type: string
-      support_email:
-        type: string
-      support_phone:
-        type: string
-      type:
-        enum:
-        - INDIVIDUAL
-        - COMPANY
-        type: string
-      website_url:
-        type: string
     type: object
   handlers.UpdateCommentBody:
     properties:
@@ -3601,6 +3542,9 @@ definitions:
       latitude:
         example: 37.7749
         type: number
+      logo_url:
+        example: https://www.somewebiste.com/logo.png
+        type: string
       longitude:
         example: -122.4194
         type: number
