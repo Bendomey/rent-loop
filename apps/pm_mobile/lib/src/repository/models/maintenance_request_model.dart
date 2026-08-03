@@ -33,11 +33,17 @@ class MaintenanceUnitModel {
   @JsonKey(name: 'property_id')
   final String? propertyId;
 
+  /// The block this unit sits in, when the caller populated it. Shown as
+  /// context on a unit row so a name like "003" is never orphaned.
+  @JsonKey(name: 'property_block')
+  final MaintenanceBlockModel? propertyBlock;
+
   MaintenanceUnitModel({
     required this.id,
     required this.name,
     required this.slug,
     this.propertyId,
+    this.propertyBlock,
   });
 
   factory MaintenanceUnitModel.fromJson(Map<String, dynamic> json) =>

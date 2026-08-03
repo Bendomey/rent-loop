@@ -95,7 +95,8 @@ class MaintenanceRequestApi extends AbstractApi {
   /// creator paths (absent from the board's [_populate]) drive the "opened
   /// by" attribution the detail hero shows.
   static const _detailPopulate =
-      'Assets,Assets.Unit,Assets.PropertyBlock,AssignedWorker,'
+      'Assets,Assets.Unit,Assets.Unit.PropertyBlock,Assets.PropertyBlock,'
+      'AssignedWorker,'
       'AssignedWorker.User,AssignedManager,'
       'AssignedManager.User,CreatedByTenant,CreatedByClientUser.User';
 

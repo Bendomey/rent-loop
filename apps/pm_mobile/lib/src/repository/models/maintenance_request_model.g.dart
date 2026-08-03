@@ -13,6 +13,10 @@ MaintenanceUnitModel _$MaintenanceUnitModelFromJson(
       name: json['name'] as String,
       slug: json['slug'] as String,
       propertyId: json['property_id'] as String?,
+      propertyBlock: json['property_block'] == null
+          ? null
+          : MaintenanceBlockModel.fromJson(
+              json['property_block'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$MaintenanceUnitModelToJson(
@@ -22,6 +26,7 @@ Map<String, dynamic> _$MaintenanceUnitModelToJson(
       'name': instance.name,
       'slug': instance.slug,
       'property_id': instance.propertyId,
+      'property_block': instance.propertyBlock,
     };
 
 MaintenanceBlockModel _$MaintenanceBlockModelFromJson(

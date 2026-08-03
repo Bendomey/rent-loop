@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:rentloop_manager/src/lib/maintenance_utils.dart';
 import 'package:rentloop_manager/src/modules/main/activity/maintenance_detail_tabs.dart';
+import 'package:rentloop_manager/src/modules/main/activity/maintenance_selected_assets.dart';
 import 'package:rentloop_manager/src/modules/main/activity/maintenance_status_actions.dart';
 import 'package:rentloop_manager/src/repository/models/maintenance_request_model.dart';
 import 'package:rentloop_manager/src/repository/notifiers/activity/maintenance_request_status_notifier.dart';
@@ -235,6 +236,9 @@ class _Body extends StatelessWidget {
       ),
       children: [
         _HeroCard(request: request),
+        // The request's primary context, so it leads — ahead of assignments
+        // and no longer buried as repeated rows in Properties.
+        MaintenanceSelectedAssets(request: request),
         if (request.attachments.isNotEmpty)
           _Attachments(urls: request.attachments),
         const RLLabel('Assignments'),
@@ -327,6 +331,8 @@ class _HeroCard extends StatelessWidget {
               ),
             ),
           ],
+          const SizedBox(height: 12),
+          MaintenanceAssetSummary(request: request),
           if (description != null && description.isNotEmpty) ...[
             const SizedBox(height: 14),
             Container(
@@ -571,8 +577,6 @@ class _PropertiesCard extends ConsumerWidget {
     // all and must still render.
     final propertyId = request.propertyId;
     final leaseId = request.leaseId;
-    final unitAssets = request.unitAssets;
-    final blockAssets = request.blockAssets;
     final canOpenLease = leaseId != null;
 
     return RLCard(
@@ -594,35 +598,8 @@ class _PropertiesCard extends ConsumerWidget {
             label: 'Visibility',
             value: mrVisibilityLabelFromApi(request.visibility),
             onTap: () => _editSoon(context, ref, 'Changing visibility'),
-            last: unitAssets.isEmpty && blockAssets.isEmpty && !canOpenLease,
+            last: !canOpenLease,
           ),
-          for (final asset in unitAssets)
-            _NavRow(
-              label: 'Unit',
-              value: asset.label,
-              last:
-                  asset == unitAssets.last &&
-                  blockAssets.isEmpty &&
-                  !canOpenLease,
-              onTap: () async {
-                await Haptics.vibrate(HapticsType.selection);
-                if (!context.mounted) return;
-                context.push('/properties/$propertyId/units/${asset.unitId}');
-              },
-            ),
-          // There is no block detail screen, so a block row opens the
-          // property's blocks list — the closest existing destination.
-          for (final asset in blockAssets)
-            _NavRow(
-              label: 'Block',
-              value: asset.label,
-              last: asset == blockAssets.last && !canOpenLease,
-              onTap: () async {
-                await Haptics.vibrate(HapticsType.selection);
-                if (!context.mounted) return;
-                context.push('/properties/$propertyId/blocks');
-              },
-            ),
           if (canOpenLease)
             _NavRow(
               label: 'Lease',
