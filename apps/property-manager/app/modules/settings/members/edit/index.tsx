@@ -1,19 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryClient } from '@tanstack/react-query'
 import { Check } from 'lucide-react'
-import { useRef } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
-import { isValidPhoneNumber } from 'react-phone-number-input'
 import { Link, useLoaderData, useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
-import {
-	linkClientUserToProperties,
-	unlinkClientUserFromProperties,
-} from '~/api/client-user-properties'
 import { useUpdateClientUser } from '~/api/client-users'
 import { useGetMyProperties } from '~/api/properties'
-import { InternationalPhoneInput } from '~/components/international-phone'
 import { Button } from '~/components/ui/button'
 import { FieldGroup } from '~/components/ui/field'
 import {
@@ -40,18 +33,12 @@ import {
 	TypographyMuted,
 } from '~/components/ui/typography'
 import { QUERY_KEYS } from '~/lib/constants'
-import { normalizeInternationalPhoneNumber } from '~/lib/phone'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
 import type { loader } from '~/routes/_auth._dashboard.settings.members.$memberId._index'
 
 const ValidationSchema = z.object({
-	name: z
-		.string({ error: 'Name is required' })
-		.min(2, 'Please enter a valid name'),
-	phone: z
-		.string({ error: 'Phone number is required' })
-		.refine(isValidPhoneNumber, { message: 'Enter a valid phone number' }),
+	role: z.enum(['ADMIN', 'STAFF']),
 	property_assignments: z
 		.array(
 			z.object({
@@ -73,13 +60,7 @@ export function EditMemberModule() {
 	const { mutateAsync: updateMember, isPending: isUpdating } =
 		useUpdateClientUser()
 	const { clientUser } = useClient()
-
-	const initialAssignments = useRef(
-		memberProperties.map((mp) => ({
-			property_id: mp.property_id,
-			role: mp.role,
-		})),
-	)
+	const isOwner = member.role === 'OWNER'
 
 	const { data: myProperties } = useGetMyProperties(
 		safeString(clientUser?.client_id),
@@ -92,8 +73,7 @@ export function EditMemberModule() {
 
 	const rhfMethods = useForm<FormSchema>({
 		defaultValues: {
-			name: member.user?.name,
-			phone: safeString(member.user?.phone_number),
+			role: isOwner ? undefined : (member.role as FormSchema['role']),
 			property_assignments: memberProperties.map((mp) => ({
 				property_id: mp.property_id,
 				name: safeString(mp.property?.name),
@@ -103,7 +83,7 @@ export function EditMemberModule() {
 		resolver: zodResolver(ValidationSchema),
 	})
 
-	const { handleSubmit, control, getValues } = rhfMethods
+	const { handleSubmit, control } = rhfMethods
 
 	const { fields, append, remove } = useFieldArray({
 		control,
@@ -121,7 +101,7 @@ export function EditMemberModule() {
 
 	const updatePropertyRole = (
 		propertyId: string,
-		role: 'MANAGER' | 'STAFF',
+		role: FormSchema['property_assignments'][number]['role'],
 	) => {
 		const index = fields.findIndex((f) => f.property_id === propertyId)
 		if (index !== -1) {
@@ -131,57 +111,15 @@ export function EditMemberModule() {
 
 	const onSubmit = async (data: FormSchema) => {
 		try {
-			// Update name + phone
 			await updateMember({
 				clientId: safeString(clientUser?.client_id),
 				id: safeString(memberId),
-				name: data.name,
-				phoneNumber:
-					normalizeInternationalPhoneNumber(data.phone) ?? data.phone,
+				role: isOwner ? undefined : data.role,
+				property_assignments: data.property_assignments.map((a) => ({
+					property_id: a.property_id,
+					role: a.role,
+				})),
 			})
-
-			// Diff property assignments
-			const initial = initialAssignments.current
-			const next = data.property_assignments
-
-			const toUnlink = initial
-				.filter((i) => {
-					const match = next.find((n) => n.property_id === i.property_id)
-					return !match || match.role !== i.role
-				})
-				.map((i) => i.property_id)
-
-			const toLink = next.filter((n) => {
-				const match = initial.find((i) => i.property_id === n.property_id)
-				return !match || match.role !== n.role
-			})
-
-			if (toUnlink.length > 0) {
-				await unlinkClientUserFromProperties({
-					clientId: safeString(clientUser?.client_id),
-					client_user_id: safeString(memberId),
-					property_ids: toUnlink,
-				})
-			}
-
-			if (toLink.length > 0) {
-				// Group by role — each link call accepts one role for all properties
-				const byRole = toLink.reduce<Record<string, string[]>>((acc, item) => {
-					acc[item.role] = [...(acc[item.role] ?? []), item.property_id]
-					return acc
-				}, {})
-
-				await Promise.all(
-					Object.entries(byRole).map(([role, property_ids]) =>
-						linkClientUserToProperties({
-							clientId: safeString(clientUser?.client_id),
-							client_user_id: safeString(memberId),
-							property_ids,
-							role: role as 'MANAGER' | 'STAFF',
-						}),
-					),
-				)
-			}
 
 			void queryClient.invalidateQueries({
 				queryKey: [QUERY_KEYS.CLIENT_USERS],
@@ -211,19 +149,14 @@ export function EditMemberModule() {
 
 				<FieldGroup className="mt-10">
 					<FieldGroup>
-						<FormField
-							name="name"
-							control={control}
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Full Name</FormLabel>
-									<FormControl>
-										<Input placeholder="John Doe" type="text" {...field} />
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
+						<FormItem>
+							<FormLabel>Full Name</FormLabel>
+							<Input
+								value={member.user?.name}
+								disabled
+								className="opacity-60"
+							/>
+						</FormItem>
 
 						<FormItem>
 							<FormLabel>Email</FormLabel>
@@ -238,23 +171,50 @@ export function EditMemberModule() {
 							</p>
 						</FormItem>
 
-						<FormField
-							name="phone"
-							control={control}
-							render={({ field, fieldState }) => (
-								<FormItem>
-									<FormLabel>Phone Number</FormLabel>
-									<FormControl>
-										<InternationalPhoneInput
-											value={field.value}
-											onChange={field.onChange}
-											error={!!fieldState.error}
-										/>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
+						<FormItem>
+							<FormLabel>Phone Number</FormLabel>
+							<Input
+								value={member.user?.phone_number}
+								disabled
+								className="opacity-60"
+							/>
+						</FormItem>
+
+						<p className="text-muted-foreground text-xs">
+							Editing name, email, and phone number isn't supported yet.
+						</p>
+
+						{isOwner ? (
+							<FormItem>
+								<FormLabel>Role</FormLabel>
+								<Input value="Owner" disabled className="opacity-60" />
+								<p className="text-muted-foreground text-xs">
+									The workspace owner's role can't be changed.
+								</p>
+							</FormItem>
+						) : (
+							<FormField
+								name="role"
+								control={control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Role</FormLabel>
+										<Select value={field.value} onValueChange={field.onChange}>
+											<FormControl>
+												<SelectTrigger className="w-full">
+													<SelectValue placeholder="Select a role" />
+												</SelectTrigger>
+											</FormControl>
+											<SelectContent>
+												<SelectItem value="ADMIN">Admin</SelectItem>
+												<SelectItem value="STAFF">Staff</SelectItem>
+											</SelectContent>
+										</Select>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+						)}
 					</FieldGroup>
 				</FieldGroup>
 
@@ -304,7 +264,7 @@ export function EditMemberModule() {
 														onValueChange={(value) =>
 															updatePropertyRole(
 																item.property_id,
-																value as 'MANAGER' | 'STAFF',
+																value as FormSchema['property_assignments'][number]['role'],
 															)
 														}
 													>
