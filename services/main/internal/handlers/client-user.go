@@ -250,6 +250,83 @@ func (h *ClientUserHandler) GetClientUserWithPopulate(w http.ResponseWriter, r *
 	})
 }
 
+type UpdateClientUserPropertyAssignmentRequest struct {
+	PropertyID string `json:"property_id" validate:"required,uuid4"             example:"a8098c1a-f86e-11da-bd1a-00112444be1e"`
+	Role       string `json:"role"        validate:"required,oneof=MANAGER STAFF" example:"MANAGER"`
+}
+
+type UpdateClientUserRequest struct {
+	Role                *string                                     `json:"role"                  validate:"omitempty,oneof=ADMIN STAFF" example:"ADMIN"`
+	PropertyAssignments []UpdateClientUserPropertyAssignmentRequest `json:"property_assignments"  validate:"omitempty,dive"`
+}
+
+// UpdateClientUser godoc
+//
+//	@Summary		Update client user role and property assignments (Admin)
+//	@Description	Update a client user's global role and/or replace the properties assigned to them (Admin). Omit a field to leave it unchanged; pass an empty `property_assignments` array to unassign all properties.
+//	@Tags			ClientUsers
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			client_id		path		string											true	"Client ID"
+//	@Param			client_user_id	path		string											true	"Client user ID"
+//	@Param			body			body		UpdateClientUserRequest						true	"Update Client User Request Body"
+//	@Success		200				{object}	object{data=transformations.OutputClientUser}	"Client user updated successfully"
+//	@Failure		400				{object}	lib.HTTPError									"Error occurred when updating client user"
+//	@Failure		401				{object}	string											"Invalid or absent authentication token"
+//	@Failure		404				{object}	lib.HTTPError									"Client user not found"
+//	@Failure		422				{object}	string											"Validation error occured"
+//	@Failure		500				{object}	string											"An unexpected error occurred"
+//	@Router			/api/v1/admin/clients/{client_id}/client-users/{client_user_id} [patch]
+func (h *ClientUserHandler) UpdateClientUser(w http.ResponseWriter, r *http.Request) {
+	currentClientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
+	if !clientUserOk {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	clientUserId := chi.URLParam(r, "client_user_id")
+
+	var body UpdateClientUserRequest
+
+	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+
+	isPassedValidation := lib.ValidateRequest(h.appCtx.Validator, body, w)
+	if !isPassedValidation {
+		return
+	}
+
+	var propertyAssignments []services.UpdateClientUserPropertyAssignmentInput
+	if body.PropertyAssignments != nil {
+		propertyAssignments = make([]services.UpdateClientUserPropertyAssignmentInput, 0, len(body.PropertyAssignments))
+		for _, assignment := range body.PropertyAssignments {
+			propertyAssignments = append(propertyAssignments, services.UpdateClientUserPropertyAssignmentInput{
+				PropertyID: assignment.PropertyID,
+				Role:       assignment.Role,
+			})
+		}
+	}
+
+	clientUser, err := h.service.UpdateClientUser(r.Context(), services.UpdateClientUserInput{
+		ClientUserID:        clientUserId,
+		ClientID:            currentClientUser.ClientID,
+		Role:                body.Role,
+		PropertyAssignments: propertyAssignments,
+		UpdatedByID:         currentClientUser.ID,
+	})
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBClientUserToRest(clientUser),
+	})
+}
+
 type DeactivateClientUserRequest struct {
 	Reason string `json:"reason" validate:"required,min=1" example:"Reason for deactivation"`
 }
