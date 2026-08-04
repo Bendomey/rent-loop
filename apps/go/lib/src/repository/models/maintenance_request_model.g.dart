@@ -6,22 +6,6 @@ part of 'maintenance_request_model.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-MaintenanceUnitModel _$MaintenanceUnitModelFromJson(
-        Map<String, dynamic> json) =>
-    MaintenanceUnitModel(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      slug: json['slug'] as String,
-    );
-
-Map<String, dynamic> _$MaintenanceUnitModelToJson(
-        MaintenanceUnitModel instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'name': instance.name,
-      'slug': instance.slug,
-    };
-
 MaintenanceExpenseModel _$MaintenanceExpenseModelFromJson(
         Map<String, dynamic> json) =>
     MaintenanceExpenseModel(
@@ -86,7 +70,6 @@ MaintenanceRequestModel _$MaintenanceRequestModelFromJson(
       priority: json['priority'] as String?,
       status: json['status'] as String?,
       code: json['code'] as String?,
-      unitId: json['unit_id'] as String?,
       leaseId: json['lease_id'] as String?,
       attachments: (json['attachments'] as List<dynamic>?)
           ?.map((e) => e as String)
@@ -97,9 +80,6 @@ MaintenanceRequestModel _$MaintenanceRequestModelFromJson(
       startedAt: json['started_at'] as String?,
       canceledAt: json['canceled_at'] as String?,
       cancellationReason: json['cancellation_reason'] as String?,
-      unit: json['unit'] == null
-          ? null
-          : MaintenanceUnitModel.fromJson(json['unit'] as Map<String, dynamic>),
       activityLogs: (json['activity_logs'] as List<dynamic>?)
           ?.map((e) =>
               MaintenanceActivityLogModel.fromJson(e as Map<String, dynamic>))
@@ -120,7 +100,6 @@ Map<String, dynamic> _$MaintenanceRequestModelToJson(
       'priority': instance.priority,
       'status': instance.status,
       'code': instance.code,
-      'unit_id': instance.unitId,
       'lease_id': instance.leaseId,
       'attachments': instance.attachments,
       'created_at': instance.createdAt,
@@ -129,7 +108,6 @@ Map<String, dynamic> _$MaintenanceRequestModelToJson(
       'started_at': instance.startedAt,
       'canceled_at': instance.canceledAt,
       'cancellation_reason': instance.cancellationReason,
-      'unit': instance.unit,
       'activity_logs': instance.activityLogs,
       'expenses': instance.expenses,
     };

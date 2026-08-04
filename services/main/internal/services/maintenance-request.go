@@ -18,7 +18,7 @@ import (
 
 type MaintenanceRequestService interface {
 	CreateByTenant(ctx context.Context, input CreateMaintenanceRequestByTenantInput) (*models.MaintenanceRequest, error)
-	CreateByAdmin(ctx context.Context, input CreateMaintenanceRequestByAdminInput) (*models.MaintenanceRequest, error)
+	CreateByAdmin(ctx context.Context, input CreateMaintenanceRequestByAdminInput) ([]models.MaintenanceRequest, error)
 	GetMaintenanceRequest(
 		ctx context.Context,
 		query repository.GetMaintenanceRequestQuery,
@@ -111,14 +111,17 @@ type CreateMaintenanceRequestByTenantInput struct {
 }
 
 type CreateMaintenanceRequestByAdminInput struct {
-	UnitID       string
-	ClientUserID string
-	Title        string
-	Desc         string
-	Priority     string
-	Category     string
-	Visibility   string
-	Attachments  []string
+	PropertyID             string
+	UnitIDs                []string
+	BlockIDs               []string
+	CreateSeparateRequests bool
+	ClientUserID           string
+	Title                  string
+	Desc                   string
+	Priority               string
+	Category               string
+	Visibility             string
+	Attachments            []string
 }
 
 type UpdateMaintenanceRequestInput struct {
@@ -186,7 +189,10 @@ func (s *maintenanceRequestService) CreateByTenant(
 	}
 
 	mr := &models.MaintenanceRequest{
-		UnitID:            lease.UnitId,
+		PropertyID: lease.Unit.PropertyID,
+		Assets: []models.MaintenanceRequestAsset{
+			{AssetType: MaintenanceAssetTypeUnit, UnitID: &lease.UnitId},
+		},
 		LeaseID:           &input.LeaseID,
 		CreatedByTenantID: &input.TenantID,
 		Title:             input.Title,
@@ -246,101 +252,197 @@ func (s *maintenanceRequestService) CreateByTenant(
 func (s *maintenanceRequestService) CreateByAdmin(
 	ctx context.Context,
 	input CreateMaintenanceRequestByAdminInput,
-) (*models.MaintenanceRequest, error) {
-	var createdByTenantID *string = nil
-	unitID := input.UnitID
+) ([]models.MaintenanceRequest, error) {
+	planned, err := PlanMaintenanceRequests(
+		input.UnitIDs, input.BlockIDs, input.Visibility, input.CreateSeparateRequests,
+	)
+	if err != nil {
+		return nil, err
+	}
 
-	var leaseID *string = nil
+	// Validate the full selection once, before creating anything.
+	for _, plan := range planned {
+		if err := s.validateAssetsBelongToProperty(ctx, input.PropertyID, plan.Assets); err != nil {
+			return nil, err
+		}
+	}
 
-	if input.Visibility == "TENANT_VISIBLE" {
-		// try to find an active lease connected to unitId
-		lease, err := s.leaseRepo.GetActiveLeaseByUnitID(ctx, input.UnitID)
-		if err != nil {
-			if err == gorm.ErrRecordNotFound {
-				// if there is no lease, then we should allow only internal admins to see it.
-				input.Visibility = "INTERNAL_ONLY"
+	created := make([]models.MaintenanceRequest, 0, len(planned))
+
+	for _, plan := range planned {
+		mr := &models.MaintenanceRequest{
+			PropertyID:            input.PropertyID,
+			CreatedByClientUserID: &input.ClientUserID,
+			Title:                 input.Title,
+			Description:           input.Desc,
+			Priority:              input.Priority,
+			Category:              input.Category,
+			Attachments:           input.Attachments,
+			Status:                "NEW",
+			Visibility:            plan.Visibility,
+			Assets:                buildAssetRows(plan.Assets),
+			ActivityLogs: []models.MaintenanceRequestActivityLog{
+				{
+					Action:                  "CREATED",
+					PerformedByClientUserID: &input.ClientUserID,
+				},
+			},
+		}
+
+		// Only a single-unit request has one lease to resolve and one tenant to
+		// notify. Anything broader was already forced to INTERNAL_ONLY by the
+		// planner, so there is nothing to resolve.
+		if mr.Visibility == MaintenanceVisibilityTenantVisible {
+			lease, leaseErr := s.leaseRepo.GetActiveLeaseByUnitID(ctx, plan.Assets[0].ID)
+			switch {
+			case leaseErr == gorm.ErrRecordNotFound:
+				// No tenant to show it to, so keep it internal.
+				mr.Visibility = MaintenanceVisibilityInternalOnly
+			case leaseErr != nil:
+				return nil, pkg.InternalServerError(leaseErr.Error(), &pkg.RentLoopErrorParams{
+					Err: leaseErr,
+					Metadata: map[string]string{
+						"function": "CreateByAdmin",
+						"action":   "fetching lease to resolve tenant and unit",
+					},
+				})
+			default:
+				leaseID := lease.ID.String()
+				mr.LeaseID = &leaseID
+				mr.CreatedByTenantID = &lease.TenantId
 			}
+		}
+
+		if err := s.repo.Create(ctx, mr); err != nil {
 			return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
 				Err: err,
 				Metadata: map[string]string{
 					"function": "CreateByAdmin",
-					"action":   "fetching lease to resolve tenant and unit",
+					"action":   "creating maintenance request",
 				},
 			})
-		} else {
-			leaseIDString := lease.ID.String()
-			leaseID = &leaseIDString
-			createdByTenantID = &lease.TenantId
 		}
 
+		s.notifyTenantOfNewRequest(ctx, mr, input.Title)
+
+		created = append(created, *mr)
 	}
 
-	mr := &models.MaintenanceRequest{
-		UnitID:                unitID,
-		LeaseID:               leaseID,
-		CreatedByClientUserID: &input.ClientUserID,
-		CreatedByTenantID:     createdByTenantID,
-		Title:                 input.Title,
-		Description:           input.Desc,
-		Priority:              input.Priority,
-		Category:              input.Category,
-		Attachments:           input.Attachments,
-		Status:                "NEW",
-		Visibility:            input.Visibility,
-		ActivityLogs: []models.MaintenanceRequestActivityLog{
-			{
-				Action:                  "CREATED",
-				PerformedByClientUserID: &input.ClientUserID,
-			},
+	return created, nil
+}
+
+// notifyTenantOfNewRequest pushes to the tenant when a request was created on
+// their behalf. No-op unless the request resolved to a single tenant's lease.
+func (s *maintenanceRequestService) notifyTenantOfNewRequest(
+	ctx context.Context,
+	mr *models.MaintenanceRequest,
+	title string,
+) {
+	if mr.CreatedByTenantID == nil || mr.LeaseID == nil {
+		return
+	}
+
+	tenantAccount, err := s.tenantAccountRepo.FindOne(ctx, map[string]any{
+		"tenant_id": *mr.CreatedByTenantID,
+	})
+	if err != nil || tenantAccount == nil {
+		log.WithError(err).WithField("tenantID", *mr.CreatedByTenantID).
+			Warn("[MaintenanceRequest] could not resolve tenant account for notification")
+		raven.CaptureError(err, map[string]string{
+			"function":               "CreateByAdmin",
+			"action":                 "resolving tenant account for notification",
+			"tenant_id":              *mr.CreatedByTenantID,
+			"maintenance_request_id": mr.ID.String(),
+		})
+		return
+	}
+
+	tenantAccountID := tenantAccount.ID.String()
+	if err := s.notificationService.SendToTenantAccount(
+		ctx,
+		tenantAccountID,
+		"New maintenance request",
+		"A new maintenance request has been created on your behalf: "+title,
+		map[string]string{
+			"type":                   "MAINTENANCE",
+			"maintenance_request_id": mr.ID.String(),
+			"status":                 "NEW",
+			"lease_id":               *mr.LeaseID,
 		},
-	}
-
-	if err := s.repo.Create(ctx, mr); err != nil {
-		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
-			Metadata: map[string]string{
-				"function": "CreateByAdmin",
-				"action":   "creating maintenance request",
-			},
+	); err != nil {
+		log.WithError(err).WithField("tenantAccountID", tenantAccountID).
+			Warn("[MaintenanceRequest] push notification failed")
+		raven.CaptureError(err, map[string]string{
+			"function":               "CreateByAdmin",
+			"action":                 "sending push notification",
+			"tenant_id":              *mr.CreatedByTenantID,
+			"maintenance_request_id": mr.ID.String(),
 		})
 	}
+}
 
-	// lets send push notification to tenant that an MR was created on their behalf
-	if createdByTenantID != nil && mr.LeaseID != nil {
-		tenantAccount, err := s.tenantAccountRepo.FindOne(ctx, map[string]any{
-			"tenant_id": *createdByTenantID,
-		})
+// validateAssetsBelongToProperty rejects any unit or block that is not part of
+// the property the request is being created under. Without this a caller could
+// attach another client's unit to their own request.
+func (s *maintenanceRequestService) validateAssetsBelongToProperty(
+	ctx context.Context,
+	propertyID string,
+	assets []MaintenanceAssetRef,
+) error {
+	db := lib.ResolveDB(ctx, s.appCtx.DB).WithContext(ctx)
 
-		if err != nil || tenantAccount == nil {
-			log.WithError(err).WithField("tenantID", *createdByTenantID).
-				Warn("[MaintenanceRequest] could not resolve tenant account for notification")
-			raven.CaptureError(err, map[string]string{
-				"function":               "CreateByAdmin",
-				"action":                 "resolving tenant account for notification",
-				"tenant_id":              *createdByTenantID,
-				"maintenance_request_id": mr.ID.String(),
+	for _, asset := range assets {
+		var count int64
+		var err error
+
+		switch asset.Type {
+		case MaintenanceAssetTypeUnit:
+			err = db.Table("units").
+				Where("id = ? AND property_id = ? AND deleted_at IS NULL", asset.ID, propertyID).
+				Count(&count).Error
+		case MaintenanceAssetTypeBlock:
+			err = db.Table("property_blocks").
+				Where("id = ? AND property_id = ? AND deleted_at IS NULL", asset.ID, propertyID).
+				Count(&count).Error
+		default:
+			return pkg.BadRequestError("unknown asset type "+asset.Type, nil)
+		}
+
+		if err != nil {
+			return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+				Err: err,
+				Metadata: map[string]string{
+					"function": "validateAssetsBelongToProperty",
+					"action":   "verifying asset belongs to property",
+				},
 			})
-		} else {
-			tenantAccountID := tenantAccount.ID.String()
-			if err := s.notificationService.SendToTenantAccount(ctx, tenantAccountID, "New maintenance request", "A new maintenance request has been created on your behalf: "+input.Title, map[string]string{
-				"type":                   "MAINTENANCE",
-				"maintenance_request_id": mr.ID.String(),
-				"status":                 "NEW",
-				"lease_id":               *mr.LeaseID,
-			}); err != nil {
-				log.WithError(err).WithField("tenantAccountID", tenantAccountID).
-					Warn("[MaintenanceRequest] push notification failed")
-				raven.CaptureError(err, map[string]string{
-					"function":               "CreateByAdmin",
-					"action":                 "sending push notification",
-					"tenant_id":              *createdByTenantID,
-					"maintenance_request_id": mr.ID.String(),
-				})
-			}
+		}
+
+		if count == 0 {
+			return pkg.BadRequestError(
+				asset.Type+" "+asset.ID+" does not belong to this property",
+				nil,
+			)
 		}
 	}
 
-	return mr, nil
+	return nil
+}
+
+// buildAssetRows converts planned asset references into model rows.
+func buildAssetRows(assets []MaintenanceAssetRef) []models.MaintenanceRequestAsset {
+	rows := make([]models.MaintenanceRequestAsset, 0, len(assets))
+	for _, asset := range assets {
+		id := asset.ID
+		row := models.MaintenanceRequestAsset{AssetType: asset.Type}
+		if asset.Type == MaintenanceAssetTypeUnit {
+			row.UnitID = &id
+		} else {
+			row.PropertyBlockID = &id
+		}
+		rows = append(rows, row)
+	}
+	return rows
 }
 
 // --- Get / List ---

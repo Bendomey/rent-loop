@@ -89,14 +89,15 @@ class _InvoicePreview extends StatelessWidget {
                       vertical: 12,
                       horizontal: 10,
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           amount,
                           style: Theme.of(context).textTheme.displaySmall!
                               .copyWith(fontWeight: FontWeight.bold),
                         ),
+                        const SizedBox(height: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 10,

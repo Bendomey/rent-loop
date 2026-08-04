@@ -1,8 +1,9 @@
 import { redirect } from 'react-router'
 import type { Route } from './+types/_auth._dashboard.settings.members.new._index'
 import { linkClientUserPropertyForServer } from '~/api/client-user-properties/server'
-import { createClientUser } from '~/api/client-users'
+import { createClientUser } from '~/api/client-users/server'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
+import { resolveAuthToken } from '~/lib/actions/auth.token.server'
 import { environmentVariables } from '~/lib/actions/env.server'
 import { replaceNullUndefinedWithUndefined } from '~/lib/actions/utils.server'
 import { getErrorMessage } from '~/lib/error-messages'
@@ -21,7 +22,7 @@ export const handle = {
 	breadcrumb: 'New',
 }
 
-export async function action({ request }: Route.ActionArgs) {
+export async function action({ request, context }: Route.ActionArgs) {
 	const baseUrl = environmentVariables().API_ADDRESS
 	const authSession = await getAuthSession(request.headers.get('Cookie'))
 	const clientId = safeString(authSession.get('selectedClientId'))
@@ -37,7 +38,10 @@ export async function action({ request }: Route.ActionArgs) {
 		role: ClientUserProperty['role']
 	}[] = propertyAssignmentsRaw ? JSON.parse(propertyAssignmentsRaw) : []
 
-	const apiConfig = { baseUrl, authToken: authSession.get('authToken') }
+	const apiConfig = {
+		baseUrl,
+		authToken: await resolveAuthToken(request, context),
+	}
 
 	try {
 		const member = await createClientUser(

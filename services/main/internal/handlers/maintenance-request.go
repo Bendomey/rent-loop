@@ -29,20 +29,24 @@ func NewMaintenanceRequestHandler(
 // ─── Request Bodies ───────────────────────────────────────────────────────────
 
 type CreateMaintenanceRequestBody struct {
-	UnitID      string   `json:"unit_id"     validate:"required,uuid4"`
-	Title       string   `json:"title"       validate:"required"`
-	Description string   `json:"description" validate:"required"`
-	Priority    string   `json:"priority"    validate:"required,oneof=LOW MEDIUM HIGH EMERGENCY"`
-	Category    string   `json:"category"    validate:"required,oneof=PLUMBING ELECTRICAL HVAC OTHER"`
-	Visibility  string   `json:"visibility"  validate:"required,oneof=TENANT_VISIBLE INTERNAL_ONLY"`
-	Attachments []string `json:"attachments" validate:"omitempty"`
+	// At least one of UnitIDs / BlockIDs must be non-empty. That rule cannot be
+	// expressed in struct tags, so the service enforces it.
+	UnitIDs                []string `json:"unit_ids"                 validate:"omitempty,dive,uuid4"`
+	BlockIDs               []string `json:"block_ids"                validate:"omitempty,dive,uuid4"`
+	CreateSeparateRequests bool     `json:"create_separate_requests"`
+	Title                  string   `json:"title"                    validate:"required"`
+	Description            string   `json:"description"              validate:"required"`
+	Priority               string   `json:"priority"                 validate:"required,oneof=LOW MEDIUM HIGH EMERGENCY"`
+	Category               string   `json:"category"                 validate:"required"`
+	Visibility             string   `json:"visibility"               validate:"required,oneof=TENANT_VISIBLE INTERNAL_ONLY"`
+	Attachments            []string `json:"attachments"              validate:"omitempty"`
 }
 
 type UpdateMaintenanceRequestBody struct {
 	Title       *string   `json:"title"       validate:"omitempty"`
 	Description *string   `json:"description" validate:"omitempty"`
 	Priority    *string   `json:"priority"    validate:"omitempty,oneof=LOW MEDIUM HIGH EMERGENCY"`
-	Category    *string   `json:"category"    validate:"omitempty,oneof=PLUMBING ELECTRICAL HVAC OTHER"`
+	Category    *string   `json:"category"    validate:"omitempty"`
 	Visibility  *string   `json:"visibility"  validate:"omitempty,oneof=TENANT_VISIBLE INTERNAL_ONLY"`
 	Attachments *[]string `json:"attachments" validate:"omitempty"`
 }
@@ -78,7 +82,7 @@ type TenantCreateMaintenanceRequestBody struct {
 	Title       string   `json:"title"       validate:"required"`
 	Description string   `json:"description" validate:"required"`
 	Priority    string   `json:"priority"    validate:"required,oneof=LOW MEDIUM HIGH EMERGENCY"`
-	Category    string   `json:"category"    validate:"required,oneof=PLUMBING ELECTRICAL HVAC OTHER"`
+	Category    string   `json:"category"    validate:"required"`
 	Attachments []string `json:"attachments" validate:"omitempty"`
 }
 
@@ -86,19 +90,22 @@ type TenantCreateMaintenanceRequestBody struct {
 
 // Create godoc
 //
-//	@Summary		Create a maintenance request (Admin)
-//	@Description	Create a new maintenance request (Admin)
+//	@Summary		Create maintenance request(s) (Admin)
+//	@Description	Create maintenance request(s) against one or more units and/or blocks (Admin).
+//	@Description	Always responds with an array: one request normally, or one per selected asset
+//	@Description	when create_separate_requests is true. A request covering more than one asset,
+//	@Description	or any block, is forced to INTERNAL_ONLY.
 //	@Tags			MaintenanceRequests
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			property_id	path		string														true	"Property ID"
-//	@Param			body		body		CreateMaintenanceRequestBody								true	"Request details"
-//	@Success		201			{object}	object{data=transformations.AdminOutputMaintenanceRequest}	"Maintenance request created successfully"
-//	@Failure		400			{object}	lib.HTTPError												"Error occurred when creating maintenance request"
-//	@Failure		401			{object}	string														"Invalid or absent authentication token"
-//	@Failure		422			{object}	lib.HTTPError												"Validation error"
-//	@Failure		500			{object}	string														"An unexpected error occurred"
+//	@Param			property_id	path		string															true	"Property ID"
+//	@Param			body		body		CreateMaintenanceRequestBody									true	"Request details"
+//	@Success		201			{object}	object{data=[]transformations.AdminOutputMaintenanceRequest}	"Maintenance request(s) created successfully"
+//	@Failure		400			{object}	lib.HTTPError													"Error occurred when creating maintenance request"
+//	@Failure		401			{object}	string															"Invalid or absent authentication token"
+//	@Failure		422			{object}	lib.HTTPError													"Validation error"
+//	@Failure		500			{object}	string															"An unexpected error occurred"
 //	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests [post]
 func (h *MaintenanceRequestHandler) Create(w http.ResponseWriter, r *http.Request) {
 	currentUser, ok := lib.ClientUserFromContext(r.Context())
@@ -116,24 +123,35 @@ func (h *MaintenanceRequestHandler) Create(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	mr, err := h.service.CreateByAdmin(r.Context(), services.CreateMaintenanceRequestByAdminInput{
-		UnitID:       body.UnitID,
-		ClientUserID: currentUser.ID,
-		Title:        body.Title,
-		Desc:         body.Description,
-		Priority:     body.Priority,
-		Category:     body.Category,
-		Visibility:   body.Visibility,
-		Attachments:  body.Attachments,
+	requests, err := h.service.CreateByAdmin(r.Context(), services.CreateMaintenanceRequestByAdminInput{
+		PropertyID:             chi.URLParam(r, "property_id"),
+		UnitIDs:                body.UnitIDs,
+		BlockIDs:               body.BlockIDs,
+		CreateSeparateRequests: body.CreateSeparateRequests,
+		ClientUserID:           currentUser.ID,
+		Title:                  body.Title,
+		Desc:                   body.Description,
+		Priority:               body.Priority,
+		Category:               body.Category,
+		Visibility:             body.Visibility,
+		Attachments:            body.Attachments,
 	})
 	if err != nil {
 		HandleErrorResponse(w, err)
 		return
 	}
 
+	// Always an array: one entry normally, one per asset when the caller asked
+	// for separate requests. A shape that varies by request flag would break
+	// clients silently.
+	output := make([]any, len(requests))
+	for i := range requests {
+		output[i] = transformations.DBMaintenanceRequestToRest(&requests[i])
+	}
+
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformations.DBMaintenanceRequestToRest(mr),
+		"data": output,
 	})
 }
 
@@ -141,12 +159,13 @@ type ListMaintenanceRequestsQuery struct {
 	lib.FilterQueryInput
 	Status            []string `json:"status"              query:"status"              description:"Filter by status (NEW, IN_PROGRESS, IN_REVIEW, RESOLVED, CANCELED)"`
 	Priority          *string  `json:"priority"            query:"priority"            description:"Filter by priority (LOW, MEDIUM, HIGH, EMERGENCY)"`
-	Category          *string  `json:"category"            query:"category"            description:"Filter by category (PLUMBING, ELECTRICAL, HVAC, OTHER)"`
+	Category          *string  `json:"category"            query:"category"            description:"Filter by category (free text)"`
 	AssignedWorkerID  *string  `json:"assigned_worker_id"  query:"assigned_worker_id"  description:"Filter by assigned worker UUID"`
 	AssignedManagerID *string  `json:"assigned_manager_id" query:"assigned_manager_id" description:"Filter by assigned manager UUID"`
-	UnitID            *string  `json:"unit_id"             query:"unit_id"             description:"Filter by unit UUID"                                                validate:"omitempty,uuid4"`
-	LeaseID           *string  `json:"lease_id"            query:"lease_id"            description:"Filter by lease UUID"                                               validate:"omitempty,uuid4"`
-	TenantID          *string  `json:"tenant_id"           query:"tenant_id"           description:"Filter by tenant UUID"                                              validate:"omitempty,uuid4"`
+	UnitIDs           []string `json:"unit_id"             query:"unit_id"             description:"Filter by one or more unit UUIDs"                                   collectionFormat:"multi" validate:"omitempty,dive,uuid4"`
+	BlockIDs          []string `json:"block_id"            query:"block_id"            description:"Filter by one or more property block UUIDs"                         collectionFormat:"multi" validate:"omitempty,dive,uuid4"`
+	LeaseID           *string  `json:"lease_id"            query:"lease_id"            description:"Filter by lease UUID"                                                                        validate:"omitempty,uuid4"`
+	TenantID          *string  `json:"tenant_id"           query:"tenant_id"           description:"Filter by tenant UUID"                                                                       validate:"omitempty,uuid4"`
 }
 
 // List godoc
@@ -178,6 +197,7 @@ func (h *MaintenanceRequestHandler) List(w http.ResponseWriter, r *http.Request)
 	}
 
 	propertyID := chi.URLParam(r, "property_id")
+	propertyIDs := []string{propertyID}
 	clientID := currentUser.ClientID
 	filters := repository.ListMaintenanceRequestsFilter{
 		ClientID:          &clientID,
@@ -186,8 +206,77 @@ func (h *MaintenanceRequestHandler) List(w http.ResponseWriter, r *http.Request)
 		Category:          lib.NullOrString(r.URL.Query().Get("category")),
 		AssignedWorkerID:  lib.NullOrString(r.URL.Query().Get("assigned_worker_id")),
 		AssignedManagerID: lib.NullOrString(r.URL.Query().Get("assigned_manager_id")),
-		PropertyID:        &propertyID,
-		UnitID:            lib.NullOrString(r.URL.Query().Get("unit_id")),
+		PropertyIDs:       &propertyIDs,
+		UnitIDs:           lib.NullOrStringArray(r.URL.Query()["unit_id"]),
+		BlockIDs:          lib.NullOrStringArray(r.URL.Query()["block_id"]),
+		LeaseID:           lib.NullOrString(r.URL.Query().Get("lease_id")),
+		TenantID:          lib.NullOrString(r.URL.Query().Get("tenant_id")),
+	}
+
+	mrs, listErr := h.service.ListMaintenanceRequests(r.Context(), *filterQuery, filters)
+	count, countErr := h.service.CountMaintenanceRequests(r.Context(), *filterQuery, filters)
+	if listErr != nil {
+		HandleErrorResponse(w, listErr)
+		return
+	}
+	if countErr != nil {
+		HandleErrorResponse(w, countErr)
+		return
+	}
+
+	rows := make([]any, len(mrs))
+	for i := range mrs {
+		rows[i] = transformations.DBMaintenanceRequestToRest(&mrs[i])
+	}
+
+	json.NewEncoder(w).Encode(lib.ReturnListResponse(filterQuery, rows, count))
+}
+
+// ListAcrossProperties godoc
+//
+//	@Summary		List maintenance requests across properties (Admin, mobile)
+//	@Description	List maintenance requests across every property the caller has access to, optionally narrowed with one or more property_id query values
+//	@Tags			MaintenanceRequests
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			property_id	query		[]string																											false	"Property ID(s) to narrow results to; omit to see every property the caller can access"	collectionFormat(multi)
+//	@Param			q			query		ListMaintenanceRequestsQuery																						true	"Query parameters"
+//	@Success		200			{object}	object{data=object{rows=[]transformations.AdminOutputMaintenanceRequest,meta=lib.HTTPReturnPaginatedMetaResponse}}	"Maintenance requests"
+//	@Failure		401			{object}	string																												"Invalid or absent authentication token"
+//	@Failure		403			{object}	string																												"Requested property_id is outside the caller's access scope"
+//	@Failure		500			{object}	string																												"An unexpected error occurred"
+//	@Router			/api/v1/admin/clients/{client_id}/maintenance-requests [get]
+func (h *MaintenanceRequestHandler) ListAcrossProperties(w http.ResponseWriter, r *http.Request) {
+	currentUser, ok := lib.ClientUserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	filterQuery, err := lib.GenerateQuery(r.URL.Query())
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	propertyIDs, currentUserID, scopeOk := ValidateRequestedPropertyAccess(w, r, h.appCtx)
+	if !scopeOk {
+		return
+	}
+
+	clientID := currentUser.ClientID
+	filters := repository.ListMaintenanceRequestsFilter{
+		ClientID:          &clientID,
+		ClientUserID:      &currentUserID,
+		PropertyIDs:       propertyIDs,
+		Statuses:          r.URL.Query()["status"],
+		Priority:          lib.NullOrString(r.URL.Query().Get("priority")),
+		Category:          lib.NullOrString(r.URL.Query().Get("category")),
+		AssignedWorkerID:  lib.NullOrString(r.URL.Query().Get("assigned_worker_id")),
+		AssignedManagerID: lib.NullOrString(r.URL.Query().Get("assigned_manager_id")),
+		UnitIDs:           lib.NullOrStringArray(r.URL.Query()["unit_id"]),
+		BlockIDs:          lib.NullOrStringArray(r.URL.Query()["block_id"]),
 		LeaseID:           lib.NullOrString(r.URL.Query().Get("lease_id")),
 		TenantID:          lib.NullOrString(r.URL.Query().Get("tenant_id")),
 	}
@@ -752,7 +841,7 @@ type TenantListMaintenanceRequestsQuery struct {
 	lib.FilterQueryInput
 	Status   []string `json:"status"   query:"status"   validate:"omitempty,dive,oneof=NEW IN_PROGRESS IN_REVIEW RESOLVED CANCELED"`
 	Priority *string  `json:"priority" query:"priority" validate:"omitempty,oneof=LOW MEDIUM HIGH EMERGENCY"`
-	Category *string  `json:"category" query:"category" validate:"omitempty,oneof=PLUMBING ELECTRICAL HVAC OTHER"`
+	Category *string  `json:"category" query:"category" validate:"omitempty"`
 }
 
 // TenantList godoc

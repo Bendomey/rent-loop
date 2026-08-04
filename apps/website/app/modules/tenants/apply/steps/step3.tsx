@@ -2,10 +2,12 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowRight, Home } from 'lucide-react'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
+import { isValidPhoneNumber } from 'react-phone-number-input'
 import { Link } from 'react-router'
 import { z } from 'zod'
 import { useTenantApplicationContext } from '../context'
 import { DatePickerInput } from '~/components/date-picker-input'
+import { InternationalPhoneInput } from '~/components/international-phone'
 import { Button } from '~/components/ui/button'
 import { FieldGroup } from '~/components/ui/field'
 import {
@@ -46,7 +48,9 @@ const ValidationSchema = z.object({
 		.or(z.literal('')),
 	phone: z
 		.string({ error: 'Phone Number is required' })
-		.min(9, 'Please enter a valid phone number'),
+		.refine(isValidPhoneNumber, {
+			message: 'Please enter a valid phone number',
+		}),
 	profile_photo_url: z.url('Please upload a logo').optional(),
 	date_of_birth: z
 		.date()
@@ -317,13 +321,18 @@ export function Step3() {
 								name="phone"
 								control={control}
 								disabled
-								render={({ field }) => (
+								render={({ field, fieldState }) => (
 									<FormItem>
 										<FormLabel>
 											Phone <span className="text-red-500">*</span>
 										</FormLabel>
 										<FormControl>
-											<Input {...field} type="text" />
+											<InternationalPhoneInput
+												value={field.value}
+												onChange={field.onChange}
+												error={!!fieldState.error}
+												disabled
+											/>
 										</FormControl>
 										<FormDescription>
 											We'll send notifications to this number

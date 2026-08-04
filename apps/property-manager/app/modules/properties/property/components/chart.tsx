@@ -25,8 +25,6 @@ import { useClient } from '~/providers/client-provider'
 interface RevenueRow {
 	'Invoices.paidAmount': string | null
 	'Invoices.paidAt.month'?: string
-	'Invoices.paidAt.week'?: string
-	'Invoices.paidAt.day'?: string
 }
 
 const chartConfig = {
@@ -36,37 +34,33 @@ const chartConfig = {
 	},
 } satisfies ChartConfig
 
-type TimeRange = '90d' | '30d' | '7d'
+type TimeRange = '12m' | '6m' | '3m'
 
+const TIME_RANGE_LABELS: Record<TimeRange, string> = {
+	'12m': 'Last year',
+	'6m': 'Last 6 months',
+	'3m': 'Last 3 months',
+}
+
+// Cube's relative "last N months" range excludes the current, in-progress
+// month, so an explicit range (N-1 months back, through the end of the
+// current month) is used to make sure this month is included.
 function dateRangeForRange(range: TimeRange): [string, string] {
-	const now = localizedDayjs()
-	const days = range === '90d' ? 90 : range === '30d' ? 30 : 7
+	const months = range === '12m' ? 11 : range === '6m' ? 5 : 2
 	return [
-		now.subtract(days, 'day').format('YYYY-MM-DD'),
-		now.format('YYYY-MM-DD'),
+		localizedDayjs()
+			.subtract(months, 'month')
+			.startOf('month')
+			.format('YYYY-MM-DD'),
+		localizedDayjs().endOf('month').format('YYYY-MM-DD'),
 	]
 }
 
-function granularityForRange(range: TimeRange) {
-	return range === '7d'
-		? ('day' as const)
-		: range === '30d'
-			? ('week' as const)
-			: ('month' as const)
-}
-
 function formatPeriodLabel(row: RevenueRow, range: TimeRange): string {
-	const raw =
-		range === '7d'
-			? row['Invoices.paidAt.day']
-			: range === '30d'
-				? row['Invoices.paidAt.week']
-				: row['Invoices.paidAt.month']
+	const raw = row['Invoices.paidAt.month']
 	if (!raw) return ''
 	const d = localizedDayjs(raw)
-	if (range === '90d') return d.format('MMM')
-	if (range === '30d') return d.format('MMM D')
-	return d.format('D MMM')
+	return range === '12m' ? d.format('MMM YY') : d.format('MMM')
 }
 
 interface Props {
@@ -74,13 +68,12 @@ interface Props {
 }
 
 export function PropertyChartBar({ propertyId }: Props) {
-	const [timeRange, setTimeRange] = useState<TimeRange>('90d')
+	const [timeRange, setTimeRange] = useState<TimeRange>('3m')
 	const { clientUser } = useClient()
 	const { data: token } = useGetAnalyticsToken(
 		safeString(clientUser?.client_id),
 	)
 
-	const granularity = granularityForRange(timeRange)
 	const dateRange = dateRangeForRange(timeRange)
 
 	const revenueQuery = useCubeQuery<RevenueRow>(
@@ -91,7 +84,7 @@ export function PropertyChartBar({ propertyId }: Props) {
 			timeDimensions: [
 				{
 					dimension: 'Invoices.paidAt',
-					granularity,
+					granularity: 'month',
 					dateRange,
 				},
 			],
@@ -131,9 +124,9 @@ export function PropertyChartBar({ propertyId }: Props) {
 						variant="outline"
 						className="hidden md:flex"
 					>
-						<ToggleGroupItem value="90d">Last 3 months</ToggleGroupItem>
-						<ToggleGroupItem value="30d">Last 30 days</ToggleGroupItem>
-						<ToggleGroupItem value="7d">Last 7 days</ToggleGroupItem>
+						<ToggleGroupItem value="12m">Last year</ToggleGroupItem>
+						<ToggleGroupItem value="6m">Last 6 months</ToggleGroupItem>
+						<ToggleGroupItem value="3m">Last 3 months</ToggleGroupItem>
 					</ToggleGroup>
 
 					<Select
@@ -145,12 +138,12 @@ export function PropertyChartBar({ propertyId }: Props) {
 							size="sm"
 							aria-label="Select time range"
 						>
-							<SelectValue placeholder="Last 3 months" />
+							<SelectValue placeholder={TIME_RANGE_LABELS[timeRange]} />
 						</SelectTrigger>
 						<SelectContent className="rounded-xl">
-							<SelectItem value="90d">Last 3 months</SelectItem>
-							<SelectItem value="30d">Last 30 days</SelectItem>
-							<SelectItem value="7d">Last 7 days</SelectItem>
+							<SelectItem value="12m">Last year</SelectItem>
+							<SelectItem value="6m">Last 6 months</SelectItem>
+							<SelectItem value="3m">Last 3 months</SelectItem>
 						</SelectContent>
 					</Select>
 				</div>
@@ -177,9 +170,7 @@ export function PropertyChartBar({ propertyId }: Props) {
 								tickLine={false}
 								axisLine={false}
 								tickFormatter={(v: number) =>
-									v >= 1000
-										? `GH₵\u00A0${(v / 1000).toFixed(0)}k`
-										: formatAmount(v)
+									v >= 1000 ? `GH₵ ${(v / 1000).toFixed(0)}k` : formatAmount(v)
 								}
 								width={60}
 							/>

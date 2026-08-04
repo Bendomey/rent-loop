@@ -175,9 +175,9 @@ export function Plugins({ maxLength }: Props) {
 					</div>
 				)}
 			</ToolbarPlugin>
-			<div className="grid h-[calc(100vh-190px)] min-h-72 grid-cols-12 gap-4 bg-zinc-100 md:h-[calc(100vh-150px)]">
+			<div className="grid h-[calc(100vh-190px)] min-h-72 grid-cols-12 gap-4 bg-zinc-100 md:h-[calc(100vh-150px)] dark:bg-zinc-900">
 				<div className="col-span-12 flex h-full items-center justify-center md:col-span-9 md:pt-10">
-					<div className="h-full w-full rounded bg-white md:w-10/12">
+					<div className="h-full w-full rounded bg-white md:w-10/12 dark:bg-zinc-800">
 						<div className="relative">
 							<AutoFocusPlugin />
 							<RichTextPlugin
@@ -285,7 +285,7 @@ export function Plugins({ maxLength }: Props) {
 						</div>
 					</div>
 				</div>
-				<div className="col-span-3 hidden h-full overflow-y-auto bg-white p-4 md:block">
+				<div className="col-span-3 hidden h-full overflow-y-auto bg-white p-4 md:block dark:bg-zinc-800">
 					<TemplateFieldsPlugin />
 				</div>
 			</div>

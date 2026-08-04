@@ -50,21 +50,24 @@ type SigningService interface {
 }
 
 type signingService struct {
-	appCtx pkg.AppContext
-	repo   repository.SigningRepository
+	appCtx  pkg.AppContext
+	repo    repository.SigningRepository
+	ladRepo repository.LeaseAgreementDocumentRepository // side effects only
 }
 
 func NewSigningService(
 	appCtx pkg.AppContext,
 	repo repository.SigningRepository,
+	ladRepo repository.LeaseAgreementDocumentRepository,
 ) SigningService {
-	return &signingService{appCtx: appCtx, repo: repo}
+	return &signingService{appCtx: appCtx, repo: repo, ladRepo: ladRepo}
 }
 
 type GenerateTokenInput struct {
 	DocumentID          string
 	TenantApplicationID *string
 	LeaseID             *string
+	LeaseTerminationID  *string
 	Role                string
 	SignerName          *string
 	SignerEmail         *string
@@ -80,6 +83,7 @@ func (s *signingService) GenerateToken(
 		DocumentID:          input.DocumentID,
 		TenantApplicationID: input.TenantApplicationID,
 		LeaseID:             input.LeaseID,
+		LeaseTerminationID:  input.LeaseTerminationID,
 		Role:                input.Role,
 		SignerName:          input.SignerName,
 		SignerEmail:         input.SignerEmail,
@@ -99,6 +103,18 @@ func (s *signingService) GenerateToken(
 	}
 
 	s.sendSigningTokenNotification(ctx, token, false)
+
+	// If this token is for a lease, advance LeaseAgreementDocument FINALIZED→SIGNING
+	if input.LeaseID != nil {
+		go func(leaseID string) {
+			doc, err := s.ladRepo.GetByLeaseID(context.Background(), leaseID, nil)
+			if err != nil || doc == nil || doc.Status != "FINALIZED" {
+				return
+			}
+			doc.Status = "SIGNING"
+			_ = s.ladRepo.Update(context.Background(), doc)
+		}(*input.LeaseID)
+	}
 
 	return token, nil
 }
@@ -180,17 +196,26 @@ func (s *signingService) SignDocument(
 		return nil, pkg.BadRequestError("SigningTokenExpired", nil)
 	}
 
+	var ladID *string
+	if token.LeaseID != nil {
+		if lad, ladErr := s.ladRepo.GetByLeaseID(ctx, *token.LeaseID, nil); ladErr == nil && lad != nil {
+			id := lad.ID.String()
+			ladID = &id
+		}
+	}
+
 	transaction := s.appCtx.DB.Begin()
 	transCtx := lib.WithTransaction(ctx, transaction)
 
 	sig := &models.DocumentSignature{
-		DocumentID:          token.DocumentID,
-		TenantApplicationID: token.TenantApplicationID,
-		LeaseID:             token.LeaseID,
-		Role:                token.Role,
-		SignatureUrl:        input.SignatureUrl,
-		SignedByName:        input.SignerName,
-		IPAddress:           input.IPAddress,
+		DocumentID:               token.DocumentID,
+		TenantApplicationID:      token.TenantApplicationID,
+		LeaseID:                  token.LeaseID,
+		LeaseAgreementDocumentID: ladID,
+		Role:                     token.Role,
+		SignatureUrl:             input.SignatureUrl,
+		SignedByName:             input.SignerName,
+		IPAddress:                input.IPAddress,
 	}
 
 	if createErr := s.repo.CreateDocumentSignature(transCtx, sig); createErr != nil {
@@ -231,6 +256,10 @@ func (s *signingService) SignDocument(
 		})
 	}
 
+	if token.LeaseID != nil {
+		s.maybeAdvanceLeaseDocToSigned(ctx, *token.LeaseID, token.DocumentID)
+	}
+
 	return sig, nil
 }
 
@@ -239,6 +268,7 @@ type SignDocumentPMInput struct {
 	SignatureUrl        string
 	TenantApplicationID *string
 	LeaseID             *string
+	LeaseTerminationID  *string
 	SignedByID          string
 }
 
@@ -252,6 +282,7 @@ func (s *signingService) SignDocumentByPM(
 		"role":                  "PROPERTY_MANAGER",
 		"tenant_application_id": input.TenantApplicationID,
 		"lease_id":              input.LeaseID,
+		"lease_termination_id":  input.LeaseTerminationID,
 	})
 	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -269,13 +300,23 @@ func (s *signingService) SignDocumentByPM(
 		return nil, pkg.BadRequestError("PMSignatureAlreadyExists", nil)
 	}
 
+	var ladID *string
+	if input.LeaseID != nil {
+		if lad, ladErr := s.ladRepo.GetByLeaseID(ctx, *input.LeaseID, nil); ladErr == nil && lad != nil {
+			id := lad.ID.String()
+			ladID = &id
+		}
+	}
+
 	sig := &models.DocumentSignature{
-		DocumentID:          input.DocumentID,
-		TenantApplicationID: input.TenantApplicationID,
-		LeaseID:             input.LeaseID,
-		Role:                "PROPERTY_MANAGER",
-		SignatureUrl:        input.SignatureUrl,
-		SignedByID:          &input.SignedByID,
+		DocumentID:               input.DocumentID,
+		TenantApplicationID:      input.TenantApplicationID,
+		LeaseID:                  input.LeaseID,
+		LeaseTerminationID:       input.LeaseTerminationID,
+		LeaseAgreementDocumentID: ladID,
+		Role:                     "PROPERTY_MANAGER",
+		SignatureUrl:             input.SignatureUrl,
+		SignedByID:               &input.SignedByID,
 	}
 
 	if createErr := s.repo.CreateDocumentSignature(ctx, sig); createErr != nil {
@@ -286,6 +327,20 @@ func (s *signingService) SignDocumentByPM(
 				"action":   "creating document signature",
 			},
 		})
+	}
+
+	if input.LeaseID != nil {
+		// Advance FINALIZED → SIGNING when PM signs directly (same as when a token is created).
+		go func(leaseID string) {
+			doc, err := s.ladRepo.GetByLeaseID(context.Background(), leaseID, nil)
+			if err != nil || doc == nil || doc.Status != "FINALIZED" {
+				return
+			}
+			doc.Status = "SIGNING"
+			_ = s.ladRepo.Update(context.Background(), doc)
+		}(*input.LeaseID)
+
+		s.maybeAdvanceLeaseDocToSigned(ctx, *input.LeaseID, input.DocumentID)
 	}
 
 	return sig, nil
@@ -510,4 +565,48 @@ func (s *signingService) CountDocumentSignatures(
 	}
 
 	return count, nil
+}
+
+// maybeAdvanceLeaseDocToSigned checks if all signing tokens for a lease document
+// have been signed AND the PM has submitted a direct signature, then advances
+// the LeaseAgreementDocument status to SIGNED.
+func (s *signingService) maybeAdvanceLeaseDocToSigned(ctx context.Context, leaseID string, documentID string) {
+	doc, err := s.ladRepo.GetByLeaseID(ctx, leaseID, nil)
+	if err != nil || doc == nil || doc.Status != "SIGNING" {
+		return
+	}
+
+	// All signing tokens must be signed.
+	filterQuery := lib.FilterQuery{Page: 1, PageSize: 100}
+	tokens, err := s.repo.ListSigningTokens(ctx, filterQuery, repository.ListSigningTokensFilter{
+		DocumentID: &documentID,
+		LeaseID:    &leaseID,
+	})
+	if err != nil || tokens == nil {
+		return
+	}
+	for _, t := range *tokens {
+		if t.SignedAt == nil {
+			return
+		}
+	}
+
+	// Both PM and tenant must have signed.
+	for _, role := range []string{"PROPERTY_MANAGER", "TENANT"} {
+		r := role
+		count, countErr := s.repo.CountDocumentSignatures(
+			ctx,
+			lib.FilterQuery{Page: 1, PageSize: 1},
+			repository.ListDocumentSignaturesFilter{
+				LeaseID: &leaseID,
+				Role:    &r,
+			},
+		)
+		if countErr != nil || count == 0 {
+			return
+		}
+	}
+
+	doc.Status = "SIGNED"
+	_ = s.ladRepo.Update(ctx, doc)
 }

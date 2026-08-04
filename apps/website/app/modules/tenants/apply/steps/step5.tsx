@@ -2,8 +2,10 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
+import { isValidPhoneNumber } from 'react-phone-number-input'
 import { z } from 'zod'
 import { useTenantApplicationContext } from '../context'
+import { InternationalPhoneInput } from '~/components/international-phone'
 import { Button } from '~/components/ui/button'
 import { FieldGroup } from '~/components/ui/field'
 import {
@@ -15,8 +17,6 @@ import {
 	FormMessage,
 } from '~/components/ui/form'
 import { ImageUpload } from '~/components/ui/image-upload'
-import { isValidPhoneNumber } from 'react-phone-number-input'
-import { InternationalPhoneInput } from '~/components/international-phone'
 import { Input } from '~/components/ui/input'
 import {
 	TypographyH2,

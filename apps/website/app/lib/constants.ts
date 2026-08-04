@@ -10,8 +10,16 @@ export const PROPERTY_MANAGER_APP_URL =
 
 export const COMING_SOON_ROUTE = '/coming-soon'
 
+export const BOOK_DEMO_URL = 'https://calendar.app.google/Gx18LyHVqc4cuMqD6'
+export const CONTACT_US_URL =
+	'https://bisaform-main-bw7x.vercel.app/f/9dc0f5d0ge2l'
+export const ENTERPRISE_ACCOUNT_REQUEST_URL =
+	'https://bisaform-main-bw7x.vercel.app/f/b1ae7cbbk45q'
+export const WHATSAPP_URL = 'https://wa.me/233201080802'
+
 export const APP_STORE_URL = '#'
-export const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.rentloop.go'
+export const PLAY_STORE_URL =
+	'https://play.google.com/store/apps/details?id=com.rentloop.go'
 
 export const USER_CIPHER = 'rentloop-website'
 

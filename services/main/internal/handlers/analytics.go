@@ -25,7 +25,7 @@ type analyticsTokenResponse struct {
 // GetAnalyticsToken godoc
 //
 //	@Summary		Get Cube.js analytics token
-//	@Description	Returns a signed JWT for querying the Cube.js analytics API. The token is scoped to the authenticated client.
+//	@Description	Returns a signed JWT for querying the Cube.js analytics API. The token carries identity only — the client id and the calling client-user id — and the Cube schema resolves row-level security from it live, so an OWNER reaches their whole client and every other role is limited to their explicit client_user_properties grants. Permission changes take effect immediately rather than at the next token refresh.
 //	@Tags			Analytics
 //	@Produce		json
 //	@Security		BearerAuth
@@ -42,9 +42,10 @@ func (h *AnalyticsHandler) GetToken(w http.ResponseWriter, r *http.Request) {
 
 	now := time.Now()
 	claims := jwt.MapClaims{
-		// Cube.js reads the security context from the "u" key
+		// Cube.js reads the security context from the "u" key.
 		"u": map[string]interface{}{
-			"clientId": clientCtx.ClientID,
+			"clientId":     clientCtx.ClientID,
+			"clientUserId": clientCtx.ID,
 		},
 		"iat": now.Unix(),
 		"exp": now.Add(time.Hour).Unix(),

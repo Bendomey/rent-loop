@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { useCreatePropertyContext } from '../context'
-import { PropertyTagInput } from '~/components/property-tag'
+// import { PropertyTagInput } from '~/components/property-tag'
 import { Button } from '~/components/ui/button'
 import { FieldGroup } from '~/components/ui/field'
 import {
@@ -168,7 +168,7 @@ export function Step1() {
 							</FormItem>
 						)}
 					/>
-					<PropertyTagInput />
+					{/* <PropertyTagInput /> */}
 				</FieldGroup>
 
 				<div className="mt-10 flex items-center justify-end space-x-5">

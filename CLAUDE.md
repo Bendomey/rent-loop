@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Critical Rules
+
+- **Never commit anything.** Do not run `git commit` under any circumstances — not for code, not for docs, not for specs. Leave all changes unstaged for the user to commit.
+
 ## Project Overview
 
 Rent-Loop is a property rental management platform consisting of a Go backend API, React Router v7 frontend applications, and a Flutter mobile app.
@@ -104,6 +108,13 @@ Backend REST API Swagger docs (staging):
 
 Use `WebFetch` on this URL to look up available endpoints, request/response
 shapes, and required fields before writing any new API calls.
+
+## Website Versioning
+
+The website footer displays the version from `apps/website/package.json` automatically. **Always bump the `version` field in `apps/website/package.json` whenever any changes are made to the website** (`apps/website/`). Use semantic versioning:
+- Patch (`1.0.x`) — copy tweaks, image swaps, bug fixes
+- Minor (`1.x.0`) — new sections, new pages, significant UI changes
+- Major (`x.0.0`) — full redesigns or breaking changes
 
 ## Adding New Public Pages (Website)
 

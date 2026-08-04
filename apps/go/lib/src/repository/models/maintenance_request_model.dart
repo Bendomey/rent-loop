@@ -3,24 +3,6 @@ import 'invoice_model.dart';
 
 part 'maintenance_request_model.g.dart';
 
-@JsonSerializable()
-class MaintenanceUnitModel {
-  final String id;
-  final String name;
-  final String slug;
-
-  MaintenanceUnitModel({
-    required this.id,
-    required this.name,
-    required this.slug,
-  });
-
-  factory MaintenanceUnitModel.fromJson(Map<String, dynamic> json) =>
-      _$MaintenanceUnitModelFromJson(json);
-
-  Map<String, dynamic> toJson() => _$MaintenanceUnitModelToJson(this);
-}
-
 int? _amountFromJson(dynamic value) {
   if (value == null) return null;
   if (value is int) return value;
@@ -101,8 +83,6 @@ class MaintenanceRequestModel {
   final String? priority;
   final String? status;
   final String? code;
-  @JsonKey(name: 'unit_id')
-  final String? unitId;
   @JsonKey(name: 'lease_id')
   final String? leaseId;
   final List<String>? attachments;
@@ -118,7 +98,6 @@ class MaintenanceRequestModel {
   final String? canceledAt;
   @JsonKey(name: 'cancellation_reason')
   final String? cancellationReason;
-  final MaintenanceUnitModel? unit;
   @JsonKey(name: 'activity_logs')
   final List<MaintenanceActivityLogModel>? activityLogs;
   final List<MaintenanceExpenseModel>? expenses;
@@ -131,7 +110,6 @@ class MaintenanceRequestModel {
     this.priority,
     this.status,
     this.code,
-    this.unitId,
     this.leaseId,
     this.attachments,
     this.createdAt,
@@ -140,7 +118,6 @@ class MaintenanceRequestModel {
     this.startedAt,
     this.canceledAt,
     this.cancellationReason,
-    this.unit,
     this.activityLogs,
     this.expenses,
   });

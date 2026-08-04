@@ -9,7 +9,8 @@ import (
 )
 
 type ListExpensesFilter struct {
-	PropertyID                  string
+	PropertyIDs                 *[]string
+	ClientUserID                *string
 	ContextLeaseID              *string
 	ContextMaintenanceRequestID *string
 	ContextType                 *string
@@ -37,12 +38,24 @@ func NewExpenseRepository(db *gorm.DB) ExpenseRepository {
 	return &expenseRepository{DB: db}
 }
 
-func expensePropertyScope(propertyID string) func(db *gorm.DB) *gorm.DB {
+func expensePropertyIDsScope(propertyIDs *[]string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		if propertyID == "" {
+		if propertyIDs == nil {
 			return db
 		}
-		return db.Where("expenses.property_id = ?", propertyID)
+		return db.Where("expenses.property_id IN (?)", *propertyIDs)
+	}
+}
+
+func expenseClientUserAccessScope(clientUserID *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if clientUserID == nil {
+			return db
+		}
+		return db.Where(
+			"expenses.property_id IN (?)",
+			accessiblePropertyIDsSubQuery(db, *clientUserID),
+		)
 	}
 }
 
@@ -104,7 +117,8 @@ func (r *expenseRepository) List(
 		Scopes(
 			DateRangeScope("expenses", filterQuery.DateRange),
 			SearchScope("expenses", filterQuery.Search),
-			expensePropertyScope(filters.PropertyID),
+			expensePropertyIDsScope(filters.PropertyIDs),
+			expenseClientUserAccessScope(filters.ClientUserID),
 			expenseLeaseScope(filters.ContextLeaseID),
 			expenseMaintenanceRequestScope(filters.ContextMaintenanceRequestID),
 			expenseContextTypeScope(filters.ContextType),
@@ -136,7 +150,8 @@ func (r *expenseRepository) Count(
 		Scopes(
 			DateRangeScope("expenses", filterQuery.DateRange),
 			SearchScope("expenses", filterQuery.Search),
-			expensePropertyScope(filters.PropertyID),
+			expensePropertyIDsScope(filters.PropertyIDs),
+			expenseClientUserAccessScope(filters.ClientUserID),
 			expenseLeaseScope(filters.ContextLeaseID),
 			expenseMaintenanceRequestScope(filters.ContextMaintenanceRequestID),
 			expenseContextTypeScope(filters.ContextType),

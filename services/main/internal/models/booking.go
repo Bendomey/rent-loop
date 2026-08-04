@@ -39,11 +39,9 @@ type Booking struct {
 	CheckedOutByID *string    // ClientUser ID who performed the check-out
 	CheckedOutBy   *ClientUser
 
-	Rate          int64  `gorm:"not null;"`
-	Currency      string `gorm:"not null;"`
 	StayFrequency string
 
-	Status string `gorm:"not null;default:'PENDING';index;"`
+	Status string `gorm:"not null;default:'PENDING';index;"` // PENDING → CONFIRMED → CHECKED_IN → COMPLETED | CANCELLED
 
 	CanceledAt         *time.Time
 	CanceledByID       *string
@@ -57,8 +55,7 @@ type Booking struct {
 	CreatedByClientUserID  *string `gorm:"index;"`
 	CreatedByClientUser    *ClientUser
 
-	InvoiceID *string `gorm:"index;"`
-	Invoice   *Invoice
+	Invoice *Invoice `gorm:"foreignKey:ContextBookingID;references:ID"`
 
 	Meta datatypes.JSON `gorm:"type:jsonb;"`
 }

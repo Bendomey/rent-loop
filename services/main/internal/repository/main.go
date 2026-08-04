@@ -6,6 +6,8 @@ type Repository struct {
 	AdminRepository                        AdminRepository
 	ClientApplicationRepository            ClientApplicationRepository
 	UserRepository                         UserRepository
+	RefreshTokenRepository                 RefreshTokenRepository
+	SessionRepository                      SessionRepository
 	ClientUserRepository                   ClientUserRepository
 	ClientRepository                       ClientRepository
 	PropertyRepository                     PropertyRepository
@@ -32,12 +34,18 @@ type Repository struct {
 	AgreementRepository                    AgreementRepository
 	BookingRepository                      BookingRepository
 	UnitDateBlockRepository                UnitDateBlockRepository
+	LeaseTerminationRepository             LeaseTerminationRepository
+	ExchangeRateRepository                 ExchangeRateRepository
+	LeaseAgreementDocumentRepository       LeaseAgreementDocumentRepository
+	NotificationRepository                 NotificationRepository
 }
 
 func NewRepository(db *gorm.DB) Repository {
 	adminRepository := NewAdminRepository(db)
 	clientApplicationRepository := NewClientApplicationRepository(db)
 	userRepository := NewUserRepository(db)
+	refreshTokenRepository := NewRefreshTokenRepository(db)
+	sessionRepository := NewSessionRepository(db)
 	clientUserRepository := NewClientUserRepository(db)
 	clientRepository := NewClientRepository(db)
 	propertyRepository := NewPropertyRepository(db)
@@ -64,11 +72,17 @@ func NewRepository(db *gorm.DB) Repository {
 	agreementRepository := NewAgreementRepository(db)
 	bookingRepo := NewBookingRepository(db)
 	unitDateBlockRepo := NewUnitDateBlockRepository(db)
+	leaseTerminationRepo := NewLeaseTerminationRepository(db)
+	exchangeRateRepository := NewExchangeRateRepository(db)
+	leaseAgreementDocumentRepository := NewLeaseAgreementDocumentRepository(db)
+	notificationRepository := NewNotificationRepository(db)
 
 	return Repository{
 		AdminRepository:                        adminRepository,
 		ClientApplicationRepository:            clientApplicationRepository,
 		UserRepository:                         userRepository,
+		RefreshTokenRepository:                 refreshTokenRepository,
+		SessionRepository:                      sessionRepository,
 		ClientUserRepository:                   clientUserRepository,
 		ClientRepository:                       clientRepository,
 		PropertyRepository:                     propertyRepository,
@@ -95,5 +109,9 @@ func NewRepository(db *gorm.DB) Repository {
 		AgreementRepository:                    agreementRepository,
 		BookingRepository:                      bookingRepo,
 		UnitDateBlockRepository:                unitDateBlockRepo,
+		LeaseTerminationRepository:             leaseTerminationRepo,
+		ExchangeRateRepository:                 exchangeRateRepository,
+		LeaseAgreementDocumentRepository:       leaseAgreementDocumentRepository,
+		NotificationRepository:                 notificationRepository,
 	}
 }

@@ -2,7 +2,8 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Link, useRevalidator } from 'react-router'
 import { toast } from 'sonner'
-import { useGetClientUsers } from '~/api/client-users'
+import { AffectedAssetsCard } from './affected-assets'
+import { useGetClientUserProperties } from '~/api/client-user-properties'
 import {
 	useAssignManager,
 	useAssignWorker,
@@ -29,9 +30,15 @@ import {
 } from '~/components/ui/select'
 import { Separator } from '~/components/ui/separator'
 import { Textarea } from '~/components/ui/textarea'
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from '~/components/ui/tooltip'
 import { TypographyMuted } from '~/components/ui/typography'
 import { QUERY_KEYS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
+import { CATEGORY_LABELS } from '~/lib/maintenance-request.utils'
 import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
 import { useClient } from '~/providers/client-provider'
@@ -54,13 +61,6 @@ const PRIORITY_COLORS: Record<MaintenanceRequestPriority, string> = {
 	EMERGENCY: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
 }
 
-const CATEGORY_LABELS: Record<MaintenanceRequestCategory, string> = {
-	PLUMBING: 'Plumbing',
-	ELECTRICAL: 'Electrical',
-	HVAC: 'HVAC',
-	OTHER: 'Other',
-}
-
 function SidebarSection({ children }: { children: React.ReactNode }) {
 	return <div className="flex flex-col gap-3">{children}</div>
 }
@@ -74,7 +74,7 @@ function SidebarRow({
 }) {
 	return (
 		<div className="flex items-center justify-between gap-4">
-			<TypographyMuted className="shrink-0 text-xs">{label}</TypographyMuted>
+			<TypographyMuted className="shrink-0 text-sm">{label}</TypographyMuted>
 			<div className="min-w-0 text-right text-sm">{children}</div>
 		</div>
 	)
@@ -97,6 +97,19 @@ export function MaintenanceRequestSidebar({ mr, propertyId }: SidebarProps) {
 
 	const isLocked = mr.status === 'RESOLVED' || mr.status === 'CANCELED'
 
+	// Same rule the create form enforces (RENTL-48.3 AC#3): a block, or more
+	// than one asset, leaves no single tenant behind the request, so it stays
+	// Internal Only and the control can't be changed.
+	const assets = mr.assets ?? []
+	const forcedInternal =
+		assets.length > 1 || assets.some((asset) => asset.asset_type === 'BLOCK')
+
+	const forcedInternalReason = assets.some(
+		(asset) => asset.asset_type === 'UNIT',
+	)
+		? 'This request covers more than one asset, so it stays Internal Only and no tenant is notified.'
+		: 'Block work has no tenant attached, so this request stays Internal Only.'
+
 	const invalidate = () => {
 		void queryClient.invalidateQueries({
 			queryKey: [QUERY_KEYS.MAINTENANCE_REQUESTS, mr.id],
@@ -116,10 +129,17 @@ export function MaintenanceRequestSidebar({ mr, propertyId }: SidebarProps) {
 	const assignManager = useAssignManager()
 	const createComment = useCreateMaintenanceRequestComment()
 
-	const { data: clientUsers } = useGetClientUsers(clientId, {
+	// Only people actually linked to this property can be assigned — listing
+	// every client user offered staff from properties they don't work on.
+	const { data: propertyMembers } = useGetClientUserProperties(clientId, {
+		filters: { property_id: propertyId },
 		pagination: { page: 1, per: 100 },
-		populate: ['User'],
+		populate: ['ClientUser', 'ClientUser.User'],
 	})
+
+	const assignableUsers = (propertyMembers?.rows ?? []).flatMap((member) =>
+		member.client_user ? [member.client_user] : [],
+	)
 
 	const handleStatusChange = (status: MaintenanceRequestStatus) => {
 		if (status === 'RESOLVED' || status === 'CANCELED') {
@@ -370,6 +390,10 @@ export function MaintenanceRequestSidebar({ mr, propertyId }: SidebarProps) {
 					</Select>
 				</SidebarSection>
 
+				{/* Affected assets — the request's primary context, so it leads the
+				rail. One row per selected asset, blocks and units as peers. */}
+				<AffectedAssetsCard assets={assets} propertyId={propertyId} />
+
 				{/* Assignments */}
 				<Card className="p-5 shadow-none">
 					<SidebarSection>
@@ -377,7 +401,7 @@ export function MaintenanceRequestSidebar({ mr, propertyId }: SidebarProps) {
 							Assignments
 						</p>
 						<div className="flex flex-col gap-2">
-							<TypographyMuted className="text-xs">Worker</TypographyMuted>
+							<TypographyMuted className="text-sm">Worker</TypographyMuted>
 							<Select
 								value={mr.assigned_worker_id ?? ''}
 								onValueChange={handleWorkerChange}
@@ -389,7 +413,7 @@ export function MaintenanceRequestSidebar({ mr, propertyId }: SidebarProps) {
 									</SelectValue>
 								</SelectTrigger>
 								<SelectContent>
-									{clientUsers?.rows.map((u) => (
+									{assignableUsers.map((u) => (
 										<SelectItem key={u.id} value={u.id}>
 											{u.user?.name}
 										</SelectItem>
@@ -398,7 +422,7 @@ export function MaintenanceRequestSidebar({ mr, propertyId }: SidebarProps) {
 							</Select>
 						</div>
 						<div className="flex flex-col gap-2">
-							<TypographyMuted className="text-xs">Manager</TypographyMuted>
+							<TypographyMuted className="text-sm">Manager</TypographyMuted>
 							<Select
 								value={mr.assigned_manager_id ?? ''}
 								onValueChange={handleManagerChange}
@@ -410,7 +434,7 @@ export function MaintenanceRequestSidebar({ mr, propertyId }: SidebarProps) {
 									</SelectValue>
 								</SelectTrigger>
 								<SelectContent>
-									{clientUsers?.rows.map((u) => (
+									{assignableUsers.map((u) => (
 										<SelectItem key={u.id} value={u.id}>
 											{u.user?.name}
 										</SelectItem>
@@ -475,47 +499,56 @@ export function MaintenanceRequestSidebar({ mr, propertyId }: SidebarProps) {
 									<SelectValue>{CATEGORY_LABELS[mr.category]}</SelectValue>
 								</SelectTrigger>
 								<SelectContent>
-									{(['PLUMBING', 'ELECTRICAL', 'HVAC', 'OTHER'] as const).map(
-										(c) => (
-											<SelectItem key={c} value={c}>
-												{CATEGORY_LABELS[c]}
-											</SelectItem>
-										),
-									)}
+									{(
+										Object.keys(CATEGORY_LABELS) as MaintenanceRequestCategory[]
+									).map((c) => (
+										<SelectItem key={c} value={c}>
+											{CATEGORY_LABELS[c]}
+										</SelectItem>
+									))}
 								</SelectContent>
 							</Select>
 						</SidebarRow>
 						<SidebarRow label="Visibility">
-							<Select
-								value={mr.visibility}
-								onValueChange={(v) =>
-									handleVisibilityChange(v as MaintenanceRequest['visibility'])
-								}
-								disabled={isLocked}
-							>
-								<SelectTrigger className="h-7 w-auto border-0 p-0 text-xs shadow-none focus:ring-0">
-									<SelectValue>
-										{mr.visibility === 'TENANT_VISIBLE'
-											? 'Tenant Visible'
-											: 'Internal Only'}
-									</SelectValue>
-								</SelectTrigger>
-								<SelectContent>
-									<SelectItem value="TENANT_VISIBLE">Tenant Visible</SelectItem>
-									<SelectItem value="INTERNAL_ONLY">Internal Only</SelectItem>
-								</SelectContent>
-							</Select>
+							<Tooltip>
+								{/* A disabled trigger takes no pointer events, so the wrapper
+								is what the tooltip hangs off. */}
+								<TooltipTrigger asChild>
+									<span tabIndex={forcedInternal ? 0 : -1} className="block">
+										<Select
+											value={mr.visibility}
+											onValueChange={(v) =>
+												handleVisibilityChange(
+													v as MaintenanceRequest['visibility'],
+												)
+											}
+											disabled={isLocked || forcedInternal}
+										>
+											<SelectTrigger className="h-7 w-auto border-0 p-0 text-xs shadow-none focus:ring-0">
+												<SelectValue>
+													{mr.visibility === 'TENANT_VISIBLE'
+														? 'Tenant Visible'
+														: 'Internal Only'}
+												</SelectValue>
+											</SelectTrigger>
+											<SelectContent>
+												<SelectItem value="TENANT_VISIBLE">
+													Tenant Visible
+												</SelectItem>
+												<SelectItem value="INTERNAL_ONLY">
+													Internal Only
+												</SelectItem>
+											</SelectContent>
+										</Select>
+									</span>
+								</TooltipTrigger>
+								{forcedInternal && (
+									<TooltipContent className="max-w-xs">
+										{forcedInternalReason}
+									</TooltipContent>
+								)}
+							</Tooltip>
 						</SidebarRow>
-						{mr.unit && (
-							<SidebarRow label="Unit">
-								<Link
-									to={`/properties/${propertyId}/assets/units/${mr.unit_id}`}
-									className="text-xs text-blue-600 hover:underline dark:text-blue-400"
-								>
-									{mr.unit.name}
-								</Link>
-							</SidebarRow>
-						)}
 						{mr.lease_id && (
 							<SidebarRow label="Lease">
 								<Link
@@ -531,11 +564,11 @@ export function MaintenanceRequestSidebar({ mr, propertyId }: SidebarProps) {
 
 				{/* Details */}
 				<SidebarSection>
-					<small className="shrink-0 text-xs">
+					<small className="text-muted-foreground shrink-0 text-sm">
 						Created {localizedDayjs(mr.created_at).format('LL')} at{' '}
 						{localizedDayjs(mr.created_at).format('LT')}
 					</small>
-					<small className="shrink-0 text-xs">
+					<small className="text-muted-foreground shrink-0 text-sm">
 						Updated {localizedDayjs(mr.updated_at).format('LL')} at{' '}
 						{localizedDayjs(mr.updated_at).format('LT')}
 					</small>

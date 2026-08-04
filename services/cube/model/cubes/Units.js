@@ -1,5 +1,8 @@
+import { propertyScopeSql } from './scope';
+
 /**
- * Units cube — scoped to the authenticated client via properties.
+ * Units cube — scoped to the authenticated client via properties, then
+ * narrowed to the caller's permitted properties (see `../scope.js`).
  */
 cube(`Units`, {
   sql: `
@@ -10,6 +13,7 @@ cube(`Units`, {
       AND ${COMPILE_CONTEXT.securityContext?.clientId
         ? `p.client_id = '${COMPILE_CONTEXT.securityContext.clientId}'::uuid`
         : '1 = 0'}
+      AND ${propertyScopeSql(COMPILE_CONTEXT.securityContext, 'u.property_id::text')}
   `,
 
   measures: {
@@ -21,25 +25,31 @@ cube(`Units`, {
     availableCount: {
       type: `count`,
       title: `Available Units`,
-      filters: [{ sql: `${CUBE}.status = 'AVAILABLE'` }],
+      filters: [{ sql: `${CUBE}.status = 'Unit.Status.Available'` }],
     },
 
     occupiedCount: {
       type: `count`,
       title: `Occupied Units`,
-      filters: [{ sql: `${CUBE}.status = 'OCCUPIED'` }],
+      filters: [{ sql: `${CUBE}.status = 'Unit.Status.Occupied'` }],
+    },
+
+    partiallyOccupiedCount: {
+      type: `count`,
+      title: `Partially Occupied Units`,
+      filters: [{ sql: `${CUBE}.status = 'Unit.Status.PartiallyOccupied'` }],
     },
 
     maintenanceCount: {
       type: `count`,
       title: `Units in Maintenance`,
-      filters: [{ sql: `${CUBE}.status = 'MAINTENANCE'` }],
+      filters: [{ sql: `${CUBE}.status = 'Unit.Status.Maintenance'` }],
     },
 
     draftCount: {
       type: `count`,
       title: `Draft Units`,
-      filters: [{ sql: `${CUBE}.status = 'DRAFT'` }],
+      filters: [{ sql: `${CUBE}.status = 'Unit.Status.Draft'` }],
     },
   },
 

@@ -1,12 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import {
-	AlertCircleIcon,
-	CheckCircle2Icon,
-	GalleryVerticalEnd,
-} from 'lucide-react'
+import { AlertCircleIcon, CheckCircle2Icon } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { Link, useFetcher, useLoaderData } from 'react-router'
 import { z } from 'zod'
+import { ExternalLink } from '~/components/external-link'
 import { Alert, AlertDescription } from '~/components/ui/alert'
 
 import { Button } from '~/components/ui/button'
@@ -21,12 +18,14 @@ import {
 } from '~/components/ui/form'
 import { Input } from '~/components/ui/input'
 import { Spinner } from '~/components/ui/spinner'
-import { TypographyH1 } from '~/components/ui/typography'
-import { APP_NAME } from '~/lib/constants'
+import { TypographyH1, TypographyH3 } from '~/components/ui/typography'
+import { collectDeviceMetadata } from '~/lib/device-info'
 import { cn } from '~/lib/utils'
 
 const ValidationSchema = z.object({
-	email: z.email('Invalid email address'),
+	email: z
+		.email('Invalid email address')
+		.transform((val) => val.toLowerCase().trim()),
 	password: z
 		.string({ error: 'Password is required' })
 		.min(6, 'Password must be at least 6 characters long'),
@@ -35,7 +34,7 @@ const ValidationSchema = z.object({
 type FormSchema = z.infer<typeof ValidationSchema>
 
 export function LoginModule() {
-	const { error, success } = useLoaderData()
+	const { error, success, rentLoopWebsiteUrl } = useLoaderData()
 	const fetcher = useFetcher<{ error: string }>()
 
 	const rhfMethods = useForm<FormSchema>({
@@ -44,9 +43,17 @@ export function LoginModule() {
 
 	const { control, handleSubmit } = rhfMethods
 
-	const onSubmit = handleSubmit(async (data) =>
-		fetcher.submit(data, { method: 'post' }),
-	)
+	const onSubmit = handleSubmit(async (data) => {
+		// Describe this device alongside the credentials so the session row can
+		// say which browser/machine it belongs to. Collected here because the
+		// values that matter (timezone, locale, client hints) exist only in the
+		// browser — the server sees none of them.
+		const metadata = await collectDeviceMetadata()
+		return fetcher.submit(
+			{ ...data, device_metadata: JSON.stringify(metadata) },
+			{ method: 'post' },
+		)
+	})
 
 	const isSubmitting = fetcher.state !== 'idle'
 
@@ -59,22 +66,17 @@ export function LoginModule() {
 							<FieldGroup>
 								<div className="flex flex-col gap-2">
 									<div className="flex flex-col gap-2 font-medium">
-										<div className="flex size-8 items-center justify-center rounded-md">
-											<GalleryVerticalEnd className="size-10" />
-										</div>
-										<span className="sr-only">{APP_NAME}.</span>
+										<TypographyH1 className="mt-4 text-7xl font-black text-rose-600 md:text-7xl">
+											rl<span className="text-black">.</span>
+										</TypographyH1>
 									</div>
 
-									<TypographyH1 className="mt-4">
-										Welcome to{' '}
-										<span className="text-rose-700">
-											{APP_NAME.slice(0, 4)}
-										</span>{' '}
-										<span className="font-extrabold">{APP_NAME.slice(4)}</span>
-									</TypographyH1>
+									<TypographyH3 className="mt-4">Welcome back!</TypographyH3>
 									<FieldDescription>
 										Don&apos;t have an account?{' '}
-										<Link to="/apply">Apply as landlord/real estate</Link>
+										<Link to="/apply" className="font-semibold">
+											Apply as landlord/real estate
+										</Link>
 									</FieldDescription>
 								</div>
 
@@ -150,7 +152,14 @@ export function LoginModule() {
 					</Form>
 					<FieldDescription className="px-6 text-center">
 						By clicking continue, you agree to our{' '}
-						<a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+						<ExternalLink to={`${rentLoopWebsiteUrl}/terms`}>
+							Terms of Service
+						</ExternalLink>{' '}
+						and{' '}
+						<ExternalLink to={`${rentLoopWebsiteUrl}/privacy-policy`}>
+							Privacy Policy
+						</ExternalLink>
+						.
 					</FieldDescription>
 				</div>
 			</div>

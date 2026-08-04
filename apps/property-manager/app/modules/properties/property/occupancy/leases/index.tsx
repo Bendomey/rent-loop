@@ -5,54 +5,42 @@ import { Link, useSearchParams } from 'react-router'
 import { PropertyTenantLeasesController } from './controller'
 import { StartLeaseDialog } from './lease/components/start-lease-dialog'
 import { useGetPropertyLeases } from '~/api/leases'
-import { DataTable } from '~/components/datatable'
+import { DataTable, useDataTableSort } from '~/components/datatable'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent } from '~/components/ui/card'
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from '~/components/ui/tooltip'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
+import { localizedDayjs } from '~/lib/date'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
+import { getLeaseDisplayStatus } from '~/lib/lease.utils'
 import { getPaymentFrequencyPeriodLabel } from '~/lib/properties.utils'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 
-function getLeaseStatusLabel(status: Lease['status']) {
-	switch (status) {
-		case 'Lease.Status.Pending':
-			return 'Pending'
-		case 'Lease.Status.Active':
-			return 'Active'
-		case 'Lease.Status.Completed':
-			return 'Completed'
-		case 'Lease.Status.Cancelled':
-			return 'Cancelled'
-		case 'Lease.Status.Terminated':
-			return 'Terminated'
-		default:
-			return status
-	}
-}
-
-function getLeaseStatusClass(status: Lease['status']) {
-	switch (status) {
-		case 'Lease.Status.Pending':
-			return 'bg-yellow-500 text-white'
-		case 'Lease.Status.Active':
-			return 'bg-teal-500 dark:bg-teal-700 text-white'
-		case 'Lease.Status.Completed':
-			return 'bg-blue-500 text-white'
-		case 'Lease.Status.Cancelled':
-			return 'bg-zinc-400 text-white'
-		case 'Lease.Status.Terminated':
-			return 'bg-rose-500 text-white'
-		default:
-			return ''
-	}
-}
+/**
+ * Fields the API may order by. `order_by` reaches the backend's ORDER BY
+ * clause, so only these — never a raw URL value — are forwarded.
+ */
+const SORTABLE_FIELDS = [
+	'leases.status',
+	'leases.rent_fee',
+	'leases.stay_duration',
+	'leases.created_at',
+]
 
 export function PropertyTenantLeasesModule() {
 	const [searchParams] = useSearchParams()
+	const sorter = useDataTableSort(SORTABLE_FIELDS, {
+		sort_by: 'leases.created_at',
+		sort: 'desc',
+	})
 	const { clientUserProperty } = useProperty()
 	const { clientUser } = useClient()
 	const [startLeaseTarget, setStartLeaseTarget] = useState<Lease | null>(null)
@@ -77,7 +65,7 @@ export function PropertyTenantLeasesModule() {
 			},
 			pagination: { page, per },
 			populate: ['Tenant', 'Unit'],
-			sorter: { sort: 'desc', sort_by: 'created_at' },
+			sorter,
 			search: {
 				query,
 				fields: ['code'],
@@ -147,21 +135,36 @@ export function PropertyTenantLeasesModule() {
 			{
 				accessorKey: 'status',
 				header: 'Status',
-				cell: ({ getValue }) => {
-					const status = getValue<Lease['status']>()
-					return (
-						<Badge
-							variant="outline"
-							className={`px-1.5 ${getLeaseStatusClass(status)}`}
-						>
-							{getLeaseStatusLabel(status)}
+				enableSorting: true,
+				meta: { sortKey: 'leases.status' },
+				cell: ({ row }) => {
+					const lease = row.original
+					const display = getLeaseDisplayStatus(lease)
+
+					const badge = (
+						<Badge variant="outline" className={`px-1.5 ${display.className}`}>
+							{display.label}
 						</Badge>
+					)
+
+					if (!lease.move_out_date) return badge
+
+					return (
+						<Tooltip>
+							<TooltipTrigger>{badge}</TooltipTrigger>
+							<TooltipContent>
+								Move-out:{' '}
+								{localizedDayjs(lease.move_out_date).format('MMM D, YYYY')}
+							</TooltipContent>
+						</Tooltip>
 					)
 				},
 			},
 			{
 				accessorKey: 'rent_fee',
 				header: 'Rent',
+				enableSorting: true,
+				meta: { sortKey: 'leases.rent_fee' },
 				cell: ({ getValue, row }) => (
 					<span className="truncate text-xs font-semibold">
 						{formatAmount(
@@ -174,6 +177,8 @@ export function PropertyTenantLeasesModule() {
 			{
 				accessorKey: 'stay_duration',
 				header: 'Duration',
+				enableSorting: true,
+				meta: { sortKey: 'leases.stay_duration' },
 				cell: ({ row }) => (
 					<span className="truncate text-xs text-zinc-600 dark:text-white">
 						{row.original.stay_duration}{' '}
@@ -258,30 +263,28 @@ export function PropertyTenantLeasesModule() {
 				</Card>
 			)}
 
-			<div className="bg-background space-y-4 rounded-lg border p-3 sm:p-5">
-				<div className="h-full w-full">
-					<DataTable
-						columns={columns}
-						isLoading={isLoading}
-						refetch={refetch}
-						error={error ? 'Failed to load leases.' : undefined}
-						dataResponse={{
-							rows: data?.rows ?? [],
-							total: data?.meta?.total ?? 0,
-							page,
-							page_size: per,
-							order: data?.meta?.order ?? 'desc',
-							order_by: data?.meta?.order_by ?? 'created_at',
-							has_prev_page: data?.meta?.has_prev_page ?? false,
-							has_next_page: data?.meta?.has_next_page ?? false,
-						}}
-						empty={{
-							message: 'No leases found',
-							description:
-								'Approved lease applications will appear here as active leases.',
-						}}
-					/>
-				</div>
+			<div className="h-full w-full">
+				<DataTable
+					columns={columns}
+					isLoading={isLoading}
+					refetch={refetch}
+					error={error ? 'Failed to load leases.' : undefined}
+					dataResponse={{
+						rows: data?.rows ?? [],
+						total: data?.meta?.total ?? 0,
+						page,
+						page_size: per,
+						order: data?.meta?.order ?? 'desc',
+						order_by: data?.meta?.order_by ?? 'created_at',
+						has_prev_page: data?.meta?.has_prev_page ?? false,
+						has_next_page: data?.meta?.has_next_page ?? false,
+					}}
+					empty={{
+						message: 'No leases found',
+						description:
+							'Approved lease applications will appear here as active leases.',
+					}}
+				/>
 			</div>
 		</div>
 	)

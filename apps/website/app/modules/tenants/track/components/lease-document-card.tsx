@@ -23,25 +23,25 @@ const STATUS_MAP: Record<
 	DRAFT: {
 		label: 'Draft',
 		description:
-			'Your lease document is being prepared by the property manager.',
+			'Your rental agreement is being prepared by the property manager.',
 		className: 'bg-zinc-100 text-zinc-600',
 	},
 	FINALIZED: {
 		label: 'Ready for Signing',
 		description:
-			'Your lease document has been finalized and is ready for signatures.',
+			'Your rental agreement has been finalized and is ready for signatures.',
 		className: 'bg-blue-100 text-blue-700',
 	},
 	SIGNING: {
 		label: 'Awaiting Signatures',
 		description:
-			'The lease is being signed. Please review and sign the document.',
+			'The rental agreement is being signed. Please review and sign the document.',
 		className: 'bg-amber-100 text-amber-700',
 	},
 	SIGNED: {
 		label: 'Fully Signed',
 		description:
-			'All parties have signed the lease agreement. You can view or download your copy.',
+			'All parties have signed the rental agreement. You can view or download your copy.',
 		className: 'bg-green-100 text-green-700',
 	},
 }
@@ -63,9 +63,11 @@ export function LeaseDocumentCard({ status, signingUrl, documentUrl }: Props) {
 	if (!status) {
 		return (
 			<div className="rounded-lg border bg-white p-6">
-				<h3 className="text-sm font-semibold text-zinc-900">Lease Document</h3>
+				<h3 className="text-sm font-semibold text-zinc-900">
+					Rental Agreement
+				</h3>
 				<p className="mt-3 text-sm text-zinc-400">
-					No lease document has been created yet
+					No rental agreement has been created yet
 				</p>
 			</div>
 		)
@@ -76,7 +78,9 @@ export function LeaseDocumentCard({ status, signingUrl, documentUrl }: Props) {
 	return (
 		<div className="rounded-lg border bg-white p-6">
 			<div className="flex items-center justify-between">
-				<h3 className="text-sm font-semibold text-zinc-900">Lease Document</h3>
+				<h3 className="text-sm font-semibold text-zinc-900">
+					Rental Agreement
+				</h3>
 				<span
 					className={cn(
 						'rounded-full px-2.5 py-0.5 text-xs font-medium',

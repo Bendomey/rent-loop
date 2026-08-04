@@ -5,6 +5,14 @@ import (
 	"github.com/gofrs/uuid"
 )
 
+func bookingInvoiceID(b *models.Booking) *string {
+	if b.Invoice == nil {
+		return nil
+	}
+	id := b.Invoice.ID.String()
+	return &id
+}
+
 type AdminOutputBooking struct {
 	ID                     string  `json:"id"`
 	Code                   string  `json:"code"`
@@ -72,8 +80,6 @@ func DBBookingToRest(i *models.Booking) any {
 		"checked_out_at":            i.CheckedOutAt,
 		"checked_out_by_id":         i.CheckedOutByID,
 		"checked_out_by":            DBClientUserToRest(i.CheckedOutBy),
-		"rate":                      i.Rate,
-		"currency":                  i.Currency,
 		"stay_frequency":            i.StayFrequency,
 		"status":                    i.Status,
 		"canceled_at":               i.CanceledAt,
@@ -85,7 +91,7 @@ func DBBookingToRest(i *models.Booking) any {
 		"requires_upfront_payment":  i.RequiresUpfrontPayment,
 		"created_by_client_user_id": i.CreatedByClientUserID,
 		"created_by_client_user":    DBClientUserToRest(i.CreatedByClientUser),
-		"invoice_id":                i.InvoiceID,
+		"invoice_id":                bookingInvoiceID(i),
 		"invoice":                   DBInvoiceToRest(i.Invoice),
 		"meta":                      i.Meta,
 		"created_at":                i.CreatedAt,
@@ -136,8 +142,6 @@ func DBPublicBookingToRest(i *models.Booking) any {
 		"confirmed_at":        i.ConfirmedAt,
 		"checked_in_at":       i.CheckedInAt,
 		"checked_out_at":      i.CheckedOutAt,
-		"rate":                i.Rate,
-		"currency":            i.Currency,
 		"stay_frequency":      i.StayFrequency,
 		"status":              i.Status,
 		"unit_id":             i.UnitID,
@@ -148,7 +152,7 @@ func DBPublicBookingToRest(i *models.Booking) any {
 		"property":            DBPublicPropertyToRest(&i.Property),
 		"canceled_at":         i.CanceledAt,
 		"cancellation_reason": i.CancellationReason,
-		"invoice_id":          i.InvoiceID,
+		"invoice_id":          bookingInvoiceID(i),
 		"invoice":             DBInvoiceToRest(i.Invoice),
 		"meta":                i.Meta,
 		"created_at":          i.CreatedAt,

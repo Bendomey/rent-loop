@@ -3,20 +3,35 @@ import { ScrollText } from 'lucide-react'
 import { useMemo } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
 import { useGetPropertyLeases } from '~/api/leases'
-import { DataTable } from '~/components/datatable'
+import { DataTable, useDataTableSort } from '~/components/datatable'
 import { Badge } from '~/components/ui/badge'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
-import { getLeaseStatusClass, getLeaseStatusLabel } from '~/lib/lease.utils'
+import { getLeaseDisplayStatus } from '~/lib/lease.utils'
 import { getPaymentFrequencyPeriodLabel } from '~/lib/properties.utils'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 
+/**
+ * Fields the API may order by. `order_by` reaches the backend's ORDER BY
+ * clause, so only these — never a raw URL value — are forwarded.
+ */
+const SORTABLE_FIELDS = [
+	'leases.status',
+	'leases.rent_fee',
+	'leases.stay_duration',
+	'leases.created_at',
+]
+
 export function PropertyAssetUnitLeasesModule() {
 	const [searchParams] = useSearchParams()
+	const sorter = useDataTableSort(SORTABLE_FIELDS, {
+		sort_by: 'leases.created_at',
+		sort: 'desc',
+	})
 	const { clientUser } = useClient()
 	const { clientUserProperty } = useProperty()
 	const { unitId } = useParams<{ unitId: string }>()
@@ -39,7 +54,7 @@ export function PropertyAssetUnitLeasesModule() {
 			},
 			pagination: { page, per },
 			populate: ['Tenant'],
-			sorter: { sort: 'desc', sort_by: 'created_at' },
+			sorter,
 		})
 
 	const isLoading = isPending || isRefetching
@@ -86,14 +101,13 @@ export function PropertyAssetUnitLeasesModule() {
 			{
 				accessorKey: 'status',
 				header: 'Status',
-				cell: ({ getValue }) => {
-					const status = getValue<Lease['status']>()
+				enableSorting: true,
+				meta: { sortKey: 'leases.status' },
+				cell: ({ row }) => {
+					const display = getLeaseDisplayStatus(row.original)
 					return (
-						<Badge
-							variant="outline"
-							className={`px-1.5 ${getLeaseStatusClass(status)}`}
-						>
-							{getLeaseStatusLabel(status)}
+						<Badge variant="outline" className={`px-1.5 ${display.className}`}>
+							{display.label}
 						</Badge>
 					)
 				},
@@ -101,6 +115,8 @@ export function PropertyAssetUnitLeasesModule() {
 			{
 				accessorKey: 'rent_fee',
 				header: 'Rent',
+				enableSorting: true,
+				meta: { sortKey: 'leases.rent_fee' },
 				cell: ({ getValue, row }) => (
 					<span className="truncate text-xs font-semibold">
 						{formatAmount(
@@ -113,6 +129,8 @@ export function PropertyAssetUnitLeasesModule() {
 			{
 				accessorKey: 'stay_duration',
 				header: 'Duration',
+				enableSorting: true,
+				meta: { sortKey: 'leases.stay_duration' },
 				cell: ({ row }) => (
 					<span className="truncate text-xs text-zinc-600 dark:text-white">
 						{row.original.stay_duration}{' '}
@@ -126,6 +144,8 @@ export function PropertyAssetUnitLeasesModule() {
 			{
 				accessorKey: 'created_at',
 				header: 'Created On',
+				enableSorting: true,
+				meta: { sortKey: 'leases.created_at' },
 				cell: ({ getValue }) => (
 					<div className="min-w-32">
 						<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">

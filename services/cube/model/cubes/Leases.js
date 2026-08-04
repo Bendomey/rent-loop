@@ -1,5 +1,8 @@
+import { propertyScopeSql } from './scope';
+
 /**
- * Leases cube — scoped to the authenticated client via properties.
+ * Leases cube — scoped to the authenticated client via properties, then
+ * narrowed to the caller's permitted properties (see `../scope.js`).
  */
 cube(`Leases`, {
   sql: `
@@ -11,6 +14,7 @@ cube(`Leases`, {
       AND ${COMPILE_CONTEXT.securityContext?.clientId
         ? `p.client_id = '${COMPILE_CONTEXT.securityContext.clientId}'::uuid`
         : '1 = 0'}
+      AND ${propertyScopeSql(COMPILE_CONTEXT.securityContext, 'u.property_id::text')}
   `,
 
   measures: {
@@ -30,6 +34,15 @@ cube(`Leases`, {
       title: `Pending Leases`,
       filters: [{ sql: `${CUBE}.status = 'Lease.Status.Pending'` }],
     },
+
+    // Distinct properties with at least one active lease (combine with a
+    // moveOutDate timeDimension at query time to scope to an expiry window)
+    expiringPropertyCount: {
+      sql: `${propertyId}`,
+      type: `countDistinct`,
+      title: `Properties With Leases Expiring`,
+      filters: [{ sql: `${CUBE}.status = 'Lease.Status.Active'` }],
+    },
   },
 
   dimensions: {
@@ -43,6 +56,12 @@ cube(`Leases`, {
       sql: `(SELECT u.property_id::text FROM units u WHERE u.id = ${CUBE}.unit_id LIMIT 1)`,
       type: `string`,
       title: `Property ID`,
+    },
+
+    tenantId: {
+      sql: `tenant_id`,
+      type: `string`,
+      title: `Tenant ID`,
     },
 
     status: {
@@ -61,6 +80,12 @@ cube(`Leases`, {
       sql: `move_in_date`,
       type: `time`,
       title: `Move-in Date`,
+    },
+
+    moveOutDate: {
+      sql: `move_out_date`,
+      type: `time`,
+      title: `Move-out Date`,
     },
 
     createdAt: {

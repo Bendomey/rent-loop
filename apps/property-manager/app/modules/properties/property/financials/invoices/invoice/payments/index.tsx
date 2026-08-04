@@ -25,18 +25,12 @@ export function PropertyFinancialsPaymentItemsModule({
 	const columns: ColumnDef<Payment>[] = useMemo(() => {
 		return [
 			{
-				id: 'id',
-				header: () => null,
-				cell: () => {
-					return <Wallet />
-				},
-			},
-			{
 				accessorKey: 'reference',
 				header: 'Reference',
 				cell: ({ row }) => {
 					return (
-						<div className="">
+						<div className="flex flex-row items-center gap-1">
+							<Wallet />
 							<span className="text-muted-foreground truncate text-xs font-bold dark:text-white">
 								{row.original.reference || 'N/A'}
 							</span>

@@ -26,6 +26,7 @@ type CreatePropertyRequest struct {
 	Status      string   `json:"status"                validate:"required,oneof=Property.Status.Active Property.Status.Maintenance Property.Status.Inactive" example:"Property.Status.Active"                                description:"Current operational status of the property"`
 	Name        string   `json:"name"                  validate:"required,min=3,max=100"                                                                     example:"Oceanview Apartment"                                   description:"Human-readable name of the property."`
 	Description *string  `json:"description,omitempty"                                                                                                       example:"A luxurious apartment overlooking the Atlantic Ocean." description:"Brief description of the property."`
+	Currency    *string  `json:"currency,omitempty"    validate:"omitempty"                                                                                  example:"GHS"                                                   description:"Transaction currency for this property. Defaults to the org reporting currency."`
 	Images      []string `json:"images,omitempty"      validate:"omitempty,dive,url"                                                                         example:"https://example.com/images/1.jpg"                      description:"Array of image URLs associated with the property."`
 	Tags        []string `json:"tags,omitempty"        validate:"omitempty,dive,min=1,max=30"                                                                example:"beachfront,furnished"                                  description:"Tags for categorizing the property."`
 	Modes       []string `json:"modes,omitempty"       validate:"omitempty,dive,oneof=LEASE BOOKING"                                                         example:"LEASE,BOOKING"                                         description:"Rental modes for the property. Options: LEASE | BOOKING."`
@@ -35,7 +36,7 @@ type CreatePropertyRequest struct {
 	Country     string   `json:"country"               validate:"required,min=2,max=100"                                                                     example:"Ghana"                                                 description:"Country where the property is located."`
 	Region      string   `json:"region"                validate:"required,min=2,max=100"                                                                     example:"Greater Accra"                                         description:"Region or administrative area where the property is located."`
 	City        string   `json:"city"                  validate:"required,min=2,max=100"                                                                     example:"Accra"                                                 description:"City where the property is located."`
-	GPSAddress  *string  `json:"gpsAddress,omitempty"                                                                                                        example:"GA-123-4567"                                           description:"GPS or digital address reference."`
+	GPSAddress  *string  `json:"gps_address,omitempty"                                                                                                       example:"GA-123-4567"                                           description:"GPS or digital address reference."`
 }
 
 // CreateProperty godoc
@@ -78,6 +79,7 @@ func (h *PropertyHandler) CreateProperty(w http.ResponseWriter, r *http.Request)
 		Status:      body.Status,
 		Name:        body.Name,
 		Description: body.Description,
+		Currency:    body.Currency,
 		Images:      body.Images,
 		Tags:        body.Tags,
 		Modes:       body.Modes,
@@ -104,8 +106,9 @@ func (h *PropertyHandler) CreateProperty(w http.ResponseWriter, r *http.Request)
 
 type ListPropertiesFilterRequest struct {
 	lib.FilterQueryInput
-	Status string `json:"status" validate:"oneof=Property.Status.Active Property.Status.Maintenance Property.Status.Inactive"`
-	Type   string `json:"type"   validate:"oneof=SINGLE MULTI"`
+	Status   string `json:"status"   validate:"oneof=Property.Status.Active Property.Status.Maintenance Property.Status.Inactive"`
+	Type     string `json:"type"     validate:"oneof=SINGLE MULTI"`
+	Archived bool   `json:"archived"`
 }
 
 // GetProperties godoc
@@ -146,6 +149,7 @@ func (h *PropertyHandler) ListProperties(w http.ResponseWriter, r *http.Request)
 		ClientID:    clientUser.ClientID,
 		Status:      lib.NullOrString(r.URL.Query().Get("status")),
 		Type:        lib.NullOrString(r.URL.Query().Get("type")),
+		Archived:    lib.NullOrBool(r.URL.Query().Get("archived")),
 	}
 
 	properties, propertiesErr := h.service.ListProperties(r.Context(), input)
@@ -273,6 +277,7 @@ func (h *PropertyHandler) GetPropertyBySlug(w http.ResponseWriter, r *http.Reque
 
 type UpdatePropertyRequest struct {
 	Name        *string                `json:"name"        validate:"omitempty,min=3,max=100"                                                                     example:"Oceanview Apartment"                                   description:"Human-readable name of the property."`
+	Currency    *string                `json:"currency"    validate:"omitempty"                                                                                   example:"GHS"                                                   description:"Transaction currency. Must be a supported currency code."`
 	Description lib.Optional[string]   `json:"description" validate:"omitempty"                                                                                   example:"A luxurious apartment overlooking the Atlantic Ocean." description:"Brief description of the property."                           swaggertype:"string"`
 	Images      lib.Optional[[]string] `json:"images"      validate:"omitempty,dive,url"                                                                          example:"https://example.com/images/1.jpg"                      description:"Array of image URLs associated with the property."            swaggertype:"array,string"`
 	Tags        lib.Optional[[]string] `json:"tags"        validate:"omitempty,dive,min=1,max=30"                                                                 example:"beachfront,furnished"                                  description:"Tags for categorizing the property."                          swaggertype:"array,string"`
@@ -283,7 +288,7 @@ type UpdatePropertyRequest struct {
 	Country     *string                `json:"country"     validate:"omitempty,min=2,max=100"                                                                     example:"Ghana"                                                 description:"Country where the property is located."`
 	Region      *string                `json:"region"      validate:"omitempty,min=2,max=100"                                                                     example:"Greater Accra"                                         description:"Region or administrative area where the property is located."`
 	City        *string                `json:"city"        validate:"omitempty,min=2,max=100"                                                                     example:"Accra"                                                 description:"City where the property is located."`
-	GPSAddress  lib.Optional[string]   `json:"gpsAddress"  validate:"omitempty"                                                                                   example:"GA-123-4567"                                           description:"GPS or digital address reference."                            swaggertype:"string"`
+	GPSAddress  lib.Optional[string]   `json:"gps_address" validate:"omitempty"                                                                                   example:"GA-123-4567"                                           description:"GPS or digital address reference."                            swaggertype:"string"`
 	Type        *string                `json:"type"        validate:"omitempty,oneof=SINGLE MULTI"                                                                example:"SINGLE"                                                description:"Type of the property. Options: SINGLE | MULTI."`
 	Status      *string                `json:"status"      validate:"omitempty,oneof=Property.Status.Active Property.Status.Maintenance Property.Status.Inactive" example:"Property.Status.Active"                                description:"Current operational status of the property"`
 }
@@ -331,6 +336,7 @@ func (h *PropertyHandler) UpdateProperty(w http.ResponseWriter, r *http.Request)
 		PropertyID:  propertyID,
 		ClientID:    currentClientUser.ClientID,
 		Name:        body.Name,
+		Currency:    body.Currency,
 		Description: body.Description,
 		Images:      body.Images,
 		Tags:        body.Tags,
@@ -369,8 +375,9 @@ func (h *PropertyHandler) UpdateProperty(w http.ResponseWriter, r *http.Request)
 //	@Produce		json
 //	@Param			property_id	path		string			true	"Property ID"
 //	@Success		204			{object}	nil				"Property deleted successfully"
-//	@Failure		400			{object}	lib.HTTPError	"Error occurred when updating a property"
+//	@Failure		400			{object}	lib.HTTPError	"Property has active leases, bookings or pending applications and cannot be deleted"
 //	@Failure		401			{object}	string			"Invalid or absent authentication token"
+//	@Failure		404			{object}	lib.HTTPError	"Property not found"
 //	@Failure		500			{object}	string			"An unexpected error occured"
 //	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id} [delete]
 func (h *PropertyHandler) DeleteProperty(w http.ResponseWriter, r *http.Request) {
@@ -383,13 +390,133 @@ func (h *PropertyHandler) DeleteProperty(w http.ResponseWriter, r *http.Request)
 	propertyID := chi.URLParam(r, "property_id")
 
 	input := services.DeletePropertyInput{
-		PropertyID: propertyID,
-		ClientID:   currentClientUser.ClientID,
+		PropertyID:  propertyID,
+		ClientID:    currentClientUser.ClientID,
+		DeletedByID: currentClientUser.ID,
 	}
 
 	deleteErr := h.service.DeleteProperty(r.Context(), input)
 	if deleteErr != nil {
 		HandleErrorResponse(w, deleteErr)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// GetPropertyDeletionPreview godoc
+//
+//	@Summary		Preview a property's deletion impact (Admin)
+//	@Description	Returns whether a property is eligible for deletion, why not if blocked, and what would be archived if it proceeds
+//	@Tags			Properties
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			property_id	path		string												true	"Property ID"
+//	@Success		200			{object}	object{data=services.PropertyDeletionEligibility}	"Deletion eligibility computed successfully"
+//	@Failure		400			{object}	lib.HTTPError										"Error occurred when computing deletion eligibility"
+//	@Failure		401			{object}	string												"Invalid or absent authentication token"
+//	@Failure		404			{object}	lib.HTTPError										"Property not found"
+//	@Failure		500			{object}	string												"An unexpected error occured"
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/deletion:preview [get]
+func (h *PropertyHandler) GetPropertyDeletionPreview(w http.ResponseWriter, r *http.Request) {
+	currentClientUser, currentClientUserOk := lib.ClientUserFromContext(r.Context())
+	if !currentClientUserOk {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	propertyID := chi.URLParam(r, "property_id")
+
+	eligibility, eligibilityErr := h.service.GetPropertyDeletionEligibility(
+		r.Context(),
+		services.GetPropertyDeletionEligibilityInput{
+			PropertyID: propertyID,
+			ClientID:   currentClientUser.ClientID,
+		},
+	)
+	if eligibilityErr != nil {
+		HandleErrorResponse(w, eligibilityErr)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": eligibility,
+	})
+}
+
+// GetPropertyRestorePreview godoc
+//
+//	@Summary		Preview restoring an archived property (Admin)
+//	@Description	Returns what a restore would bring back into the active portfolio: block/unit counts and kept (non-blocking) lease/booking/application counts
+//	@Tags			Properties
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			property_id	path		string											true	"Property ID"
+//	@Success		200			{object}	object{data=services.PropertyRestorePreview}	"Restore preview computed successfully"
+//	@Failure		400			{object}	lib.HTTPError									"Property is not archived"
+//	@Failure		401			{object}	string											"Invalid or absent authentication token"
+//	@Failure		404			{object}	lib.HTTPError									"Property not found"
+//	@Failure		500			{object}	string											"An unexpected error occurred"
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/restore:preview [get]
+func (h *PropertyHandler) GetPropertyRestorePreview(w http.ResponseWriter, r *http.Request) {
+	currentClientUser, currentClientUserOk := lib.ClientUserFromContext(r.Context())
+	if !currentClientUserOk {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	propertyID := chi.URLParam(r, "property_id")
+
+	preview, previewErr := h.service.GetPropertyRestorePreview(
+		r.Context(),
+		services.GetPropertyRestorePreviewInput{
+			PropertyID: propertyID,
+			ClientID:   currentClientUser.ClientID,
+		},
+	)
+	if previewErr != nil {
+		HandleErrorResponse(w, previewErr)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": preview,
+	})
+}
+
+// RestoreProperty godoc
+//
+//	@Summary		Restore an archived property (Admin)
+//	@Description	Un-archives a soft-deleted property. Units, blocks, leases, bookings and applications were never removed (see DeleteProperty), so nothing else needs restoring.
+//	@Tags			Properties
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			property_id	path	string	true	"Property ID"
+//	@Success		204			"Property restored successfully"
+//	@Failure		400			{object}	lib.HTTPError	"Property is not archived"
+//	@Failure		401			{object}	string			"Invalid or absent authentication token"
+//	@Failure		404			{object}	lib.HTTPError	"Property not found"
+//	@Failure		500			{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}:restore [post]
+func (h *PropertyHandler) RestoreProperty(w http.ResponseWriter, r *http.Request) {
+	currentClientUser, currentClientUserOk := lib.ClientUserFromContext(r.Context())
+	if !currentClientUserOk {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	propertyID := chi.URLParam(r, "property_id")
+
+	restoreErr := h.service.RestoreProperty(r.Context(), services.RestorePropertyInput{
+		PropertyID:   propertyID,
+		ClientID:     currentClientUser.ClientID,
+		RestoredByID: currentClientUser.ID,
+	})
+	if restoreErr != nil {
+		HandleErrorResponse(w, restoreErr)
 		return
 	}
 

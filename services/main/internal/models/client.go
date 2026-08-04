@@ -16,6 +16,7 @@ type Client struct {
 	Longitude          float64 `gorm:"not null;"`
 	Description        *string
 	RegistrationNumber *string
+	LogoURL            *string
 	WebsiteUrl         *string
 	SupportPhone       *string
 	SupportEmail       *string
@@ -25,6 +26,8 @@ type Client struct {
 	IDNumber      *string
 	IDExpiry      *string
 	IDDocumentURL *string
+
+	Currency string `gorm:"not null;default:'GHS'"` // reporting currency for the org
 
 	ClientApplicationId string `gorm:"not null;"`
 	ClientApplication   ClientApplication

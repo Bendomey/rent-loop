@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"slices"
+	"strconv"
 	"strings"
 )
 
@@ -34,6 +35,12 @@ type ITokenGenerationSecret struct {
 	AdminSecret      string
 	ClientUserSecret string
 	TenantUserSecret string
+}
+
+type IAuthTokenTTL struct {
+	AccessTokenHours   int
+	RefreshTokenDays   int
+	ReplayGraceSeconds int
 }
 
 type IWittyflow struct {
@@ -86,9 +93,15 @@ type IChartOfAccounts struct {
 	PropertyManagementExpenseID string
 }
 
+type IOpenExchangeRatesAPI struct {
+	BaseURL string
+	AppID   string
+}
+
 type IClients struct {
-	AccountingAPI IAccountingAPI
-	GatekeeperAPI IGatekeeperAPI
+	AccountingAPI        IAccountingAPI
+	GatekeeperAPI        IGatekeeperAPI
+	OpenExchangeRatesAPI IOpenExchangeRatesAPI
 }
 
 type IFirebase struct {
@@ -108,6 +121,7 @@ type Config struct {
 	Sentry          ISentry
 	DefaultData     IDefaultData
 	TokenSecrets    ITokenGenerationSecret
+	AuthTokenTTL    IAuthTokenTTL
 	Wittyflow       IWittyflow
 	ResendAPIKey    string
 	SupportData     IRentloopSupport
@@ -156,6 +170,11 @@ func Load() Config {
 			ClientUserSecret: getEnv("CLIENT_USER_SECRET", "superduperclientusersecret"),
 			TenantUserSecret: getEnv("TENANT_USER_SECRET", "superdupertenantusersecret"),
 		},
+		AuthTokenTTL: IAuthTokenTTL{
+			AccessTokenHours:   getEnvInt("ACCESS_TOKEN_TTL_HOURS", 1),
+			RefreshTokenDays:   getEnvInt("REFRESH_TOKEN_TTL_DAYS", 90),
+			ReplayGraceSeconds: getEnvInt("REFRESH_TOKEN_REPLAY_GRACE_SECONDS", 20),
+		},
 		Wittyflow: IWittyflow{
 			AppID:     getEnv("WITTYFLOW_APP_ID", "fake-app-id"),
 			AppSecret: getEnv("WITTYFLOW_APP_SECRET", "fake-app-secret"),
@@ -184,6 +203,10 @@ func Load() Config {
 				BaseURL:   getEnv("GATEKEEPER_API_BASE_URL", "http://localhost:8082/api/v1"),
 				ApiKey:    getEnv("GATEKEEPER_API_KEY", "fake-api-key"),
 				ProjectID: getEnv("GATEKEEPER_PROJECT_ID", "fake-project-id"),
+			},
+			OpenExchangeRatesAPI: IOpenExchangeRatesAPI{
+				BaseURL: getEnv("OPENEXCHANGERATES_BASE_URL", "https://openexchangerates.org/api"),
+				AppID:   getEnv("OPENEXCHANGERATES_APP_ID", ""),
 			},
 		},
 		CubeApiSecret: getEnv("CUBEJS_API_SECRET", "superdupercubeapisecret"),
@@ -220,6 +243,18 @@ func getEnv(key, fallback string) string {
 		return value
 	}
 	return fallback
+}
+
+func getEnvInt(key string, fallback int) int {
+	value, exists := os.LookupEnv(key)
+	if !exists {
+		return fallback
+	}
+	parsed, err := strconv.Atoi(value)
+	if err != nil || parsed <= 0 {
+		return fallback
+	}
+	return parsed
 }
 
 func parseCommaSeparated(s string) []string {

@@ -17,9 +17,9 @@ import type { Route } from './+types/root'
 import { GoogleAnalytics } from './components/google-analytics'
 import { TopbarLoader } from './components/top-bar-loader'
 import { environmentVariables } from './lib/actions/env.server'
+import { TAWK_HIDDEN_PATHS } from './lib/constants'
 import { NotFoundModule } from './modules/404-page'
 import { Providers } from './providers'
-import { TAWK_HIDDEN_PATHS } from './lib/constants'
 
 dayjs.locale('en-gb')
 dayjs.extend(localizedFormat)
@@ -34,6 +34,10 @@ export const links: Route.LinksFunction = () => [
 	{
 		rel: 'stylesheet',
 		href: 'https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Shantell+Sans:ital,wght@0,300..800;1,300..800&display=swap',
+	},
+	{
+		rel: 'stylesheet',
+		href: 'https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,400..700&family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap',
 	},
 	{ rel: 'manifest', href: '/manifest.webmanifest' },
 	{ rel: 'icon', href: '/favicon.ico' },

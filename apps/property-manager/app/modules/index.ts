@@ -10,13 +10,16 @@ export * from './auth-middleware'
 export * from './apply'
 export * from './apply/success'
 
-export * from './dashboard'
+export * from './insights'
 
 export * from './properties'
 export * from './properties/new'
 
 export * from './settings/members'
 export * from './settings/members/new'
+export * from './settings/members/edit'
+export * from './settings/customer-support-access'
+export * from './settings/archived-properties'
 
 export * from './changelog'
 
@@ -53,6 +56,7 @@ export * from './properties/property/occupancy/tenants'
 export * from './properties/property/occupancy/tenants/tenant'
 export * from './properties/property/occupancy/tenants/tenant/profile'
 export * from './properties/property/occupancy/tenants/tenant/leases'
+export * from './properties/property/occupancy/tenants/tenant/bookings'
 
 export * from './properties/property/occupancy/leases'
 export * from './properties/property/occupancy/leases/bulk-onboard'
@@ -69,8 +73,6 @@ export * from './properties/property/occupancy/applications/application/tenant'
 export * from './properties/property/occupancy/applications/application/move-in'
 export * from './properties/property/occupancy/applications/application/financial'
 export * from './properties/property/occupancy/applications/application/docs'
-export * from './properties/property/occupancy/applications/application/docs/lease-editor'
-export * from './properties/property/occupancy/applications/application/docs/lease-signing'
 
 export * from './public-signing'
 
@@ -94,8 +96,12 @@ export * from './properties/property/settings/members'
 export * from './properties/property/settings/general'
 export * from './properties/property/settings/billing'
 export * from './properties/property/settings/documents'
+export * from './properties/property/settings/danger-zone'
 
 export * from './properties/property/occupancy/bookings'
 export * from './properties/property/occupancy/bookings/new'
 export * from './properties/property/occupancy/bookings/booking'
 export * from './properties/property/occupancy/availability'
+
+export * from './documents/document-editor'
+export * from './documents/document-signing'

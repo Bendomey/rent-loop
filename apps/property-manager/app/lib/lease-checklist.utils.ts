@@ -12,27 +12,65 @@ function getPeriodDays(frequency: string): number {
 }
 
 /**
- * Returns the estimated lease end date based on move_in_date + stay_duration × frequency.
+ * Mirrors the backend's leaseEndDate() (services/main/internal/services/lease.go)
+ * for the rare case move_out_date isn't available from the API yet (e.g. a
+ * lease predating this field). Falls back to the same open-ended-lease
+ * sentinel the backend uses when duration/frequency can't produce a real date.
+ */
+function computeMoveOutDate(
+	moveInDate: Date | string,
+	stayDuration: number,
+	stayDurationFrequency: string,
+): Date {
+	if (!stayDuration || !stayDurationFrequency) return new Date('2099-01-01')
+
+	const moveIn = new Date(moveInDate)
+
+	switch (stayDurationFrequency.toLowerCase()) {
+		case 'hours':
+		case 'hour':
+			return new Date(moveIn.getTime() + stayDuration * 60 * 60 * 1000)
+		case 'days':
+		case 'day':
+			return new Date(moveIn.getTime() + stayDuration * 86_400_000)
+		case 'months':
+		case 'month': {
+			const result = new Date(moveIn)
+			result.setMonth(result.getMonth() + stayDuration)
+			return result
+		}
+		default:
+			return new Date('2099-01-01')
+	}
+}
+
+/**
+ * Returns the lease's move-out date, preferring the value computed and
+ * persisted by the backend, and falling back to a client-side computation
+ * when it isn't available from the API.
  */
 export function getLeaseEndDate(lease: Lease): Date {
-	const moveIn = new Date(lease.move_in_date)
-	const periodDays = getPeriodDays(lease.stay_duration_frequency)
-	return new Date(
-		moveIn.getTime() + lease.stay_duration * periodDays * 86_400_000,
+	if (lease.move_out_date) return new Date(lease.move_out_date)
+	return computeMoveOutDate(
+		lease.move_in_date,
+		lease.stay_duration,
+		lease.stay_duration_frequency,
 	)
 }
 
 /**
  * Whether the check-in reminder banner should be shown.
- * Shows when: no submitted/acknowledged CHECK_IN exists AND we're within the first
- * 2 payment periods from move_in_date.
+ * Shows when: no CHECK_IN exists, or one exists but is still in DRAFT (not yet
+ * submitted) AND we're within the first 2 payment periods from move_in_date.
+ * A SUBMITTED/ACKNOWLEDGED checklist means it's already handled; DISPUTED gets
+ * its own dedicated alert.
  */
 export function shouldShowCheckInAlert(
 	lease: Lease,
 	checklists: LeaseChecklist[],
 ): boolean {
-	const hasCheckIn = checklists.some((c) => c.type === 'CHECK_IN')
-	if (hasCheckIn) return false
+	const checkIn = checklists.find((c) => c.type === 'CHECK_IN')
+	if (checkIn && checkIn.status !== 'DRAFT') return false
 
 	const frequency = lease.payment_frequency ?? lease.stay_duration_frequency
 	const periodDays = getPeriodDays(frequency)
@@ -44,35 +82,32 @@ export function shouldShowCheckInAlert(
 }
 
 /**
- * Whether the check-out reminder banner should be shown.
- * Shows when:
- * - CHECK_IN exists in SUBMITTED or ACKNOWLEDGED state
- * - No submitted/acknowledged CHECK_OUT exists
- * - We're within 1 payment period of the lease end date
+ * Whether a checklist's move-in/move-out report has been handed off to the
+ * tenant (submitted or acknowledged), as opposed to still sitting in DRAFT.
  */
-export function shouldShowCheckOutAlert(
-	lease: Lease,
-	checklists: LeaseChecklist[],
-): boolean {
-	const checkIn = checklists.find((c) => c.type === 'CHECK_IN')
-	if (
-		!checkIn ||
-		(checkIn.status !== 'SUBMITTED' && checkIn.status !== 'ACKNOWLEDGED')
-	) {
-		return false
-	}
+export function isChecklistHandled(status: LeaseChecklistStatus): boolean {
+	return status === 'SUBMITTED' || status === 'ACKNOWLEDGED'
+}
 
-	const hasCheckOut = checklists.some((c) => c.type === 'CHECK_OUT')
-	if (hasCheckOut) return false
+/**
+ * Whether the "lease ending soon" banner should be shown. This banner combines
+ * the move-out report reminder with the upcoming renew-lease decision — the
+ * renew decision is purely time-based, so it does not depend on any checklist
+ * having been created or completed.
+ * Shows when:
+ * - The lease is still Active
+ * - We're within 1 payment period of the lease end date (or past it — the lease
+ *   hasn't been renewed yet, so it still needs attention)
+ */
+export function shouldShowLeaseEndingAlert(lease: Lease): boolean {
+	if (lease.status !== 'Lease.Status.Active') return false
 
 	const frequency = lease.payment_frequency ?? lease.stay_duration_frequency
 	const periodDays = getPeriodDays(frequency)
 	const endDate = getLeaseEndDate(lease)
-	const now = new Date()
-	const msUntilEnd = endDate.getTime() - now.getTime()
-	const daysUntilEnd = msUntilEnd / 86_400_000
+	const daysUntilEnd = (endDate.getTime() - new Date().getTime()) / 86_400_000
 
-	return daysUntilEnd >= 0 && daysUntilEnd <= periodDays
+	return daysUntilEnd <= periodDays
 }
 
 export function getChecklistStatusLabel(status: LeaseChecklistStatus): string {
@@ -148,4 +183,54 @@ export function getChecklistTypeLabel(type: LeaseChecklistType): string {
 
 export function isChecklistEditable(status: LeaseChecklistStatus): boolean {
 	return status === 'DRAFT' || status === 'DISPUTED'
+}
+
+export interface LeaseTermProgress {
+	percent: number // elapsed / total duration, clamped 0–100
+	daysLeft: number // days from today to the lease end date (can be negative)
+	monthOf: number // 1-based current month, clamped to [1, monthsTotal]
+	monthsTotal: number
+	isEndingSoon: boolean
+}
+
+/**
+ * Progress through a lease's move-in → move-out term, for the summary
+ * rail's progress bar. Returns null when the lease has no real end date
+ * (getLeaseEndDate falls back to its open-ended 2099 sentinel) — callers
+ * should hide the progress bar in that case rather than show a fabricated
+ * percentage.
+ */
+export function getLeaseTermProgress(lease: Lease): LeaseTermProgress | null {
+	const start = new Date(lease.move_in_date)
+	const end = getLeaseEndDate(lease)
+	if (end.getFullYear() >= 2099) return null
+
+	const totalMs = end.getTime() - start.getTime()
+	if (totalMs <= 0) return null
+
+	const now = new Date()
+	const elapsedMs = Math.max(0, now.getTime() - start.getTime())
+	const percent = Math.min(100, Math.max(0, (elapsedMs / totalMs) * 100))
+	const daysLeft = Math.ceil((end.getTime() - now.getTime()) / 86_400_000)
+
+	const totalDays = totalMs / 86_400_000
+	const monthsTotal = lease.stay_duration_frequency
+		?.toLowerCase()
+		.startsWith('month')
+		? Math.max(1, lease.stay_duration)
+		: Math.max(1, Math.round(totalDays / 30))
+
+	const elapsedDays = elapsedMs / 86_400_000
+	const monthOf = Math.min(
+		monthsTotal,
+		Math.max(1, Math.ceil(elapsedDays / 30)),
+	)
+
+	return {
+		percent,
+		daysLeft,
+		monthOf,
+		monthsTotal,
+		isEndingSoon: shouldShowLeaseEndingAlert(lease),
+	}
 }

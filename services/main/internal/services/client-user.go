@@ -34,14 +34,17 @@ type ClientUserService interface {
 	) (*models.ClientUser, error)
 	ActivateClientUser(ctx context.Context, input ClientUserSearchInput) (*models.ClientUser, error)
 	DeactivateClientUser(ctx context.Context, input DeactivateClientUserInput) (*models.ClientUser, error)
+	UpdateClientUser(ctx context.Context, input UpdateClientUserInput) (*models.ClientUser, error)
+	DeleteClientUser(ctx context.Context, input DeleteClientUserInput) error
 	InsertClientUser(ctx context.Context, clientUser *models.ClientUser) error
 }
 
 type clientUserService struct {
-	appCtx     pkg.AppContext
-	repo       repository.ClientUserRepository
-	clientRepo repository.ClientRepository
-	userRepo   repository.UserRepository
+	appCtx                    pkg.AppContext
+	repo                      repository.ClientUserRepository
+	clientRepo                repository.ClientRepository
+	userRepo                  repository.UserRepository
+	clientUserPropertyService ClientUserPropertyService
 }
 
 func NewClientUserService(
@@ -49,8 +52,9 @@ func NewClientUserService(
 	repo repository.ClientUserRepository,
 	clientRepo repository.ClientRepository,
 	userRepo repository.UserRepository,
+	clientUserPropertyService ClientUserPropertyService,
 ) ClientUserService {
-	return &clientUserService{appCtx, repo, clientRepo, userRepo}
+	return &clientUserService{appCtx, repo, clientRepo, userRepo, clientUserPropertyService}
 }
 
 func (s *clientUserService) InsertClientUser(ctx context.Context, clientUser *models.ClientUser) error {
@@ -506,4 +510,175 @@ func (s *clientUserService) DeactivateClientUser(
 	)
 
 	return clientUserToBeDeactivated, nil
+}
+
+type UpdateClientUserPropertyAssignmentInput struct {
+	PropertyID string
+	Role       string
+}
+
+type UpdateClientUserInput struct {
+	ClientUserID string
+	ClientID     string
+	Role         *string
+	// PropertyAssignments, when non-nil, replaces the client user's full set
+	// of property assignments with this list (an empty, non-nil slice clears
+	// all assignments). A nil slice leaves existing assignments untouched.
+	PropertyAssignments []UpdateClientUserPropertyAssignmentInput
+	UpdatedByID         string
+}
+
+func (s *clientUserService) UpdateClientUser(
+	ctx context.Context,
+	input UpdateClientUserInput,
+) (*models.ClientUser, error) {
+	clientUser, getClientUserErr := s.repo.GetByQuery(
+		ctx,
+		map[string]any{"id": input.ClientUserID, "client_id": input.ClientID},
+	)
+	if getClientUserErr != nil {
+		if errors.Is(getClientUserErr, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("ClientUserNotFound", &pkg.RentLoopErrorParams{
+				Err: getClientUserErr,
+			})
+		}
+
+		return nil, pkg.InternalServerError(getClientUserErr.Error(), &pkg.RentLoopErrorParams{
+			Err: getClientUserErr,
+			Metadata: map[string]string{
+				"function": "UpdateClientUser",
+				"action":   "fetching client user by ID",
+			},
+		})
+	}
+
+	// CreatedByID is nil only for the workspace owner (see ClientUser.BeforeDelete) —
+	// their role isn't assignable via this endpoint.
+	if input.Role != nil && clientUser.CreatedByID == nil {
+		return nil, pkg.BadRequestError("CannotChangeOwnerRole", nil)
+	}
+
+	tx := s.appCtx.DB.Begin()
+	transCtx := lib.WithTransaction(ctx, tx)
+
+	if input.Role != nil {
+		clientUser.Role = *input.Role
+
+		if updateErr := s.repo.Update(transCtx, clientUser); updateErr != nil {
+			tx.Rollback()
+			return nil, pkg.InternalServerError(updateErr.Error(), &pkg.RentLoopErrorParams{
+				Err: updateErr,
+				Metadata: map[string]string{
+					"function": "UpdateClientUser",
+					"action":   "updating client user role",
+				},
+			})
+		}
+	}
+
+	if input.PropertyAssignments != nil {
+		assignments := make([]ClientUserPropertyAssignment, 0, len(input.PropertyAssignments))
+		for _, assignment := range input.PropertyAssignments {
+			assignments = append(assignments, ClientUserPropertyAssignment{
+				PropertyID: assignment.PropertyID,
+				Role:       assignment.Role,
+			})
+		}
+
+		replaceErr := s.clientUserPropertyService.ReplaceClientUserProperties(transCtx, ReplaceClientUserPropertiesInput{
+			ClientUserID: input.ClientUserID,
+			Assignments:  assignments,
+			CreatedByID:  input.UpdatedByID,
+		})
+		if replaceErr != nil {
+			tx.Rollback()
+			return nil, replaceErr
+		}
+	}
+
+	if commitErr := tx.Commit().Error; commitErr != nil {
+		tx.Rollback()
+		return nil, commitErr
+	}
+
+	return clientUser, nil
+}
+
+type DeleteClientUserInput struct {
+	ClientUserID     string
+	ClientID         string
+	DeleteProperties bool
+}
+
+func (s *clientUserService) DeleteClientUser(
+	ctx context.Context,
+	input DeleteClientUserInput,
+) error {
+	clientUser, getClientUserErr := s.repo.GetByQuery(
+		ctx,
+		map[string]any{"id": input.ClientUserID, "client_id": input.ClientID},
+	)
+	if getClientUserErr != nil {
+		if errors.Is(getClientUserErr, gorm.ErrRecordNotFound) {
+			return pkg.NotFoundError("ClientUserNotFound", &pkg.RentLoopErrorParams{
+				Err: getClientUserErr,
+			})
+		}
+
+		return pkg.InternalServerError(getClientUserErr.Error(), &pkg.RentLoopErrorParams{
+			Err: getClientUserErr,
+			Metadata: map[string]string{
+				"function": "DeleteClientUser",
+				"action":   "fetching client user by ID",
+			},
+		})
+	}
+
+	propertiesCount, countErr := s.clientUserPropertyService.CountClientUserProperties(
+		ctx,
+		repository.ListClientUserPropertiesFilter{ClientUserID: &input.ClientUserID},
+	)
+	if countErr != nil {
+		return countErr
+	}
+
+	if propertiesCount > 0 && !input.DeleteProperties {
+		return pkg.BadRequestError("ClientUserHasLinkedProperties", nil)
+	}
+
+	tx := s.appCtx.DB.Begin()
+	transCtx := lib.WithTransaction(ctx, tx)
+
+	if propertiesCount > 0 {
+		unlinkErr := s.clientUserPropertyService.UnlinkAllByClientUserID(transCtx, input.ClientUserID)
+		if unlinkErr != nil {
+			tx.Rollback()
+			return unlinkErr
+		}
+	}
+
+	deleteClientUserErr := s.repo.Delete(transCtx, clientUser)
+	if deleteClientUserErr != nil {
+		tx.Rollback()
+
+		if deleteClientUserErr.Error() == "CannotDeleteSuperUserForClient" {
+			return pkg.BadRequestError("CannotDeleteSuperUserForClient", nil)
+		}
+
+		return pkg.InternalServerError(deleteClientUserErr.Error(), &pkg.RentLoopErrorParams{
+			Err: deleteClientUserErr,
+			Metadata: map[string]string{
+				"function": "DeleteClientUser",
+				"action":   "deleting client user",
+			},
+		})
+	}
+
+	commitErr := tx.Commit().Error
+	if commitErr != nil {
+		tx.Rollback()
+		return commitErr
+	}
+
+	return nil
 }

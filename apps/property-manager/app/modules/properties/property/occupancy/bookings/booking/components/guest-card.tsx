@@ -85,7 +85,7 @@ export function GuestCard({
 						</AvatarFallback>
 					</Avatar>
 					<div>
-						<p className="text-sm font-semibold">{fullName}</p>
+						<p className="font-serif text-lg font-semibold">{fullName}</p>
 						{guest.current_address ? (
 							<p className="text-muted-foreground text-xs">
 								{guest.current_address}

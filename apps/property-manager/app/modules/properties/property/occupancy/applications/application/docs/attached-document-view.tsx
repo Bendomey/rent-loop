@@ -1,6 +1,7 @@
 import { CheckCircle, FileText, Pen, PenLine, X } from 'lucide-react'
 import React from 'react'
 import { Link, useParams } from 'react-router'
+import { en } from 'zod/v4/locales'
 import { PromptSignatureButton } from './prompt-signature-button'
 import { SigningStatusRow } from './signing-status-row'
 import { useSigningTokens } from '~/api/signing'
@@ -196,21 +197,21 @@ export function AttachedDocumentView({
 				</div>
 			) : (
 				<div className="space-y-3">
-					{tenantApplication.lease_agreement_document_status ===
-						'FINALIZED' && (
-						<div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
-							<p className="text-xs text-amber-700">
-								Need to make changes?{' '}
-								<Link
-									to={`/properties/${propertyId}/occupancy/applications/${applicationId}/editor/${tenantApplication.lease_agreement_document_id}`}
-									className="font-medium underline underline-offset-2"
-								>
-									Open the editor
-								</Link>{' '}
-								and revert the document to draft.
-							</p>
-						</div>
-					)}
+					{tenantApplication.lease_agreement_document_status === 'FINALIZED' &&
+						signatures.length === 0 && (
+							<div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+								<p className="text-xs text-amber-700">
+									Need to make changes?{' '}
+									<Link
+										to={`/properties/${propertyId}/occupancy/applications/${applicationId}/editor/${tenantApplication.lease_agreement_document_id}`}
+										className="font-medium underline underline-offset-2"
+									>
+										Open the editor
+									</Link>{' '}
+									and revert the document to draft.
+								</p>
+							</div>
+						)}
 
 					{['SIGNING', 'SIGNED'].includes(
 						safeString(tenantApplication.lease_agreement_document_status),
@@ -279,6 +280,13 @@ export function AttachedDocumentView({
 									role="TENANT"
 									propertyId={safeString(propertyId)}
 									tenantApplicationId={applicationId}
+									email={safeString(tenantApplication?.email)}
+									phone={safeString(tenantApplication?.phone)}
+									name={safeString(
+										tenantApplication?.first_name +
+											' ' +
+											tenantApplication?.last_name,
+									)}
 								/>
 							)}
 
@@ -302,6 +310,16 @@ export function AttachedDocumentView({
 												existingToken={witnessToken}
 												documentId={safeString(documentId)}
 												propertyId={safeString(propertyId)}
+												{...(entry.role !== 'pm_witness'
+													? {
+															name: safeString(
+																tenantApplication?.emergency_contact_name,
+															),
+															phone: safeString(
+																tenantApplication?.emergency_contact_phone,
+															),
+														}
+													: {})}
 												role={
 													entry.role === 'pm_witness'
 														? 'PM_WITNESS'

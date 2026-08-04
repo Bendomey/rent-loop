@@ -20,6 +20,7 @@ type LeaseChecklistRepository interface {
 	) (*[]models.LeaseChecklist, error)
 	Count(context context.Context, filters ListLeaseChecklistsFilter) (int64, error)
 	GetCheckInChecklist(ctx context.Context, leaseID string) (*models.LeaseChecklist, error)
+	GetCheckOutChecklist(ctx context.Context, leaseID string) (*models.LeaseChecklist, error)
 }
 
 type leaseChecklistRepository struct {
@@ -152,6 +153,21 @@ func (r *leaseChecklistRepository) GetCheckInChecklist(
 	result := r.db.WithContext(ctx).
 		Preload("Items").
 		Where("lease_id = ? AND type = ?", leaseID, "CHECK_IN").
+		First(&checklist)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &checklist, nil
+}
+
+func (r *leaseChecklistRepository) GetCheckOutChecklist(
+	ctx context.Context,
+	leaseID string,
+) (*models.LeaseChecklist, error) {
+	var checklist models.LeaseChecklist
+	result := r.db.WithContext(ctx).
+		Preload("Items").
+		Where("lease_id = ? AND type = ?", leaseID, "CHECK_OUT").
 		First(&checklist)
 	if result.Error != nil {
 		return nil, result.Error

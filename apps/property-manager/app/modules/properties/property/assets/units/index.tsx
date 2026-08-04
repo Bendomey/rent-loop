@@ -4,12 +4,16 @@ import {
 	Copy,
 	EllipsisVertical,
 	Eye,
+	ImageIcon,
 	Info,
+	Pencil,
+	Trash,
 	Users,
 } from 'lucide-react'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router'
 import { PropertyAssetUnitsController } from './controller'
+import DeletePropertyUnitModal from './delete'
 import { useGetPropertyUnits } from '~/api/units'
 import { GridElement } from '~/components/Grid'
 import { Image } from '~/components/Image'
@@ -18,7 +22,6 @@ import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import {
 	Card,
-	CardAction,
 	CardContent,
 	CardFooter,
 	CardHeader,
@@ -28,6 +31,7 @@ import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
+	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu'
 import {
@@ -49,6 +53,9 @@ export function PropertyAssetUnitsModule() {
 	const { clientUser } = useClient()
 	const [searchParams] = useSearchParams()
 	const navigate = useNavigate()
+	const isMultiProperty = clientUserProperty?.property?.type === 'MULTI'
+	const [unitPendingDelete, setUnitPendingDelete] = useState<PropertyUnit>()
+	const [openDeleteModal, setOpenDeleteModal] = useState(false)
 
 	const page = searchParams.get('page')
 		? Number(searchParams.get('page'))
@@ -81,34 +88,45 @@ export function PropertyAssetUnitsModule() {
 	const unitCards = useMemo(
 		() =>
 			({ data }: { data: PropertyUnit }) => {
+				const isDeletable =
+					data.status === 'Unit.Status.Draft' ||
+					data.status === 'Unit.Status.Maintenance'
+				const isOccupied =
+					data.status === 'Unit.Status.Occupied' ||
+					data.status === 'Unit.Status.PartiallyOccupied'
+				const deleteDisabledReason = isOccupied
+					? 'This unit is occupied and cannot be deleted.'
+					: 'Switch this unit to Draft or Maintenance to delete it.'
 				return (
 					<Card
 						key={data.id}
 						className="gap-2 overflow-hidden pt-0 pb-3 shadow-none"
 					>
-						<div className="h-44 w-full overflow-hidden">
-							<Image
-								className="h-full w-full object-cover"
-								src={data.images?.[0] ?? 'https://placehold.co/600x400'}
-								alt={data.name}
-							/>
-						</div>
-
-						<CardHeader className="flex items-center justify-between">
-							<CardTitle className="truncate">{data.name}</CardTitle>
-							<CardAction>
+						<div className="relative h-40 w-full overflow-hidden">
+							{data.images?.[0] ? (
+								<Image
+									className="h-full w-full object-cover"
+									src={data.images[0]}
+									alt={data.name}
+								/>
+							) : (
+								<div className="bg-muted flex h-44 w-full items-center justify-center">
+									<ImageIcon className="text-muted-foreground size-10" />
+								</div>
+							)}
+							<div className="absolute top-2 right-2 flex items-center gap-1">
 								<Badge
 									variant="outline"
 									className={
 										data.status === 'Unit.Status.Available'
-											? 'bg-teal-500 text-white'
+											? 'border-none bg-teal-500 text-white shadow-sm'
 											: data.status === 'Unit.Status.Maintenance'
-												? 'bg-yellow-500 text-white'
+												? 'border-none bg-yellow-500 text-white shadow-sm'
 												: data.status === 'Unit.Status.Occupied'
-													? 'bg-rose-500 text-white'
+													? 'border-none bg-rose-500 text-white shadow-sm'
 													: data.status === 'Unit.Status.PartiallyOccupied'
-														? 'bg-orange-500 text-white'
-														: 'bg-zinc-400 text-white'
+														? 'border-none bg-orange-500 text-white shadow-sm'
+														: 'border-none bg-zinc-400 text-white shadow-sm'
 									}
 								>
 									{data.status === 'Unit.Status.Available'
@@ -121,16 +139,30 @@ export function PropertyAssetUnitsModule() {
 													? 'Partially Occupied'
 													: 'Draft'}
 								</Badge>
-							</CardAction>
+								{(data.max_occupants_allowed ?? 0) > 1 && (
+									<Tooltip>
+										<TooltipTrigger asChild>
+											<Badge
+												variant="outline"
+												className="gap-1 border-none bg-sky-500 text-white shadow-sm"
+											>
+												<Users className="size-3" />
+												Shared Unit
+											</Badge>
+										</TooltipTrigger>
+										<TooltipContent>
+											Up to {data.max_occupants_allowed} tenants
+										</TooltipContent>
+									</Tooltip>
+								)}
+							</div>
+						</div>
+
+						<CardHeader className="px-4">
+							<CardTitle className="">{data.name}</CardTitle>
 						</CardHeader>
 
-						<CardContent className="space-y-2 pb-2">
-							<div className="flex items-center gap-2">
-								<Users className="text-zinc-500" size={16} />
-								<TypographyMuted className="truncate">
-									Max occupants: {data.max_occupants_allowed}
-								</TypographyMuted>
-							</div>
+						<CardContent className="space-y-2 px-4 pb-2">
 							<div className="flex items-center gap-2">
 								<CircleCheck className="text-zinc-500" size={16} />
 								<TypographyMuted>{`Updated ${dayjs(data.updated_at).format('MMM D, YYYY')}`}</TypographyMuted>
@@ -163,6 +195,16 @@ export function PropertyAssetUnitsModule() {
 										<DropdownMenuItem
 											onClick={() =>
 												void navigate(
+													`/properties/${data.property_id}/assets/units/${data.id}/edit`,
+												)
+											}
+										>
+											<Pencil className="size-4" />
+											Edit
+										</DropdownMenuItem>
+										<DropdownMenuItem
+											onClick={() =>
+												void navigate(
 													`/properties/${data.property_id}/assets/units/new?unit_id=${data.id}`,
 												)
 											}
@@ -170,6 +212,44 @@ export function PropertyAssetUnitsModule() {
 											<Copy className="size-4" />
 											Duplicate
 										</DropdownMenuItem>
+										{isMultiProperty && (
+											<>
+												<DropdownMenuSeparator />
+												{isDeletable ? (
+													<DropdownMenuItem
+														variant="destructive"
+														onClick={() => {
+															setUnitPendingDelete(data)
+															setOpenDeleteModal(true)
+														}}
+													>
+														<Trash className="size-4" />
+														Delete
+													</DropdownMenuItem>
+												) : (
+													<Tooltip>
+														<TooltipTrigger asChild>
+															<span
+																tabIndex={0}
+																className="block cursor-not-allowed"
+															>
+																<DropdownMenuItem
+																	variant="destructive"
+																	disabled
+																	className="pointer-events-none"
+																>
+																	<Trash className="size-4" />
+																	Delete
+																</DropdownMenuItem>
+															</span>
+														</TooltipTrigger>
+														<TooltipContent side="left">
+															{deleteDisabledReason}
+														</TooltipContent>
+													</Tooltip>
+												)}
+											</>
+										)}
 									</DropdownMenuContent>
 								</DropdownMenu>
 							</PropertyPermissionGuard>
@@ -177,11 +257,11 @@ export function PropertyAssetUnitsModule() {
 					</Card>
 				)
 			},
-		[navigate],
+		[navigate, isMultiProperty],
 	)
 
 	return (
-		<div className="mx-6 my-6 flex flex-col gap-4 sm:gap-6">
+		<div className="mx-auto my-6 flex w-full max-w-7xl flex-col gap-4 px-6 sm:gap-6">
 			<div>
 				<div className="flex items-center gap-2">
 					<TypographyH4 className="mb-1">Manage Units</TypographyH4>
@@ -229,6 +309,12 @@ export function PropertyAssetUnitsModule() {
 					refetch={refetch}
 				/>
 			</div>
+
+			<DeletePropertyUnitModal
+				opened={openDeleteModal}
+				setOpened={setOpenDeleteModal}
+				data={unitPendingDelete}
+			/>
 		</div>
 	)
 }

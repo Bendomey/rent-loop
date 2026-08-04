@@ -30,8 +30,6 @@ interface Booking {
 	checked_out_at: Nullable<Date>
 	checked_out_by_id: Nullable<string>
 	checked_out_by: Nullable<ClientUser>
-	rate: number
-	currency: string
 	stay_frequency: PropertyUnit['payment_frequency']
 	status: BookingStatus
 	canceled_at: Nullable<Date>
@@ -43,8 +41,8 @@ interface Booking {
 	requires_upfront_payment: boolean
 	created_by_client_user_id: Nullable<string>
 	created_by_client_user: Nullable<ClientUser>
-	invoice_id: Nullable<string>
-	invoice: Nullable<Invoice>
+	invoice_id: string
+	invoice: Invoice
 	meta: Nullable<Record<string, unknown>>
 	created_at: Date
 	updated_at: Date

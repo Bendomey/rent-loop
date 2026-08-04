@@ -8,11 +8,17 @@ import {
 	TypographyMuted,
 	TypographyP,
 } from '~/components/ui/typography'
+import { ExistingTenantPreview } from '../components/existingTenantPreview'
+import { getIdTypeLabel } from '~/lib/tenant.utils'
 
 const renderPreviewField = (label: string, value?: string | null) => (
 	<div className="py-3">
-		<p className="text-sm font-medium text-zinc-600">{label}</p>
-		<p className="mt-1 text-sm text-zinc-900">{value || '—'}</p>
+		<p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+			{label}
+		</p>
+		<p className="mt-1 text-sm text-zinc-900 dark:text-zinc-100">
+			{value || '—'}
+		</p>
 	</div>
 )
 
@@ -28,7 +34,7 @@ const PreviewCard = ({
 	stepNumber: number
 	onEdit: () => void
 }) => (
-	<div className="rounded-lg border bg-white p-6">
+	<div className="rounded-lg border bg-white p-6 dark:border-zinc-700 dark:bg-zinc-800">
 		<div className="mb-4 flex items-start justify-between">
 			<div>
 				<h3 className="text-foreground font-semibold">{title}</h3>
@@ -41,7 +47,7 @@ const PreviewCard = ({
 				size="sm"
 				variant="ghost"
 				onClick={onEdit}
-				className="text-rose-600 hover:text-rose-700"
+				className="text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300"
 			>
 				<Pencil className="h-4 w-4" />
 			</Button>
@@ -51,9 +57,28 @@ const PreviewCard = ({
 )
 
 export function Step4() {
-	const { goBack, goToPage, formData, onSubmit, isSubmitting } =
-		useCreatePropertyTenantApplicationContext()
+	const {
+		goBack,
+		goToPage,
+		isExistingTenant,
+		formData,
+		onSubmit,
+		isSubmitting,
+	} = useCreatePropertyTenantApplicationContext()
 	const isStudent = formData.employer_type === 'STUDENT'
+
+	if (isExistingTenant) {
+		return (
+			<ExistingTenantPreview
+				tenant={formData}
+				onConfirm={async (currentAddress) => {
+					await onSubmit({ ...formData, current_address: currentAddress })
+				}}
+				onCancel={() => goToPage(0)}
+				isSubmitting={isSubmitting}
+			/>
+		)
+	}
 
 	return (
 		<form
@@ -140,7 +165,7 @@ export function Step4() {
 			>
 				<div className="grid grid-cols-2 gap-x-4 gap-y-0">
 					{renderPreviewField('Nationality', formData.nationality)}
-					{renderPreviewField('ID Type', formData.id_type)}
+					{renderPreviewField('ID Type', getIdTypeLabel(formData.id_type))}
 					<div className="col-span-2">
 						{renderPreviewField('ID Number', formData.id_number)}
 					</div>

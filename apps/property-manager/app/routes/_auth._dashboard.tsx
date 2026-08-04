@@ -23,14 +23,13 @@ import {
 	SidebarTrigger,
 } from '~/components/ui/sidebar'
 import { useOnboardingTour } from '~/hooks/use-onboarding-tour'
-import { getAuthSession } from '~/lib/actions/auth.session.server'
+import { resolveAuthToken } from '~/lib/actions/auth.token.server'
 import { clientContext } from '~/lib/actions/client.context.server'
 import { environmentVariables } from '~/lib/actions/env.server'
 
 export async function loader({ request, context }: Route.LoaderArgs) {
 	const baseUrl = environmentVariables().API_ADDRESS
-	const authSession = await getAuthSession(request.headers.get('Cookie'))
-	const authToken = authSession.get('authToken')
+	const authToken = await resolveAuthToken(request, context)
 	if (!authToken) {
 		return redirect('/login')
 	}

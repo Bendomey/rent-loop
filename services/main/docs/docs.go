@@ -990,7 +990,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Returns a signed JWT for querying the Cube.js analytics API. The token is scoped to the authenticated client.",
+                "description": "Returns a signed JWT for querying the Cube.js analytics API. The token carries identity only — the client id and the calling client-user id — and the Cube schema resolves row-level security from it live, so an OWNER reaches their whole client and every other role is limited to their explicit client_user_properties grants. Permission changes take effect immediately rather than at the next token refresh.",
                 "produces": [
                     "application/json"
                 ],
@@ -1032,7 +1032,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "List announcements for the current client",
+                "description": "List announcements. When called via /properties/{property_id}/announcements, scoped to exactly that property (existing behavior). When called via /announcements (no property_id in the URL — used by mobile), includes broadcast announcements plus every property-specific announcement the caller has access to; optionally narrowed with one or more property_id query values.",
                 "produces": [
                     "application/json"
                 ],
@@ -1041,6 +1041,16 @@ const docTemplate = `{
                 ],
                 "summary": "List announcements (Admin)",
                 "parameters": [
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "Property ID(s) to narrow results to (only applies to the /announcements route); omit to see broadcast plus every property the caller can access",
+                        "name": "property_id",
+                        "in": "query"
+                    },
                     {
                         "type": "string",
                         "name": "end_date",
@@ -2212,6 +2222,18 @@ const docTemplate = `{
                         "example": "ClientUser.Status.Active",
                         "name": "status",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "client-user@example.com",
+                        "name": "user_email",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "+233281234569",
+                        "name": "user_phone",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -2465,6 +2487,161 @@ const docTemplate = `{
                         "description": "Client user not found",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete client user (Admin). By default, fails if the client user has properties linked to it — pass delete_properties=true to unlink and delete them as part of this request.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientUsers"
+                ],
+                "summary": "Delete client user (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Client user ID",
+                        "name": "client_user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Also unlink and delete all properties attached to this client user",
+                        "name": "delete_properties",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Client user deleted successfully"
+                    },
+                    "400": {
+                        "description": "Client user still has linked properties, or cannot delete the workspace owner",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Client user not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update a client user's global role and/or replace the properties assigned to them (Admin). Omit a field to leave it unchanged; pass an empty ` + "`" + `property_assignments` + "`" + ` array to unassign all properties.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientUsers"
+                ],
+                "summary": "Update client user role and property assignments (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Client user ID",
+                        "name": "client_user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Client User Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateClientUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Client user updated successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputClientUser"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when updating client user",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Client user not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error occured",
+                        "schema": {
+                            "type": "string"
                         }
                     },
                     "500": {
@@ -3189,6 +3366,801 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/admin/clients/{client_id}/expenses": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List expenses across every property the caller has access to, optionally narrowed with one or more property_id query values",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Expenses"
+                ],
+                "summary": "List expenses across properties (Admin, mobile)",
+                "parameters": [
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "Property ID(s) to narrow results to; omit to see every property the caller can access",
+                        "name": "property_id",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "LEASE",
+                            "MAINTENANCE"
+                        ],
+                        "type": "string",
+                        "name": "context_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                        ],
+                        "name": "ids",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "search_fields",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_date",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Expenses",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.OutputExpense"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Requested property_id is outside the caller's access scope",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/invoices": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List invoices across every property the caller has access to, optionally narrowed with one or more property_id query values",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "List invoices across properties (Admin, mobile)",
+                "parameters": [
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "Property ID(s) to narrow results to; omit to see every property the caller can access",
+                        "name": "property_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "active",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "context_lease_termination_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "context_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                        ],
+                        "name": "ids",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "payee_client_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "payee_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "payer_client_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "payer_lease_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "payer_tenant_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "payer_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "search_fields",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.OutputInvoice"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "An error occurred while filtering invoices",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Absent or invalid authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Requested property_id is outside the caller's access scope",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/leases": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List leases across every property the caller has access to, optionally narrowed with one or more property_id query values",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Lease"
+                ],
+                "summary": "List leases across properties (Admin, mobile)",
+                "parameters": [
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "Property ID(s) to narrow results to; omit to see every property the caller can access",
+                        "name": "property_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                        ],
+                        "name": "ids",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "MANUAL",
+                            "ONLINE"
+                        ],
+                        "type": "string",
+                        "example": "MANUAL",
+                        "name": "lease_agreement_document_mode",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "2026-08-01",
+                        "name": "move_out_date_from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "2026-09-30",
+                        "name": "move_out_date_to",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "b4d0243c-6581-4104-8185-d83a45ebe41b",
+                        "name": "parent_lease_id",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "HOURLY",
+                            "DAILY",
+                            "MONTHLY",
+                            "QUARTERLY",
+                            "BIANNUALLY",
+                            "ANNUALLY",
+                            "ONETIME"
+                        ],
+                        "type": "string",
+                        "example": "HOURLY",
+                        "name": "payment_frequency",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "search_fields",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "Lease.Status.Pending",
+                            "Lease.Status.Active",
+                            "Lease.Status.Terminated",
+                            "Lease.Status.Completed",
+                            "Lease.Status.Cancelled"
+                        ],
+                        "type": "string",
+                        "example": "Lease.Status.Pending",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "HOURS",
+                            "DAYS",
+                            "MONTHS"
+                        ],
+                        "type": "string",
+                        "example": "HOURS",
+                        "name": "stay_duration_frequency",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                        ],
+                        "name": "unit_ids",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.OutputAdminLease"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "An error occurred while filtering leases",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Absent or invalid authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Requested property_id is outside the caller's access scope",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/maintenance-requests": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List maintenance requests across every property the caller has access to, optionally narrowed with one or more property_id query values",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "MaintenanceRequests"
+                ],
+                "summary": "List maintenance requests across properties (Admin, mobile)",
+                "parameters": [
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "Property ID(s) to narrow results to; omit to see every property the caller can access",
+                        "name": "property_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "assigned_manager_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "assigned_worker_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "name": "block_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "category",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                        ],
+                        "name": "ids",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "lease_id",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "priority",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "search_fields",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "tenant_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "name": "unit_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Maintenance requests",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.AdminOutputMaintenanceRequest"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Requested property_id is outside the caller's access scope",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/clients/{client_id}/payment-accounts": {
             "get": {
                 "security": [
@@ -3648,6 +4620,11 @@ const docTemplate = `{
                 ],
                 "summary": "Get all properties (Admin)",
                 "parameters": [
+                    {
+                        "type": "boolean",
+                        "name": "archived",
+                        "in": "query"
+                    },
                     {
                         "type": "string",
                         "name": "end_date",
@@ -4169,7 +5146,7 @@ const docTemplate = `{
                         "description": "Property deleted successfully"
                     },
                     "400": {
-                        "description": "Error occurred when updating a property",
+                        "description": "Property has active leases, bookings or pending applications and cannot be deleted",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -4178,6 +5155,12 @@ const docTemplate = `{
                         "description": "Invalid or absent authentication token",
                         "schema": {
                             "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Property not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
                         }
                     },
                     "500": {
@@ -5630,6 +6613,72 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/deletion:preview": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns whether a property is eligible for deletion, why not if blocked, and what would be archived if it proceeds",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Properties"
+                ],
+                "summary": "Preview a property's deletion impact (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deletion eligibility computed successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/services.PropertyDeletionEligibility"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when computing deletion eligibility",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Property not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occured",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/clients/{client_id}/properties/{property_id}/expenses": {
             "get": {
                 "security": [
@@ -6073,7 +7122,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "List invoices with optional filters (Admin)",
+                "description": "List invoices for a property (Admin)",
                 "consumes": [
                     "application/json"
                 ],
@@ -6087,6 +7136,13 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
                         "description": "Property ID",
                         "name": "property_id",
                         "in": "path",
@@ -6095,6 +7151,11 @@ const docTemplate = `{
                     {
                         "type": "boolean",
                         "name": "active",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "context_lease_termination_id",
                         "in": "query"
                     },
                     {
@@ -6167,6 +7228,11 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "name": "payer_tenant_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "name": "payer_type",
                         "in": "query"
                     },
@@ -6233,7 +7299,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Error occurred when listing invoices",
+                        "description": "Invalid query parameters",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -6242,6 +7308,86 @@ const docTemplate = `{
                         "description": "Invalid or absent authentication token",
                         "schema": {
                             "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new invoice (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "Create invoice (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Create invoice request body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreateInvoiceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Invoice created successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputInvoice"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when creating invoice",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
                         }
                     },
                     "500": {
@@ -6484,6 +7630,79 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/invoices/{invoice_id}/issue": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Issue a draft invoice, changing its status to ISSUED (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "Issue draft invoice (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Invoice ID",
+                        "name": "invoice_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Invoice Issued Successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputInvoice"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when issuing invoice",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Invoice not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/clients/{client_id}/properties/{property_id}/invoices/{invoice_id}/line-items": {
             "get": {
                 "security": [
@@ -6710,6 +7929,179 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update a line item on an existing draft invoice (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "Update line item on invoice (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Invoice ID",
+                        "name": "invoice_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Line Item ID",
+                        "name": "line_item_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update line item request body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateLineItemRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Line Item Updated Successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputInvoiceLineItem"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when updating line item",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Invoice or line item not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/invoices/{invoice_id}/pay": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Creates an offline payment for the invoice and immediately verifies it as successful.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "Pay an invoice (offline)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Invoice ID",
+                        "name": "invoice_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Pay invoice request body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ManagerPayInvoiceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Invoice paid successfully"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
             }
         },
         "/api/v1/admin/clients/{client_id}/properties/{property_id}/invoices/{invoice_id}/void": {
@@ -6850,6 +8242,18 @@ const docTemplate = `{
                         "type": "string",
                         "example": "MANUAL",
                         "name": "lease_agreement_document_mode",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "2026-08-01",
+                        "name": "move_out_date_from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "2026-09-30",
+                        "name": "move_out_date_to",
                         "in": "query"
                     },
                     {
@@ -7170,6 +8574,448 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/agreement-documents": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Fetch the agreement document pipeline record for a lease, with signatures.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Lease"
+                ],
+                "summary": "Get lease agreement document",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Lease ID",
+                        "name": "lease_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputAdminLeaseAgreementDocument"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Start the document pipeline for a lease. Status is set to DRAFT.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Lease"
+                ],
+                "summary": "Create lease agreement document",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Lease ID",
+                        "name": "lease_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Request body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreateLeaseAgreementDocumentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputAdminLeaseAgreementDocument"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Remove the agreement document pipeline record. Allowed in any status while the PDF has not yet been saved to the lease.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Lease"
+                ],
+                "summary": "Delete lease agreement document",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Lease ID",
+                        "name": "lease_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update mode, document_id, or document_url. Only allowed when status is DRAFT.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Lease"
+                ],
+                "summary": "Update lease agreement document",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Lease ID",
+                        "name": "lease_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Request body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateLeaseAgreementDocumentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputAdminLeaseAgreementDocument"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/agreement-documents/draft": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Revert a FINALIZED document back to DRAFT so edits can be made.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Lease"
+                ],
+                "summary": "Revert lease agreement document to draft",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Lease ID",
+                        "name": "lease_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputAdminLeaseAgreementDocument"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/agreement-documents/finalize": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Lock the document content and advance status from DRAFT to FINALIZED.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Lease"
+                ],
+                "summary": "Finalize lease agreement document",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Lease ID",
+                        "name": "lease_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputAdminLeaseAgreementDocument"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "type": "string"
                         }
@@ -8428,6 +10274,609 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/terminations": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List terminations for a lease",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "LeaseTermination"
+                ],
+                "summary": "List lease terminations (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Lease ID",
+                        "name": "lease_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                        ],
+                        "name": "ids",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "search_fields",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "LeaseTermination.Status.InProgress",
+                            "LeaseTermination.Status.Completed",
+                            "LeaseTermination.Status.Cancelled"
+                        ],
+                        "type": "string",
+                        "example": "LeaseTermination.Status.InProgress",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.OutputLeaseTermination"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Start a lease termination process for an active lease",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "LeaseTermination"
+                ],
+                "summary": "Create lease termination (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Lease ID",
+                        "name": "lease_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Create termination request body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreateLeaseTerminationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Termination Created",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputLeaseTermination"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Lease not Active or InProgress termination already exists",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/terminations/{termination_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a single lease termination by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "LeaseTermination"
+                ],
+                "summary": "Get lease termination (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Lease ID",
+                        "name": "lease_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Termination ID",
+                        "name": "termination_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Termination",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputLeaseTermination"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update fields on an InProgress lease termination",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "LeaseTermination"
+                ],
+                "summary": "Update lease termination (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Lease ID",
+                        "name": "lease_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Termination ID",
+                        "name": "termination_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update request body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateLeaseTerminationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Updated",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputLeaseTermination"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Termination not InProgress",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/terminations/{termination_id}/cancel": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Cancel an in-progress lease termination — lease remains Active",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "LeaseTermination"
+                ],
+                "summary": "Cancel lease termination (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Lease ID",
+                        "name": "lease_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Termination ID",
+                        "name": "termination_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Cancelled"
+                    },
+                    "400": {
+                        "description": "Termination not InProgress",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/terminations/{termination_id}/complete": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Complete a lease termination — sets lease to Terminated and releases the unit (transactional)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "LeaseTermination"
+                ],
+                "summary": "Complete lease termination (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Lease ID",
+                        "name": "lease_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Termination ID",
+                        "name": "termination_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Completed"
+                    },
+                    "400": {
+                        "description": "Termination not InProgress",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests": {
             "get": {
                 "security": [
@@ -8462,6 +10911,15 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "name": "assigned_worker_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "name": "block_id",
                         "in": "query"
                     },
                     {
@@ -8566,7 +11024,11 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "type": "string",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
                         "name": "unit_id",
                         "in": "query"
                     }
@@ -8620,7 +11082,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Create a new maintenance request (Admin)",
+                "description": "Create maintenance request(s) against one or more units and/or blocks (Admin).\nAlways responds with an array: one request normally, or one per selected asset\nwhen create_separate_requests is true. A request covering more than one asset,\nor any block, is forced to INTERNAL_ONLY.",
                 "consumes": [
                     "application/json"
                 ],
@@ -8630,7 +11092,7 @@ const docTemplate = `{
                 "tags": [
                     "MaintenanceRequests"
                 ],
-                "summary": "Create a maintenance request (Admin)",
+                "summary": "Create maintenance request(s) (Admin)",
                 "parameters": [
                     {
                         "type": "string",
@@ -8651,12 +11113,15 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "201": {
-                        "description": "Maintenance request created successfully",
+                        "description": "Maintenance request(s) created successfully",
                         "schema": {
                             "type": "object",
                             "properties": {
                                 "data": {
-                                    "$ref": "#/definitions/transformations.AdminOutputMaintenanceRequest"
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/transformations.AdminOutputMaintenanceRequest"
+                                    }
                                 }
                             }
                         }
@@ -9905,6 +12370,72 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/restore:preview": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns what a restore would bring back into the active portfolio: block/unit counts and kept (non-blocking) lease/booking/application counts",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Properties"
+                ],
+                "summary": "Preview restoring an archived property (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Restore preview computed successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/services.PropertyRestorePreview"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Property is not archived",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Property not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/clients/{client_id}/properties/{property_id}/signing": {
             "post": {
                 "security": [
@@ -10027,6 +12558,11 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "name": "lease_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "lease_termination_id",
                         "in": "query"
                     },
                     {
@@ -11096,8 +13632,16 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "204": {
-                        "description": "lease application approved successfully"
+                    "200": {
+                        "description": "lease application approved successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputAdminLease"
+                                }
+                            }
+                        }
                     },
                     "400": {
                         "description": "Error occurred when approving a lease application",
@@ -11224,93 +13768,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id}/invoice/{invoice_id}/pay": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Pay an invoice for a lease application (security deposit and/or initial deposit) (Admin)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "TenantApplication"
-                ],
-                "summary": "Pay an invoice for a lease application (Admin)",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Property ID",
-                        "name": "property_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "lease application ID",
-                        "name": "tenant_application_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Invoice ID",
-                        "name": "invoice_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Pay invoice request body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.PayInvoiceRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Invoice paid successfully"
-                    },
-                    "400": {
-                        "description": "Error occurred when paying invoice",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "lease application or invoice not found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "422": {
-                        "description": "Validation error",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
         "/api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id}/invoice:generate": {
             "post": {
                 "security": [
@@ -11405,7 +13862,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "List unique tenants for a property with optional status filtering. status=ACTIVE means tenant has at least one active lease; status=EXPIRED means tenant has no active leases but has terminated/completed/cancelled leases.",
+                "description": "List unique tenants for a property with optional status filtering. status=ACTIVE means tenant has at least one active lease; status=EXPIRED means tenant has no active leases but has terminated/completed/cancelled leases. Each tenant includes its most relevant lease (recent_lease) and booking (recent_booking) for this property.",
                 "consumes": [
                     "application/json"
                 ],
@@ -11558,7 +14015,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get tenant by ID (Admin)",
+                "description": "Get tenant by ID, scoped to the property (returns 404 if the tenant has no lease/booking in this property). Includes the tenant's most relevant lease (recent_lease) and booking (recent_booking) for this property.",
                 "consumes": [
                     "application/json"
                 ],
@@ -11627,6 +14084,178 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/tenants/{tenant_id}/bookings": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List a tenant's booking history for a property. This endpoint is intended for manager use to view a specific tenant's full booking history.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Booking"
+                ],
+                "summary": "List bookings by tenant (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                        ],
+                        "name": "ids",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "search_fields",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "PENDING",
+                            "CONFIRMED",
+                            "CHECKED_IN",
+                            "CANCELLED"
+                        ],
+                        "type": "string",
+                        "example": "PENDING",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "550e8400-e29b-41d4-a716-446655440000",
+                        "name": "unit_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Tenant ID",
+                        "name": "tenant_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.AdminOutputBooking"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/clients/{client_id}/properties/{property_id}/tenants/{tenant_id}/leases": {
             "get": {
                 "security": [
@@ -11685,6 +14314,18 @@ const docTemplate = `{
                         "type": "string",
                         "example": "MANUAL",
                         "name": "lease_agreement_document_mode",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "2026-08-01",
+                        "name": "move_out_date_from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "2026-09-30",
+                        "name": "move_out_date_to",
                         "in": "query"
                     },
                     {
@@ -12745,6 +15386,710 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}:restore": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Un-archives a soft-deleted property. Units, blocks, leases, bookings and applications were never removed (see DeleteProperty), so nothing else needs restoring.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Properties"
+                ],
+                "summary": "Restore an archived property (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Property restored successfully"
+                    },
+                    "400": {
+                        "description": "Property is not archived",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Property not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/tenant-applications": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List lease applications across every property the caller is linked to, optionally narrowed with one or more property_id query values",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "TenantApplication"
+                ],
+                "summary": "List lease applications across properties (Admin, mobile)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "Property ID(s) to narrow results to; omit to see every property the caller is linked to",
+                        "name": "property_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "Desired unit ID(s) to narrow results to",
+                        "name": "desired_unit_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "72432ce6-5620-4ecf-a862-4bf2140556a1",
+                        "name": "created_by_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "72432ce6-5620-4ecf-a862-4bf2140556a1",
+                        "name": "desired_unit_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "john.doe@example.com",
+                            "email@example.com"
+                        ],
+                        "name": "email",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "MALE",
+                            "FEMALE"
+                        ],
+                        "type": "string",
+                        "name": "gender",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                        ],
+                        "name": "ids",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "ONLINE",
+                            "CASH",
+                            "EXTERNAL"
+                        ],
+                        "type": "string",
+                        "name": "initial_deposit_payment_method",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "SINGLE",
+                            "MARRIED",
+                            "DIVORCED",
+                            "WIDOWED"
+                        ],
+                        "type": "string",
+                        "name": "marital_status",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "HOURLY",
+                            "DAILY",
+                            "MONTHLY",
+                            "QUARTERLY",
+                            "BIANNUALLY",
+                            "ANNUALLY",
+                            "ONETIME"
+                        ],
+                        "type": "string",
+                        "name": "payment_frequency",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "+233281234569",
+                            "+233281234569"
+                        ],
+                        "name": "phone",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "search_fields",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "ONLINE",
+                            "CASH",
+                            "EXTERNAL"
+                        ],
+                        "type": "string",
+                        "name": "security_deposit_payment_method",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "TenantApplication.Status.InProgress",
+                            "TenantApplication.Status.Cancelled",
+                            "TenantApplication.Status.Completed"
+                        ],
+                        "type": "string",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "HOURS",
+                            "DAYS",
+                            "MONTHS"
+                        ],
+                        "type": "string",
+                        "name": "stay_duration_frequency",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lease applications",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.OutputAdminTenantApplication"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when fetching lease applications",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Requested property_id is outside the caller's linked properties",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/tenants": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List unique tenants across every property the caller has access to, optionally narrowed with one or more property_id query values. status=ACTIVE means tenant has at least one active lease; status=EXPIRED means tenant has no active leases but has past leases.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tenants"
+                ],
+                "summary": "List tenants across properties (Admin, mobile)",
+                "parameters": [
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "Property ID(s) to narrow results to; omit to see every property the caller can access",
+                        "name": "property_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                        ],
+                        "name": "ids",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "search_fields",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "ACTIVE",
+                            "EXPIRED"
+                        ],
+                        "type": "string",
+                        "example": "ACTIVE",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.OutputAdminTenant"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "An error occurred while filtering tenants",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Absent or invalid authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Requested property_id is outside the caller's access scope",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/units": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List units across every property the caller has access to, optionally narrowed with one or more property_id query values",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Units"
+                ],
+                "summary": "List units across properties (Admin, mobile)",
+                "parameters": [
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "Property ID(s) to narrow results to; omit to see every property the caller can access",
+                        "name": "property_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "767d8e23-8c9f-4c51-85af-5908039869da",
+                            "3d90d606-2a22-4487-9431-69736829094f"
+                        ],
+                        "name": "block_ids",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                        ],
+                        "name": "ids",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "WEEKLY",
+                            "DAILY",
+                            "MONTHLY",
+                            "QUARTERLY",
+                            "BIANNUALLY",
+                            "ANNUALLY"
+                        ],
+                        "type": "string",
+                        "example": "WEEKLY",
+                        "name": "payment_frequency",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "prop_123",
+                        "name": "property_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "search_fields",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "Unit.Status.Draft",
+                            "Unit.Status.Available",
+                            "Unit.Status.Occupied",
+                            "Unit.Status.Maintenance"
+                        ],
+                        "type": "string",
+                        "example": "Unit.Status.Available",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "APARTMENT",
+                            "HOUSE",
+                            "STUDIO",
+                            "OFFICE",
+                            "RETAIL"
+                        ],
+                        "type": "string",
+                        "example": "SINGLE",
+                        "name": "type",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.AdminOutputUnit"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Requested property_id is outside the caller's access scope",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/system/agreements": {
             "get": {
                 "security": [
@@ -13055,6 +16400,46 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/admin/users/logout": {
+            "post": {
+                "description": "Ends one session by revoking the presented refresh token. Always returns 204, even for an unknown or already-revoked token — logout must never block a client from clearing its local state. Other sessions for the same user are unaffected. (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Revoke a refresh token (Admin)",
+                "parameters": [
+                    {
+                        "description": "Refresh token to revoke",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.RefreshTokenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Session revoked"
+                    },
+                    "422": {
+                        "description": "Validation error occurred",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/users/me": {
             "get": {
                 "security": [
@@ -13225,6 +16610,204 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "User not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error occurred",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/users/me/sessions": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Every device currently signed in as you — one entry per sign-in, most recently used first. ` + "`" + `is_current` + "`" + ` marks the session making this request. ` + "`" + `location_city` + "`" + `/` + "`" + `location_country` + "`" + ` are null until a GeoIP database is configured, and the device fields are null when the client sent no metadata and its User-Agent could not be parsed.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sessions"
+                ],
+                "summary": "List your active sessions",
+                "responses": {
+                    "200": {
+                        "description": "Sessions retrieved successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/transformations.OutputSession"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Authorization failed",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/users/me/sessions/{session_id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Ends the given session and every refresh token under it. Idempotent — an already-revoked session still returns 204. A session belonging to another user reports 404 rather than 403, so this cannot be used to probe which session ids exist. Revoking your own current session is allowed and is equivalent to logging out.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sessions"
+                ],
+                "summary": "Sign out one session",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session ID",
+                        "name": "session_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Session revoked successfully"
+                    },
+                    "401": {
+                        "description": "Authorization failed",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Session not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/users/me/sessions:revoke-others": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Ends every session for you except the one making this request, which stays signed in. Returns how many were ended. Requires an access token carrying a session claim — tokens issued before sessions existed cannot identify which one to keep and are rejected.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sessions"
+                ],
+                "summary": "Sign out all other sessions",
+                "responses": {
+                    "200": {
+                        "description": "Other sessions revoked successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "revoked_count": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Authorization failed",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/users/refresh": {
+            "post": {
+                "description": "Rotates the presented refresh token and returns a new access token plus a new refresh token. No Authorization header is required — the refresh token itself is the credential. (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Exchange a refresh token for a new token pair (Admin)",
+                "parameters": [
+                    {
+                        "description": "Refresh token",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.RefreshTokenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Token pair refreshed successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputTokenPair"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Refresh token is invalid, revoked, or expired",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -13627,6 +17210,76 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/invoices/{invoice_id}/pay": {
+            "post": {
+                "description": "Records an offline payment (PENDING) for an invoice.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "Pay invoice (public)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Invoice ID",
+                        "name": "invoice_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Payment body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ManagerPayInvoiceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Payment recorded",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputPayment"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Application or invoice not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/leases": {
             "get": {
                 "security": [
@@ -13671,6 +17324,18 @@ const docTemplate = `{
                         "type": "string",
                         "example": "MANUAL",
                         "name": "lease_agreement_document_mode",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "2026-08-01",
+                        "name": "move_out_date_from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "2026-09-30",
+                        "name": "move_out_date_to",
                         "in": "query"
                     },
                     {
@@ -14652,12 +18317,6 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "enum": [
-                            "PLUMBING",
-                            "ELECTRICAL",
-                            "HVAC",
-                            "OTHER"
-                        ],
                         "type": "string",
                         "name": "category",
                         "in": "query"
@@ -15070,6 +18729,215 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/notifications": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns paginated in-app notifications for the authenticated client user, newest first.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "List in-app notifications (Property Manager)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number (default 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size (default 20, max 50)",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "type": "object"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/notifications/read-all": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Marks all unread in-app notifications as read for the authenticated client user.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Mark all notifications as read (Property Manager)",
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/notifications/unread-count": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns the count of unread in-app notifications for the authenticated client user.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Get unread notification count (Property Manager)",
+                "responses": {
+                    "200": {
+                        "description": "Unread count",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "count": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/notifications/{notification_id}/read": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Marks a single in-app notification as read for the authenticated client user.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Mark notification as read (Property Manager)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Notification ID (UUID)",
+                        "name": "notification_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Unexpected error",
                         "schema": {
                             "type": "string"
                         }
@@ -15585,6 +19453,215 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/tenant-accounts/notifications": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns paginated in-app notifications for the authenticated tenant account, newest first.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "List in-app notifications (Tenant)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number (default 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size (default 20, max 50)",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "type": "object"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/tenant-accounts/notifications/read-all": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Marks all unread in-app notifications as read for the authenticated tenant account.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Mark all notifications as read (Tenant)",
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/tenant-accounts/notifications/unread-count": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns the count of unread in-app notifications for the authenticated tenant account.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Get unread notification count (Tenant)",
+                "responses": {
+                    "200": {
+                        "description": "Unread count",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "count": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/tenant-accounts/notifications/{notification_id}/read": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Marks a single in-app notification as read for the authenticated tenant account.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Mark notification as read (Tenant)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Notification ID (UUID)",
+                        "name": "notification_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Unexpected error",
                         "schema": {
                             "type": "string"
                         }
@@ -16177,6 +20254,87 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/tenants/{tenant_id}": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update a tenant's profile details",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tenants"
+                ],
+                "summary": "Update a tenant",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tenant ID",
+                        "name": "tenant_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Tenant details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateTenantRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tenant updated successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputTenant"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when updating a tenant",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Tenant not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid JSON body",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/units/{unit_id}": {
             "get": {
                 "description": "Fetch unit subset",
@@ -16414,9 +20572,14 @@ const docTemplate = `{
                         "INITIAL_DEPOSIT",
                         "MAINTENANCE_FEE",
                         "SAAS_FEE",
-                        "EXPENSE"
+                        "BOOKING_FEE",
+                        "EXPENSE",
+                        "DEPOSIT_REFUND",
+                        "EARLY_TERMINATION_FEE",
+                        "DAMAGE_CHARGE",
+                        "RENT_REFUND"
                     ],
-                    "example": "RENT"
+                    "example": "OTHER"
                 },
                 "currency": {
                     "type": "string",
@@ -17349,6 +21512,101 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.CreateInvoiceRequest": {
+            "type": "object",
+            "required": [
+                "context_type",
+                "currency",
+                "line_items",
+                "payee_type",
+                "payer_type"
+            ],
+            "properties": {
+                "context_lease_termination_id": {
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                },
+                "context_type": {
+                    "type": "string",
+                    "enum": [
+                        "LEASE_TERMINATION"
+                    ],
+                    "example": "LEASE_RENT"
+                },
+                "currency": {
+                    "type": "string",
+                    "example": "GHS"
+                },
+                "due_date": {
+                    "type": "string",
+                    "example": "2024-07-01T00:00:00Z"
+                },
+                "line_items": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/handlers.AddLineItemRequest"
+                    }
+                },
+                "payee_client_id": {
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                },
+                "payee_tenant_id": {
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                },
+                "payee_type": {
+                    "type": "string",
+                    "enum": [
+                        "PROPERTY_OWNER",
+                        "TENANT",
+                        "EXTERNAL"
+                    ],
+                    "example": "PROPERTY_OWNER"
+                },
+                "payer_client_id": {
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                },
+                "payer_lease_id": {
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                },
+                "payer_type": {
+                    "type": "string",
+                    "enum": [
+                        "TENANT",
+                        "PROPERTY_OWNER"
+                    ],
+                    "example": "TENANT"
+                }
+            }
+        },
+        "handlers.CreateLeaseAgreementDocumentRequest": {
+            "type": "object",
+            "required": [
+                "mode"
+            ],
+            "properties": {
+                "document_id": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "document_url": {
+                    "type": "string",
+                    "example": "https://example.com/lease.pdf"
+                },
+                "mode": {
+                    "type": "string",
+                    "enum": [
+                        "MANUAL",
+                        "ONLINE"
+                    ],
+                    "example": "ONLINE"
+                }
+            }
+        },
         "handlers.CreateLeaseChecklistItemRequest": {
             "type": "object",
             "required": [
@@ -17409,6 +21667,28 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.CreateLeaseTerminationRequest": {
+            "type": "object",
+            "required": [
+                "reason",
+                "type"
+            ],
+            "properties": {
+                "reason": {
+                    "type": "string",
+                    "example": "Both parties agreed"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "EVICTION",
+                        "MUTUAL_AGREEMENT",
+                        "TENANT_INITIATED"
+                    ],
+                    "example": "MUTUAL_AGREEMENT"
+                }
+            }
+        },
         "handlers.CreateMaintenanceRequestBody": {
             "type": "object",
             "required": [
@@ -17416,7 +21696,6 @@ const docTemplate = `{
                 "description",
                 "priority",
                 "title",
-                "unit_id",
                 "visibility"
             ],
             "properties": {
@@ -17426,14 +21705,17 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "block_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "category": {
-                    "type": "string",
-                    "enum": [
-                        "PLUMBING",
-                        "ELECTRICAL",
-                        "HVAC",
-                        "OTHER"
-                    ]
+                    "type": "string"
+                },
+                "create_separate_requests": {
+                    "type": "boolean"
                 },
                 "description": {
                     "type": "string"
@@ -17450,8 +21732,12 @@ const docTemplate = `{
                 "title": {
                     "type": "string"
                 },
-                "unit_id": {
-                    "type": "string"
+                "unit_ids": {
+                    "description": "At least one of UnitIDs / BlockIDs must be non-empty. That rule cannot be\nexpressed in struct tags, so the service enforces it.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "visibility": {
                     "type": "string",
@@ -17623,11 +21909,15 @@ const docTemplate = `{
                     "minLength": 2,
                     "example": "Ghana"
                 },
+                "currency": {
+                    "type": "string",
+                    "example": "GHS"
+                },
                 "description": {
                     "type": "string",
                     "example": "A luxurious apartment overlooking the Atlantic Ocean."
                 },
-                "gpsAddress": {
+                "gps_address": {
                     "type": "string",
                     "example": "GA-123-4567"
                 },
@@ -17872,7 +22162,6 @@ const docTemplate = `{
                 "name",
                 "payment_frequency",
                 "rent_fee",
-                "rent_fee_currency",
                 "status",
                 "type"
             ],
@@ -18074,6 +22363,9 @@ const docTemplate = `{
                 "lease_id": {
                     "type": "string"
                 },
+                "lease_termination_id": {
+                    "type": "string"
+                },
                 "role": {
                     "type": "string",
                     "enum": [
@@ -18180,6 +22472,10 @@ const docTemplate = `{
                     "type": "string",
                     "example": "user@example.com"
                 },
+                "metadata": {
+                    "description": "Metadata describes the device/browser starting this session. Optional and\nentirely client-supplied — it is display data for a future \"active\nsessions\" view, never anything an authorization decision may rest on.",
+                    "type": "object"
+                },
                 "password": {
                     "type": "string",
                     "minLength": 6,
@@ -18187,7 +22483,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.PayInvoiceRequest": {
+        "handlers.ManagerPayInvoiceRequest": {
             "type": "object",
             "required": [
                 "amount",
@@ -18302,6 +22598,22 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.RefreshTokenRequest": {
+            "type": "object",
+            "required": [
+                "refresh_token"
+            ],
+            "properties": {
+                "metadata": {
+                    "description": "Metadata optionally refreshes the session's device and reported location\n(see lib.SessionDeviceInfo). Omit it and the previously recorded values\nare left untouched. Same untrusted, display-only blob as on login.",
+                    "type": "object"
+                },
+                "refresh_token": {
+                    "type": "string",
+                    "example": "3f2504e0-4f89-11d3-9a0c-0305e82c3301:sSx1"
+                }
+            }
+        },
         "handlers.RegisterFcmTokenRequest": {
             "type": "object",
             "required": [
@@ -18391,6 +22703,9 @@ const docTemplate = `{
                 "lease_id": {
                     "type": "string"
                 },
+                "lease_termination_id": {
+                    "type": "string"
+                },
                 "signature_url": {
                     "type": "string"
                 },
@@ -18448,13 +22763,7 @@ const docTemplate = `{
                     }
                 },
                 "category": {
-                    "type": "string",
-                    "enum": [
-                        "PLUMBING",
-                        "ELECTRICAL",
-                        "HVAC",
-                        "OTHER"
-                    ]
+                    "type": "string"
                 },
                 "description": {
                     "type": "string"
@@ -18560,86 +22869,65 @@ const docTemplate = `{
             }
         },
         "handlers.UpdateBookingRequest": {
-            "type": "object"
-        },
-        "handlers.UpdateClientRequest": {
             "type": "object",
             "properties": {
-                "address": {
-                    "type": "string",
-                    "minLength": 5
-                },
-                "city": {
-                    "type": "string",
-                    "minLength": 2
-                },
-                "country": {
-                    "type": "string",
-                    "minLength": 2
-                },
-                "description": {
-                    "type": "string",
-                    "maxLength": 500
-                },
-                "id_document_url": {
+                "check_in_date": {
                     "type": "string"
                 },
-                "id_expiry": {
+                "check_out_date": {
                     "type": "string"
                 },
-                "id_number": {
+                "meta": {
+                    "type": "object"
+                },
+                "notes": {
                     "type": "string"
                 },
-                "id_type": {
-                    "description": "individual identity fields",
+                "requires_upfront_payment": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "handlers.UpdateClientRequest": {
+            "type": "object"
+        },
+        "handlers.UpdateClientUserPropertyAssignmentRequest": {
+            "type": "object",
+            "required": [
+                "property_id",
+                "role"
+            ],
+            "properties": {
+                "property_id": {
+                    "type": "string",
+                    "example": "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                },
+                "role": {
                     "type": "string",
                     "enum": [
-                        "DRIVERS_LICENSE",
-                        "PASSPORT",
-                        "NATIONAL_ID"
-                    ]
+                        "MANAGER",
+                        "STAFF"
+                    ],
+                    "example": "MANAGER"
+                }
+            }
+        },
+        "handlers.UpdateClientUserRequest": {
+            "type": "object",
+            "properties": {
+                "property_assignments": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.UpdateClientUserPropertyAssignmentRequest"
+                    }
                 },
-                "latitude": {
-                    "type": "number"
-                },
-                "longitude": {
-                    "type": "number"
-                },
-                "name": {
-                    "type": "string",
-                    "minLength": 2
-                },
-                "region": {
-                    "type": "string",
-                    "minLength": 2
-                },
-                "registration_number": {
-                    "type": "string"
-                },
-                "sub_type": {
+                "role": {
                     "type": "string",
                     "enum": [
-                        "LANDLORD",
-                        "PROPERTY_MANAGER",
-                        "DEVELOPER",
-                        "AGENCY"
-                    ]
-                },
-                "support_email": {
-                    "type": "string"
-                },
-                "support_phone": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string",
-                    "enum": [
-                        "INDIVIDUAL",
-                        "COMPANY"
-                    ]
-                },
-                "website_url": {
-                    "type": "string"
+                        "ADMIN",
+                        "STAFF"
+                    ],
+                    "example": "ADMIN"
                 }
             }
         },
@@ -18675,16 +22963,30 @@ const docTemplate = `{
                         "BANK"
                     ]
                 },
-                "status": {
+                "currency": {
+                    "type": "string",
+                    "example": "GHS"
+                },
+                "due_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.UpdateLeaseAgreementDocumentRequest": {
+            "type": "object",
+            "properties": {
+                "document_id": {
+                    "type": "string"
+                },
+                "document_url": {
+                    "type": "string"
+                },
+                "mode": {
                     "type": "string",
                     "enum": [
-                        "DRAFT",
-                        "ISSUED",
-                        "PARTIALLY_PAID",
-                        "PAID",
-                        "VOID"
-                    ],
-                    "example": "ISSUED"
+                        "MANUAL",
+                        "ONLINE"
+                    ]
                 }
             }
         },
@@ -18769,6 +23071,86 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.UpdateLeaseTerminationRequest": {
+            "type": "object",
+            "properties": {
+                "document_id": {
+                    "type": "string"
+                },
+                "document_mode": {
+                    "type": "string"
+                },
+                "document_url": {
+                    "type": "string"
+                },
+                "lease_checklist_id": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "example": "Non-payment of rent"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "EVICTION",
+                        "MUTUAL_AGREEMENT",
+                        "TENANT_INITIATED"
+                    ],
+                    "example": "EVICTION"
+                }
+            }
+        },
+        "handlers.UpdateLineItemRequest": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string",
+                    "enum": [
+                        "RENT",
+                        "SECURITY_DEPOSIT",
+                        "INITIAL_DEPOSIT",
+                        "MAINTENANCE_FEE",
+                        "SAAS_FEE",
+                        "BOOKING_FEE",
+                        "EXPENSE",
+                        "DEPOSIT_REFUND",
+                        "EARLY_TERMINATION_FEE",
+                        "DAMAGE_CHARGE",
+                        "RENT_REFUND"
+                    ],
+                    "example": "OTHER"
+                },
+                "currency": {
+                    "type": "string",
+                    "example": "GHS"
+                },
+                "label": {
+                    "type": "string",
+                    "example": "January Rent"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "quantity": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "example": 1
+                },
+                "total_amount": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "example": 100000
+                },
+                "unit_amount": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "example": 100000
+                }
+            }
+        },
         "handlers.UpdateMaintenanceRequestBody": {
             "type": "object",
             "properties": {
@@ -18779,13 +23161,7 @@ const docTemplate = `{
                     }
                 },
                 "category": {
-                    "type": "string",
-                    "enum": [
-                        "PLUMBING",
-                        "ELECTRICAL",
-                        "HVAC",
-                        "OTHER"
-                    ]
+                    "type": "string"
                 },
                 "description": {
                     "type": "string"
@@ -18932,11 +23308,15 @@ const docTemplate = `{
                     "minLength": 2,
                     "example": "Ghana"
                 },
+                "currency": {
+                    "type": "string",
+                    "example": "GHS"
+                },
                 "description": {
                     "type": "string",
                     "example": "A luxurious apartment overlooking the Atlantic Ocean."
                 },
-                "gpsAddress": {
+                "gps_address": {
                     "type": "string",
                     "example": "GA-123-4567"
                 },
@@ -19135,6 +23515,109 @@ const docTemplate = `{
             "properties": {
                 "lease_agreement_document_status": {
                     "type": "string"
+                }
+            }
+        },
+        "handlers.UpdateTenantRequest": {
+            "type": "object",
+            "properties": {
+                "date_of_birth": {
+                    "type": "string",
+                    "example": "1990-01-01"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
+                },
+                "emergency_contact_name": {
+                    "type": "string",
+                    "example": "Mary Doe"
+                },
+                "emergency_contact_phone": {
+                    "type": "string",
+                    "example": "+1122334455"
+                },
+                "employer": {
+                    "type": "string",
+                    "example": "Tech Ltd."
+                },
+                "first_name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "example": "John"
+                },
+                "gender": {
+                    "type": "string",
+                    "enum": [
+                        "MALE",
+                        "FEMALE"
+                    ],
+                    "example": "MALE"
+                },
+                "id_back_url": {
+                    "type": "string",
+                    "example": "https://example.com/id-back.jpg"
+                },
+                "id_front_url": {
+                    "type": "string",
+                    "example": "https://example.com/id-front.jpg"
+                },
+                "id_number": {
+                    "type": "string",
+                    "example": "ID123456"
+                },
+                "id_type": {
+                    "type": "string",
+                    "enum": [
+                        "GHANA_CARD",
+                        "NATIONAL_ID",
+                        "PASSPORT",
+                        "DRIVER_LICENSE"
+                    ],
+                    "example": "GHANA_CARD"
+                },
+                "last_name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "example": "Doe"
+                },
+                "marital_status": {
+                    "type": "string",
+                    "enum": [
+                        "SINGLE",
+                        "MARRIED",
+                        "DIVORCED",
+                        "WIDOWED"
+                    ],
+                    "example": "SINGLE"
+                },
+                "nationality": {
+                    "type": "string",
+                    "example": "Ghanaian"
+                },
+                "occupation": {
+                    "type": "string",
+                    "example": "Software Engineer"
+                },
+                "occupation_address": {
+                    "type": "string",
+                    "example": "456 Tech Ave, Accra"
+                },
+                "other_names": {
+                    "type": "string",
+                    "example": "Michael"
+                },
+                "profile_photo_url": {
+                    "type": "string",
+                    "example": "https://example.com/photo.jpg"
+                },
+                "proof_of_income_url": {
+                    "type": "string",
+                    "example": "https://example.com/income.pdf"
+                },
+                "relationship_to_emergency_contact": {
+                    "type": "string",
+                    "example": "sister"
                 }
             }
         },
@@ -19361,6 +23844,80 @@ const docTemplate = `{
                 }
             }
         },
+        "services.PropertyDeletionBlockingReason": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "services.PropertyDeletionEligibility": {
+            "type": "object",
+            "properties": {
+                "blocking_reasons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/services.PropertyDeletionBlockingReason"
+                    }
+                },
+                "can_delete": {
+                    "type": "boolean"
+                },
+                "will_be_deleted": {
+                    "$ref": "#/definitions/services.PropertyDeletionSummary"
+                }
+            }
+        },
+        "services.PropertyDeletionSummary": {
+            "type": "object",
+            "properties": {
+                "blocks": {
+                    "type": "integer"
+                },
+                "bookings": {
+                    "type": "integer"
+                },
+                "leases": {
+                    "type": "integer"
+                },
+                "tenant_applications": {
+                    "type": "integer"
+                },
+                "units": {
+                    "type": "integer"
+                }
+            }
+        },
+        "services.PropertyRestorePreview": {
+            "type": "object",
+            "properties": {
+                "blocks": {
+                    "type": "integer"
+                },
+                "bookings": {
+                    "type": "integer"
+                },
+                "leases": {
+                    "type": "integer"
+                },
+                "tenant_applications": {
+                    "type": "integer"
+                },
+                "units": {
+                    "type": "integer"
+                }
+            }
+        },
         "transformations.AdminOutputAnnouncement": {
             "type": "object",
             "properties": {
@@ -19543,6 +24100,12 @@ const docTemplate = `{
                         "$ref": "#/definitions/transformations.OutputMaintenanceActivityLog"
                     }
                 },
+                "assets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/transformations.OutputMaintenanceRequestAsset"
+                    }
+                },
                 "assigned_manager": {
                     "$ref": "#/definitions/transformations.OutputClientUser"
                 },
@@ -19606,6 +24169,12 @@ const docTemplate = `{
                 "priority": {
                     "type": "string"
                 },
+                "property": {
+                    "$ref": "#/definitions/transformations.OutputProperty"
+                },
+                "property_id": {
+                    "type": "string"
+                },
                 "resolved_at": {
                     "type": "string"
                 },
@@ -19619,12 +24188,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "title": {
-                    "type": "string"
-                },
-                "unit": {
-                    "$ref": "#/definitions/transformations.AdminOutputUnit"
-                },
-                "unit_id": {
                     "type": "string"
                 },
                 "updated_at": {
@@ -19934,8 +24497,13 @@ const docTemplate = `{
                     "type": "string",
                     "example": "192.168.1.1"
                 },
+                "lease_id": {
+                    "description": "TenantApplication   *OutputAdminTenantApplication ` + "`" + `json:\"tenant_application,omitempty\"` + "`" + `",
+                    "type": "string",
+                    "example": "770e8400-e29b-41d4-a716-446655440000"
+                },
                 "role": {
-                    "description": "TenantApplicationID *string                       ` + "`" + `json:\"tenant_application_id,omitempty\" example:\"660e8400-e29b-41d4-a716-446655440000\"` + "`" + `\nTenantApplication   *OutputAdminTenantApplication ` + "`" + `json:\"tenant_application,omitempty\"` + "`" + `\nLeaseID             *string                       ` + "`" + `json:\"lease_id,omitempty\"              example:\"770e8400-e29b-41d4-a716-446655440000\"` + "`" + `\nLease               *OutputAdminLease             ` + "`" + `json:\"lease,omitempty\"` + "`" + `",
+                    "description": "Lease               *OutputAdminLease             ` + "`" + `json:\"lease,omitempty\"` + "`" + `",
                     "type": "string",
                     "example": "TENANT"
                 },
@@ -19953,6 +24521,10 @@ const docTemplate = `{
                 "signed_by_name": {
                     "type": "string",
                     "example": "John Doe"
+                },
+                "tenant_application_id": {
+                    "type": "string",
+                    "example": "660e8400-e29b-41d4-a716-446655440000"
                 },
                 "updated_at": {
                     "type": "string",
@@ -20012,6 +24584,9 @@ const docTemplate = `{
                     "type": "string",
                     "example": "2024-07-01T09:00:00Z"
                 },
+                "lease_agreement_document": {
+                    "$ref": "#/definitions/transformations.OutputAdminLeaseAgreementDocument"
+                },
                 "lease_agreement_document_url": {
                     "type": "string",
                     "example": "https://example.com/lease.pdf"
@@ -20023,6 +24598,10 @@ const docTemplate = `{
                 "move_in_date": {
                     "type": "string",
                     "example": "2024-07-01T00:00:00Z"
+                },
+                "move_out_date": {
+                    "type": "string",
+                    "example": "2025-07-01T00:00:00Z"
                 },
                 "parent_lease_id": {
                     "type": "string",
@@ -20117,6 +24696,135 @@ const docTemplate = `{
                 }
             }
         },
+        "transformations.OutputAdminLeaseAgreementDocument": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-06-01T09:00:00Z"
+                },
+                "document": {
+                    "$ref": "#/definitions/transformations.OutputAdminDocument"
+                },
+                "document_id": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "document_url": {
+                    "type": "string",
+                    "example": "https://example.com/lease.pdf"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "lease_id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "mode": {
+                    "type": "string",
+                    "example": "ONLINE"
+                },
+                "signatures": {
+                    "type": "array",
+                    "items": {}
+                },
+                "status": {
+                    "type": "string",
+                    "example": "DRAFT"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-06-10T09:00:00Z"
+                }
+            }
+        },
+        "transformations.OutputAdminLeaseTermination": {
+            "type": "object",
+            "properties": {
+                "cancelled_at": {
+                    "type": "string",
+                    "example": "2024-12-01T10:00:00Z"
+                },
+                "cancelled_by": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
+                },
+                "cancelled_by_id": {
+                    "type": "string",
+                    "example": "b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"
+                },
+                "code": {
+                    "type": "string",
+                    "example": "2606ABC123"
+                },
+                "completed_at": {
+                    "type": "string",
+                    "example": "2024-12-01T10:00:00Z"
+                },
+                "completed_by": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
+                },
+                "completed_by_id": {
+                    "type": "string",
+                    "example": "b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-06-01T09:00:00Z"
+                },
+                "document_id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "document_mode": {
+                    "type": "string",
+                    "example": "MANUAL"
+                },
+                "document_url": {
+                    "type": "string",
+                    "example": "https://example.com/termination.pdf"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "initiated_by": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
+                },
+                "initiated_by_id": {
+                    "type": "string",
+                    "example": "b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"
+                },
+                "lease_checklist": {
+                    "$ref": "#/definitions/transformations.OutputLeaseChecklist"
+                },
+                "lease_checklist_id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "lease_id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "reason": {
+                    "type": "string",
+                    "example": "Both parties agreed to end the tenancy"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "LeaseTermination.Status.InProgress"
+                },
+                "type": {
+                    "type": "string",
+                    "example": "MUTUAL_AGREEMENT"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-06-10T09:00:00Z"
+                }
+            }
+        },
         "transformations.OutputAdminSigningToken": {
             "type": "object",
             "properties": {
@@ -20163,6 +24871,13 @@ const docTemplate = `{
                 "lease_id": {
                     "type": "string",
                     "example": "770e8400-e29b-41d4-a716-446655440000"
+                },
+                "lease_termination": {
+                    "$ref": "#/definitions/transformations.OutputAdminLeaseTermination"
+                },
+                "lease_termination_id": {
+                    "type": "string",
+                    "example": "880e8400-e29b-41d4-a716-446655440000"
                 },
                 "role": {
                     "type": "string",
@@ -20298,6 +25013,12 @@ const docTemplate = `{
                 "proof_of_income_url": {
                     "type": "string",
                     "example": "https://example.com/income.pdf"
+                },
+                "recent_booking": {
+                    "$ref": "#/definitions/transformations.AdminOutputBooking"
+                },
+                "recent_lease": {
+                    "$ref": "#/definitions/transformations.OutputAdminLease"
                 },
                 "relationship_to_emergency_contact": {
                     "type": "string",
@@ -20727,6 +25448,10 @@ const docTemplate = `{
                     "type": "number",
                     "example": 37.7749
                 },
+                "logo_url": {
+                    "type": "string",
+                    "example": "https://www.somewebiste.com/logo.png"
+                },
                 "longitude": {
                     "type": "number",
                     "example": -122.4194
@@ -21050,6 +25775,13 @@ const docTemplate = `{
                     "type": "string",
                     "example": "770e8400-e29b-41d4-a716-446655440000"
                 },
+                "lease_termination": {
+                    "$ref": "#/definitions/transformations.OutputLeaseTermination"
+                },
+                "lease_termination_id": {
+                    "type": "string",
+                    "example": "880e8400-e29b-41d4-a716-446655440000"
+                },
                 "role": {
                     "type": "string",
                     "example": "TENANT"
@@ -21152,6 +25884,13 @@ const docTemplate = `{
                     "additionalProperties": {}
                 },
                 "context_lease_id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "context_lease_termination": {
+                    "$ref": "#/definitions/transformations.OutputLeaseTermination"
+                },
+                "context_lease_termination_id": {
                     "type": "string",
                     "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
                 },
@@ -21382,6 +26121,10 @@ const docTemplate = `{
                 "move_in_date": {
                     "type": "string",
                     "example": "2024-07-01T00:00:00Z"
+                },
+                "move_out_date": {
+                    "type": "string",
+                    "example": "2025-07-01T00:00:00Z"
                 },
                 "parent_lease_id": {
                     "type": "string",
@@ -21614,6 +26357,62 @@ const docTemplate = `{
                 }
             }
         },
+        "transformations.OutputLeaseTermination": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "2606ABC123"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-06-01T09:00:00Z"
+                },
+                "document_id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "document_mode": {
+                    "type": "string",
+                    "example": "MANUAL"
+                },
+                "document_url": {
+                    "type": "string",
+                    "example": "https://example.com/termination.pdf"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "lease_checklist": {
+                    "$ref": "#/definitions/transformations.OutputLeaseChecklist"
+                },
+                "lease_checklist_id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "lease_id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "reason": {
+                    "type": "string",
+                    "example": "Both parties agreed to end the tenancy"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "LeaseTermination.Status.InProgress"
+                },
+                "type": {
+                    "type": "string",
+                    "example": "MUTUAL_AGREEMENT"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-06-10T09:00:00Z"
+                }
+            }
+        },
         "transformations.OutputMaintenanceActivityLog": {
             "type": "object",
             "properties": {
@@ -21633,6 +26432,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "metadata": {},
+                "performed_by_client_user": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
+                },
                 "performed_by_client_user_id": {
                     "type": "string"
                 },
@@ -21651,6 +26453,12 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/transformations.OutputMaintenanceActivityLog"
+                    }
+                },
+                "assets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/transformations.OutputMaintenanceRequestAsset"
                     }
                 },
                 "attachments": {
@@ -21689,6 +26497,9 @@ const docTemplate = `{
                 "priority": {
                     "type": "string"
                 },
+                "property_id": {
+                    "type": "string"
+                },
                 "resolved_at": {
                     "type": "string"
                 },
@@ -21701,13 +26512,26 @@ const docTemplate = `{
                 "title": {
                     "type": "string"
                 },
-                "unit": {
-                    "$ref": "#/definitions/transformations.OutputUnit"
-                },
-                "unit_id": {
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "transformations.OutputMaintenanceRequestAsset": {
+            "type": "object",
+            "properties": {
+                "asset_type": {
                     "type": "string"
                 },
-                "updated_at": {
+                "id": {
+                    "type": "string"
+                },
+                "property_block": {},
+                "property_block_id": {
+                    "type": "string"
+                },
+                "unit": {},
+                "unit_id": {
                     "type": "string"
                 }
             }
@@ -21863,6 +26687,10 @@ const docTemplate = `{
                     "type": "string",
                     "example": "123 Main St"
                 },
+                "blocks_count": {
+                    "type": "integer",
+                    "example": 2
+                },
                 "city": {
                     "type": "string",
                     "example": "Accra"
@@ -21887,6 +26715,18 @@ const docTemplate = `{
                     "$ref": "#/definitions/transformations.OutputClientUser"
                 },
                 "created_by_id": {
+                    "type": "string",
+                    "example": "1e81fea0-5e8b-4535-b449-1a2133e94a7a"
+                },
+                "deleted_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2026-07-01T00:00:00Z"
+                },
+                "deleted_by": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
+                },
+                "deleted_by_id": {
                     "type": "string",
                     "example": "1e81fea0-5e8b-4535-b449-1a2133e94a7a"
                 },
@@ -21949,6 +26789,10 @@ const docTemplate = `{
                 "type": {
                     "type": "string",
                     "example": "SINGLE"
+                },
+                "units_count": {
+                    "type": "integer",
+                    "example": 6
                 },
                 "updated_at": {
                     "type": "string",
@@ -22015,6 +26859,76 @@ const docTemplate = `{
                 }
             }
         },
+        "transformations.OutputSession": {
+            "type": "object",
+            "properties": {
+                "client_name": {
+                    "type": "string",
+                    "example": "Chrome"
+                },
+                "client_version": {
+                    "type": "string",
+                    "example": "141.0"
+                },
+                "device_kind": {
+                    "type": "string",
+                    "example": "LAPTOP"
+                },
+                "device_name": {
+                    "type": "string",
+                    "example": "MacBook Pro"
+                },
+                "expires_at": {
+                    "type": "string",
+                    "example": "2026-10-28T09:14:22Z"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "ip_address": {
+                    "type": "string",
+                    "example": "154.160.22.14"
+                },
+                "is_current": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "last_used_at": {
+                    "type": "string",
+                    "example": "2026-07-30T09:14:22Z"
+                },
+                "location_city": {
+                    "type": "string",
+                    "example": "Accra"
+                },
+                "location_country": {
+                    "type": "string",
+                    "example": "Ghana"
+                },
+                "location_source": {
+                    "description": "LocationSource is CLIENT when the place was reported by the device — which\nmeans it is spoofable and should be shown as reported rather than\nverified — or SERVER when derived from the observed IP. Null when no\nlocation is known.",
+                    "type": "string",
+                    "example": "CLIENT"
+                },
+                "os": {
+                    "type": "string",
+                    "example": "macOS"
+                },
+                "os_version": {
+                    "type": "string",
+                    "example": "15.3"
+                },
+                "signed_in_at": {
+                    "type": "string",
+                    "example": "2026-07-04T18:02:11Z"
+                },
+                "timezone": {
+                    "type": "string",
+                    "example": "Africa/Accra"
+                }
+            }
+        },
         "transformations.OutputSigningToken": {
             "type": "object",
             "properties": {
@@ -22054,6 +26968,13 @@ const docTemplate = `{
                 "lease_id": {
                     "type": "string",
                     "example": "770e8400-e29b-41d4-a716-446655440000"
+                },
+                "lease_termination": {
+                    "$ref": "#/definitions/transformations.OutputLeaseTermination"
+                },
+                "lease_termination_id": {
+                    "type": "string",
+                    "example": "880e8400-e29b-41d4-a716-446655440000"
                 },
                 "role": {
                     "type": "string",
@@ -22414,6 +27335,27 @@ const docTemplate = `{
                 }
             }
         },
+        "transformations.OutputTokenPair": {
+            "type": "object",
+            "properties": {
+                "expires_in": {
+                    "type": "integer",
+                    "example": 3600
+                },
+                "refresh_expires_in": {
+                    "type": "integer",
+                    "example": 7776000
+                },
+                "refresh_token": {
+                    "type": "string",
+                    "example": "3f2504e0-4f89-11d3-9a0c-0305e82c3301:sSx1"
+                },
+                "token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                }
+            }
+        },
         "transformations.OutputUnit": {
             "type": "object",
             "properties": {
@@ -22521,6 +27463,18 @@ const docTemplate = `{
         "transformations.OutputUserWithToken": {
             "type": "object",
             "properties": {
+                "expires_in": {
+                    "type": "integer",
+                    "example": 3600
+                },
+                "refresh_expires_in": {
+                    "type": "integer",
+                    "example": 7776000
+                },
+                "refresh_token": {
+                    "type": "string",
+                    "example": "3f2504e0-4f89-11d3-9a0c-0305e82c3301:sSx1"
+                },
                 "token": {
                     "type": "string",
                     "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."

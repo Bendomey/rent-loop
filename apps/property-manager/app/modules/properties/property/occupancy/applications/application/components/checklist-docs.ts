@@ -2,6 +2,9 @@ import type { ChecklistItem } from './checklist-types'
 import { getWitnessNodesFromContent } from '~/lib/document.utils'
 
 export function getDocsItems(application: TenantApplication): ChecklistItem[] {
+	// Docs are optional — if none attached, the section passes vacuously
+	if (!application.lease_agreement_document_mode) return []
+
 	const signatures = (
 		application.lease_agreement_document_signatures ?? []
 	).filter((s) => s.document_id === application.lease_agreement_document_id)

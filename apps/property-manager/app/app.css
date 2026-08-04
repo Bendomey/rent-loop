@@ -6,17 +6,39 @@
 
 @theme {
 	--font-sans:
-		'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+		'DM Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
 		'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+	--font-serif: 'DM Serif Display', serif;
+	--font-mono:
+		'JetBrains Mono', ui-monospace, SF Mono, SF Mono Regular, Consolas,
+		'Liberation Mono', Menlo, Courier, monospace;
+}
+
+/*
+ * Radius ladder — taken from the WEB portal primitives (LB/LBtn/lPanel), which
+ * differ from the mobile app's ladder. Mapped onto the Tailwind scale that our
+ * components already consume:
+ *   rounded-sm  →  9px  (sub-nav rows, tab-strip thumbs)
+ *   rounded-md  → 10px  (LBtn — buttons and inputs)
+ *   rounded-lg  → 11px  (nav items, icon tiles)
+ *   rounded-xl  → 18px  (lPanel — the default panel/card radius)
+ *   rounded-2xl → 20px  (modals)
+ */
+@theme {
+	--radius-sm: 9px;
+	--radius-md: 10px;
+	--radius-lg: 11px;
+	--radius-xl: 18px;
+	--radius-2xl: 20px;
 }
 
 @theme inline {
-	--radius-sm: calc(var(--radius) - 4px);
-	--radius-md: calc(var(--radius) - 2px);
-	--radius-lg: var(--radius);
-	--radius-xl: calc(var(--radius) + 4px);
 	--color-background: var(--background);
+	/* the warm shell behind the white surfaces — `bg-shell` */
+	--color-shell: var(--shell);
 	--color-foreground: var(--foreground);
+	/* ink-soft: body copy in dense paragraphs, sidebar subtitle */
+	--color-foreground-soft: var(--foreground-soft);
 	--color-card: var(--card);
 	--color-card-foreground: var(--card-foreground);
 	--color-popover: var(--popover);
@@ -38,6 +60,23 @@
 	--color-chart-3: var(--chart-3);
 	--color-chart-4: var(--chart-4);
 	--color-chart-5: var(--chart-5);
+
+	/*
+	 * Status tones — every state in the app resolves to one of five tones,
+	 * each a foreground + tint-background pair. Use `text-success bg-success-bg`
+	 * rather than hard-coding a colour on a status.
+	 */
+	--color-success: var(--success);
+	--color-success-bg: var(--success-bg);
+	--color-info: var(--info);
+	--color-info-bg: var(--info-bg);
+	--color-warning: var(--warning);
+	--color-warning-bg: var(--warning-bg);
+	--color-danger: var(--danger);
+	--color-danger-bg: var(--danger-bg);
+	--color-neutral: var(--neutral);
+	--color-neutral-bg: var(--neutral-bg);
+
 	--color-sidebar: var(--sidebar);
 	--color-sidebar-foreground: var(--sidebar-foreground);
 	--color-sidebar-primary: var(--sidebar-primary);
@@ -48,73 +87,197 @@
 	--color-sidebar-ring: var(--sidebar-ring);
 }
 
+/*
+ * ─── Rentloop brand primitives ───────────────────────────────────────────
+ * Raw values from the WEB portal token set (`LB` / `LTONE` in the design
+ * project). Note these differ from the mobile app's tokens — the hairlines,
+ * tone tints and radii are all a step tighter on web, so don't cross-import
+ * from the mobile spec. Nothing should consume these directly; they exist so
+ * the semantic tokens below have a single, traceable source. Neutrals are
+ * alpha-on-ink so they composite correctly over any surface — use the
+ * variable rather than a flattened hex.
+ */
 :root {
-	--radius: 0.625rem;
-	--background: oklch(1 0 0);
-	--foreground: oklch(0.141 0.005 285.823);
-	--card: oklch(1 0 0);
-	--card-foreground: oklch(0.141 0.005 285.823);
-	--popover: oklch(1 0 0);
-	--popover-foreground: oklch(0.141 0.005 285.823);
-	--primary: oklch(0.59 0.22 18);
-	--primary-foreground: oklch(0.985 0 0);
-	--secondary: oklch(0.967 0.001 286.375);
-	--secondary-foreground: oklch(0.21 0.006 285.885);
-	--muted: oklch(0.967 0.001 286.375);
-	--muted-foreground: oklch(0.552 0.016 285.938);
-	--accent: oklch(0.967 0.001 286.375);
-	--accent-foreground: oklch(0.21 0.006 285.885);
-	--destructive: oklch(0.577 0.245 27.325);
-	--border: oklch(0.92 0.004 286.32);
-	--input: oklch(0.92 0.004 286.32);
-	--ring: oklch(0.705 0.015 286.067);
-	--chart-1: oklch(0.646 0.222 41.116);
-	--chart-2: oklch(0.6 0.118 184.704);
-	--chart-3: oklch(0.398 0.07 227.392);
-	--chart-4: oklch(0.828 0.189 84.429);
-	--chart-5: oklch(0.769 0.188 70.08);
-	--sidebar: oklch(0.985 0 0);
-	--sidebar-foreground: oklch(0.141 0.005 285.823);
-	--sidebar-primary: oklch(0.21 0.006 285.885);
-	--sidebar-primary-foreground: oklch(0.985 0 0);
-	--sidebar-accent: oklch(0.967 0.001 286.375);
-	--sidebar-accent-foreground: oklch(0.21 0.006 285.885);
-	--sidebar-border: oklch(0.92 0.004 286.32);
-	--sidebar-ring: oklch(0.705 0.015 286.067);
+	/* brand — crimson is the only saturated hue in the system */
+	--rl-crimson: #c8003a;
+	--rl-crimson-tint: rgba(200, 0, 58, 0.08);
+	/* the danger-button / danger-panel border weight */
+	--rl-crimson-border: rgba(200, 0, 58, 0.22);
+	/* lifted crimson, for accent-as-text on dark surfaces */
+	--rl-crimson-light: #ff6f8e;
+	/* crimson raised just enough to sit off a dark surface as a fill */
+	--rl-crimson-raised: #e0164e;
+
+	/* ink & text */
+	--rl-ink: #111110;
+	--rl-ink-soft: #3a3935;
+	--rl-muted: rgba(17, 17, 16, 0.55);
+	--rl-muted-soft: rgba(17, 17, 16, 0.4);
+	--rl-micro: rgba(17, 17, 16, 0.3);
+
+	/* surfaces & lines */
+	--rl-surface: #ffffff;
+	/* the warm shell the portal sits on — behind//between white surfaces */
+	--rl-cream: #f0eee9;
+	--rl-fill: #f4f4f2;
+	--rl-hairline: rgba(17, 17, 16, 0.1);
+	--rl-hairline-soft: rgba(17, 17, 16, 0.06);
+
+	/* the same ramp inverted, for dark mode */
+	--rl-cream-dark: #0d0d0c;
+	--rl-surface-dark: #1a1a18;
+	--rl-fill-dark: #232320;
+	--rl-ink-inverse: #fafaf8;
+	--rl-muted-inverse: rgba(250, 250, 248, 0.55);
+	--rl-muted-soft-inverse: rgba(250, 250, 248, 0.4);
+	--rl-hairline-inverse: rgba(250, 250, 248, 0.1);
+	--rl-hairline-soft-inverse: rgba(250, 250, 248, 0.06);
+
+	/* status tones — foreground / tint-background pairs (LTONE) */
+	--rl-success: #157a47;
+	--rl-success-bg: rgba(27, 158, 92, 0.13);
+	--rl-info: #2456c4;
+	--rl-info-bg: rgba(46, 108, 246, 0.1);
+	--rl-warning: #bd5e16;
+	--rl-warning-bg: rgba(233, 123, 42, 0.14);
+	--rl-danger: #c8003a;
+	--rl-danger-bg: rgba(200, 0, 58, 0.09);
+	--rl-neutral: #555555;
+	--rl-neutral-bg: rgba(17, 17, 16, 0.05);
+
+	/* elevation — the UI is deliberately flat; separation is carried by
+	 * hairlines and fills, and shadow is reserved for floating elements. */
+	--rl-elev-1: 0 1px 3px rgba(0, 0, 0, 0.08);
+	--rl-elev-bar: 0 -6px 18px -10px rgba(17, 17, 16, 0.18);
+	--rl-elev-fab: 0 6px 16px -6px rgba(17, 17, 16, 0.35);
+	--rl-elev-sheet: 0 -10px 40px -12px rgba(0, 0, 0, 0.25);
 }
 
+/* ─── Semantic tokens · light ─────────────────────────────────────────── */
+:root {
+	--radius: 10px;
+
+	/*
+	 * On web the content area and the sidebar are both plain white — the cream
+	 * shell sits *behind* them and only shows through gaps and inset layouts.
+	 * Separation between surfaces is carried by hairlines, never by shadow.
+	 */
+	--background: var(--rl-surface);
+	--shell: var(--rl-cream);
+	--foreground: var(--rl-ink);
+	--foreground-soft: var(--rl-ink-soft);
+	--card: var(--rl-surface);
+	--card-foreground: var(--rl-ink);
+	--popover: var(--rl-surface);
+	--popover-foreground: var(--rl-ink);
+
+	--primary: var(--rl-crimson);
+	--primary-foreground: #ffffff;
+	--secondary: var(--rl-fill);
+	--secondary-foreground: var(--rl-ink);
+	--muted: var(--rl-fill);
+	--muted-foreground: var(--rl-muted);
+	--accent: var(--rl-fill);
+	--accent-foreground: var(--rl-ink);
+	--destructive: var(--rl-danger);
+
+	--border: var(--rl-hairline);
+	--input: var(--rl-hairline);
+	--ring: var(--rl-crimson);
+
+	--chart-1: var(--rl-crimson);
+	--chart-2: #2e6cf6;
+	--chart-3: #1b9e5c;
+	--chart-4: #e97b2a;
+	--chart-5: var(--rl-ink-soft);
+
+	--success: var(--rl-success);
+	--success-bg: var(--rl-success-bg);
+	--info: var(--rl-info);
+	--info-bg: var(--rl-info-bg);
+	--warning: var(--rl-warning);
+	--warning-bg: var(--rl-warning-bg);
+	--danger: var(--rl-danger);
+	--danger-bg: var(--rl-danger-bg);
+	--neutral: var(--rl-neutral);
+	--neutral-bg: var(--rl-neutral-bg);
+
+	/*
+	 * Table row states, pre-composited against the row surface so they are fully
+	 * opaque. A sticky (pinned) cell paints in its own layer, so it cannot sit on
+	 * the row's background — it needs its own, and a translucent tint would let
+	 * the columns scrolling beneath show through.
+	 */
+	--row-hover: color-mix(in oklab, var(--muted) 50%, var(--card));
+	--row-selected: color-mix(in oklab, var(--primary) 5%, var(--card));
+
+	--sidebar: var(--rl-surface);
+	--sidebar-foreground: var(--rl-ink);
+	/* the active nav pill: solid crimson, white label */
+	--sidebar-primary: var(--rl-crimson);
+	--sidebar-primary-foreground: #ffffff;
+	--sidebar-accent: var(--rl-fill);
+	--sidebar-accent-foreground: var(--rl-ink);
+	--sidebar-border: var(--rl-hairline);
+	--sidebar-ring: var(--rl-crimson);
+}
+
+/* ─── Semantic tokens · dark ──────────────────────────────────────────── */
 .dark {
-	--background: oklch(0.141 0.005 285.823);
-	--foreground: oklch(0.985 0 0);
-	--card: oklch(0.21 0.006 285.885);
-	--card-foreground: oklch(0.985 0 0);
-	--popover: oklch(0.21 0.006 285.885);
-	--popover-foreground: oklch(0.985 0 0);
-	--primary: oklch(0.59 0.22 18);
-	--primary-foreground: oklch(0.21 0.006 285.885);
-	--secondary: oklch(0.274 0.006 286.033);
-	--secondary-foreground: oklch(0.985 0 0);
-	--muted: oklch(0.274 0.006 286.033);
-	--muted-foreground: oklch(0.705 0.015 286.067);
-	--accent: oklch(0.274 0.006 286.033);
-	--accent-foreground: oklch(0.985 0 0);
-	--destructive: oklch(0.704 0.191 22.216);
-	--border: oklch(1 0 0 / 10%);
-	--input: oklch(1 0 0 / 15%);
-	--ring: oklch(0.552 0.016 285.938);
-	--chart-1: oklch(0.488 0.243 264.376);
-	--chart-2: oklch(0.696 0.17 162.48);
-	--chart-3: oklch(0.769 0.188 70.08);
-	--chart-4: oklch(0.627 0.265 303.9);
-	--chart-5: oklch(0.645 0.246 16.439);
-	--sidebar: oklch(0.21 0.006 285.885);
-	--sidebar-foreground: oklch(0.985 0 0);
-	--sidebar-primary: oklch(0.488 0.243 264.376);
-	--sidebar-primary-foreground: oklch(0.985 0 0);
-	--sidebar-accent: oklch(0.274 0.006 286.033);
-	--sidebar-accent-foreground: oklch(0.985 0 0);
-	--sidebar-border: oklch(1 0 0 / 10%);
-	--sidebar-ring: oklch(0.552 0.016 285.938);
+	--background: var(--rl-surface-dark);
+	--shell: var(--rl-cream-dark);
+	--foreground: var(--rl-ink-inverse);
+	--foreground-soft: rgba(250, 250, 248, 0.75);
+	--card: var(--rl-surface-dark);
+	--card-foreground: var(--rl-ink-inverse);
+	--popover: var(--rl-surface-dark);
+	--popover-foreground: var(--rl-ink-inverse);
+
+	/* crimson holds ~6:1 against white, so the fill stays put across modes */
+	--primary: var(--rl-crimson);
+	--primary-foreground: #ffffff;
+	--secondary: var(--rl-fill-dark);
+	--secondary-foreground: var(--rl-ink-inverse);
+	--muted: var(--rl-fill-dark);
+	--muted-foreground: var(--rl-muted-inverse);
+	--accent: var(--rl-fill-dark);
+	--accent-foreground: var(--rl-ink-inverse);
+	--destructive: var(--rl-crimson-raised);
+
+	--border: var(--rl-hairline-inverse);
+	--input: rgba(250, 250, 248, 0.15);
+	--ring: var(--rl-crimson-light);
+
+	--chart-1: var(--rl-crimson-light);
+	--chart-2: #6d9bff;
+	--chart-3: #4fc98a;
+	--chart-4: #f2a45f;
+	--chart-5: var(--rl-muted-soft-inverse);
+
+	/* tones lift their foreground and thicken their tint to hold on ink */
+	--success: #4fc98a;
+	--success-bg: rgba(27, 158, 92, 0.22);
+	--info: #7aa5ff;
+	--info-bg: rgba(46, 108, 246, 0.22);
+	--warning: #f0a35e;
+	--warning-bg: rgba(233, 123, 42, 0.22);
+	--danger: var(--rl-crimson-light);
+	--danger-bg: rgba(200, 0, 58, 0.22);
+	--neutral: var(--rl-muted-soft-inverse);
+	--neutral-bg: rgba(250, 250, 248, 0.08);
+
+	/* recomposited against the dark surface — see the light-mode note above */
+	--row-hover: color-mix(in oklab, var(--muted) 50%, var(--card));
+	--row-selected: color-mix(in oklab, var(--primary) 12%, var(--card));
+
+	--sidebar: var(--rl-surface-dark);
+	--sidebar-foreground: var(--rl-ink-inverse);
+	--sidebar-primary: var(--rl-crimson);
+	--sidebar-primary-foreground: #ffffff;
+	--sidebar-accent: rgba(250, 250, 248, 0.06);
+	--sidebar-accent-foreground: var(--rl-ink-inverse);
+	--sidebar-border: rgba(250, 250, 248, 0.1);
+	--sidebar-ring: var(--rl-crimson-light);
 }
 
 @layer base {
@@ -124,6 +287,15 @@
 	html,
 	body {
 		@apply bg-background text-foreground;
+	}
+
+	/*
+	 * The design system draws its glyphs at a 1.7 stroke — noticeably lighter
+	 * than Lucide's default 2. Setting it here keeps every icon on-system
+	 * without threading strokeWidth through each call site.
+	 */
+	svg.lucide {
+		stroke-width: 1.7;
 	}
 }
 
@@ -138,8 +310,11 @@
 		background: transparent;
 	}
 	.scrollbar-visible::-webkit-scrollbar-thumb {
-		background-color: oklch(0.82 0.004 286.32);
+		background-color: var(--rl-micro);
 		border-radius: 9999px;
+	}
+	.dark .scrollbar-visible::-webkit-scrollbar-thumb {
+		background-color: rgba(250, 250, 248, 0.25);
 	}
 }
 

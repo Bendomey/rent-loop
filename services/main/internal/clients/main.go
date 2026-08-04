@@ -4,14 +4,16 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/clients/accounting"
 	"github.com/Bendomey/rent-loop/services/main/internal/clients/fcm"
 	"github.com/Bendomey/rent-loop/services/main/internal/clients/gatekeeper"
+	"github.com/Bendomey/rent-loop/services/main/internal/clients/openexchangerates"
 	"github.com/Bendomey/rent-loop/services/main/internal/config"
 	log "github.com/sirupsen/logrus"
 )
 
 type Clients struct {
-	AccountingAPI accounting.Client
-	GatekeeperAPI gatekeeper.Client
-	FCM           fcm.Client
+	AccountingAPI        accounting.Client
+	GatekeeperAPI        gatekeeper.Client
+	FCM                  fcm.Client
+	OpenExchangeRatesAPI openexchangerates.Client
 }
 
 func NewClients(cfg config.Config) Clients {
@@ -28,9 +30,15 @@ func NewClients(cfg config.Config) Clients {
 		log.Fatalf("failed to initialize FCM client: %v", err)
 	}
 
+	oxrClient := openexchangerates.NewClient(
+		cfg.Clients.OpenExchangeRatesAPI.BaseURL,
+		cfg.Clients.OpenExchangeRatesAPI.AppID,
+	)
+
 	return Clients{
-		AccountingAPI: accountingClient,
-		GatekeeperAPI: gatekeeperClient,
-		FCM:           fcmClient,
+		AccountingAPI:        accountingClient,
+		GatekeeperAPI:        gatekeeperClient,
+		FCM:                  fcmClient,
+		OpenExchangeRatesAPI: oxrClient,
 	}
 }

@@ -18,6 +18,8 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 			// user auth endpoints
 			r.Post("/v1/admin/users/login", handlers.UserHandler.Login)
 			r.Post("/v1/admin/users/forgot-password", handlers.UserHandler.ForgotPassword)
+			r.Post("/v1/admin/users/refresh", handlers.UserHandler.RefreshToken)
+			r.Post("/v1/admin/users/logout", handlers.UserHandler.Logout)
 
 			// signing (token-based auth, no JWT required)
 			r.Get("/v1/signing/{token}/verify", handlers.SigningHandler.VerifyToken)
@@ -49,13 +51,28 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 				r.Patch("/me", handlers.UserHandler.UpdateMe)
 				r.Patch("/me/password", handlers.UserHandler.UpdatePassword)
 				r.Post("/reset-password", handlers.UserHandler.ResetPassword)
+				r.Get("/me/sessions", handlers.SessionHandler.ListSessions)
+				r.Delete("/me/sessions/{session_id}", handlers.SessionHandler.RevokeSession)
+				r.Post(
+					"/me/sessions:revoke-others",
+					handlers.SessionHandler.RevokeOtherSessions,
+				)
+			})
+
+			// user-scoped routes (no client_id needed in URL)
+			r.Patch("/v1/tenants/{tenant_id}", handlers.TenantHandler.UpdateTenant)
+
+			r.Route("/v1/notifications", func(r chi.Router) {
+				r.Get("/unread-count", handlers.NotificationHandler.PMGetUnreadCount)
+				r.Post("/read-all", handlers.NotificationHandler.PMMarkAllRead)
+				r.Get("/", handlers.NotificationHandler.PMListNotifications)
+				r.Post("/{notification_id}/read", handlers.NotificationHandler.PMMarkNotificationRead)
 			})
 
 			// client-scoped routes — require valid client membership
 			r.Route("/v1/admin/clients/{client_id}", func(r chi.Router) {
 				r.Use(middlewares.ValidateClientMembershipMiddleware(appCtx))
 
-				// analytics
 				r.Get("/analytics/token", handlers.AnalyticsHandler.GetToken)
 
 				// client management
@@ -72,6 +89,10 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 
 					r.Route("/{client_user_id}", func(r chi.Router) {
 						r.Get("/", handlers.ClientUserHandler.GetClientUserWithPopulate)
+						r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+							Patch("/", handlers.ClientUserHandler.UpdateClientUser)
+						r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+							Delete("/", handlers.ClientUserHandler.DeleteClientUser)
 						r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
 							Post("/properties:link", handlers.ClientUserPropertyHandler.LinkClientUserToProperties)
 						r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
@@ -93,6 +114,11 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 					r.Get("/me", handlers.ClientUserPropertyHandler.ListClientUserProperties)
 					r.Get("/slug/{slug}", handlers.PropertyHandler.GetPropertyBySlug)
 
+					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+						Get("/{property_id}/restore:preview", handlers.PropertyHandler.GetPropertyRestorePreview)
+					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+						Post("/{property_id}:restore", handlers.PropertyHandler.RestoreProperty)
+
 					r.Route("/{property_id}", func(r chi.Router) {
 						r.Use(middlewares.ValidatePropertyAccessMiddleware(appCtx))
 
@@ -103,6 +129,8 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 							Patch("/", handlers.PropertyHandler.UpdateProperty)
 						r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
 							Delete("/", handlers.PropertyHandler.DeleteProperty)
+						r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+							Get("/deletion:preview", handlers.PropertyHandler.GetPropertyDeletionPreview)
 						r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
 							Post("/client-users:link", handlers.ClientUserPropertyHandler.LinkPropertyToClientUsers)
 						r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
@@ -228,8 +256,6 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
 								Post("/{tenant_application_id}/invoice:generate", handlers.TenantApplicationHandler.GenerateInvoice)
 							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
-								Post("/{tenant_application_id}/invoice/{invoice_id}/pay", handlers.TenantApplicationHandler.PayInvoice)
-							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
 								Patch("/{tenant_application_id}/approve", handlers.TenantApplicationHandler.ApproveTenantApplication)
 						})
 
@@ -288,11 +314,41 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 							r.Route("/expenses", func(r chi.Router) {
 								r.Get("/", handlers.ExpenseHandler.ListLeaseExpenses)
 							})
+
+							r.Route("/terminations", func(r chi.Router) {
+								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+									Post("/", handlers.LeaseTerminationHandler.CreateLeaseTermination)
+								r.Get("/", handlers.LeaseTerminationHandler.ListLeaseTerminations)
+								r.Route("/{termination_id}", func(r chi.Router) {
+									r.Get("/", handlers.LeaseTerminationHandler.GetLeaseTermination)
+									r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+										Patch("/", handlers.LeaseTerminationHandler.UpdateLeaseTermination)
+									r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+										Patch("/complete", handlers.LeaseTerminationHandler.CompleteLeaseTermination)
+									r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+										Patch("/cancel", handlers.LeaseTerminationHandler.CancelLeaseTermination)
+								})
+							})
+
+							r.Route("/agreement-documents", func(r chi.Router) {
+								r.Get("/", handlers.LeaseAgreementDocumentHandler.GetLeaseAgreementDocument)
+								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+									Post("/", handlers.LeaseAgreementDocumentHandler.CreateLeaseAgreementDocument)
+								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+									Patch("/", handlers.LeaseAgreementDocumentHandler.UpdateLeaseAgreementDocument)
+								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+									Delete("/", handlers.LeaseAgreementDocumentHandler.DeleteLeaseAgreementDocument)
+								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+									Post("/finalize", handlers.LeaseAgreementDocumentHandler.FinalizeLeaseAgreementDocument)
+								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+									Post("/draft", handlers.LeaseAgreementDocumentHandler.RevertLeaseAgreementDocumentToDraft)
+							})
 						})
 
 						r.Route("/tenants/{tenant_id}", func(r chi.Router) {
 							r.Get("/", handlers.TenantHandler.GetTenantByID)
 							r.Get("/leases", handlers.LeaseHandler.ListLeasesByTenant)
+							r.Get("/bookings", handlers.BookingHandler.ListBookingsByTenant)
 						})
 
 						// maintenance requests
@@ -323,6 +379,8 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 
 						r.Route("/invoices", func(r chi.Router) {
 							r.Get("/", handlers.InvoiceHandler.ListInvoices)
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+								Post("/", handlers.InvoiceHandler.CreateInvoice)
 							r.Route("/{invoice_id}", func(r chi.Router) {
 								r.Get("/", handlers.InvoiceHandler.GetInvoiceByID)
 								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
@@ -330,12 +388,18 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
 									Patch("/void", handlers.InvoiceHandler.VoidInvoice)
 								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+									Patch("/issue", handlers.InvoiceHandler.IssueInvoice)
+								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
 									Delete("/", handlers.InvoiceHandler.DeleteInvoice)
 								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
 									Post("/line-items", handlers.InvoiceHandler.AddLineItem)
 								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+									Patch("/line-items/{line_item_id}", handlers.InvoiceHandler.UpdateLineItem)
+								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
 									Delete("/line-items/{line_item_id}", handlers.InvoiceHandler.RemoveLineItem)
 								r.Get("/line-items", handlers.InvoiceHandler.GetLineItems)
+								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+									Post("/pay", handlers.InvoiceHandler.ManagerPayInvoice)
 							})
 						})
 
@@ -347,11 +411,26 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 					})
 				})
 
-				// global announcements
+				r.Get("/leases", handlers.LeaseHandler.ListLeasesAcrossProperties)
+				r.Get("/tenants", handlers.TenantHandler.ListTenantsAcrossProperties)
+				r.Get("/invoices", handlers.InvoiceHandler.ListInvoicesAcrossProperties)
+				r.Get("/maintenance-requests", handlers.MaintenanceRequestHandler.ListAcrossProperties)
+				r.Get("/expenses", handlers.ExpenseHandler.ListExpensesAcrossProperties)
+				r.Get("/units", handlers.UnitHandler.ListUnitsAcrossProperties)
+				r.Get(
+					"/tenant-applications",
+					handlers.TenantApplicationHandler.ListTenantApplicationsAcrossProperties,
+				)
+
+				// global announcements. Only GET / (the cross-property/mobile list) needs
+				// InjectPropertyAccessScopeMiddleware — scoped to just that route rather than
+				// the whole group, so writes/publish/schedule don't pay for an unused
+				// ClientUserProperty lookup on every request.
 				r.Route("/announcements", func(r chi.Router) {
 					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
 						Post("/", handlers.AnnouncementHandler.CreateAnnouncement)
-					r.Get("/", handlers.AnnouncementHandler.ListAnnouncements)
+					r.With(middlewares.InjectPropertyAccessScopeMiddleware(appCtx)).
+						Get("/", handlers.AnnouncementHandler.ListAnnouncements)
 					r.Route("/{announcement_id}", func(r chi.Router) {
 						r.Get("/", handlers.AnnouncementHandler.GetAnnouncementById)
 						r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).

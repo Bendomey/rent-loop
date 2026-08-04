@@ -75,8 +75,10 @@ type GetMaintenanceRequestQuery struct {
 
 type ListMaintenanceRequestsFilter struct {
 	ClientID          *string
-	PropertyID        *string
-	UnitID            *string
+	PropertyIDs       *[]string
+	ClientUserID      *string
+	UnitIDs           *[]string
+	BlockIDs          *[]string
 	LeaseID           *string
 	Statuses          []string
 	Priority          *string
@@ -112,11 +114,7 @@ func (r *maintenanceRequestRepository) GetOneWithPopulate(
 	var mr models.MaintenanceRequest
 	db := lib.ResolveDB(ctx, r.DB).WithContext(ctx).Where("maintenance_requests.id = ?", query.ID)
 
-	if query.Populate != nil {
-		for _, field := range *query.Populate {
-			db = db.Preload(field)
-		}
-	}
+	db = ApplyPopulate(db, &models.MaintenanceRequest{}, query.Populate)
 
 	result := db.First(&mr)
 	if result.Error != nil {
@@ -138,8 +136,10 @@ func (r *maintenanceRequestRepository) List(
 			DateRangeScope("maintenance_requests", filterQuery.DateRange),
 			SearchScope("maintenance_requests", filterQuery.Search),
 			mrClientIDScope(filters.ClientID),
-			mrPropertyIDScope(filters.PropertyID),
-			mrUnitIDScope(filters.UnitID),
+			mrPropertyIDsScope(filters.PropertyIDs),
+			mrClientUserAccessScope(filters.ClientUserID),
+			mrUnitIDsScope(filters.UnitIDs),
+			mrBlockIDsScope(filters.BlockIDs),
 			mrLeaseIDScope(filters.LeaseID),
 			mrStatusScope(filters.Statuses),
 			mrPriorityScope(filters.Priority),
@@ -151,11 +151,7 @@ func (r *maintenanceRequestRepository) List(
 			OrderScope("maintenance_requests", filterQuery.OrderBy, filterQuery.Order),
 		)
 
-	if filterQuery.Populate != nil {
-		for _, field := range *filterQuery.Populate {
-			db = db.Preload(field)
-		}
-	}
+	db = ApplyPopulate(db, &models.MaintenanceRequest{}, filterQuery.Populate)
 
 	result := db.Find(&mrs)
 	if result.Error != nil {
@@ -177,8 +173,10 @@ func (r *maintenanceRequestRepository) Count(
 			DateRangeScope("maintenance_requests", filterQuery.DateRange),
 			SearchScope("maintenance_requests", filterQuery.Search),
 			mrClientIDScope(filters.ClientID),
-			mrPropertyIDScope(filters.PropertyID),
-			mrUnitIDScope(filters.UnitID),
+			mrPropertyIDsScope(filters.PropertyIDs),
+			mrClientUserAccessScope(filters.ClientUserID),
+			mrUnitIDsScope(filters.UnitIDs),
+			mrBlockIDsScope(filters.BlockIDs),
 			mrLeaseIDScope(filters.LeaseID),
 			mrStatusScope(filters.Statuses),
 			mrPriorityScope(filters.Priority),
@@ -348,11 +346,7 @@ func (r *maintenanceRequestRepository) ListComments(
 			OrderScope("maintenance_request_comments", filterQuery.OrderBy, filterQuery.Order),
 		)
 
-	if filterQuery.Populate != nil {
-		for _, field := range *filterQuery.Populate {
-			db = db.Preload(field)
-		}
-	}
+	db = ApplyPopulate(db, &models.MaintenanceRequestComment{}, filterQuery.Populate)
 
 	result := db.Find(&comments)
 	if result.Error != nil {
@@ -410,33 +404,70 @@ func mrClientIDScope(clientID *string) func(db *gorm.DB) *gorm.DB {
 			return db
 		}
 		subQuery := db.Session(&gorm.Session{NewDB: true}).
-			Table("units").
-			Select("units.id").
-			Joins("JOIN properties ON properties.id = units.property_id").
-			Where("properties.client_id = ? AND units.deleted_at IS NULL AND properties.deleted_at IS NULL", *clientID)
-		return db.Where("maintenance_requests.unit_id IN (?)", subQuery)
+			Table("properties").
+			Select("properties.id").
+			Where("properties.client_id = ? AND properties.deleted_at IS NULL", *clientID)
+		return db.Where("maintenance_requests.property_id IN (?)", subQuery)
 	}
 }
 
-func mrPropertyIDScope(propertyID *string) func(db *gorm.DB) *gorm.DB {
+func mrClientUserAccessScope(clientUserID *string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		if propertyID == nil {
+		if clientUserID == nil {
 			return db
 		}
-		subQuery := db.Session(&gorm.Session{NewDB: true}).
-			Table("units").
-			Select("id").
-			Where("property_id = ? AND deleted_at IS NULL", *propertyID)
-		return db.Where("maintenance_requests.unit_id IN (?)", subQuery)
+		return db.Where(
+			"maintenance_requests.property_id IN (?)",
+			accessiblePropertyIDsSubQuery(db, *clientUserID),
+		)
 	}
 }
 
-func mrUnitIDScope(unitID *string) func(db *gorm.DB) *gorm.DB {
+func mrPropertyIDsScope(propertyIDs *[]string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		if unitID == nil {
+		if propertyIDs == nil {
 			return db
 		}
-		return db.Where("maintenance_requests.unit_id = ?", *unitID)
+		return db.Where("maintenance_requests.property_id IN (?)", *propertyIDs)
+	}
+}
+
+// mrUnitIDsScope matches requests that target any of the given units. EXISTS
+// rather than a join, so a request targeting two of the selected units is still
+// returned exactly once.
+func mrUnitIDsScope(unitIDs *[]string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if unitIDs == nil {
+			return db
+		}
+		return db.Where(
+			`EXISTS (
+				SELECT 1 FROM maintenance_request_assets a
+				WHERE a.maintenance_request_id = maintenance_requests.id
+				  AND a.asset_type = 'UNIT'
+				  AND a.unit_id IN (?)
+				  AND a.deleted_at IS NULL
+			)`,
+			*unitIDs,
+		)
+	}
+}
+
+func mrBlockIDsScope(blockIDs *[]string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if blockIDs == nil {
+			return db
+		}
+		return db.Where(
+			`EXISTS (
+				SELECT 1 FROM maintenance_request_assets a
+				WHERE a.maintenance_request_id = maintenance_requests.id
+				  AND a.asset_type = 'BLOCK'
+				  AND a.property_block_id IN (?)
+				  AND a.deleted_at IS NULL
+			)`,
+			*blockIDs,
+		)
 	}
 }
 
@@ -589,8 +620,10 @@ func (r *maintenanceRequestRepository) CountByStatus(
 		Select("status, count(*) as count").
 		Scopes(
 			mrClientIDScope(filters.ClientID),
-			mrPropertyIDScope(filters.PropertyID),
-			mrUnitIDScope(filters.UnitID),
+			mrPropertyIDsScope(filters.PropertyIDs),
+			mrClientUserAccessScope(filters.ClientUserID),
+			mrUnitIDsScope(filters.UnitIDs),
+			mrBlockIDsScope(filters.BlockIDs),
 			mrLeaseIDScope(filters.LeaseID),
 			mrTenantScope(filters.TenantID),
 		).

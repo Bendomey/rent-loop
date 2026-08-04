@@ -23,10 +23,12 @@ import { PwaUpdatePrompt } from './components/pwa-update-prompt'
 import { TopbarLoader } from './components/top-bar-loader'
 import { Toaster } from './components/ui/sonner'
 import { getAuthSession } from './lib/actions/auth.session.server'
+import { resolveAuthToken } from './lib/actions/auth.token.server'
 import { environmentVariables } from './lib/actions/env.server'
 import { safeString } from './lib/strings'
 import { NotFoundModule } from './modules'
 import { Providers } from './providers'
+import { rememberBrowserTimezone } from '~/lib/session-timezone'
 
 dayjs.locale('en-gb')
 dayjs.extend(localizedFormat)
@@ -40,7 +42,8 @@ export const links: Route.LinksFunction = () => [
 	},
 	{
 		rel: 'stylesheet',
-		href: 'https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Shantell+Sans:ital,wght@0,300..800;1,300..800&display=swap',
+		href: 'https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap',
+		// href: 'https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Shantell+Sans:ital,wght@0,300..800;1,300..800&family=Instrument+Serif:ital@0;1&display=swap',
 	},
 	{ rel: 'manifest', href: '/manifest.webmanifest' },
 	{ rel: 'apple-touch-icon', href: '/icons/apple-icon-180.png' },
@@ -528,14 +531,14 @@ export const links: Route.LinksFunction = () => [
 	},
 ]
 
-export async function loader({ request }: Route.LoaderArgs) {
+export async function loader({ request, context }: Route.LoaderArgs) {
 	const env = environmentVariables()
 	const authSession = await getAuthSession(request.headers.get('Cookie'))
 
 	return {
 		ENV: {
 			API_ADDRESS: env.API_ADDRESS,
-			AUTH_TOKEN: authSession.get('authToken'),
+			AUTH_TOKEN: await resolveAuthToken(request, context),
 			GOOGLE_MAPS_API_KEY: env.GOOGLE_MAPS_API_KEY,
 			CUBEJS_API_URL: env.CUBEJS_API_URL,
 			GOOGLE_ANALYTICS_ID: env.GOOGLE_ANALYTICS_ID,
@@ -631,6 +634,14 @@ export default function App() {
 		if ('serviceWorker' in navigator) {
 			void navigator.serviceWorker.register('/sw.js', { scope: '/' })
 		}
+	}, [])
+
+	// Token refresh runs in server middleware, which cannot see the browser's
+	// timezone — it would read the host's. Recording it here on every load
+	// gives that path a browser-derived value to forward, and keeps a
+	// travelling session's reported place current.
+	useEffect(() => {
+		rememberBrowserTimezone()
 	}, [])
 
 	return (

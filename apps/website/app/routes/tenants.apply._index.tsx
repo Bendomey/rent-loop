@@ -114,18 +114,18 @@ export async function action({ request }: Route.ActionArgs) {
 		)
 
 		if (!tenantApplication) {
-			throw new Error('Lease application creation returned no data')
+			throw new Error('Rental application creation returned no data')
 		}
 
 		return redirect(`/tenants/apply/success`)
 	} catch {
-		return { error: 'Failed to submit lease application' }
+		return { error: 'Failed to submit rental application' }
 	}
 }
 
 export function meta({ loaderData, location }: Route.MetaArgs) {
 	const meta = getSocialMetas({
-		title: `Complete Lease Application Details - ${APP_NAME}`,
+		title: `Complete Rental Application Details - ${APP_NAME}`,
 		url: getDisplayUrl({
 			origin: loaderData.origin,
 			path: location.pathname,

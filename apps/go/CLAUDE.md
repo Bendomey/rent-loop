@@ -6,6 +6,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 RentLoop Flutter mobile app — the tenant-facing mobile client for the rent management platform. Dart 3.8.1+, Flutter SDK.
 
+## Codebase Index
+
+This project has a living `docs/` folder with architecture, implementation, patterns, decisions, and changelog files.
+
+### Session Start
+- Read `docs/architecture.md` and `docs/implementation.md` before doing any work.
+- These files contain the project map — do not re-scan the codebase from scratch.
+
+### After Every Feature or Bugfix
+1. Run `git diff HEAD~1 --name-only` to identify changed files.
+2. Re-scan only the changed files and their direct neighbors.
+3. Update the relevant doc files with targeted edits:
+   - New module/package → update `docs/architecture.md`, `docs/implementation.md`
+   - New class/function/endpoint → update `docs/implementation.md`
+   - Renamed files/folders → update `docs/architecture.md`, `docs/patterns.md`
+   - New dependency → update `docs/architecture.md`
+   - New naming/code pattern → update `docs/patterns.md`
+4. If an architectural decision was made → append an ADR entry to `docs/decisions.md`
+5. Append a dated changelog entry to `docs/changelog.md`
+
 ## Commands
 
 ```bash
@@ -17,7 +37,7 @@ make build_bundle  # flutter build appbundle (release, obfuscated)
 make release       # flutter build
 ```
 
-**Running tests:** No test harness is configured. Linting uses `flutter_lints` via `analysis_options.yaml`.
+**Running tests:** No test harness configured. Linting uses `flutter_lints` via `analysis_options.yaml`.
 
 **After changing any `@riverpod`-annotated provider or `@freezed`/`@JsonSerializable` model, run `make build_runner` to regenerate `.g.dart` files.**
 
@@ -32,59 +52,31 @@ Providers use `@riverpod` annotations with generated `.g.dart` part files. The g
 - `currentUserNotifierProvider` — authenticated `TenantAccountModel?` (keepAlive, in-memory)
 - `currentLeaseNotifierProvider` — currently selected `LeaseModel?` (keepAlive, ID persisted to secure storage)
 - `leaseIdManagerProvider` — reads/writes `'rentloop.current_lease_id'` to secure storage
+- `appStartupNotifierProvider` — orchestrates cold-start; drives GoRouter redirect via `refreshListenable`
 
 Most screen state is local (`ConsumerStatefulWidget` + `setState`). There is no global BLoC or Redux layer.
 
-### Using `currentUserNotifierProvider` (the authenticated tenant account)
+### Using `currentUserNotifierProvider` and `currentLeaseNotifierProvider`
 
-`currentUserNotifierProvider` holds a `TenantAccountModel?`. It is populated automatically:
-- After a successful OTP verify (login)
-- On app startup via the splash screen (if a stored JWT is found)
-
-**Reading the current user in any screen:**
 ```dart
-// In a ConsumerStatefulWidget or ConsumerWidget
 final currentUser = ref.watch(currentUserNotifierProvider); // TenantAccountModel?
-
-// Access nested tenant profile
-final tenant = currentUser?.tenant;
-final fullName = '${tenant?.firstName} ${tenant?.lastName}';
-final phone = currentUser?.phoneNumber;
-```
-
-**Reading the active lease on any screen:**
-```dart
 final activeLease = ref.watch(currentLeaseNotifierProvider); // LeaseModel?
-final unitName = activeLease?.unit?.name ?? activeLease?.unit?.slug;
-final rentFee = activeLease?.rentFee; // int, e.g. 1200
-```
 
-**Switching the active lease (persists across restarts):**
-```dart
+// Switching the active lease (persists across restarts):
 await ref.read(currentLeaseNotifierProvider.notifier).setLease(lease);
 ```
 
-**How it is populated:** `leasesProvider` calls `loadFromLeases()` after every fetch. This reads the stored lease ID, finds the matching lease in the list, and sets it as active. If no ID is stored or the stored ID is not in the list, the first lease is used and its ID is saved.
-
-**Clearing on logout:**
-```dart
-ref.read(currentUserNotifierProvider.notifier).clear();
-ref.read(currentLeaseNotifierProvider.notifier).clear();
-await ref.read(tokenManagerProvider).remove();
-await ref.read(leaseIdManagerProvider).remove();
-context.go('/auth');
-```
-
-`TenantAccountModel` fields: `id`, `phoneNumber`, `tenantId`, `createdAt`, `updatedAt`, `tenant`.
-`TenantModel` (nested as `.tenant`) fields: `id`, `firstName`, `lastName`, `otherNames`, `email`, `phone`, `profilePhotoUrl`, `dateOfBirth`, `gender`, `nationality`, `maritalStatus`, `occupation`, `occupationAddress`, `employer`, `idType`, `idNumber`, `idFrontUrl`, `idBackUrl`, `proofOfIncomeUrl`, `emergencyContactName`, `emergencyContactPhone`, `relationshipToEmergencyContact`.
+**Clearing on logout** — always go through `AppStartupNotifier.logout()`, which handles FCM token deletion, secure storage cleanup, and state clearing in one call.
 
 ### Navigation — GoRouter
 
 Routes defined in `lib/src/navigation/routes.dart`. Initial route: `/splash`.
 
-Main shell uses `StatefulShellRoute` with `IndexedStack` for 4 bottom tabs: Home, Payments, Maintenance, More.
+Main shell uses `StatefulShellRoute.indexedStack` for 4 bottom tabs: Home, Payments, Maintenance, More.
 
 Auth flow: `/splash` → checks token → `/auth` (welcome) → `/auth/login` → `/auth/login/verify/:phone` → `/` (home).
+
+GoRouter's `refreshListenable` is wired to `appStartupNotifierProvider` — status changes trigger re-evaluation of the `redirect` callback without imperative navigation.
 
 ### Module Structure
 
@@ -96,7 +88,7 @@ modules/
 └── main/       # Home, payments, maintenance, more (tab screens)
 ```
 
-Screens extend `ConsumerStatefulWidget`. Navigation uses `context.go()` / `context.push()`.
+Screens extend `ConsumerStatefulWidget` or `ConsumerWidget`. Navigation uses `context.go()` / `context.push()`.
 
 ### Key Packages
 
@@ -142,14 +134,6 @@ return RefreshIndicator(
 - **All list/detail screens must also have pull-to-refresh** using `RefreshIndicator` wrapping the `ListView`, with `onRefresh: () => ref.refresh(myProvider.future)`
 - See `home_skeleton.dart` and `unit_details/root.dart` for reference implementations
 
-### Splash / Auth Init
-
-`lib/src/navigation/splash.dart` handles startup:
-1. Checks internet connectivity via `connectivity_plus`
-2. Reads stored JWT from `tokenManagerProvider`
-3. If token exists: fetches `GET /api/v1/tenant-accounts/me`, saves result to `currentUserNotifierProvider`, then routes to `/`
-4. If no token: routes to `/auth`
-
 ---
 
 ## API Integration Pattern
@@ -166,23 +150,20 @@ lib/src/
 │   └── root.dart           # AbstractApi base class
 ├── repository/
 │   ├── api_state.dart      # ApiState / ApiStatus enum (idle/pending/success/failed)
-│   ├── models/             # @freezed + @JsonSerializable DTOs
+│   ├── models/             # @JsonSerializable DTOs
 │   ├── notifiers/          # Mutation state: extend ApiState, use @riverpod class
 │   └── providers/          # Query state: @riverpod Future<T> functions
 ```
 
 ### AbstractApi Base Class (`lib/src/api/root.dart`)
 
-All API classes extend `AbstractApi`, which holds a configured `http.Client` and `TokenManager`. It exposes an `execute()` method that:
-- Validates token presence for auth-required calls
-- Attaches `Authorization: Bearer <token>` header
-- Throws on non-2xx responses
+All API classes extend `AbstractApi`, which holds a `TokenManager`. Its `execute()` method attaches `Authorization: Bearer <token>` and throws `ApiException` on non-2xx. Parse the user-facing message via `ApiException.message` (reads `json['errors']['message']`).
 
 ### Api Class (per resource)
 
 ```dart
 class AuthApi extends AbstractApi {
-  AuthApi({required super.httpClient, required super.tokenManager});
+  AuthApi({required super.tokenManager});
 
   Future<http.Response> sendOtp(String phone) => execute(
     method: 'POST',
@@ -193,17 +174,10 @@ class AuthApi extends AbstractApi {
 }
 
 @riverpod
-AuthApi authApi(AuthApiRef ref) {
-  return AuthApi(
-    httpClient: ref.watch(httpClientProvider),
-    tokenManager: ref.watch(tokenManagerProvider),
-  );
-}
+AuthApi authApi(AuthApiRef ref) => AuthApi(tokenManager: ref.watch(tokenManagerProvider));
 ```
 
 ### Mutation Notifier (actions that change state)
-
-State class extends `ApiState`. Notifier sets `pending → success/failed`.
 
 ```dart
 class SendOtpState extends ApiState {
@@ -220,11 +194,10 @@ class SendOtpNotifier extends _$SendOtpNotifier {
     try {
       await ref.read(authApiProvider).sendOtp(phone);
       state = SendOtpState(status: ApiStatus.success);
-    } catch (e) {
-      state = SendOtpState(
-        status: ApiStatus.failed,
-        errorMessage: translateApiErrorMessage(e),
-      );
+    } on ApiException catch (e) {
+      state = SendOtpState(status: ApiStatus.failed, errorMessage: translateApiErrorMessage(errorMessage: e.message));
+    } catch (_) {
+      state = SendOtpState(status: ApiStatus.failed, errorMessage: translateApiErrorMessage());
     }
   }
 }
@@ -232,47 +205,36 @@ class SendOtpNotifier extends _$SendOtpNotifier {
 
 **UI consumption:**
 ```dart
-final notifier = ref.watch(sendOtpNotifierProvider.notifier);
 final state = ref.watch(sendOtpNotifierProvider);
-
 if (state.status.isLoading()) // show spinner
 if (state.status.isFailed())  // show state.errorMessage
 ```
 
 ### Query Provider (data fetching)
 
-For read operations, use a simple `@riverpod Future<T>` function:
-
 ```dart
 @riverpod
-Future<LeaseModel> currentLease(CurrentLeaseRef ref) async {
-  final json = await ref.read(leaseApiProvider).getCurrentLease();
-  return LeaseModel.fromJson(json);
+Future<List<LeaseModel>> leases(LeasesRef ref) async {
+  final list = await ref.read(leaseApiProvider).getLeases();
+  await ref.read(currentLeaseNotifierProvider.notifier).loadFromLeases(list);
+  return list;
 }
 ```
 
-**UI consumption** — handle `AsyncValue` with `.when()`:
-```dart
-final lease = ref.watch(currentLeaseProvider);
-lease.when(
-  data: (l) => LeaseCard(lease: l),
-  loading: () => const CircularProgressIndicator(),
-  error: (e, _) => ErrorCard(errorMessage: e.toString(), retry: () => ref.invalidate(currentLeaseProvider)),
-);
-```
+**UI consumption** — use the `hasValue`/`isLoading` guard (not `.when()`) — see Skeleton Loaders section.
 
-### Models — `@freezed` + `@JsonSerializable`
+### Models — `@JsonSerializable`
 
 ```dart
-@freezed
-class LeaseModel with _$LeaseModel {
-  const factory LeaseModel({
-    required String id,
-    required String status,
-  }) = _LeaseModel;
+@JsonSerializable()
+class LeaseModel {
+  final String id;
+  @JsonKey(name: 'rent_fee')
+  final int rentFee;
 
-  factory LeaseModel.fromJson(Map<String, dynamic> json) =>
-      _$LeaseModelFromJson(json);
+  LeaseModel({required this.id, required this.rentFee});
+  factory LeaseModel.fromJson(Map<String, dynamic> json) => _$LeaseModelFromJson(json);
+  Map<String, dynamic> toJson() => _$LeaseModelToJson(this);
 }
 ```
 
@@ -280,7 +242,7 @@ Run `make build_runner` after adding/changing models.
 
 ### Error Handling
 
-API errors are translated to user-facing strings in `lib/src/lib/api_error_messages.dart`. Pattern: `context.errorCode` switch, default to `'Something happened. Try again.'`.
+API errors are translated to user-facing strings in `lib/src/lib/api_error_messages.dart`. Always pass `e.message` from `ApiException` — default fallback is `'Something happened. Try again.'`
 
 ---
 
@@ -290,31 +252,6 @@ Full docs: **https://api.rentloopapp.com/swagger/index.html**
 
 Auth: `Authorization: Bearer <jwt>` header on all protected routes.
 
-### Tenant Account Routes (mobile app scope)
-
-**Authentication (no auth required)**
-| Method | Path | Description |
-|---|---|---|
-| POST | `/api/v1/tenant-accounts/auth/codes` | Send OTP to phone |
-| POST | `/api/v1/tenant-accounts/auth/codes/verify` | Verify OTP, returns JWT |
-
-**Lease Applications (tracking page — mixed auth)**
-| Method | Path | Description |
-|---|---|---|
-| GET | `/api/v1/tenant-applications/code/{code}` | Get application by tracking code |
-| POST | `/api/v1/tenant-applications/code/{code}/otp:send` | Send OTP for application |
-| POST | `/api/v1/tenant-applications/code/{code}/otp:verify` | Verify OTP for application |
-| POST | `/api/v1/tenant-applications/code/{code}/invoice/{invoice_id}/pay` | Pay invoice |
-| GET/PATCH | `/api/v1/tenant-applications/{id}` | Get/update application |
-| POST | `/api/v1/tenant-applications` | Submit new application |
-
-**Other**
-| Method | Path | Description |
-|---|---|---|
-| GET | `/api/v1/units/{unit_id}` | Get unit details |
-| GET | `/api/v1/tenants/phone/{phone}` | Look up tenant by phone |
-| GET/POST | `/api/v1/signing/{token}/verify` | Signing token verify |
-| POST | `/api/v1/signing/{token}/sign` | Sign document |
-| POST | `/api/v1/payments/offline` | Record offline payment |
+Use `WebFetch` on the Swagger URL to look up endpoints, request/response shapes, and required fields before writing new API calls.
 
 > Admin-only routes (property manager portal) are under `/api/v1/admin/`. Do not call these from the mobile app.

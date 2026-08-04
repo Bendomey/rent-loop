@@ -19,7 +19,7 @@ import {
 } from '~/components/ui/typography'
 import { useSendOtp } from '~/hooks/use-send-otp'
 import { getErrorMessage } from '~/lib/error-messages'
-import { formatPhoneWithCountryCode } from '~/lib/misc'
+import { normalizeInternationalPhoneNumber } from '~/lib/phone'
 
 export function Step2() {
 	const [otp, setOtp] = useState('')
@@ -27,8 +27,15 @@ export function Step2() {
 	const [resendCountdown, setResendCountdown] = useState(60)
 	const [resendAttempts, setResendAttempts] = useState(1)
 
-	const { goBack, goNext, goToPage, formData, updateFormData, allowEdit } =
-		useTenantApplicationContext()
+	const {
+		goBack,
+		goNext,
+		goToPage,
+		formData,
+		updateFormData,
+		allowEdit,
+		setOpenAddress,
+	} = useTenantApplicationContext()
 	const { sendOtp, isSendingOtp } = useSendOtp()
 
 	const isOtpComplete = otp.length === 6
@@ -45,6 +52,10 @@ export function Step2() {
 		return () => clearTimeout(t)
 	}, [resendCountdown])
 
+	const channel: Array<'EMAIL' | 'SMS'> = formData.email
+		? ['EMAIL', 'SMS']
+		: ['SMS']
+
 	const resend = () => {
 		if (!canResend) return
 
@@ -52,7 +63,11 @@ export function Step2() {
 
 		setResendAttempts((a) => a + 1)
 		setResendCountdown(nextResend)
-		sendOtp(formData.phone)
+		sendOtp({
+			channel: ['EMAIL', 'SMS'],
+			phone: formData.phone,
+			...(formData.email ? { email: formData.email } : {}),
+		})
 	}
 
 	useEffect(() => {
@@ -73,7 +88,7 @@ export function Step2() {
 		mutate(
 			{
 				code: otp,
-				phone: formatPhoneWithCountryCode(formData.phone, '+233', 9),
+				phone: normalizeInternationalPhoneNumber(formData.phone),
 			},
 			{
 				onError: (e: unknown) => {
@@ -98,7 +113,7 @@ export function Step2() {
 		useGetTenantByPhone()
 
 	const tenantLookUpByPhoneAndFormUpdate = async () => {
-		const phone = formatPhoneWithCountryCode(formData.phone, '+233', 9)
+		const phone = normalizeInternationalPhoneNumber(formData.phone)
 		getTenantMutate(phone, {
 			onError: () => {
 				allowEdit(true)
@@ -135,16 +150,14 @@ export function Step2() {
 					relationship_to_emergency_contact:
 						tenant.relationship_to_emergency_contact,
 					emergency_contact_phone: tenant.emergency_contact_phone,
-					employer_type: tenant.employer_type,
-					occupation:
-						tenant.employer_type === 'STUDENT'
-							? tenant.employer_type
-							: tenant.occupation,
+					employer_type: tenant.occupation === 'STUDENT' ? 'STUDENT' : 'WORKER',
+					occupation: tenant.occupation,
 					employer: tenant.employer,
 					occupation_address: tenant.occupation_address,
 					proof_of_income_url: tenant.proof_of_income_url,
 				})
 				goToPage(6)
+				setOpenAddress(true)
 			},
 		})
 	}
@@ -162,9 +175,17 @@ export function Step2() {
 					<TypographyMuted className="leading-relaxed">
 						Enter the 6-digit code sent to{' '}
 						<span className="font-medium text-zinc-900">
-							{formatPhoneWithCountryCode(formData.phone, '+233', 9) ||
-								'your phone'}
+							{formData.phone || 'your phone'}
 						</span>
+						{formData.email && (
+							<>
+								{' '}
+								and{' '}
+								<span className="font-medium text-zinc-900">
+									{formData.email}
+								</span>
+							</>
+						)}
 					</TypographyMuted>
 				</div>
 

@@ -4,6 +4,10 @@ import { environmentVariables } from './env.server'
 
 type SessionData = {
 	authToken: string
+	// Never exposed to the browser — deliberately absent from root.tsx's ENV
+	// block. This is a 90-day credential; the access token beside it lasts an
+	// hour. Putting it in window.ENV would hand any XSS the better prize.
+	refreshToken: string
 	selectedClientId: string
 }
 

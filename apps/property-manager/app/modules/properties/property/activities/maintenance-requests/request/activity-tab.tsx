@@ -1,11 +1,11 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@radix-ui/react-avatar'
 import {
 	AlertCircle,
+	ArrowLeftRight,
 	CheckCircle2,
 	MessageSquare,
-	RefreshCw,
-	UserCheck,
-	Wrench,
+	Plus,
+	User,
 } from 'lucide-react'
 import { useGetMaintenanceRequestActivityLogs } from '~/api/maintenance-requests'
 import { TypographyMuted } from '~/components/ui/typography'
@@ -14,44 +14,51 @@ import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
 import { useClient } from '~/providers/client-provider'
 
+// Each entry carries its own tinted disc, so the timeline reads by colour
+// before it reads by label.
 const ACTION_CONFIG: Record<
 	MaintenanceRequestActivityLog['action'],
 	{ icon: React.ElementType; label: string; iconClass: string }
 > = {
 	CREATED: {
-		icon: Wrench,
+		icon: Plus,
 		label: 'Request created',
-		iconClass: 'text-zinc-500',
+		iconClass:
+			'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-300',
 	},
 	STATUS_CHANGED: {
-		icon: RefreshCw,
+		icon: ArrowLeftRight,
 		label: 'Status changed',
-		iconClass: 'text-blue-500',
+		iconClass:
+			'bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-300',
 	},
 	WORKER_ASSIGNED: {
-		icon: UserCheck,
+		icon: User,
 		label: 'Worker assigned',
-		iconClass: 'text-amber-500',
+		iconClass:
+			'bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-300',
 	},
 	MANAGER_ASSIGNED: {
-		icon: UserCheck,
+		icon: User,
 		label: 'Manager assigned',
-		iconClass: 'text-purple-500',
+		iconClass:
+			'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary',
 	},
 	RESOLVED: {
 		icon: CheckCircle2,
 		label: 'Resolved',
-		iconClass: 'text-emerald-500',
+		iconClass:
+			'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-300',
 	},
 	CANCELED: {
 		icon: AlertCircle,
 		label: 'Canceled',
-		iconClass: 'text-red-500',
+		iconClass: 'bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-300',
 	},
 	NOTE: {
 		icon: MessageSquare,
 		label: 'Note added',
-		iconClass: 'text-zinc-500',
+		iconClass: 'bg-muted text-muted-foreground',
 	},
 }
 
@@ -120,7 +127,7 @@ function ActivityDetail({
 		}
 		if (byManager) {
 			return (
-				<p className="text-muted-foreground flex flex-wrap items-center gap-1 text-sm">
+				<p className="text-muted-foreground flex flex-wrap items-center gap-1 text-[15px]">
 					Created by{' '}
 					{log.performed_by_client_user ? (
 						<UserChip
@@ -165,7 +172,9 @@ function ActivityDetail({
 			)
 		}
 		if (log.description) {
-			return <p className="text-muted-foreground text-sm">{log.description}</p>
+			return (
+				<p className="text-muted-foreground text-[15px]">{log.description}</p>
+			)
 		}
 		return null
 	}
@@ -176,7 +185,7 @@ function ActivityDetail({
 			!!log.performed_by_client_user_id &&
 			log.performed_by_client_user_id === mr.assigned_worker_id
 		return (
-			<p className="text-muted-foreground flex flex-wrap items-center gap-1 text-sm">
+			<p className="text-muted-foreground flex flex-wrap items-center gap-1 text-[15px]">
 				Assigned to{' '}
 				{worker ? (
 					<UserChip name={safeString(worker?.user?.name)} />
@@ -198,7 +207,7 @@ function ActivityDetail({
 			!!log.performed_by_client_user_id &&
 			log.performed_by_client_user_id === mr.assigned_manager_id
 		return (
-			<p className="text-muted-foreground flex flex-wrap items-center gap-1 text-sm">
+			<p className="text-muted-foreground flex flex-wrap items-center gap-1 text-[15px]">
 				Assigned to{' '}
 				{manager ? (
 					<UserChip name={safeString(manager?.user?.name)} />
@@ -289,31 +298,31 @@ export function ActivityTab({ requestId, propertyId, mr }: ActivityTabProps) {
 	}
 
 	return (
-		<div className="flex flex-col gap-1 py-2">
+		<div className="flex flex-col py-2">
 			{logs.map((log, index) => {
 				const config = ACTION_CONFIG[log.action]
 				const Icon = config.icon
 				const isLast = index === logs.length - 1
 
 				return (
-					<div key={log.id} className="flex items-start gap-3">
+					<div key={log.id} className="flex items-stretch gap-4">
 						<div className="flex flex-col items-center">
 							<div
 								className={cn(
-									'flex h-7 w-7 shrink-0 items-center justify-center rounded-full',
-									'bg-muted',
+									'flex size-10 shrink-0 items-center justify-center rounded-full',
+									config.iconClass,
 								)}
 							>
-								<Icon className={cn('h-3.5 w-3.5', config.iconClass)} />
+								<Icon className="size-[19px]" />
 							</div>
 							{!isLast && (
-								<div className="bg-border mt-1 h-full min-h-[20px] w-px" />
+								<div className="bg-border my-1 min-h-4 w-px flex-1" />
 							)}
 						</div>
-						<div className="flex flex-col gap-0.5 pb-4">
-							<p className="text-sm font-medium">{config.label}</p>
+						<div className="flex flex-col gap-1 pb-6">
+							<p className="text-base font-bold">{config.label}</p>
 							<ActivityDetail log={log} mr={mr} />
-							<TypographyMuted className="text-xs">
+							<TypographyMuted className="text-sm">
 								{localizedDayjs(log.created_at).format(
 									'MMM D, YYYY [at] h:mm A',
 								)}

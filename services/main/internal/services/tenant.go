@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
@@ -17,9 +18,17 @@ type TenantService interface {
 	GetOrCreateTenant(context context.Context, input CreateTenantInput) (*models.Tenant, error)
 	GetTenantByPhone(context context.Context, phone string) (*models.Tenant, error)
 	GetTenantByID(context context.Context, query repository.GetTenantQuery) (*models.Tenant, error)
-	ListTenantsByProperty(context context.Context, filter repository.ListTenantsFilter) (*[]models.Tenant, error)
-	CountTenantsByProperty(context context.Context, filter repository.ListTenantsFilter) (int64, error)
+	ListTenantsByProperty(
+		context context.Context,
+		filter repository.ListTenantsByPropertyFilter,
+	) (*[]models.Tenant, error)
+	CountTenantsByProperty(context context.Context, filter repository.ListTenantsByPropertyFilter) (int64, error)
+	GetTenantByIDForProperty(
+		context context.Context,
+		query repository.GetTenantByPropertyQuery,
+	) (*models.Tenant, error)
 	FindOrCreateLightTenant(ctx context.Context, input FindOrCreateLightTenantInput) (*models.Tenant, error)
+	UpdateTenant(context context.Context, tenantID string, input UpdateTenantInput) (*models.Tenant, error)
 }
 
 type tenantService struct {
@@ -53,7 +62,7 @@ type CreateTenantInput struct {
 	Employer                       *string
 	OccupationAddress              *string
 	ProofOfIncomeUrl               *string
-	CreatedById                    string
+	CreatedById                    *string
 }
 
 func (s *tenantService) CreateTenant(ctx context.Context, input CreateTenantInput) (*models.Tenant, error) {
@@ -233,9 +242,9 @@ func (s *tenantService) GetTenantByID(ctx context.Context, query repository.GetT
 
 func (s *tenantService) ListTenantsByProperty(
 	ctx context.Context,
-	filter repository.ListTenantsFilter,
+	filter repository.ListTenantsByPropertyFilter,
 ) (*[]models.Tenant, error) {
-	tenants, err := s.repo.List(ctx, filter)
+	tenants, err := s.repo.ListTenantsByProperty(ctx, filter)
 	if err != nil {
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
 			Err: err,
@@ -248,11 +257,33 @@ func (s *tenantService) ListTenantsByProperty(
 	return tenants, nil
 }
 
+func (s *tenantService) GetTenantByIDForProperty(
+	ctx context.Context,
+	query repository.GetTenantByPropertyQuery,
+) (*models.Tenant, error) {
+	tenant, err := s.repo.GetOneByProperty(ctx, query)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("Tenant not found", &pkg.RentLoopErrorParams{
+				Err: err,
+			})
+		}
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "GetTenantByIDForProperty",
+				"action":   "fetching tenant",
+			},
+		})
+	}
+	return tenant, nil
+}
+
 func (s *tenantService) CountTenantsByProperty(
 	ctx context.Context,
-	filter repository.ListTenantsFilter,
+	filter repository.ListTenantsByPropertyFilter,
 ) (int64, error) {
-	count, err := s.repo.Count(ctx, filter)
+	count, err := s.repo.CountTenantsByProperty(ctx, filter)
 	if err != nil {
 		return 0, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
 			Err: err,
@@ -266,13 +297,14 @@ func (s *tenantService) CountTenantsByProperty(
 }
 
 type FindOrCreateLightTenantInput struct {
-	FirstName string
-	LastName  string
-	Phone     string
-	Email     *string
-	IDType    *string
-	IDNumber  *string
-	Gender    string
+	FirstName   string
+	LastName    string
+	Phone       string
+	Email       *string
+	IDType      *string
+	IDNumber    *string
+	Gender      string
+	CreatedById *string
 }
 
 func (s *tenantService) FindOrCreateLightTenant(
@@ -291,16 +323,162 @@ func (s *tenantService) FindOrCreateLightTenant(
 
 	// Create new light tenant (only booking-relevant fields)
 	tenant := &models.Tenant{
-		FirstName: input.FirstName,
-		LastName:  input.LastName,
-		Phone:     input.Phone,
-		Email:     input.Email,
-		IDType:    input.IDType,
-		IDNumber:  input.IDNumber,
-		Gender:    input.Gender,
+		FirstName:   input.FirstName,
+		LastName:    input.LastName,
+		Phone:       input.Phone,
+		Email:       input.Email,
+		IDType:      input.IDType,
+		IDNumber:    input.IDNumber,
+		Gender:      input.Gender,
+		CreatedById: input.CreatedById,
 	}
 	if createErr := s.repo.Create(ctx, tenant); createErr != nil {
 		return nil, createErr
 	}
+	return tenant, nil
+}
+
+type UpdateTenantInput struct {
+	FirstName *string
+	LastName  *string
+	Gender    *string
+
+	OtherNames                     lib.Optional[string]
+	Email                          lib.Optional[string]
+	DateOfBirth                    lib.Optional[time.Time]
+	Nationality                    lib.Optional[string]
+	MaritalStatus                  lib.Optional[string]
+	ProfilePhotoUrl                lib.Optional[string]
+	IDType                         lib.Optional[string]
+	IDNumber                       lib.Optional[string]
+	IDFrontUrl                     lib.Optional[string]
+	IDBackUrl                      lib.Optional[string]
+	EmergencyContactName           lib.Optional[string]
+	EmergencyContactPhone          lib.Optional[string]
+	RelationshipToEmergencyContact lib.Optional[string]
+	Occupation                     lib.Optional[string]
+	Employer                       lib.Optional[string]
+	OccupationAddress              lib.Optional[string]
+	ProofOfIncomeUrl               lib.Optional[string]
+}
+
+func (s *tenantService) UpdateTenant(
+	ctx context.Context,
+	tenantID string,
+	input UpdateTenantInput,
+) (*models.Tenant, error) {
+	tenant, err := s.repo.FindOne(ctx, map[string]any{"id": tenantID})
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("Tenant not found", &pkg.RentLoopErrorParams{
+				Err: err,
+			})
+		}
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "UpdateTenant",
+				"action":   "fetching tenant",
+			},
+		})
+	}
+
+	updates := map[string]any{}
+
+	if input.FirstName != nil {
+		updates["first_name"] = *input.FirstName
+		tenant.FirstName = *input.FirstName
+	}
+	if input.LastName != nil {
+		updates["last_name"] = *input.LastName
+		tenant.LastName = *input.LastName
+	}
+	if input.Gender != nil {
+		updates["gender"] = *input.Gender
+		tenant.Gender = *input.Gender
+	}
+	if input.OtherNames.IsSet {
+		updates["other_names"] = input.OtherNames.Ptr()
+		tenant.OtherNames = input.OtherNames.Ptr()
+	}
+	if input.Email.IsSet {
+		updates["email"] = input.Email.Ptr()
+		tenant.Email = input.Email.Ptr()
+	}
+	if input.DateOfBirth.IsSet {
+		updates["date_of_birth"] = input.DateOfBirth.Ptr()
+		tenant.DateOfBirth = input.DateOfBirth.Ptr()
+	}
+	if input.Nationality.IsSet {
+		updates["nationality"] = input.Nationality.Ptr()
+		tenant.Nationality = input.Nationality.Ptr()
+	}
+	if input.MaritalStatus.IsSet {
+		updates["marital_status"] = input.MaritalStatus.Ptr()
+		tenant.MaritalStatus = input.MaritalStatus.Ptr()
+	}
+	if input.ProfilePhotoUrl.IsSet {
+		updates["profile_photo_url"] = input.ProfilePhotoUrl.Ptr()
+		tenant.ProfilePhotoUrl = input.ProfilePhotoUrl.Ptr()
+	}
+	if input.IDType.IsSet {
+		updates["id_type"] = input.IDType.Ptr()
+		tenant.IDType = input.IDType.Ptr()
+	}
+	if input.IDNumber.IsSet {
+		updates["id_number"] = input.IDNumber.Ptr()
+		tenant.IDNumber = input.IDNumber.Ptr()
+	}
+	if input.IDFrontUrl.IsSet {
+		updates["id_front_url"] = input.IDFrontUrl.Ptr()
+		tenant.IDFrontUrl = input.IDFrontUrl.Ptr()
+	}
+	if input.IDBackUrl.IsSet {
+		updates["id_back_url"] = input.IDBackUrl.Ptr()
+		tenant.IDBackUrl = input.IDBackUrl.Ptr()
+	}
+	if input.EmergencyContactName.IsSet {
+		updates["emergency_contact_name"] = input.EmergencyContactName.Ptr()
+		tenant.EmergencyContactName = input.EmergencyContactName.Ptr()
+	}
+	if input.EmergencyContactPhone.IsSet {
+		updates["emergency_contact_phone"] = input.EmergencyContactPhone.Ptr()
+		tenant.EmergencyContactPhone = input.EmergencyContactPhone.Ptr()
+	}
+	if input.RelationshipToEmergencyContact.IsSet {
+		updates["relationship_to_emergency_contact"] = input.RelationshipToEmergencyContact.Ptr()
+		tenant.RelationshipToEmergencyContact = input.RelationshipToEmergencyContact.Ptr()
+	}
+	if input.Occupation.IsSet {
+		updates["occupation"] = input.Occupation.Ptr()
+		tenant.Occupation = input.Occupation.Ptr()
+	}
+	if input.Employer.IsSet {
+		updates["employer"] = input.Employer.Ptr()
+		tenant.Employer = input.Employer.Ptr()
+	}
+	if input.OccupationAddress.IsSet {
+		updates["occupation_address"] = input.OccupationAddress.Ptr()
+		tenant.OccupationAddress = input.OccupationAddress.Ptr()
+	}
+	if input.ProofOfIncomeUrl.IsSet {
+		updates["proof_of_income_url"] = input.ProofOfIncomeUrl.Ptr()
+		tenant.ProofOfIncomeUrl = input.ProofOfIncomeUrl.Ptr()
+	}
+
+	if len(updates) == 0 {
+		return tenant, nil
+	}
+
+	if err := s.repo.Update(ctx, tenant, updates); err != nil {
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "UpdateTenant",
+				"action":   "updating tenant",
+			},
+		})
+	}
+
 	return tenant, nil
 }

@@ -53,10 +53,12 @@ export function UnitSelect({
 		if (data && data.rows) {
 			return data.rows.map((item) => ({
 				value: item.id,
-				label:
-					item.status === 'Unit.Status.Available'
-						? item.name
-						: `${item.name} (${getPropertyUnitStatusLabel(item.status)})`,
+				label: [
+					'Unit.Status.Available',
+					'Unit.Status.PartiallyOccupied',
+				].includes(item.status)
+					? `${item.name} (Available)`
+					: `${item.name} (${getPropertyUnitStatusLabel(item.status)})`,
 				isAvailable:
 					item.status === 'Unit.Status.Available' ||
 					item.status === 'Unit.Status.PartiallyOccupied',
@@ -95,7 +97,9 @@ export function UnitSelect({
 				}}
 			>
 				<SelectTrigger className="w-full">
-					<SelectValue placeholder="Select Unit..." />
+					<SelectValue
+						placeholder={isPending ? 'Loading...' : 'Select Unit...'}
+					/>
 				</SelectTrigger>
 
 				<SelectContent>

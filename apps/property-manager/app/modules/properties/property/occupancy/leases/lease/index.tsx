@@ -1,75 +1,36 @@
-import {
-	CalendarDays,
-	CheckIcon,
-	ExternalLink,
-	FileText,
-	HouseIcon,
-	ScrollText,
-	User,
-} from 'lucide-react'
+import { ExternalLink, FileText } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { Link, useLoaderData } from 'react-router'
+import { useLoaderData, useSearchParams } from 'react-router'
 import { ChecklistAlerts } from './components/checklist-alerts'
 import { ChecklistSection } from './components/checklist-section'
+import { DetailField, DetailPanel } from './components/detail-field'
+import { DocumentRow } from './components/document-row'
+import { LeaseAgreementDocumentSetup } from './components/lease-agreement-document-setup'
+import { LeaseHeader } from './components/lease-header'
+import { LeaseSummaryCard } from './components/lease-summary-card'
 import { StartLeaseDialog } from './components/start-lease-dialog'
 import { LeaseExpensesTab } from './expenses-tab'
-import { Image } from '~/components/Image'
-import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
 import { useHasPropertyPermissions } from '~/components/permissions/use-has-role'
-import { Badge } from '~/components/ui/badge'
-import { Button } from '~/components/ui/button'
-import {
-	Card,
-	CardContent,
-	CardFooter,
-	CardHeader,
-	CardTitle,
-} from '~/components/ui/card'
-import { Separator } from '~/components/ui/separator'
+import { Avatar, AvatarFallback } from '~/components/ui/avatar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
-import { TypographyMuted } from '~/components/ui/typography'
 import { useTour } from '~/hooks/use-tour'
 import { PermissionState } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
-import { getLeaseStatusClass, getLeaseStatusLabel } from '~/lib/lease.utils'
 import {
 	getPaymentFrequencyLabel,
 	getPaymentFrequencyPeriodLabel,
 } from '~/lib/properties.utils'
-import { toFirstUpperCase } from '~/lib/strings'
+import { getInitials, toFirstUpperCase } from '~/lib/strings'
 import { LEASE_DETAIL_TOUR_STEPS, TOUR_KEYS } from '~/lib/tours'
 import { useProperty } from '~/providers/property-provider'
 import type { loader } from '~/routes/_auth.properties.$propertyId.occupancy.leases.$leaseId'
 
-function DetailRow({
-	label,
-	value,
-}: {
-	label: string
-	value: React.ReactNode
-}) {
-	return (
-		<div className="flex flex-col gap-0.5">
-			<TypographyMuted className="text-xs">{label}</TypographyMuted>
-			<div className="text-sm font-medium">{value ?? '—'}</div>
-		</div>
-	)
-}
-
-function SectionHeading({ children }: { children: React.ReactNode }) {
-	return (
-		<>
-			<p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
-				{children}
-			</p>
-			<Separator />
-		</>
-	)
-}
-
 export function LeaseDetailModule() {
-	const { lease, clientUserProperty } = useLoaderData<typeof loader>()
+	const { lease, clientUserProperty, documentTemplates } =
+		useLoaderData<typeof loader>()
+	const [searchParams] = useSearchParams()
+	const initialTab = searchParams.get('tab') ?? 'details'
 	const { clientUserProperty: ctxProp } = useProperty()
 	const { hasPermissions: managerPermission } = useHasPropertyPermissions({
 		roles: ['MANAGER'],
@@ -102,6 +63,9 @@ export function LeaseDetailModule() {
 	const isPending = lease.status === 'Lease.Status.Pending'
 	const canEditChecklist = managerPermission === PermissionState.AUTHORIZED
 
+	const tenantName = tenant ? `${tenant.first_name} ${tenant.last_name}` : null
+	const subtitle = `Lease · ${unit?.name ?? '—'} · ${tenantName ?? '—'}`
+
 	return (
 		<>
 			<div className="mx-auto flex max-w-6xl flex-col">
@@ -110,648 +74,420 @@ export function LeaseDetailModule() {
 					canEdit={canEditChecklist}
 					propertyId={propertyId}
 				/>
+
+				<div className="mx-5 mt-5">
+					<LeaseHeader
+						lease={lease}
+						subtitle={subtitle}
+						isPending={isPending}
+						isTerminable={isTerminable}
+						onStartLease={() => setStartLeaseOpen(true)}
+					/>
+				</div>
+
 				<div className="m-5 grid grid-cols-12 gap-6">
 					{/* Sidebar */}
 					<div id="lease-sidebar" className="col-span-12 lg:col-span-4">
-						<Card className="overflow-hidden pt-0 shadow-none">
-							{unit?.images?.[0] && (
-								<div className="h-40 w-full overflow-hidden">
-									<Image
-										src={unit.images[0]}
-										alt={unit.name}
-										className="h-full w-full object-cover"
-									/>
-								</div>
-							)}
-							<CardHeader className="flex items-start justify-between gap-2">
-								<div className="flex items-center gap-2">
-									<ScrollText className="text-muted-foreground size-5" />
-									<CardTitle className="text-base">{lease.code}</CardTitle>
-								</div>
-								<Badge
-									variant="outline"
-									className={`px-2 py-0.5 text-xs ${getLeaseStatusClass(lease.status)}`}
-								>
-									{getLeaseStatusLabel(lease.status)}
-								</Badge>
-							</CardHeader>
-
-							<CardContent className="space-y-4 text-sm">
-								{/* Tenant */}
-								<div className="flex items-center gap-2">
-									<User className="text-muted-foreground size-4 shrink-0" />
-									{tenant ? (
-										<Link
-											to={`/properties/${propertyId}/occupancy/tenants/${tenant.id}`}
-											className="text-blue-600 hover:underline"
-										>
-											{tenant.first_name} {tenant.last_name}
-										</Link>
-									) : (
-										<span className="text-muted-foreground">—</span>
-									)}
-								</div>
-
-								{/* Unit */}
-								<div className="flex items-center gap-2">
-									<HouseIcon className="text-muted-foreground size-4 shrink-0" />
-									{unit ? (
-										<Link
-											to={`/properties/${propertyId}/assets/units/${unit.id}`}
-											className="text-blue-600 hover:underline"
-										>
-											{unit.name}
-										</Link>
-									) : (
-										<span className="text-muted-foreground">—</span>
-									)}
-								</div>
-
-								<Separator />
-
-								{/* Rent */}
-								<div className="space-y-0.5">
-									<TypographyMuted className="text-xs">
-										Rent Fee
-									</TypographyMuted>
-									<p className="text-2xl font-semibold">
-										{formatAmount(
-											convertPesewasToCedis(lease.rent_fee),
-											lease.rent_fee_currency,
-										)}
-									</p>
-									<TypographyMuted className="text-xs">
-										{getPaymentFrequencyLabel(lease.payment_frequency ?? '')}
-									</TypographyMuted>
-								</div>
-
-								<Separator />
-
-								{/* Created On */}
-								<div className="flex items-center gap-2">
-									<CalendarDays className="text-muted-foreground size-4 shrink-0" />
-									<div>
-										<TypographyMuted className="text-xs">
-											Created On
-										</TypographyMuted>
-										<p className="text-sm">
-											{localizedDayjs(lease.created_at).format('LL')}
-										</p>
-									</div>
-								</div>
-
-								{/* Updated On */}
-								<div className="flex items-center gap-2">
-									<CalendarDays className="text-muted-foreground size-4 shrink-0" />
-									<div>
-										<TypographyMuted className="text-xs">
-											Updated On
-										</TypographyMuted>
-										<p className="text-sm">
-											{localizedDayjs(lease.updated_at).format('LL')}
-										</p>
-									</div>
-								</div>
-
-								{/* Application link */}
-								{application && (
-									<>
-										<Separator />
-										<Link
-											to={`/properties/${propertyId}/occupancy/applications/${application.id}`}
-											className="flex items-center gap-1 text-xs text-blue-600 hover:underline"
-										>
-											<ExternalLink className="size-3.5" />
-											View Application ({application.code})
-										</Link>
-									</>
-								)}
-							</CardContent>
-
-							<CardFooter className="flex justify-end gap-2 border-t pt-4">
-								{isTerminable && (
-									<PropertyPermissionGuard roles={['MANAGER']}>
-										<Button variant="destructive" size="sm" disabled>
-											Terminate Lease
-										</Button>
-									</PropertyPermissionGuard>
-								)}
-								{isPending && (
-									<PropertyPermissionGuard roles={['MANAGER']}>
-										<Button
-											variant="default"
-											className="bg-teal-600 hover:bg-teal-700 dark:bg-teal-900 dark:hover:bg-teal-800"
-											size="sm"
-											onClick={() => setStartLeaseOpen(true)}
-										>
-											Start Lease
-											<CheckIcon className="size-4" />
-										</Button>
-									</PropertyPermissionGuard>
-								)}
-							</CardFooter>
-						</Card>
+						<LeaseSummaryCard
+							lease={lease}
+							propertyId={propertyId}
+							tenant={tenant}
+							unit={unit}
+							application={application}
+						/>
 					</div>
 
 					{/* Main Content */}
 					<div className="col-span-12 lg:col-span-8">
-						<Tabs defaultValue="details">
-							<TabsList id="lease-tabs">
-								<TabsTrigger value="details">Lease Details</TabsTrigger>
-								<TabsTrigger value="tenant">Tenant Profile</TabsTrigger>
-								<TabsTrigger value="documents">Documents</TabsTrigger>
-								<TabsTrigger value="expenses">Expenses</TabsTrigger>
-							</TabsList>
+						<div className="overflow-x-auto pb-1">
+							<Tabs defaultValue={initialTab}>
+								<TabsList id="lease-tabs">
+									<TabsTrigger value="details">Lease Details</TabsTrigger>
+									<TabsTrigger value="tenant">Tenant Profile</TabsTrigger>
+									<TabsTrigger value="documents">Documents</TabsTrigger>
+									<TabsTrigger value="expenses">Expenses</TabsTrigger>
+								</TabsList>
 
-							{/* Details Tab */}
-							<TabsContent value="details" className="mt-4 space-y-4">
-								{/* Lease Terms + Financial Terms */}
-								<Card className="shadow-none">
-									<CardContent className="space-y-6">
-										{/* Lease Terms */}
-										<div className="space-y-3">
-											<SectionHeading>Lease Terms</SectionHeading>
-											<div className="grid grid-cols-2 gap-4">
-												<DetailRow
-													label="Payment Frequency"
-													value={
-														getPaymentFrequencyLabel(
-															lease.payment_frequency ?? '',
-														) || '—'
-													}
-												/>
-												<DetailRow
-													label="Duration"
-													value={`${lease.stay_duration} ${getPaymentFrequencyPeriodLabel(lease.stay_duration_frequency, lease.stay_duration)}`}
-												/>
-												<DetailRow
-													label="Move-in Date"
-													value={localizedDayjs(lease.move_in_date).format(
+								{/* Details Tab */}
+								<TabsContent value="details" className="mt-4 space-y-4">
+									<DetailPanel label="Lease terms">
+										<div className="grid grid-cols-2 gap-4">
+											<DetailField
+												label="Payment Frequency"
+												value={
+													getPaymentFrequencyLabel(
+														lease.payment_frequency ?? '',
+													) || '—'
+												}
+											/>
+											<DetailField
+												label="Duration"
+												value={`${lease.stay_duration} ${getPaymentFrequencyPeriodLabel(lease.stay_duration_frequency, lease.stay_duration)}`}
+											/>
+											<DetailField
+												label="Move-in Date"
+												value={localizedDayjs(lease.move_in_date).format('LL')}
+											/>
+											<DetailField
+												label="Move-out Date"
+												value={localizedDayjs(lease.move_out_date).format('LL')}
+											/>
+											<DetailField
+												label="Property Inspection"
+												value={
+													lease.property_inspection_date
+														? localizedDayjs(
+																lease.property_inspection_date,
+															).format('LL')
+														: '—'
+												}
+											/>
+											<DetailField
+												label="Utility Transfers"
+												value={
+													lease.utility_transfers_date
+														? localizedDayjs(
+																lease.utility_transfers_date,
+															).format('LL')
+														: '—'
+												}
+											/>
+											<DetailField
+												label="Activated At"
+												value={
+													lease.activated_at
+														? localizedDayjs(lease.activated_at).format('LL')
+														: '—'
+												}
+											/>
+											{lease.cancelled_at && (
+												<DetailField
+													label="Cancelled At"
+													value={localizedDayjs(lease.cancelled_at).format(
 														'LL',
 													)}
 												/>
-												<DetailRow
-													label="Property Inspection"
-													value={
-														lease.property_inspection_date
-															? localizedDayjs(
-																	lease.property_inspection_date,
-																).format('LL')
-															: '—'
-													}
+											)}
+											{lease.terminated_at && (
+												<DetailField
+													label="Terminated At"
+													value={localizedDayjs(lease.terminated_at).format(
+														'LL',
+													)}
 												/>
-												<DetailRow
-													label="Utility Transfers"
-													value={
-														lease.utility_transfers_date
-															? localizedDayjs(
-																	lease.utility_transfers_date,
-																).format('LL')
-															: '—'
-													}
+											)}
+											{lease.completed_at && (
+												<DetailField
+													label="Completed At"
+													value={localizedDayjs(lease.completed_at).format(
+														'LL',
+													)}
 												/>
-												<DetailRow
-													label="Activated At"
-													value={
-														lease.activated_at
-															? localizedDayjs(lease.activated_at).format('LL')
-															: '—'
-													}
-												/>
-												{lease.cancelled_at && (
-													<DetailRow
-														label="Cancelled At"
-														value={localizedDayjs(lease.cancelled_at).format(
-															'LL',
-														)}
-													/>
-												)}
-												{lease.terminated_at && (
-													<DetailRow
-														label="Terminated At"
-														value={localizedDayjs(lease.terminated_at).format(
-															'LL',
-														)}
-													/>
-												)}
-												{lease.completed_at && (
-													<DetailRow
-														label="Completed At"
-														value={localizedDayjs(lease.completed_at).format(
-															'LL',
-														)}
-													/>
-												)}
-											</div>
+											)}
 										</div>
+									</DetailPanel>
 
-										{/* Financial Terms */}
-										{application && (
-											<div className="space-y-3">
-												<SectionHeading>Financial Terms</SectionHeading>
-												<div className="grid grid-cols-2 gap-4">
-													<DetailRow
-														label="Rent Fee"
+									{application && (
+										<DetailPanel label="Financial terms">
+											<div className="grid grid-cols-2 gap-4">
+												<DetailField
+													label="Rent Fee"
+													value={formatAmount(
+														convertPesewasToCedis(application.rent_fee),
+														application.rent_fee_currency,
+													)}
+												/>
+												{application.initial_deposit_fee != null && (
+													<DetailField
+														label="Initial Deposit"
 														value={formatAmount(
-															convertPesewasToCedis(application.rent_fee),
+															convertPesewasToCedis(
+																application.initial_deposit_fee,
+															),
 															application.rent_fee_currency,
 														)}
 													/>
-													{application.initial_deposit_fee != null && (
-														<DetailRow
-															label="Initial Deposit"
-															value={formatAmount(
-																convertPesewasToCedis(
-																	application.initial_deposit_fee,
-																),
-																application.rent_fee_currency,
-															)}
-														/>
-													)}
-													{application.payment_frequency && (
-														<DetailRow
-															label="Payment Frequency"
-															value={getPaymentFrequencyLabel(
-																application.payment_frequency,
-															)}
-														/>
-													)}
-													<DetailRow
-														label="Security Deposit"
+												)}
+												{application.payment_frequency && (
+													<DetailField
+														label="Payment Frequency"
+														value={getPaymentFrequencyLabel(
+															application.payment_frequency,
+														)}
+													/>
+												)}
+												<DetailField
+													label="Security Deposit"
+													value={
+														application.security_deposit_fee
+															? formatAmount(
+																	convertPesewasToCedis(
+																		application.security_deposit_fee,
+																	),
+																	application.rent_fee_currency,
+																)
+															: '-'
+													}
+												/>
+											</div>
+											{application.application_payment_invoice && (
+												<DocumentRow
+													icon={<FileText className="size-[18px]" />}
+													tone="blue"
+													title="Invoice"
+													subtitle={
+														application.application_payment_invoice.code
+													}
+													to={`/properties/${propertyId}/financials/invoices/${application.application_payment_invoice.id}`}
+													actionLabel="Open"
+												/>
+											)}
+										</DetailPanel>
+									)}
+
+									<DetailPanel label="Inspection reports">
+										<div id="lease-checklist">
+											<ChecklistSection
+												leaseId={lease.id}
+												canEdit={canEditChecklist}
+												propertyId={propertyId}
+											/>
+										</div>
+									</DetailPanel>
+								</TabsContent>
+
+								{/* Tenant Profile Tab */}
+								<TabsContent value="tenant" className="mt-4 space-y-4">
+									{tenant ? (
+										<>
+											<div className="flex items-center gap-4 rounded-xl border p-5">
+												<Avatar className="size-14">
+													<AvatarFallback className="text-primary bg-primary/10 text-lg font-semibold">
+														{getInitials(tenantName ?? '?')}
+													</AvatarFallback>
+												</Avatar>
+												<div>
+													<p className="font-serif text-xl">{tenantName}</p>
+													<p className="text-muted-foreground mt-0.5 text-xs">
+														{unit?.name ?? '—'}
+													</p>
+												</div>
+											</div>
+
+											<DetailPanel label="Personal Information">
+												<div className="grid grid-cols-2 gap-4">
+													<DetailField
+														label="Full Name"
+														value={`${tenant.first_name}${tenant.other_names ? ` ${tenant.other_names}` : ''} ${tenant.last_name}`}
+													/>
+													<DetailField label="Email" value={tenant.email} />
+													<DetailField label="Phone" value={tenant.phone} />
+													<DetailField
+														label="Gender"
+														value={toFirstUpperCase(tenant.gender)}
+													/>
+													<DetailField
+														label="Date of Birth"
+														value={localizedDayjs(tenant.date_of_birth).format(
+															'LL',
+														)}
+													/>
+													<DetailField
+														label="Nationality"
 														value={
-															application.security_deposit_fee
-																? formatAmount(
-																		convertPesewasToCedis(
-																			application.security_deposit_fee,
-																		),
-																		application.rent_fee_currency,
-																	)
+															tenant.nationality
+																? toFirstUpperCase(tenant.nationality)
 																: '-'
 														}
 													/>
-													{application.application_payment_invoice && (
-														<div className="flex flex-col gap-0.5">
-															<TypographyMuted className="text-xs">
-																Invoice
-															</TypographyMuted>
-															<Link
-																to={`/properties/${propertyId}/financials/invoices/${application.application_payment_invoice.id}`}
-																className="flex items-center gap-1 text-sm text-blue-600 hover:underline"
-															>
-																<FileText className="size-3.5" />
-																{application.application_payment_invoice.code}
-															</Link>
-														</div>
-													)}
+													<DetailField
+														label="Marital Status"
+														value={
+															tenant.marital_status
+																? toFirstUpperCase(tenant.marital_status)
+																: '-'
+														}
+													/>
+													<DetailField
+														label="Current Address"
+														value={tenant.current_address}
+													/>
 												</div>
-											</div>
-										)}
-									</CardContent>
-								</Card>
+											</DetailPanel>
 
-								{/* Inspection Reports — separate card */}
-								<Card id="lease-checklist" className="shadow-none">
-									<CardContent>
-										<ChecklistSection
-											leaseId={lease.id}
-											canEdit={canEditChecklist}
-											propertyId={propertyId}
-										/>
-									</CardContent>
-								</Card>
-							</TabsContent>
-
-							{/* Tenant Profile Tab */}
-							<TabsContent value="tenant" className="mt-4">
-								<Card className="shadow-none">
-									<CardContent className="space-y-6">
-										{tenant ? (
-											<>
-												{/* Personal Info */}
-												<div className="space-y-3">
-													<SectionHeading>Personal Information</SectionHeading>
-													<div className="grid grid-cols-2 gap-4">
-														<DetailRow
-															label="Full Name"
-															value={`${tenant.first_name}${tenant.other_names ? ` ${tenant.other_names}` : ''} ${tenant.last_name}`}
-														/>
-														<DetailRow label="Email" value={tenant.email} />
-														<DetailRow label="Phone" value={tenant.phone} />
-														<DetailRow
-															label="Gender"
-															value={toFirstUpperCase(tenant.gender)}
-														/>
-														<DetailRow
-															label="Date of Birth"
-															value={localizedDayjs(
-																tenant.date_of_birth,
-															).format('LL')}
-														/>
-														<DetailRow
-															label="Nationality"
+											<DetailPanel label="Identification">
+												<div className="grid grid-cols-2 gap-4">
+													<DetailField
+														label="ID Type"
+														value={tenant.id_type?.replace(/_/g, ' ') ?? '—'}
+													/>
+													<DetailField
+														label="ID Number"
+														value={tenant.id_number}
+													/>
+													{tenant.id_front_url && (
+														<DetailField
+															label="ID Front"
 															value={
-																tenant.nationality
-																	? toFirstUpperCase(tenant.nationality)
-																	: '-'
-															}
-														/>
-														<DetailRow
-															label="Marital Status"
-															value={
-																tenant.marital_status
-																	? toFirstUpperCase(tenant.marital_status)
-																	: '-'
-															}
-														/>
-														<DetailRow
-															label="Current Address"
-															value={tenant.current_address}
-														/>
-													</div>
-												</div>
-
-												{/* ID Information */}
-												<div className="space-y-3">
-													<SectionHeading>Identification</SectionHeading>
-													<div className="grid grid-cols-2 gap-4">
-														<DetailRow
-															label="ID Type"
-															value={tenant.id_type?.replace(/_/g, ' ') ?? '—'}
-														/>
-														<DetailRow
-															label="ID Number"
-															value={tenant.id_number}
-														/>
-														{tenant.id_front_url && (
-															<div className="flex flex-col gap-0.5">
-																<TypographyMuted className="text-xs">
-																	ID Front
-																</TypographyMuted>
 																<a
 																	href={tenant.id_front_url}
 																	target="_blank"
 																	rel="noopener noreferrer"
-																	className="flex items-center gap-1 text-sm text-blue-600 hover:underline"
+																	className="text-primary flex items-center gap-1 text-sm font-medium hover:underline"
 																>
 																	<ExternalLink className="size-3.5" />
 																	View
 																</a>
-															</div>
-														)}
-														{tenant.id_back_url && (
-															<div className="flex flex-col gap-0.5">
-																<TypographyMuted className="text-xs">
-																	ID Back
-																</TypographyMuted>
+															}
+														/>
+													)}
+													{tenant.id_back_url && (
+														<DetailField
+															label="ID Back"
+															value={
 																<a
 																	href={tenant.id_back_url}
 																	target="_blank"
 																	rel="noopener noreferrer"
-																	className="flex items-center gap-1 text-sm text-blue-600 hover:underline"
+																	className="text-primary flex items-center gap-1 text-sm font-medium hover:underline"
 																>
 																	<ExternalLink className="size-3.5" />
 																	View
 																</a>
-															</div>
-														)}
-													</div>
+															}
+														/>
+													)}
 												</div>
+											</DetailPanel>
 
-												{/* Employment */}
-												<div className="space-y-3">
-													<SectionHeading>Employment</SectionHeading>
-													<div className="grid grid-cols-2 gap-4">
-														<DetailRow
-															label="Employer Type"
-															value={toFirstUpperCase(tenant.employer_type)}
-														/>
-														<DetailRow
-															label="Employer"
-															value={tenant.employer}
-														/>
-														<DetailRow
-															label="Occupation"
-															value={tenant.occupation}
-														/>
-														<DetailRow
-															label="Occupation Address"
-															value={tenant.occupation_address}
-														/>
-														{tenant.proof_of_income_url && (
-															<div className="flex flex-col gap-0.5">
-																<TypographyMuted className="text-xs">
-																	Proof of Income
-																</TypographyMuted>
+											<DetailPanel label="Employment">
+												<div className="grid grid-cols-2 gap-4">
+													<DetailField
+														label="Employer Type"
+														value={toFirstUpperCase(tenant.employer_type)}
+													/>
+													<DetailField
+														label="Employer"
+														value={tenant.employer}
+													/>
+													<DetailField
+														label="Occupation"
+														value={tenant.occupation}
+													/>
+													<DetailField
+														label="Occupation Address"
+														value={tenant.occupation_address}
+													/>
+													{tenant.proof_of_income_url && (
+														<DetailField
+															label="Proof of Income"
+															value={
 																<a
 																	href={tenant.proof_of_income_url}
 																	target="_blank"
 																	rel="noopener noreferrer"
-																	className="flex items-center gap-1 text-sm text-blue-600 hover:underline"
+																	className="text-primary flex items-center gap-1 text-sm font-medium hover:underline"
 																>
 																	<ExternalLink className="size-3.5" />
 																	View
 																</a>
-															</div>
-														)}
-													</div>
-												</div>
-
-												{/* Emergency Contact */}
-												<div className="space-y-3">
-													<SectionHeading>Emergency Contact</SectionHeading>
-													<div className="grid grid-cols-2 gap-4">
-														<DetailRow
-															label="Name"
-															value={tenant.emergency_contact_name}
-														/>
-														<DetailRow
-															label="Phone"
-															value={tenant.emergency_contact_phone}
-														/>
-														<DetailRow
-															label="Relationship"
-															value={
-																tenant.relationship_to_emergency_contact
-																	? toFirstUpperCase(
-																			tenant.relationship_to_emergency_contact,
-																		)
-																	: '-'
 															}
 														/>
-													</div>
+													)}
 												</div>
+											</DetailPanel>
 
-												{/* Previous Tenancy */}
-												{/* {(tenant.previous_landlord_name ||
-													tenant.previous_landlord_phone ||
-													tenant.previous_tenancy_period) && (
-													<div className="space-y-3">
-														<SectionHeading>Previous Tenancy</SectionHeading>
-														<div className="grid grid-cols-2 gap-4">
-															<DetailRow
-																label="Previous Landlord"
-																value={tenant.previous_landlord_name}
-															/>
-															<DetailRow
-																label="Landlord Phone"
-																value={tenant.previous_landlord_phone}
-															/>
-															<DetailRow
-																label="Tenancy Period"
-																value={tenant.previous_tenancy_period}
-															/>
-														</div>
-													</div>
-												)} */}
-											</>
-										) : (
+											<DetailPanel label="Emergency Contact">
+												<div className="grid grid-cols-2 gap-4">
+													<DetailField
+														label="Name"
+														value={tenant.emergency_contact_name}
+													/>
+													<DetailField
+														label="Phone"
+														value={tenant.emergency_contact_phone}
+													/>
+													<DetailField
+														label="Relationship"
+														value={
+															tenant.relationship_to_emergency_contact
+																? toFirstUpperCase(
+																		tenant.relationship_to_emergency_contact,
+																	)
+																: '-'
+														}
+													/>
+												</div>
+											</DetailPanel>
+										</>
+									) : (
+										<DetailPanel>
 											<p className="text-muted-foreground text-sm">
 												Tenant information not available.
 											</p>
+										</DetailPanel>
+									)}
+								</TabsContent>
+
+								{/* Documents Tab */}
+								<TabsContent value="documents" className="mt-4 space-y-4">
+									<DetailPanel label="Lease Agreement">
+										{lease.lease_agreement_document_url ? (
+											<DocumentRow
+												icon={<FileText className="size-[18px]" />}
+												title="Lease Agreement"
+												subtitle="Signed"
+												href={lease.lease_agreement_document_url}
+												actionLabel="View Document"
+											/>
+										) : (
+											<LeaseAgreementDocumentSetup
+												leaseId={lease.id}
+												propertyId={propertyId}
+												lease={lease}
+												tenant={tenant}
+												documentTemplates={documentTemplates}
+												isManager={canEditChecklist}
+											/>
 										)}
-									</CardContent>
-								</Card>
-							</TabsContent>
+									</DetailPanel>
 
-							{/* Documents Tab */}
-							<TabsContent value="documents" className="mt-4">
-								<Card className="shadow-none">
-									<CardContent className="space-y-6">
-										{/* Lease Agreement */}
-										<div className="space-y-3">
-											<SectionHeading>Lease Agreement</SectionHeading>
-											{lease.lease_agreement_document_url ? (
-												<div className="space-y-4 text-sm">
-													<a
-														href={lease.lease_agreement_document_url}
-														target="_blank"
-														rel="noopener noreferrer"
-														className="flex items-center gap-1 text-blue-600 hover:underline"
-													>
-														<ExternalLink className="size-3.5" />
-														View Document
-													</a>
-													{application?.lease_agreement_document_signatures &&
-													application.lease_agreement_document_signatures
-														.length > 0 ? (
-														<div className="space-y-2">
-															{application.lease_agreement_document_signatures
-																.filter(
-																	(sig) =>
-																		sig.document_id ===
-																		application.lease_agreement_document_id,
-																)
-																.map((sig) => {
-																	const role = sig.role
-																	const roleLabel: Record<typeof role, string> =
-																		{
-																			PROPERTY_MANAGER: 'Property Manager',
-																			TENANT: 'Tenant',
-																			PM_WITNESS: 'PM Witness',
-																			TENANT_WITNESS: 'Tenant Witness',
-																		}
-																	return (
-																		<div
-																			key={role}
-																			className="flex items-center justify-between rounded-md border px-3 py-2"
-																		>
-																			<div>
-																				<p className="text-xs font-medium">
-																					{roleLabel[role]}
-																				</p>
-																				{sig?.signed_by_name && (
-																					<p className="text-muted-foreground text-xs">
-																						{sig.signed_by_name}
-																					</p>
-																				)}
-																			</div>
-																			{sig ? (
-																				<div className="flex items-center gap-2">
-																					<Badge
-																						variant="outline"
-																						className="bg-teal-500 px-1.5 text-white dark:bg-teal-900"
-																					>
-																						Signed{' '}
-																						{localizedDayjs(
-																							sig.created_at,
-																						).format('LLL')}
-																					</Badge>
-																				</div>
-																			) : (
-																				<Badge
-																					variant="outline"
-																					className="bg-zinc-400 px-1.5 text-white"
-																				>
-																					Not signed
-																				</Badge>
-																			)}
-																		</div>
-																	)
-																})}
-														</div>
-													) : (
-														<p className="text-muted-foreground text-xs">
-															No signature records available.
-														</p>
-													)}
-												</div>
-											) : (
-												<p className="text-muted-foreground text-sm">N/A</p>
-											)}
-										</div>
+									{lease.termination_agreement_document_url && (
+										<DetailPanel label="Termination Agreement">
+											<DocumentRow
+												icon={<FileText className="size-[18px]" />}
+												title="Termination Agreement"
+												subtitle={`PM signed: ${
+													lease.termination_agreement_document_property_manager_signed_at
+														? localizedDayjs(
+																lease.termination_agreement_document_property_manager_signed_at,
+															).format('LL')
+														: 'Not yet signed'
+												} · Tenant signed: ${
+													lease.termination_agreement_document_tenant_signed_at
+														? localizedDayjs(
+																lease.termination_agreement_document_tenant_signed_at,
+															).format('LL')
+														: 'Not yet signed'
+												}`}
+												href={lease.termination_agreement_document_url}
+												actionLabel="View Document"
+											/>
+										</DetailPanel>
+									)}
+								</TabsContent>
 
-										{/* Termination Agreement */}
-										<div className="space-y-3">
-											<SectionHeading>Termination Agreement</SectionHeading>
-											{lease.termination_agreement_document_url ? (
-												<div className="space-y-2 text-sm">
-													<a
-														href={lease.termination_agreement_document_url}
-														target="_blank"
-														rel="noopener noreferrer"
-														className="flex items-center gap-1 text-blue-600 hover:underline"
-													>
-														<ExternalLink className="size-3.5" />
-														View Document
-													</a>
-													<div className="text-muted-foreground space-y-1 text-xs">
-														<p>
-															PM signed:{' '}
-															{lease.termination_agreement_document_property_manager_signed_at
-																? localizedDayjs(
-																		lease.termination_agreement_document_property_manager_signed_at,
-																	).format('LL')
-																: 'Not yet signed'}
-														</p>
-														<p>
-															Tenant signed:{' '}
-															{lease.termination_agreement_document_tenant_signed_at
-																? localizedDayjs(
-																		lease.termination_agreement_document_tenant_signed_at,
-																	).format('LL')
-																: 'Not yet signed'}
-														</p>
-													</div>
-												</div>
-											) : (
-												<p className="text-muted-foreground text-sm">N/A</p>
-											)}
-										</div>
-									</CardContent>
-								</Card>
-							</TabsContent>
-							{/* Expenses Tab */}
-							<TabsContent value="expenses" className="mt-4">
-								<Card className="shadow-none">
-									<CardContent className="pt-4">
+								{/* Expenses Tab */}
+								<TabsContent value="expenses" className="mt-4">
+									<DetailPanel>
 										<LeaseExpensesTab
 											leaseId={lease.id}
 											propertyId={propertyId}
 										/>
-									</CardContent>
-								</Card>
-							</TabsContent>
-						</Tabs>
+									</DetailPanel>
+								</TabsContent>
+							</Tabs>
+						</div>
 					</div>
 				</div>
 			</div>

@@ -30,6 +30,7 @@ interface RentloopDocumentSignature {
 	signed_by_name: Nullable<string>
 	signed_by_id: Nullable<string>
 	signed_by?: Nullable<ClientUser>
+	lease_agreement_document_id: Nullable<string>
 	ip_address: string
 	created_at: Date
 	updated_at: Date

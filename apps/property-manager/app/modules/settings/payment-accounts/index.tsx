@@ -5,6 +5,7 @@ import {
 	Edit,
 	EllipsisVertical,
 	Eye,
+	Info,
 	RotateCw,
 	Trash2,
 } from 'lucide-react'
@@ -14,7 +15,8 @@ import { PaymentAccountsController } from './controller'
 import DeletePaymentAccountModal from './delete'
 import SetPaymentAccountAsDefaultModal from './set-default'
 import { useGetPaymentAccounts } from '~/api/payment-accounts'
-import { DataTable } from '~/components/datatable'
+import { DataTable, useDataTableSort } from '~/components/datatable'
+import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import {
@@ -35,6 +37,18 @@ import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
 import { useClient } from '~/providers/client-provider'
 
+/**
+ * Fields the API may order by. `order_by` reaches the backend's ORDER BY
+ * clause, so only these — never a raw URL value — are forwarded.
+ */
+const SORTABLE_FIELDS = [
+	'payment_accounts.identifier',
+	'payment_accounts.rail',
+	'payment_accounts.is_default',
+	'payment_accounts.status',
+	'payment_accounts.created_at',
+]
+
 export function PaymentAccountsModule() {
 	const navigate = useNavigate()
 	const { clientUser } = useClient()
@@ -48,6 +62,10 @@ export function PaymentAccountsModule() {
 		setOpenSetDefaultPaymentAccountModal,
 	] = useState(false)
 	const [searchParams] = useSearchParams()
+	const sorter = useDataTableSort(SORTABLE_FIELDS, {
+		sort_by: 'payment_accounts.created_at',
+		sort: 'desc',
+	})
 
 	const page = searchParams.get('page')
 		? Number(searchParams.get('page'))
@@ -66,7 +84,7 @@ export function PaymentAccountsModule() {
 				owner_types: ['PROPERTY_OWNER', 'SYSTEM'],
 			},
 			pagination: { page, per },
-			sorter: { sort: 'desc', sort_by: 'created_at' },
+			sorter,
 		})
 
 	const isLoading = isPending || isRefetching
@@ -74,24 +92,19 @@ export function PaymentAccountsModule() {
 	const columns: ColumnDef<PaymentAccount>[] = useMemo(() => {
 		return [
 			{
-				id: 'drag',
-				header: () => null,
-				accessorKey: 'rail',
+				accessorKey: 'identifier',
+				header: 'Account Number',
+				enableSorting: true,
+				meta: { sortKey: 'payment_accounts.identifier' },
 				cell: ({ getValue }) => {
 					const value = getValue<PaymentAccount['rail']>()
 					const Icon = paymentIcons[value]
 
-					return Icon ? (
-						<Icon className="size-5 text-zinc-500 dark:text-white" />
-					) : null
-				},
-			},
-			{
-				accessorKey: 'identifier',
-				header: 'Account Number',
-				cell: ({ getValue }) => {
 					return (
-						<div className="min-w-32">
+						<div className="flex min-w-32 items-center gap-2">
+							{Icon ? (
+								<Icon className="size-5 text-zinc-500 dark:text-white" />
+							) : null}
 							<span className="truncate text-xs text-zinc-600 dark:text-white">
 								{getValue<string>() ?? 'N/A'}
 							</span>
@@ -102,6 +115,8 @@ export function PaymentAccountsModule() {
 			{
 				accessorKey: 'rail',
 				header: 'Account Type',
+				enableSorting: true,
+				meta: { sortKey: 'payment_accounts.rail' },
 				cell: ({ getValue }) => (
 					<span className="truncate text-xs text-zinc-600 dark:text-white">
 						{getPaymentAccountTypeLabel(getValue<PaymentAccount['rail']>())}
@@ -111,6 +126,8 @@ export function PaymentAccountsModule() {
 			{
 				accessorKey: 'is_default',
 				header: 'Is Default',
+				enableSorting: true,
+				meta: { sortKey: 'payment_accounts.is_default' },
 				cell: ({ getValue }) => {
 					const isDefault = getValue<boolean>()
 
@@ -138,6 +155,8 @@ export function PaymentAccountsModule() {
 			{
 				accessorKey: 'status',
 				header: 'Status',
+				enableSorting: true,
+				meta: { sortKey: 'payment_accounts.status' },
 				cell: ({ getValue }) => (
 					<Badge variant="outline" className="text-muted-foreground px-1.5">
 						{getValue<PaymentAccount['status']>() === 'ACTIVE' ? (
@@ -240,6 +259,14 @@ export function PaymentAccountsModule() {
 					</Button>
 				</div>
 			</div>
+			<Alert>
+				<Info className="size-4" />
+				<AlertTitle>Payment accounts are managed by support</AlertTitle>
+				<AlertDescription>
+					You cannot add payment accounts manually. To add or update payment
+					accounts for online payments, please reach out to our support team.
+				</AlertDescription>
+			</Alert>
 			<PaymentAccountsController />
 			<div className="h-full w-full">
 				<DataTable

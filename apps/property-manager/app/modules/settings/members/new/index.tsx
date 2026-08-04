@@ -1,11 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Check, HelpCircle, Mail } from 'lucide-react'
 import { useEffect } from 'react'
-import { useFieldArray, useForm } from 'react-hook-form'
+import { useFieldArray, useForm, useWatch } from 'react-hook-form'
+import { isValidPhoneNumber } from 'react-phone-number-input'
 import { Link, useFetcher } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { useGetMyProperties } from '~/api/properties'
+import { InternationalPhoneInput } from '~/components/international-phone'
 import { Button } from '~/components/ui/button'
 import { FieldGroup } from '~/components/ui/field'
 import {
@@ -45,8 +47,6 @@ import {
 	TypographyH4,
 	TypographyMuted,
 } from '~/components/ui/typography'
-import { isValidPhoneNumber } from 'react-phone-number-input'
-import { InternationalPhoneInput } from '~/components/international-phone'
 import { normalizeInternationalPhoneNumber } from '~/lib/phone'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
@@ -61,16 +61,16 @@ const ValidationSchema = z.object({
 	phone: z
 		.string({ error: 'Contact phone number is required' })
 		.refine(isValidPhoneNumber, { message: 'Enter a valid phone number' }),
-	email: z.email('Please enter a valid support email address'),
-	property_assignments: z
-		.array(
-			z.object({
-				property_id: z.string(),
-				name: z.string(),
-				role: z.enum(['MANAGER', 'STAFF']),
-			}),
-		)
-		.min(1, 'Please assign at least one property'),
+	email: z
+		.email('Please enter a valid support email address')
+		.transform((val) => val.toLowerCase().trim()),
+	property_assignments: z.array(
+		z.object({
+			property_id: z.string(),
+			name: z.string(),
+			role: z.enum(['MANAGER', 'STAFF']),
+		}),
+	),
 })
 
 export type FormSchema = z.infer<typeof ValidationSchema>
@@ -100,6 +100,10 @@ export function NewMemberModule() {
 	})
 
 	const { handleSubmit, control, getValues } = rhfMethods
+	const propertyAssignments =
+		(useWatch({ control, name: 'property_assignments' }) as
+			| FormSchema['property_assignments']
+			| undefined) ?? []
 
 	const { fields, append, remove } = useFieldArray({
 		control,
@@ -290,16 +294,22 @@ export function NewMemberModule() {
 					control={control}
 					render={() => (
 						<FormItem>
-							<TypographyH4>Assign Properties to Member</TypographyH4>
+							<TypographyH4>
+								Assign Properties to Member{' '}
+								<span className="text-muted-foreground text-sm font-normal">
+									(Optional)
+								</span>
+							</TypographyH4>
 							<TypographyMuted>
-								Member will have access to all properties you select here.
+								Member will have access to all properties you select here. You
+								can assign properties later.
 							</TypographyMuted>
 
 							{properties.length > 0 && (
 								<div className="mt-4 flex flex-wrap gap-2">
 									{properties.map((item: ClientUserProperty) => {
 										if (!item.property) return null
-										const selected = fields.find(
+										const selected = propertyAssignments.find(
 											(f) => f.property_id === item.property_id,
 										)
 										const isSelected = Boolean(selected)

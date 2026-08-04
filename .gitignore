@@ -24,3 +24,7 @@ firebase_test_cases.yaml
 # Git worktrees
 .worktrees/
 .superpowers/
+
+# Claude Code local settings & agent worktrees
+.claude/settings.local.json
+.claude/worktrees/

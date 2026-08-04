@@ -12,7 +12,6 @@ import {
 	PaginationNext,
 	PaginationPrevious,
 } from '../ui/pagination'
-import { ScrollArea } from '../ui/scroll-area'
 
 interface DataResponse<T> {
 	rows: T[]
@@ -48,7 +47,7 @@ export function GridElement<T extends { id: string }>({
 	empty,
 	isLoading = false,
 	error,
-	boxHeight = 65,
+	// boxHeight = 65,
 	gridColumns = {},
 	gridElement: GridItem,
 }: Props<T>) {
@@ -96,19 +95,14 @@ export function GridElement<T extends { id: string }>({
 	if (!data.length) return <EmptyOutline {...empty} />
 
 	return (
-		<>
-			<ScrollArea
-				className="bg-background mb-2 w-full rounded-xl p-4 shadow-sm"
-				style={{ height: `${boxHeight}vh` }}
-			>
-				<div className={gridClass}>
-					{data.map((item) => (
-						<GridItem key={item.id} data={item} />
-					))}
-				</div>
-			</ScrollArea>
+		<div className="mb-5">
+			<div className={gridClass}>
+				{data.map((item) => (
+					<GridItem key={item.id} data={item} />
+				))}
+			</div>
 
-			<Pagination>
+			<Pagination className="mt-5">
 				<PaginationContent>
 					<PaginationItem
 						className={
@@ -169,6 +163,6 @@ export function GridElement<T extends { id: string }>({
 					</PaginationItem>
 				</PaginationContent>
 			</Pagination>
-		</>
+		</div>
 	)
 }

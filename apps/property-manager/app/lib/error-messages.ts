@@ -4,6 +4,8 @@ export function getErrorMessage(key: string, defaultMessage?: string) {
 			'The email address is already associated with another account.',
 		PasswordIncorrect: 'The current password you entered is incorrect.',
 		CodeIncorrect: 'The code you entered is incorrect.',
+		UserAlreadyMemberOfClient:
+			'Support access is already set up for this workspace. Refresh the page to see the current status.',
 	}
 
 	return (

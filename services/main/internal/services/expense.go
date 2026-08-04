@@ -339,7 +339,7 @@ func (s *expenseService) GenerateExpenseInvoice(
 
 		mr, mrErr := s.mrRepo.GetOneWithPopulate(ctx, repository.GetMaintenanceRequestQuery{
 			ID:       *expense.ContextMaintenanceRequestID,
-			Populate: &[]string{"Lease", "Lease.Tenant", "Unit"},
+			Populate: &[]string{"Lease", "Lease.Tenant"},
 		})
 		if mrErr != nil {
 			tx.Rollback()
@@ -355,7 +355,7 @@ func (s *expenseService) GenerateExpenseInvoice(
 			})
 		}
 
-		propertyID := mr.Unit.PropertyID
+		propertyID := mr.PropertyID
 		lineItem.Metadata = &map[string]any{"mr": mr.ID.String()}
 
 		for _, payer := range input.Payers {

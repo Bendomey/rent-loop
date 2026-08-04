@@ -3,9 +3,11 @@ import dayjs from 'dayjs'
 import { ChevronDown, Pencil, X } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import { useForm, type Resolver } from 'react-hook-form'
+import { isValidPhoneNumber } from 'react-phone-number-input'
 import { useFetcher } from 'react-router'
 import { z } from 'zod'
 
+import { InternationalPhoneInput } from '~/components/international-phone'
 import {
 	Form,
 	FormControl,
@@ -14,9 +16,6 @@ import {
 	FormLabel,
 	FormMessage,
 } from '~/components/ui/form'
-import { formatPhoneWithCountryCode } from '~/lib/misc'
-import { isValidPhoneNumber } from 'react-phone-number-input'
-import { InternationalPhoneInput } from '~/components/international-phone'
 import { Input } from '~/components/ui/input'
 import {
 	Select,
@@ -25,6 +24,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '~/components/ui/select'
+import { formatPhoneWithCountryCode } from '~/lib/misc'
 import { cn } from '~/lib/utils'
 
 type EmployerType = 'STUDENT' | 'WORKER'

@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/clients/fcm"
@@ -9,6 +10,8 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 	log "github.com/sirupsen/logrus"
+	"gorm.io/datatypes"
+	"gorm.io/gorm"
 )
 
 type NotificationService interface {
@@ -19,17 +22,38 @@ type NotificationService interface {
 	// SendToTenantAccount fans out a push notification to all tokens for the account.
 	// Invalid tokens reported by FCM are automatically deleted.
 	SendToTenantAccount(ctx context.Context, tenantAccountID, title, body string, data map[string]string) error
+
+	// CreateNotification persists a new notification record and returns it.
+	CreateNotification(ctx context.Context, input CreateNotificationInput) (*models.Notification, error)
+	// ListInApp returns paginated IN_APP notifications for a recipient, newest first.
+	ListInApp(
+		ctx context.Context,
+		recipientID, recipientType string,
+		page, pageSize int,
+	) ([]*models.Notification, int64, error)
+	// MarkAsRead marks one notification as read, verifying ownership by recipientID.
+	MarkAsRead(ctx context.Context, notificationID, recipientID string) error
+	// MarkAllAsRead marks all unread IN_APP notifications as read for a recipient.
+	MarkAllAsRead(ctx context.Context, recipientID, recipientType string) error
+	// GetUnreadCount returns the count of unread IN_APP notifications for a recipient.
+	GetUnreadCount(ctx context.Context, recipientID, recipientType string) (int64, error)
 }
 
 type notificationService struct {
-	appCtx       pkg.AppContext
-	fcmTokenRepo repository.FcmTokenRepository
+	appCtx           pkg.AppContext
+	fcmTokenRepo     repository.FcmTokenRepository
+	notificationRepo repository.NotificationRepository
 }
 
-func NewNotificationService(appCtx pkg.AppContext, fcmTokenRepo repository.FcmTokenRepository) NotificationService {
+func NewNotificationService(
+	appCtx pkg.AppContext,
+	fcmTokenRepo repository.FcmTokenRepository,
+	notificationRepo repository.NotificationRepository,
+) NotificationService {
 	return &notificationService{
-		appCtx:       appCtx,
-		fcmTokenRepo: fcmTokenRepo,
+		appCtx:           appCtx,
+		fcmTokenRepo:     fcmTokenRepo,
+		notificationRepo: notificationRepo,
 	}
 }
 
@@ -37,6 +61,18 @@ type RegisterFcmTokenInput struct {
 	TenantAccountID string
 	Token           string
 	Platform        string // "ios" or "android"
+}
+
+type CreateNotificationInput struct {
+	OrganizationID string
+	RecipientID    string
+	RecipientType  string // "CLIENT_USER" | "TENANT_ACCOUNT"
+	Event          string
+	Category       *string
+	Visibility     string // "IN_APP" | "HIDDEN"
+	Title          string
+	Body           string
+	Data           map[string]any
 }
 
 func (s *notificationService) RegisterToken(ctx context.Context, input RegisterFcmTokenInput) error {
@@ -113,4 +149,77 @@ func (s *notificationService) SendToTenantAccount(
 	}
 
 	return nil
+}
+
+func (s *notificationService) CreateNotification(
+	ctx context.Context,
+	input CreateNotificationInput,
+) (*models.Notification, error) {
+	var dataJSON datatypes.JSON
+	if input.Data != nil {
+		raw, err := json.Marshal(input.Data)
+		if err != nil {
+			return nil, pkg.InternalServerError(
+				"failed to marshal notification data",
+				&pkg.RentLoopErrorParams{Err: err},
+			)
+		}
+		dataJSON = datatypes.JSON(raw)
+	}
+
+	n := &models.Notification{
+		OrganizationID: input.OrganizationID,
+		RecipientID:    input.RecipientID,
+		RecipientType:  input.RecipientType,
+		Event:          input.Event,
+		Category:       input.Category,
+		Visibility:     input.Visibility,
+		Title:          &input.Title,
+		Body:           &input.Body,
+		Data:           dataJSON,
+		Status:         "PENDING",
+	}
+
+	if err := s.notificationRepo.Create(ctx, n); err != nil {
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{Err: err})
+	}
+	return n, nil
+}
+
+func (s *notificationService) ListInApp(
+	ctx context.Context,
+	recipientID, recipientType string,
+	page, pageSize int,
+) ([]*models.Notification, int64, error) {
+	notifications, total, err := s.notificationRepo.ListInApp(ctx, recipientID, recipientType, page, pageSize)
+	if err != nil {
+		return nil, 0, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{Err: err})
+	}
+	return notifications, total, nil
+}
+
+func (s *notificationService) MarkAsRead(ctx context.Context, notificationID, recipientID string) error {
+	err := s.notificationRepo.MarkAsRead(ctx, notificationID, recipientID)
+	if err == nil {
+		return nil
+	}
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return pkg.NotFoundError("notification not found", &pkg.RentLoopErrorParams{Err: err})
+	}
+	return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{Err: err})
+}
+
+func (s *notificationService) MarkAllAsRead(ctx context.Context, recipientID, recipientType string) error {
+	if err := s.notificationRepo.MarkAllAsRead(ctx, recipientID, recipientType); err != nil {
+		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{Err: err})
+	}
+	return nil
+}
+
+func (s *notificationService) GetUnreadCount(ctx context.Context, recipientID, recipientType string) (int64, error) {
+	count, err := s.notificationRepo.GetUnreadCount(ctx, recipientID, recipientType)
+	if err != nil {
+		return 0, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{Err: err})
+	}
+	return count, nil
 }

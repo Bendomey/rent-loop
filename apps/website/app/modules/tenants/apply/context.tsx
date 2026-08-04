@@ -12,6 +12,8 @@ interface TenantApplicationContextType {
 	goNext: () => void
 	allowEdit: (value: boolean) => void
 	isEditable: boolean
+	setOpenAddress: (value: boolean) => void
+	isOpenAddress: boolean
 	updateFormData: (data: Partial<CreatePropertyTenantApplicationInput>) => void
 	formData: Partial<CreatePropertyTenantApplicationInput>
 	isSubmitting: boolean
@@ -32,6 +34,7 @@ export function CreateNewPropertyTenantApplicationProvider({
 	const createFetcher = useFetcher<{ error: string }>()
 	const [stepCount, setStepCount] = useState(0)
 	const [isEditable, setisEditable] = useState(false)
+	const [isOpenAddress, setisOpenAddress] = useState(false)
 	const [formData, setFormData] = useState<
 		Partial<CreatePropertyTenantApplicationInput>
 	>({})
@@ -41,11 +44,12 @@ export function CreateNewPropertyTenantApplicationProvider({
 	const goNext = () => setStepCount((prev) => prev + 1)
 	const goToPage = (page: number) => setStepCount(page)
 	const allowEdit = (value: boolean) => setisEditable(value)
+	const setOpenAddress = (value: boolean) => setisOpenAddress(value)
 
 	// where there is an error in the action data, show an error toast
 	useEffect(() => {
 		if (createFetcher?.data?.error) {
-			toast.error('Failed to submit lease application. Please try again.')
+			toast.error('Failed to submit rental application. Please try again.')
 		}
 	}, [createFetcher?.data])
 
@@ -68,17 +72,7 @@ export function CreateNewPropertyTenantApplicationProvider({
 	const onSubmit = async (
 		data: Partial<CreatePropertyTenantApplicationInput>,
 	) => {
-		const updatedData = { ...data }
-
-		if (formData.phone) {
-			updatedData.phone = `+233${formData.phone.slice(-9)}`
-		}
-
-		if (formData.emergency_contact_phone) {
-			updatedData.emergency_contact_phone = `+233${formData.emergency_contact_phone.slice(-9)}`
-		}
-
-		await createFetcher.submit(updatedData, {
+		await createFetcher.submit(data, {
 			method: 'POST',
 			action: `/tenants/apply`,
 		})
@@ -95,6 +89,8 @@ export function CreateNewPropertyTenantApplicationProvider({
 		isSubmitting,
 		allowEdit,
 		isEditable,
+		setOpenAddress,
+		isOpenAddress,
 	}
 
 	return (

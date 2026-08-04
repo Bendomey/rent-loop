@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"slices"
+	"time"
 
 	"github.com/Bendomey/goutilities/pkg/validatetoken"
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
@@ -24,6 +25,12 @@ func InjectUserAuthMiddleware(appCtx pkg.AppContext) func(http.Handler) http.Han
 					http.Error(w, "AuthorizationFailed", http.StatusUnauthorized)
 					return
 				}
+
+				if user.SessionID != "" && !sessionIsLive(appCtx, user.SessionID) {
+					http.Error(w, "AuthorizationFailed", http.StatusUnauthorized)
+					return
+				}
+
 				ctx := lib.WithUser(r.Context(), user)
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return
@@ -109,9 +116,34 @@ func userFromJWT(unattendedToken string, secret string) (*lib.UserFromToken, err
 		return nil, errors.New("AuthorizationFailed")
 	}
 
+	// sid is optional: access tokens minted before sessions existed don't have
+	// it, and rejecting them would sign out everyone at deploy time.
+	sessionID := ""
+	if sidVal, sidFound := claims["sid"]; sidFound {
+		if sid, sidOk := sidVal.(string); sidOk {
+			sessionID = sid
+		}
+	}
+
 	return &lib.UserFromToken{
-		ID: id,
+		ID:        id,
+		SessionID: sessionID,
 	}, nil
+}
+
+// sessionIsLive reports whether a session can still authenticate. It fails
+// CLOSED — a database error reads as "not live" rather than waving the request
+// through, since the whole point is that a revoked session stops working.
+func sessionIsLive(appCtx pkg.AppContext, sessionID string) bool {
+	var count int64
+	result := appCtx.DB.
+		Model(&models.Session{}).
+		Where("id = ? AND revoked_at IS NULL AND expires_at > ?", sessionID, time.Now()).
+		Count(&count)
+	if result.Error != nil {
+		return false
+	}
+	return count > 0
 }
 
 func ValidateRoleClientUserMiddleware(_ pkg.AppContext, allowedRoles ...string) func(http.Handler) http.Handler {
@@ -168,6 +200,54 @@ func ValidatePropertyAccessMiddleware(appCtx pkg.AppContext) func(http.Handler) 
 
 			ctx := lib.WithClientUserProperty(r.Context(), &lib.ClientUserPropertyFromToken{
 				Role: cup.Role,
+			})
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
+}
+
+// InjectPropertyAccessScopeMiddleware resolves which properties the current client user
+// can see, for the cross-property "global" list routes (as opposed to
+// ValidatePropertyAccessMiddleware, which checks access to exactly one property_id taken
+// from the URL). OWNER gets unrestricted access to every property under their client;
+// ADMIN/STAFF are limited to whatever ClientUserProperty rows they've been explicitly
+// assigned — resolved fresh on every request so a revoked/granted assignment takes effect
+// immediately, without needing a new login.
+func InjectPropertyAccessScopeMiddleware(appCtx pkg.AppContext) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			clientCtx, ok := lib.ClientUserFromContext(r.Context())
+			if !ok || clientCtx == nil {
+				http.Error(w, "AuthorizationFailed", http.StatusUnauthorized)
+				return
+			}
+
+			if clientCtx.Role == "OWNER" {
+				ctx := lib.WithPropertyAccessScope(r.Context(), &lib.PropertyAccessScope{
+					ClientID:     clientCtx.ClientID,
+					Unrestricted: true,
+				})
+				next.ServeHTTP(w, r.WithContext(ctx))
+				return
+			}
+
+			var cups []models.ClientUserProperty
+			result := appCtx.DB.Select("property_id").
+				Where("client_user_id = ? AND deleted_at IS NULL", clientCtx.ID).
+				Find(&cups)
+			if result.Error != nil {
+				http.Error(w, "InternalServerError", http.StatusInternalServerError)
+				return
+			}
+
+			propertyIDs := make([]string, 0, len(cups))
+			for _, cup := range cups {
+				propertyIDs = append(propertyIDs, cup.PropertyID)
+			}
+
+			ctx := lib.WithPropertyAccessScope(r.Context(), &lib.PropertyAccessScope{
+				ClientID:    clientCtx.ClientID,
+				PropertyIDs: propertyIDs,
 			})
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})

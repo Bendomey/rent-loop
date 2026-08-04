@@ -26,8 +26,10 @@ type ClientUserPropertyService interface {
 	) (int64, error)
 	LinkClientUserToProperties(context context.Context, input LinkClientUserToPropertiesInput) error
 	UnlinkByClientUserID(context context.Context, input repository.UnlinkClientUserFromPropertyQuery) error
+	UnlinkAllByClientUserID(context context.Context, clientUserID string) error
 	LinkPropertyToClientUsers(context context.Context, input LinkPropertyToClientUsersInput) error
 	UnlinkPropertyFromClientUsers(context context.Context, input repository.UnlinkPropertyFromClientUsersQuery) error
+	ReplaceClientUserProperties(context context.Context, input ReplaceClientUserPropertiesInput) error
 	FetchClientUserPropertyWithPopulate(
 		context context.Context,
 		input repository.ClientUserPropertyWithPopulateQuery,
@@ -75,6 +77,62 @@ func (s *clientUserPropertyService) LinkClientUserToProperties(
 			Err: clientUserPropertiesLinkErr,
 			Metadata: map[string]string{
 				"function": "LinkClientUserToProperties",
+				"action":   "creating client user properties link",
+			},
+		})
+	}
+
+	return nil
+}
+
+type ClientUserPropertyAssignment struct {
+	PropertyID string
+	Role       string
+}
+
+type ReplaceClientUserPropertiesInput struct {
+	ClientUserID string
+	Assignments  []ClientUserPropertyAssignment
+	CreatedByID  string
+}
+
+// ReplaceClientUserProperties swaps out the full set of properties a client
+// user is assigned to for the given set, unlinking the rest. Each assignment
+// carries its own role, so a client user can be MANAGER on one property and
+// STAFF on another in the same call.
+func (s *clientUserPropertyService) ReplaceClientUserProperties(
+	ctx context.Context,
+	input ReplaceClientUserPropertiesInput,
+) error {
+	if unlinkErr := s.repo.DeleteAllByClientUserID(ctx, input.ClientUserID); unlinkErr != nil {
+		return pkg.InternalServerError(unlinkErr.Error(), &pkg.RentLoopErrorParams{
+			Err: unlinkErr,
+			Metadata: map[string]string{
+				"function": "ReplaceClientUserProperties",
+				"action":   "unlinking existing client user properties",
+			},
+		})
+	}
+
+	if len(input.Assignments) == 0 {
+		return nil
+	}
+
+	clientUserProperties := make([]models.ClientUserProperty, 0, len(input.Assignments))
+	for _, assignment := range input.Assignments {
+		clientUserProperties = append(clientUserProperties, models.ClientUserProperty{
+			PropertyID:   assignment.PropertyID,
+			ClientUserID: input.ClientUserID,
+			Role:         assignment.Role,
+			CreatedByID:  &input.CreatedByID,
+		})
+	}
+
+	if createErr := s.repo.BulkCreate(ctx, &clientUserProperties); createErr != nil {
+		return pkg.InternalServerError(createErr.Error(), &pkg.RentLoopErrorParams{
+			Err: createErr,
+			Metadata: map[string]string{
+				"function": "ReplaceClientUserProperties",
 				"action":   "creating client user properties link",
 			},
 		})
@@ -198,6 +256,24 @@ func (s *clientUserPropertyService) UnlinkByClientUserID(
 			Metadata: map[string]string{
 				"function": "UnlinkByClientUserID",
 				"action":   "deleting client user property links",
+			},
+		})
+	}
+
+	return nil
+}
+
+func (s *clientUserPropertyService) UnlinkAllByClientUserID(
+	ctx context.Context,
+	clientUserID string,
+) error {
+	unlinkErr := s.repo.DeleteAllByClientUserID(ctx, clientUserID)
+	if unlinkErr != nil {
+		return pkg.InternalServerError(unlinkErr.Error(), &pkg.RentLoopErrorParams{
+			Err: unlinkErr,
+			Metadata: map[string]string{
+				"function": "UnlinkAllByClientUserID",
+				"action":   "deleting all client user property links",
 			},
 		})
 	}

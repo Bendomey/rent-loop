@@ -3,6 +3,7 @@ import { z } from 'zod'
 import type { Route } from './+types/_auth.properties.$propertyId.occupancy.applications._index'
 import { createTenantApplication } from '~/api/tenant-applications'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
+import { resolveAuthToken } from '~/lib/actions/auth.token.server'
 import { environmentVariables } from '~/lib/actions/env.server'
 import { propertyContext } from '~/lib/actions/property.context.server'
 import { replaceNullUndefinedWithUndefined } from '~/lib/actions/utils.server'
@@ -67,7 +68,7 @@ export const handle = {
 	breadcrumb: 'New Lease Application',
 }
 
-export async function action({ request }: Route.ActionArgs) {
+export async function action({ request, context }: Route.ActionArgs) {
 	const baseUrl = environmentVariables().API_ADDRESS
 	const authSession = await getAuthSession(request.headers.get('Cookie'))
 	const clientId = safeString(authSession.get('selectedClientId'))
@@ -93,7 +94,7 @@ export async function action({ request }: Route.ActionArgs) {
 			},
 			{
 				baseUrl,
-				authToken: authSession.get('authToken'),
+				authToken: await resolveAuthToken(request, context),
 			},
 		)
 

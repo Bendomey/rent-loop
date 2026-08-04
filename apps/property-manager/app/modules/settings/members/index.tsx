@@ -4,14 +4,13 @@ import {
 	CircleCheck,
 	CircleX,
 	EllipsisVertical,
-	User,
 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { MembersController } from './controller'
 import { ClientUserStatus } from './status'
 import { useGetClientUsers } from '~/api/client-users'
-import { DataTable } from '~/components/datatable'
+import { DataTable, useDataTableSort } from '~/components/datatable'
 import { Alert, AlertTitle } from '~/components/ui/alert'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
@@ -23,18 +22,29 @@ import {
 	DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
-import { PAGINATION_DEFAULTS } from '~/lib/constants'
+import { CUSTOMER_SUPPORT_ACCOUNT, PAGINATION_DEFAULTS } from '~/lib/constants'
 import { safeString } from '~/lib/strings'
 import { useAuth } from '~/providers/auth-provider'
 import { useClient } from '~/providers/client-provider'
-import EditMemberRoleModule from './edit-role'
+
+/**
+ * Fields the API may order by. `order_by` reaches the backend's ORDER BY
+ * clause, so only these — never a raw URL value — are forwarded.
+ */
+const SORTABLE_FIELDS = [
+	'client_users.role',
+	'client_users.status',
+	'client_users.created_at',
+]
 
 export function MembersModule() {
 	const [searchParams] = useSearchParams()
+	const sorter = useDataTableSort(SORTABLE_FIELDS, {
+		sort_by: 'client_users.created_at',
+		sort: 'desc',
+	})
 	const { currentUser } = useAuth()
 	const { clientUser } = useClient()
-	const [selectedMember, setSelectedMember] = useState<ClientUser>()
-	const [openEditMemberRoleModal, setOpenEditMemberRoleModal] = useState(false)
 
 	const page = searchParams.get('page')
 		? Number(searchParams.get('page'))
@@ -51,7 +61,7 @@ export function MembersModule() {
 			filters: { role: role, status: status },
 			pagination: { page, per },
 			populate: ['User'],
-			sorter: { sort: 'desc', sort_by: 'created_at' },
+			sorter,
 			search: {
 				query: searchParams.get('query') ?? undefined,
 				fields: ['name', 'email', 'phone_number'],
@@ -61,19 +71,21 @@ export function MembersModule() {
 
 	const isLoading = isPending || isRefetching
 
+	// The RentLoop Support account is managed from its own dedicated
+	// "Customer Support Access" settings screen, not from here.
+	const rows = (data?.rows ?? []).filter(
+		(row) => row.user?.email !== CUSTOMER_SUPPORT_ACCOUNT.EMAIL,
+	)
+	const hiddenRowCount = (data?.rows?.length ?? 0) - rows.length
+
 	const columns: ColumnDef<ClientUser>[] = useMemo(() => {
 		return [
-			{
-				id: 'drag',
-				header: () => null,
-				cell: () => <User />,
-			},
 			{
 				accessorKey: 'user.name',
 				header: 'Name',
 				cell: ({ getValue }) => {
 					return (
-						<div className="min-w-32">
+						<div className="flex min-w-32 items-center">
 							<span className="truncate text-xs text-zinc-600 dark:text-white">
 								{getValue<string>() ?? 'No name'}
 							</span>
@@ -85,6 +97,8 @@ export function MembersModule() {
 			{
 				accessorKey: 'role',
 				header: 'Role',
+				enableSorting: true,
+				meta: { sortKey: 'client_users.role' },
 				cell: ({ getValue }) => (
 					<Badge variant="outline" className="px-1.5">
 						<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">
@@ -111,6 +125,8 @@ export function MembersModule() {
 			{
 				accessorKey: 'status',
 				header: 'Status',
+				enableSorting: true,
+				meta: { sortKey: 'client_users.status' },
 				cell: ({ getValue }) => (
 					<Badge variant="outline" className="text-muted-foreground px-1.5">
 						{getValue<string>() === 'ClientUser.Status.Active' ? (
@@ -158,17 +174,9 @@ export function MembersModule() {
 										clientUser?.role === 'OWNER' ? (
 											<>
 												<DropdownMenuItem asChild>
-													<Button
-														className="bg- w-full"
-														// variant="default"
-														size="sm"
-														onClick={() => {
-															setSelectedMember(row.original ?? undefined)
-															setOpenEditMemberRoleModal(true)
-														}}
-													>
-														Edit Role
-													</Button>
+													<Link to={`/settings/members/${row.original.id}`}>
+														Edit
+													</Link>
 												</DropdownMenuItem>
 												<DropdownMenuSeparator />
 												<ClientUserStatus
@@ -211,8 +219,8 @@ export function MembersModule() {
 					refetch={refetch}
 					error={error ? 'Failed to load members.' : undefined}
 					dataResponse={{
-						rows: data?.rows ?? [],
-						total: data?.meta?.total ?? 0,
+						rows,
+						total: (data?.meta?.total ?? 0) - hiddenRowCount,
 						page,
 						page_size: per,
 						order: data?.meta?.order ?? 'desc',
@@ -227,11 +235,6 @@ export function MembersModule() {
 					}}
 				/>
 			</div>
-			<EditMemberRoleModule
-				data={selectedMember}
-				opened={openEditMemberRoleModal}
-				setOpened={setOpenEditMemberRoleModal}
-			/>
 		</main>
 	)
 }

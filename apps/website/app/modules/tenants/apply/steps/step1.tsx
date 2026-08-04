@@ -2,8 +2,10 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { AlertCircleIcon, ArrowLeft, ArrowRight } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { isValidPhoneNumber } from 'react-phone-number-input'
 import { z } from 'zod'
 import { useTenantApplicationContext } from '../context'
+import { InternationalPhoneInput } from '~/components/international-phone'
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
 import { Button } from '~/components/ui/button'
 import {
@@ -15,15 +17,24 @@ import {
 	FormLabel,
 	FormMessage,
 } from '~/components/ui/form'
-import { Input } from '~/components/ui/input'
 import { Spinner } from '~/components/ui/spinner'
 import { TypographyH2 } from '~/components/ui/typography'
 import { useSendOtp } from '~/hooks/use-send-otp'
+import { Input } from '~/components/ui/input'
+import { safeString } from '~/lib/strings'
+import { normalizeInternationalPhoneNumber } from '~/lib/phone'
 
 const ValidationSchema = z.object({
 	phone: z
 		.string({ error: 'Phone number is required' })
-		.min(9, 'Please enter a valid phone number'),
+		.refine(isValidPhoneNumber, {
+			message: 'Please enter a valid phone number',
+		}),
+	email: z
+		.string()
+		.email('Please enter a valid email address')
+		.optional()
+		.or(z.literal('')),
 })
 
 type FormSchema = z.infer<typeof ValidationSchema>
@@ -41,7 +52,7 @@ export function Step1() {
 
 	const rhfMethods = useForm<FormSchema>({
 		resolver: zodResolver(ValidationSchema),
-		defaultValues: {},
+		defaultValues: { email: '' },
 	})
 
 	const { handleSubmit, control, setValue } = rhfMethods
@@ -53,12 +64,22 @@ export function Step1() {
 				shouldValidate: true,
 			})
 		}
+		if (formData.email) {
+			setValue('email', formData.email, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
 	}, [formData])
 
 	const onSubmit = async (data: FormSchema) => {
 		setOtpError(false)
-		updateFormData({ phone: data.phone })
-		sendOtp(data.phone)
+		updateFormData({ phone: data.phone, email: safeString(data.email) })
+		sendOtp({
+			channel: ['EMAIL', 'SMS'],
+			email: data.email,
+			phone: normalizeInternationalPhoneNumber(data.phone),
+		})
 	}
 
 	return (
@@ -99,17 +120,39 @@ export function Step1() {
 						<FormField
 							name="phone"
 							control={control}
-							render={({ field }) => (
+							render={({ field, fieldState }) => (
 								<FormItem>
 									<FormLabel>
 										Phone number <span className="text-red-500">*</span>
 									</FormLabel>
 									<FormControl>
-										<Input {...field} type="text" placeholder="201234567" />
+										<InternationalPhoneInput
+											value={field.value}
+											onChange={field.onChange}
+											error={!!fieldState.error}
+										/>
 									</FormControl>
 									<FormDescription>
-										We may send a verification code to confirm it’s you. Please
-										use a phone number you can access.
+										We may send a verification code to confirm it's you. Enter
+										your number in international format, e.g.{' '}
+										<span className="font-medium">+233 201 234 567</span>.
+									</FormDescription>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+
+						<FormField
+							name="email"
+							control={control}
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Email</FormLabel>
+									<FormControl>
+										<Input {...field} type="text" />
+									</FormControl>
+									<FormDescription>
+										We'll send notifications to this email
 									</FormDescription>
 									<FormMessage />
 								</FormItem>

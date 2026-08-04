@@ -11,6 +11,7 @@ import { Link } from 'react-router'
 import { PropertySectionCards } from './components/cards'
 import { PropertyChartBar } from './components/chart'
 import { PropertyRentIncomeCards } from './components/rent-cards'
+import { PropertyRiskSummary } from './components/risk-summary'
 import { PropertyUnitsChart } from './components/units-chart'
 import { TypographyH1, TypographyP } from '~/components/ui/typography'
 import { useTour } from '~/hooks/use-tour'
@@ -84,13 +85,13 @@ export function PropertyModule() {
 		<div className="mx-auto w-full max-w-7xl px-4 py-8">
 			{/* Header */}
 			<div id="property-overview-header" className="mb-8">
-				<TypographyH1 className="text-2xl font-semibold tracking-tight md:text-3xl">
+				<TypographyH1 className="text-2xl tracking-tight md:text-3xl">
 					Property Overview{' '}
 					{clientUserProperty?.property?.name
 						? `— ${clientUserProperty?.property.name}`
 						: ''}
 				</TypographyH1>
-				<TypographyP className="text-muted-foreground mt-1 mb-4 text-sm">
+				<TypographyP className="text-muted-foreground mb-4 text-sm">
 					Comprehensive insights into rental performance, occupancy, and
 					maintenance trends.
 				</TypographyP>
@@ -113,6 +114,11 @@ export function PropertyModule() {
 			{/* Summary Cards */}
 			<section id="property-summary-cards" className="mb-8">
 				<PropertySectionCards propertyId={propertyId} />
+			</section>
+
+			{/* Risk Summary */}
+			<section id="property-risk-summary" className="mb-8">
+				<PropertyRiskSummary propertyId={propertyId} />
 			</section>
 
 			{/* Charts Section */}

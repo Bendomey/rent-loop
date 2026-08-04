@@ -23,18 +23,12 @@ export function PropertyFinancialsPaymentLineItemsModule({
 	const columns: ColumnDef<InvoiceLineItem>[] = useMemo(() => {
 		return [
 			{
-				id: 'id',
-				header: () => null,
-				cell: () => {
-					return <Building />
-				},
-			},
-			{
 				accessorKey: 'label',
 				header: 'Label',
 				cell: ({ row }) => {
 					return (
-						<div className="">
+						<div className="flex flex-row items-center gap-1">
+							<Building />
 							<span className="text-muted-foreground truncate text-xs font-bold dark:text-white">
 								{row.original.label}
 							</span>

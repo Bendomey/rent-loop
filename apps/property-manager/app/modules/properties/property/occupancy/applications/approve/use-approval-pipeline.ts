@@ -11,7 +11,7 @@ import {
 import { useNavigationBlocker } from '~/hooks/use-navigation-blocker'
 import { QUERY_KEYS } from '~/lib/constants'
 import {
-	buildTemplateFieldMap,
+	buildTenantApplicationFieldMap,
 	resolveTemplateFields,
 } from '~/lib/resolve-template-fields'
 import { safeString } from '~/lib/strings'
@@ -28,6 +28,7 @@ type PipelineState =
 	| { status: 'PROCESSING'; currentStep: ApprovalStep; progress: number }
 	| { status: 'ERROR'; failedStep: ApprovalStep; error: string }
 	| { status: 'SUCCESS' }
+	| { status: 'NEXT_STEPS'; lease?: Lease }
 
 const STEP_DESCRIPTIONS: Record<ApprovalStep, string> = {
 	GENERATE_PDF: 'Preparing your documents...',
@@ -38,7 +39,7 @@ const STEP_DESCRIPTIONS: Record<ApprovalStep, string> = {
 
 interface UseApprovalPipelineProps {
 	application: TenantApplication
-	onSuccess: () => void
+	onSuccess: (lease?: Lease) => void
 	propertyId: string
 }
 
@@ -163,7 +164,7 @@ export function useApprovalPipeline({
 
 				// Step 1: Generate PDF
 				beginStep('GENERATE_PDF')
-				const templateFieldMap = buildTemplateFieldMap(application)
+				const templateFieldMap = buildTenantApplicationFieldMap(application)
 				const parsedEditorState = JSON.parse(doc.content) as Parameters<
 					typeof resolveTemplateFields
 				>[0]
@@ -195,7 +196,7 @@ export function useApprovalPipeline({
 
 			// Step 4: Approve
 			beginStep('APPROVE')
-			await approveApplication({
+			const lease = await approveApplication({
 				client_id: safeString(clientUser?.client_id),
 				property_id: propertyId,
 				id: application.id,
@@ -208,10 +209,11 @@ export function useApprovalPipeline({
 				queryKey: [QUERY_KEYS.PROPERTY_TENANT_APPLICATIONS],
 			})
 			void revalidator.revalidate()
+			onSuccess(lease)
 
 			setTimeout(() => {
-				onSuccess()
-			}, 2000)
+				setState({ status: 'NEXT_STEPS', lease })
+			}, 1000)
 		} catch (error) {
 			if (progressIntervalRef.current) {
 				clearInterval(progressIntervalRef.current)

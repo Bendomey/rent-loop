@@ -35,9 +35,14 @@ func NewTenantAccountRouter(appCtx pkg.AppContext, handlers handlers.Handlers) f
 				"/v1/tenant-applications/code/{code}/otp:verify",
 				handlers.TenantApplicationHandler.VerifyTrackingOtp,
 			)
+			// TODO: remove this.
 			r.Post(
 				"/v1/tenant-applications/code/{code}/invoice/{invoice_id}/pay",
 				handlers.TenantApplicationHandler.PayTrackingInvoice,
+			)
+			r.Post(
+				"/v1/invoices/{invoice_id}/pay",
+				handlers.InvoiceHandler.PayInvoice,
 			)
 		})
 
@@ -51,6 +56,17 @@ func NewTenantAccountRouter(appCtx pkg.AppContext, handlers handlers.Handlers) f
 			r.Post("/v1/payments/offline:initiate", handlers.PaymentHandler.CreateOfflinePayment)
 			r.Post("/v1/tenant-accounts/fcm-token", handlers.NotificationHandler.RegisterFcmToken)
 			r.Delete("/v1/tenant-accounts/fcm-token", handlers.NotificationHandler.DeleteFcmToken)
+
+			// tenant notifications — static paths before parameterised ones
+			r.Route("/v1/tenant-accounts/notifications", func(r chi.Router) {
+				r.Get("/unread-count", handlers.NotificationHandler.TenantGetUnreadCount)
+				r.Post("/read-all", handlers.NotificationHandler.TenantMarkAllRead)
+				r.Get("/", handlers.NotificationHandler.TenantListNotifications)
+				r.Post(
+					"/{notification_id}/read",
+					handlers.NotificationHandler.TenantMarkNotificationRead,
+				)
+			})
 
 			// tenant announcements
 			r.Get("/v1/leases/{lease_id}/announcements", handlers.AnnouncementHandler.ListTenantAnnouncements)

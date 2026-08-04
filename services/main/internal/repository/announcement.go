@@ -73,11 +73,16 @@ type TenantAnnouncementFilter struct {
 }
 
 type ListAnnouncementsFilter struct {
-	ClientID     *string
-	PropertyID   lib.Optional[string]
-	Status       *string
-	Type         *string
-	TenantFilter *TenantAnnouncementFilter
+	ClientID   *string
+	PropertyID lib.Optional[string]
+	// PropertyAccessIDs is distinct from PropertyID: PropertyID is an exact-match filter
+	// (used by the nested /properties/{property_id}/announcements route); PropertyAccessIDs
+	// is the caller's resolved access scope for the cross-property route — nil means
+	// unrestricted (OWNER), non-nil enforces "broadcast OR one of these properties."
+	PropertyAccessIDs *[]string
+	Status            *string
+	Type              *string
+	TenantFilter      *TenantAnnouncementFilter
 }
 
 func (r *announcementRepository) List(
@@ -94,6 +99,7 @@ func (r *announcementRepository) List(
 			SearchScope("announcements", filterQuery.Search),
 			announcementClientIDScope(filters.ClientID),
 			announcementPropertyIDScope(filters.PropertyID),
+			announcementPropertyAccessScope(filters.PropertyAccessIDs),
 			announcementStatusScope(filters.Status),
 			announcementTypeScope(filters.Type),
 			announcementTenantScope(filters.TenantFilter),
@@ -129,6 +135,7 @@ func (r *announcementRepository) Count(
 			SearchScope("announcements", filterQuery.Search),
 			announcementClientIDScope(filters.ClientID),
 			announcementPropertyIDScope(filters.PropertyID),
+			announcementPropertyAccessScope(filters.PropertyAccessIDs),
 			announcementStatusScope(filters.Status),
 			announcementTypeScope(filters.Type),
 			announcementTenantScope(filters.TenantFilter),
@@ -209,6 +216,23 @@ func announcementPropertyIDScope(propertyID lib.Optional[string]) func(db *gorm.
 		}
 
 		return db
+	}
+}
+
+// announcementPropertyAccessScope adds property-specific visibility (bounded by the caller's
+// access scope) to the cross-property (mobile) announcements route. Broadcast announcements
+// (property_id IS NULL) always pass through regardless of scope. nil means unrestricted
+// (OWNER): no filter beyond the existing client_id scope, i.e. every announcement under the
+// client, broadcast or property-specific.
+func announcementPropertyAccessScope(propertyIDs *[]string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if propertyIDs == nil {
+			return db
+		}
+		return db.Where(
+			"announcements.property_id IS NULL OR announcements.property_id IN (?)",
+			*propertyIDs,
+		)
 	}
 }
 

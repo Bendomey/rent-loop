@@ -3,15 +3,16 @@ import { redirect } from 'react-router'
 import type { Route } from './+types/_auth.api.files.docx.to-lexical'
 import { createDocumentSSR } from '~/api/documents'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
+import { resolveAuthToken } from '~/lib/actions/auth.token.server'
 import { htmlToLexicalState } from '~/lib/actions/editor-utils.server'
 import { environmentVariables } from '~/lib/actions/env.server'
 import { captureException } from '~/lib/actions/sentry.server'
 import { removeFileExtension, safeString } from '~/lib/strings'
 
-export async function action({ request }: Route.ActionArgs) {
+export async function action({ request, context }: Route.ActionArgs) {
 	const baseUrl = environmentVariables().API_ADDRESS
 	const authSession = await getAuthSession(request.headers.get('Cookie'))
-	const authToken = authSession.get('authToken')
+	const authToken = await resolveAuthToken(request, context)
 	if (!authToken) {
 		return redirect('/login')
 	}

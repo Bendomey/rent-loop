@@ -26,6 +26,7 @@ type InvoiceRepository interface {
 	CreateLineItem(context context.Context, lineItem *models.InvoiceLineItem) error
 	GetLineItem(context context.Context, lineItemID string) (*models.InvoiceLineItem, error)
 	GetLineItems(context context.Context, invoiceID string) ([]models.InvoiceLineItem, error)
+	UpdateLineItem(context context.Context, lineItem *models.InvoiceLineItem) error
 	DeleteLineItem(context context.Context, lineItemID string) error
 	ListForReminders(ctx context.Context) (*[]models.Invoice, error)
 }
@@ -91,13 +92,16 @@ type ListInvoicesFilter struct {
 	PayerType                  *string
 	PayerClientID              *string
 	PayerLeaseID               *string
+	PayerTenantID              *string
 	PayeeType                  *string
 	PayeeClientID              *string
 	PayeeTenantID              *string
 	ContextType                *string
+	ContextLeaseTerminationID  *string
 	Status                     *[]string
 	Active                     *bool
-	PropertyID                 *string
+	PropertyIDs                *[]string
+	ClientUserID               *string
 	ClientID                   *string
 	ContextLeaseID             *string
 	ContextTenantApplicationID *string
@@ -111,15 +115,18 @@ func (r *invoiceRepository) List(ctx context.Context, filterQuery ListInvoicesFi
 		invoicePayerTypeScope(filterQuery.PayerType),
 		invoicePayerClientIDScope(filterQuery.PayerClientID),
 		invoicePayerLeaseIDScope(filterQuery.PayerLeaseID),
+		invoicePayerTenantIDScope(filterQuery.PayerTenantID),
 		invoicePayeeTypeScope(filterQuery.PayeeType),
 		invoicePayeeClientIDScope(filterQuery.PayeeClientID),
 		invoicePayeeTenantIDScope(filterQuery.PayeeTenantID),
 		invoiceContextTypeScope(filterQuery.ContextType),
+		invoiceLeaseTerminationIDScope(filterQuery.ContextLeaseTerminationID),
 		invoiceStatusScope(filterQuery.Status),
 		DateRangeScope("invoices", filterQuery.DateRange),
 		SearchScope("invoices", filterQuery.Search),
 		invoiceActiveScope(filterQuery.Active),
-		invoicePropertyIDScope(filterQuery.PropertyID),
+		invoicePropertyIDsScope(filterQuery.PropertyIDs),
+		invoiceClientUserAccessScope(filterQuery.ClientUserID),
 		invoiceClientIDScope(filterQuery.ClientID),
 		invoiceLeaseContextScope(filterQuery.ContextLeaseID, filterQuery.ContextTenantApplicationID),
 
@@ -151,13 +158,15 @@ func (r *invoiceRepository) Count(ctx context.Context, filterQuery ListInvoicesF
 			invoicePayerTypeScope(filterQuery.PayerType),
 			invoicePayerClientIDScope(filterQuery.PayerClientID),
 			invoicePayerLeaseIDScope(filterQuery.PayerLeaseID),
+			invoicePayerTenantIDScope(filterQuery.PayerTenantID),
 			invoicePayeeTypeScope(filterQuery.PayeeType),
 			invoicePayeeClientIDScope(filterQuery.PayeeClientID),
 			invoicePayeeTenantIDScope(filterQuery.PayeeTenantID),
 			invoiceContextTypeScope(filterQuery.ContextType),
 			invoiceStatusScope(filterQuery.Status),
 			invoiceActiveScope(filterQuery.Active),
-			invoicePropertyIDScope(filterQuery.PropertyID),
+			invoicePropertyIDsScope(filterQuery.PropertyIDs),
+			invoiceClientUserAccessScope(filterQuery.ClientUserID),
 			invoiceClientIDScope(filterQuery.ClientID),
 			invoiceLeaseContextScope(filterQuery.ContextLeaseID, filterQuery.ContextTenantApplicationID),
 
@@ -279,6 +288,28 @@ func invoicePayerLeaseIDScope(payerLeaseID *string) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
+// invoicePayerTenantIDScope filters invoices paid by any of a tenant's leases
+// in this property (a tenant can have more than one lease over time, e.g.
+// renewals or a unit change), mirroring invoiceTenantOwnerContextScope's
+// payer_lease_id / context_tenant_application_id fallback for application-stage
+// invoices (a tenant_application has no tenant_id of its own until it's
+// approved into a lease).
+func invoicePayerTenantIDScope(payerTenantID *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if payerTenantID == nil {
+			return db
+		}
+		return db.Where(
+			`invoices.payer_lease_id IN (SELECT id FROM leases WHERE tenant_id = ?)
+			 OR invoices.context_tenant_application_id IN (
+				SELECT tenant_application_id FROM leases WHERE tenant_id = ? AND tenant_application_id IS NOT NULL
+			 )`,
+			*payerTenantID,
+			*payerTenantID,
+		)
+	}
+}
+
 func invoicePayeeTypeScope(payeeType *string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if payeeType == nil {
@@ -324,12 +355,28 @@ func invoiceStatusScope(statuses *[]string) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
-func invoicePropertyIDScope(propertyID *string) func(db *gorm.DB) *gorm.DB {
+func invoicePropertyIDsScope(propertyIDs *[]string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		if propertyID == nil {
+		if propertyIDs == nil {
 			return db
 		}
-		return db.Where("invoices.property_id = ?", *propertyID)
+		return db.Where("invoices.property_id IN (?)", *propertyIDs)
+	}
+}
+
+// invoiceClientUserAccessScope bounds invoices to the properties the given
+// client user is linked to — the access boundary for the cross-property list.
+// Applied alongside (not instead of) invoiceClientIDScope, which stays a
+// business-level client bound. See accessiblePropertyIDsSubQuery.
+func invoiceClientUserAccessScope(clientUserID *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if clientUserID == nil {
+			return db
+		}
+		return db.Where(
+			"invoices.property_id IN (?)",
+			accessiblePropertyIDsSubQuery(db, *clientUserID),
+		)
 	}
 }
 
@@ -346,6 +393,15 @@ func invoiceClientIDScope(clientID *string) func(db *gorm.DB) *gorm.DB {
 // It returns invoices whose context_lease_id matches leaseID OR whose
 // context_tenant_application_id matches tenantApplicationID (when provided).
 // If both are nil, no filter is applied.
+func invoiceLeaseTerminationIDScope(leaseTerminationID *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if leaseTerminationID == nil {
+			return db
+		}
+		return db.Where("invoices.context_lease_termination_id = ?", *leaseTerminationID)
+	}
+}
+
 func invoiceLeaseContextScope(leaseID *string, tenantApplicationID *string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if leaseID == nil && tenantApplicationID == nil {
@@ -435,6 +491,12 @@ func (r *invoiceRepository) GetLineItems(ctx context.Context, invoiceID string) 
 	}
 
 	return lineItems, nil
+}
+
+func (r *invoiceRepository) UpdateLineItem(ctx context.Context, lineItem *models.InvoiceLineItem) error {
+	db := lib.ResolveDB(ctx, r.DB)
+
+	return db.WithContext(ctx).Model(lineItem).Updates(lineItem).Error
 }
 
 func (r *invoiceRepository) DeleteLineItem(ctx context.Context, lineItemID string) error {

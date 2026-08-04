@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query'
 import { QUERY_KEYS } from '~/lib/constants'
 import { getQueryParams } from '~/lib/get-param'
 import { fetchClient } from '~/lib/transport'
@@ -68,6 +68,7 @@ export interface UpdateLeaseInput {
 	propertyId: string
 	leaseId: string
 	utility_transfers_date?: Date
+	lease_agreement_document_url?: string | null
 }
 
 const updateLease = async (props: UpdateLeaseInput) => {
@@ -75,6 +76,8 @@ const updateLease = async (props: UpdateLeaseInput) => {
 		const body: Record<string, unknown> = {}
 		if (props.utility_transfers_date)
 			body.utility_transfers_date = props.utility_transfers_date.toISOString()
+		if (props.lease_agreement_document_url !== undefined)
+			body.lease_agreement_document_url = props.lease_agreement_document_url
 
 		const response = await fetchClient<ApiResponse<Lease>>(
 			`/v1/admin/clients/${props.clientId}/properties/${props.propertyId}/leases/${props.leaseId}`,
@@ -126,4 +129,48 @@ export const useGetTenantLeases = (
 		queryKey: [QUERY_KEYS.LEASES, clientId, propertyId, tenantId, query],
 		queryFn: () => getTenantLeases(clientId, propertyId, tenantId, query),
 		enabled: !!tenantId && !!propertyId && !!clientId,
+	})
+
+/**
+ * GET leases across every property the caller can access (paginated).
+ * Callers own all params — pagination, filters, ordering, populate.
+ */
+const getLeasesAcrossProperties = async (
+	clientId: string,
+	props: FetchMultipleDataInputParams<Record<string, unknown>>,
+) => {
+	try {
+		const params = getQueryParams<Record<string, unknown>>(props)
+		const response = await fetchClient<
+			ApiResponse<FetchMultipleDataResponse<Lease>>
+		>(`/v1/admin/clients/${clientId}/leases?${params.toString()}`)
+		return response.parsedBody.data
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+
+export const useGetLeasesAcrossPropertiesInfinite = (
+	clientId: string,
+	query: FetchMultipleDataInputParams<Record<string, unknown>>,
+	enabled = true,
+) =>
+	useInfiniteQuery({
+		queryKey: [QUERY_KEYS.LEASES, 'across-properties', clientId, query],
+		queryFn: ({ pageParam }: { pageParam: number }) =>
+			getLeasesAcrossProperties(clientId, {
+				...query,
+				pagination: { ...query.pagination, page: pageParam },
+			}),
+		initialPageParam: 1,
+		getNextPageParam: (lastPage) =>
+			lastPage?.meta?.has_next_page ? lastPage.meta.page + 1 : undefined,
+		enabled: enabled && !!clientId,
 	})

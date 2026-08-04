@@ -11,9 +11,9 @@ import { useMemo } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
 import { TenantPaymentSectionCards } from './cards'
 import { TenantPaymentController } from './controller'
+import { useCubeQuery, useGetAnalyticsToken } from '~/api/analytics'
 import { useGetInvoices } from '~/api/invoices'
-import { useGetTenantLeases } from '~/api/leases'
-import { DataTable } from '~/components/datatable'
+import { DataTable, useDataTableSort } from '~/components/datatable'
 import { Badge } from '~/components/ui/badge'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
@@ -27,8 +27,25 @@ import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 
+/**
+ * Fields the API may order by. `order_by` reaches the backend's ORDER BY
+ * clause, so only these — never a raw URL value — are forwarded.
+ */
+const SORTABLE_FIELDS = [
+	'invoices.code',
+	'invoices.total_amount',
+	'invoices.context_type',
+	'invoices.status',
+	'invoices.due_date',
+	'invoices.created_at',
+]
+
 export function TenantPaymentsModule() {
 	const [searchParams] = useSearchParams()
+	const sorter = useDataTableSort(SORTABLE_FIELDS, {
+		sort_by: 'invoices.created_at',
+		sort: 'desc',
+	})
 	const { clientUser } = useClient()
 	const { clientUserProperty } = useProperty()
 	const { tenantId } = useParams()
@@ -41,44 +58,70 @@ export function TenantPaymentsModule() {
 		: PAGINATION_DEFAULTS.PER_PAGE
 	const status = searchParams.get('status') ?? undefined
 
-	const { data: leasesData } = useGetTenantLeases(
-		safeString(clientUser?.client_id),
-		safeString(clientUserProperty?.property_id),
-		safeString(tenantId),
-		{ filters: {}, pagination: { page: 1, per: 1 } },
-	)
-	const leaseId = leasesData?.rows?.[0]?.id
-
 	const { data, isPending, isRefetching, error, refetch } = useGetInvoices(
 		safeString(clientUser?.client_id),
 		safeString(clientUserProperty?.property_id),
 		{
 			filters: {
-				status: status,
-				payer_lease_id: leaseId,
+				status,
+				payer_tenant_id: safeString(tenantId),
 			},
 			pagination: { page, per },
-			sorter: { sort: 'desc', sort_by: 'created_at' },
+			sorter,
 		},
 	)
 
 	const isLoading = isPending || isRefetching
 
+	// Stats are sourced from Cube (all-time, unfiltered by status/page) rather
+	// than the paginated invoice list above.
+	const { data: token } = useGetAnalyticsToken(
+		safeString(clientUser?.client_id),
+	)
+	const statsQuery = useCubeQuery<{
+		'Invoices.totalAmount': string | null
+		'Invoices.paidAmount': string | null
+		'Invoices.outstandingAmount': string | null
+		'Invoices.count': string | null
+	}>(token, ['tenant-invoice-stats', safeString(tenantId)], {
+		measures: [
+			'Invoices.totalAmount',
+			'Invoices.paidAmount',
+			'Invoices.outstandingAmount',
+			'Invoices.count',
+		],
+		filters: [
+			{
+				member: 'Invoices.tenantId',
+				operator: 'equals',
+				values: [safeString(tenantId)],
+			},
+			{
+				member: 'Invoices.propertyId',
+				operator: 'equals',
+				values: [safeString(clientUserProperty?.property_id)],
+			},
+		],
+	})
+	const statsRow = statsQuery.data?.[0]
+	const totalAmount = Number(statsRow?.['Invoices.totalAmount'] ?? 0)
+	const paidAmount = Number(statsRow?.['Invoices.paidAmount'] ?? 0)
+	const outstandingAmount = Number(
+		statsRow?.['Invoices.outstandingAmount'] ?? 0,
+	)
+	const totalInvoices = Number(statsRow?.['Invoices.count'] ?? 0)
+
 	const columns: ColumnDef<Invoice>[] = useMemo(() => {
 		return [
 			{
-				id: 'drag',
-				header: () => null,
-				cell: () => {
-					return <Receipt className="text-muted-foreground size-5" />
-				},
-			},
-			{
 				accessorKey: 'code',
 				header: 'Invoice #',
+				enableSorting: true,
+				meta: { sortKey: 'invoices.code' },
 				cell: ({ row }) => {
 					return (
-						<div className="">
+						<div className="flex flex-row items-center gap-1">
+							<Receipt className="text-muted-foreground size-5" />
 							<Link
 								to={`/properties/${clientUserProperty?.property_id}/financials/invoices/${row.original.id}`}
 								aria-label={`View details for application`}
@@ -95,6 +138,8 @@ export function TenantPaymentsModule() {
 			{
 				accessorKey: 'total_amount',
 				header: 'Amount',
+				enableSorting: true,
+				meta: { sortKey: 'invoices.total_amount' },
 				cell: ({ row }) => (
 					<span className="truncate text-xs font-semibold text-zinc-800 dark:text-white">
 						{formatAmount(
@@ -107,6 +152,8 @@ export function TenantPaymentsModule() {
 			{
 				accessorKey: 'context_type',
 				header: 'Type',
+				enableSorting: true,
+				meta: { sortKey: 'invoices.context_type' },
 				cell: ({ getValue }) => (
 					<span className="truncate text-xs text-zinc-600 dark:text-white">
 						{getInvoiceContextTypeLabel(getValue<Invoice['context_type']>())}
@@ -116,6 +163,8 @@ export function TenantPaymentsModule() {
 			{
 				accessorKey: 'status',
 				header: 'Status',
+				enableSorting: true,
+				meta: { sortKey: 'invoices.status' },
 				cell: ({ getValue }) => (
 					<Badge variant="outline" className="text-muted-foreground px-1.5">
 						{getValue<string>() === 'DRAFT' ? (
@@ -136,6 +185,8 @@ export function TenantPaymentsModule() {
 			{
 				accessorKey: 'due_date',
 				header: 'Due Date',
+				enableSorting: true,
+				meta: { sortKey: 'invoices.due_date' },
 				cell: ({ getValue }) => {
 					const date = getValue<Date | null>()
 					return (
@@ -150,6 +201,8 @@ export function TenantPaymentsModule() {
 			{
 				accessorKey: 'created_at',
 				header: 'Created On',
+				enableSorting: true,
+				meta: { sortKey: 'invoices.created_at' },
 				cell: ({ getValue }) => (
 					<div className="min-w-32">
 						<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">
@@ -171,7 +224,13 @@ export function TenantPaymentsModule() {
 				</TypographyMuted>
 			</div>
 
-			<TenantPaymentSectionCards />
+			<TenantPaymentSectionCards
+				isLoading={statsQuery.isPending}
+				totalAmount={totalAmount}
+				paidAmount={paidAmount}
+				outstandingAmount={outstandingAmount}
+				totalInvoices={totalInvoices}
+			/>
 
 			<div className="bg-background space-y-5 rounded-lg border p-3 sm:p-5">
 				<TenantPaymentController isLoading={isLoading} refetch={refetch} />

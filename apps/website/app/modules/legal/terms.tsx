@@ -1,12 +1,12 @@
-import { Footer } from '~/components/layout/footer'
-import { Header } from '~/components/layout/header'
+import { MarketingFooter, MarketingNav, TopBar } from '~/components/marketing'
 
 export function TermsOfUse() {
 	return (
 		<div>
-			<Header />
+			<TopBar />
+			<MarketingNav />
 
-			<main className="mx-auto max-w-4xl px-6 py-24 pt-32 lg:px-8">
+			<main className="mx-auto max-w-4xl px-6 py-12 lg:px-8">
 				<h1 className="text-4xl font-semibold tracking-tight text-gray-900">
 					Terms of Use
 				</h1>
@@ -248,17 +248,14 @@ export function TermsOfUse() {
 					</p>
 					<p className="mt-4 text-base/7 text-gray-600">
 						Phone Number:{' '}
-						<a
-							href="tel:+233201080802"
-							className="text-rose-700 hover:text-rose-600"
-						>
+						<a href="tel:+233201080802" className="text-rl-crimson">
 							+233 201 080 802
 						</a>
 						<br />
 						Email:{' '}
 						<a
 							href="mailto:support@rentloopapp.com"
-							className="text-rose-700 hover:text-rose-600"
+							className="text-rl-crimson"
 						>
 							support@rentloopapp.com
 						</a>
@@ -266,7 +263,7 @@ export function TermsOfUse() {
 				</section>
 			</main>
 
-			<Footer />
+			<MarketingFooter />
 		</div>
 	)
 }

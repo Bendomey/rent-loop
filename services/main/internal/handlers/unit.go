@@ -30,7 +30,7 @@ type CreateUnitRequest struct {
 	Status              string          `json:"status"                validate:"required,oneof=Unit.Status.Draft Unit.Status.Available Unit.Status.Occupied Unit.Status.Maintenance" example:"Unit.Status.Available"           description:"Current status of the unit (e.g., Unit.Status.Draft Unit.Status.Available Unit.Status.Occupied Unit.Status.Maintenance)"`
 	Area                *float64        `json:"area"                  validate:"omitempty"                                                                                           example:"120.5"                           description:"Area of the unit in square feet or square meters"`
 	RentFee             int64           `json:"rent_fee"              validate:"required"                                                                                            example:"1500"                            description:"Rent amount"`
-	RentFeeCurrency     string          `json:"rent_fee_currency"     validate:"required"                                                                                            example:"USD"                             description:"Currency for the rent fee"`
+	RentFeeCurrency     string          `json:"rent_fee_currency"     validate:"omitempty"                                                                                           example:"USD"                             description:"Currency for the rent fee; inherits from property if not set"`
 	PaymentFrequency    string          `json:"payment_frequency"     validate:"required,oneof=WEEKLY DAILY MONTHLY QUARTERLY BIANNUALLY ANNUALLY"                                   example:"WEEKLY"                          description:"Payment frequency (e.g., WEEKLY, DAILY, MONTHLY, QUARTERLY, BIANNUALLY, ANNUALLY)"`
 	Features            *map[string]any `json:"features"              validate:"omitempty"                                                                                                                                     description:"Additional metadata in JSON format"`
 	MaxOccupantsAllowed int             `json:"max_occupants_allowed" validate:"required"                                                                                            example:"4"                               description:"Maximum number of occupants allowed"`
@@ -146,6 +146,68 @@ func (h *UnitHandler) ListUnits(w http.ResponseWriter, r *http.Request) {
 	input := repository.ListUnitsFilter{
 		FilterQuery:      *filterQuery,
 		PropertyID:       propertyID,
+		Status:           lib.NullOrString(r.URL.Query().Get("status")),
+		Type:             lib.NullOrString(r.URL.Query().Get("type")),
+		PaymentFrequency: lib.NullOrString(r.URL.Query().Get("payment_frequency")),
+		BlockIDs:         lib.NullOrStringArray(r.URL.Query()["block_ids"]),
+	}
+
+	units, unitsErr := h.service.ListUnits(r.Context(), input)
+	if unitsErr != nil {
+		HandleErrorResponse(w, unitsErr)
+		return
+	}
+
+	count, countErr := h.service.CountUnits(r.Context(), input)
+	if countErr != nil {
+		HandleErrorResponse(w, countErr)
+		return
+	}
+
+	unitsTransformed := make([]any, 0)
+	for _, unit := range units {
+		unitsTransformed = append(unitsTransformed, transformations.DBAdminUnitToRest(&unit))
+	}
+
+	json.NewEncoder(w).Encode(lib.ReturnListResponse(filterQuery, unitsTransformed, count))
+}
+
+// ListUnitsAcrossProperties godoc
+//
+//	@Summary		List units across properties (Admin, mobile)
+//	@Description	List units across every property the caller has access to, optionally narrowed with one or more property_id query values
+//	@Tags			Units
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			property_id	query		[]string				false	"Property ID(s) to narrow results to; omit to see every property the caller can access"	collectionFormat(multi)
+//	@Param			q			query		ListUnitsFilterRequest	true	"Units"
+//	@Success		200			{object}	object{data=object{rows=[]transformations.AdminOutputUnit,meta=lib.HTTPReturnPaginatedMetaResponse}}
+//	@Failure		401			{object}	string	"Invalid or absent authentication token"
+//	@Failure		403			{object}	string	"Requested property_id is outside the caller's access scope"
+//	@Failure		500			{object}	string	"An unexpected error occurred"
+//	@Router			/api/v1/admin/clients/{client_id}/units [get]
+func (h *UnitHandler) ListUnitsAcrossProperties(w http.ResponseWriter, r *http.Request) {
+	filterQuery, filterErr := lib.GenerateQuery(r.URL.Query())
+	if filterErr != nil {
+		HandleErrorResponse(w, filterErr)
+		return
+	}
+
+	isFilterPassedValidation := lib.ValidateRequest(h.appCtx.Validator, filterQuery, w)
+	if !isFilterPassedValidation {
+		return
+	}
+
+	propertyIDs, currentUserID, scopeOk := ValidateRequestedPropertyAccess(w, r, h.appCtx)
+	if !scopeOk {
+		return
+	}
+
+	input := repository.ListUnitsFilter{
+		FilterQuery:      *filterQuery,
+		PropertyIDs:      propertyIDs,
+		ClientUserID:     &currentUserID,
 		Status:           lib.NullOrString(r.URL.Query().Get("status")),
 		Type:             lib.NullOrString(r.URL.Query().Get("type")),
 		PaymentFrequency: lib.NullOrString(r.URL.Query().Get("payment_frequency")),

@@ -27,22 +27,30 @@ type UnitService interface {
 	SetSystemUnitStatus(ctx context.Context, input UpdateUnitStatusInput) error
 	DeleteUnit(ctx context.Context, input repository.DeleteUnitInput) error
 	updateUnitCount(ctx context.Context, input UpdateUnitCountInput) error
+	resolveUnitCurrency(ctx context.Context, currency, propertyID string) string
 }
 
 type unitService struct {
 	appCtx               pkg.AppContext
 	repo                 repository.UnitRepository
+	propertyRepo         repository.PropertyRepository
 	propertyBlockService PropertyBlockService
 }
 
 type UnitServiceDependencies struct {
 	AppCtx               pkg.AppContext
 	Repo                 repository.UnitRepository
+	PropertyRepo         repository.PropertyRepository
 	PropertyBlockService PropertyBlockService
 }
 
 func NewUnitService(deps UnitServiceDependencies) UnitService {
-	return &unitService{appCtx: deps.AppCtx, repo: deps.Repo, propertyBlockService: deps.PropertyBlockService}
+	return &unitService{
+		appCtx:               deps.AppCtx,
+		repo:                 deps.Repo,
+		propertyRepo:         deps.PropertyRepo,
+		propertyBlockService: deps.PropertyBlockService,
+	}
 }
 
 type CreateUnitInput struct {
@@ -61,6 +69,18 @@ type CreateUnitInput struct {
 	CreatedByID         string
 	Features            *map[string]any
 	MaxOccupantsAllowed int
+}
+
+func (s *unitService) resolveUnitCurrency(ctx context.Context, currency, propertyID string) string {
+	if currency != "" {
+		return currency
+	}
+	prop, err := s.propertyRepo.GetByID(ctx, repository.GetPropertyQuery{ID: propertyID})
+	if err == nil && prop.Currency != "" {
+		return prop.Currency
+	}
+
+	return "GHS"
 }
 
 func (s *unitService) CreateUnit(ctx context.Context, input CreateUnitInput) (*models.Unit, error) {
@@ -88,8 +108,13 @@ func (s *unitService) CreateUnit(ctx context.Context, input CreateUnitInput) (*m
 		}
 		features = datatypes.JSON(unmarshalledFeatures)
 	} else {
-		features = datatypes.JSON{}
+		features = datatypes.JSON("{}")
 	}
+
+	if input.RentFeeCurrency != "" && !lib.IsSupportedCurrency(input.RentFeeCurrency) {
+		return nil, pkg.BadRequestError("UnsupportedCurrency", nil)
+	}
+	currency := s.resolveUnitCurrency(ctx, input.RentFeeCurrency, input.PropertyID)
 
 	unit := models.Unit{
 		PropertyID:          input.PropertyID,
@@ -102,7 +127,7 @@ func (s *unitService) CreateUnit(ctx context.Context, input CreateUnitInput) (*m
 		Status:              input.Status,
 		Area:                input.Area,
 		RentFee:             input.RentFee,
-		RentFeeCurrency:     input.RentFeeCurrency,
+		RentFeeCurrency:     currency,
 		PaymentFrequency:    input.PaymentFrequency,
 		CreatedById:         input.CreatedByID,
 		Features:            features,
@@ -267,8 +292,14 @@ func (s *unitService) UpdateUnit(ctx context.Context, input UpdateUnitInput) (*m
 		})
 	}
 
-	if unit.Status != "Unit.Status.Draft" {
-		return nil, pkg.ForbiddenError("UnitNotInDraftState", nil)
+	rentalInfoChanged := input.RentFee != nil ||
+		input.RentFeeCurrency != nil ||
+		input.PaymentFrequency != nil ||
+		input.MaxOccupantsAllowed != nil
+
+	if rentalInfoChanged &&
+		(unit.Status == "Unit.Status.Occupied" || unit.Status == "Unit.Status.PartiallyOccupied") {
+		return nil, pkg.ForbiddenError("UnitIsOccupied", nil)
 	}
 
 	if input.Name != nil {
@@ -553,6 +584,41 @@ func (s *unitService) updateUnitCount(ctx context.Context, input UpdateUnitCount
 			Metadata: map[string]string{
 				"function": "CreateUnit",
 				"action":   "updating property block unit count",
+			},
+		})
+	}
+
+	propertyUnitsCount, countPropertyUnitsErr := s.CountUnits(ctx, repository.ListUnitsFilter{
+		PropertyID: input.PropertyID,
+	})
+	if countPropertyUnitsErr != nil {
+		return pkg.InternalServerError(countPropertyUnitsErr.Error(), &pkg.RentLoopErrorParams{
+			Err: countPropertyUnitsErr,
+			Metadata: map[string]string{
+				"function": "CreateUnit",
+				"action":   "counting property units",
+			},
+		})
+	}
+
+	property, getPropertyErr := s.propertyRepo.GetByID(ctx, repository.GetPropertyQuery{ID: input.PropertyID})
+	if getPropertyErr != nil {
+		return pkg.InternalServerError(getPropertyErr.Error(), &pkg.RentLoopErrorParams{
+			Err: getPropertyErr,
+			Metadata: map[string]string{
+				"function": "CreateUnit",
+				"action":   "fetching property to update units count",
+			},
+		})
+	}
+
+	property.UnitsCount = int(propertyUnitsCount)
+	if updatePropertyErr := s.propertyRepo.Update(ctx, property); updatePropertyErr != nil {
+		return pkg.InternalServerError(updatePropertyErr.Error(), &pkg.RentLoopErrorParams{
+			Err: updatePropertyErr,
+			Metadata: map[string]string{
+				"function": "CreateUnit",
+				"action":   "updating property units count",
 			},
 		})
 	}

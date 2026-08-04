@@ -42,10 +42,7 @@ export function PhoneGate({ onVerify, error, loading }: Props) {
 							<label className="mb-1 block text-sm font-medium text-zinc-700">
 								Phone number
 							</label>
-							<InternationalPhoneInput
-								value={phone}
-								onChange={setPhone}
-							/>
+							<InternationalPhoneInput value={phone} onChange={setPhone} />
 						</div>
 
 						{error ? (

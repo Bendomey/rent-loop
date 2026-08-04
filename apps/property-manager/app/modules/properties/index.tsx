@@ -4,7 +4,7 @@ import { useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { PropertiesController } from './controller'
 import { useGetMyProperties } from '~/api/properties'
-import { DataTable } from '~/components/datatable'
+import { DataTable, useDataTableSort } from '~/components/datatable'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import {
@@ -13,11 +13,57 @@ import {
 } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
 import { safeString } from '~/lib/strings'
+import { cn } from '~/lib/utils'
 import { useClient } from '~/providers/client-provider'
+
+/**
+ * Fields the API may be asked to order by. `sort_by` is interpolated into the
+ * backend's ORDER BY clause, so only these — never a raw URL value — are
+ * forwarded. Each one must match a column's `meta.sortKey`.
+ */
+const SORTABLE_FIELDS = [
+	'properties.name',
+	'properties.address',
+	'properties.blocks_count',
+	'properties.units_count',
+	'properties.status',
+	'client_user_properties.created_at',
+]
+
+/** A count with its unit word, dimmed when there is nothing to count. */
+function CountCell({
+	value,
+	one,
+	many,
+}: {
+	value: number
+	one: string
+	many: string
+}) {
+	return (
+		<span className="inline-flex items-baseline gap-1.5">
+			<span
+				className={cn(
+					'font-mono text-[15px] font-bold',
+					value === 0 ? 'text-muted-foreground/60' : 'text-foreground',
+				)}
+			>
+				{value}
+			</span>
+			<span className="text-muted-foreground text-[13.5px]">
+				{value === 1 ? one : many}
+			</span>
+		</span>
+	)
+}
 
 export function PropertiesModule() {
 	const [searchParams] = useSearchParams()
 	const { clientUser } = useClient()
+	const sorter = useDataTableSort(SORTABLE_FIELDS, {
+		sort_by: 'client_user_properties.created_at',
+		sort: 'desc',
+	})
 
 	const page = searchParams.get('page')
 		? Number(searchParams.get('page'))
@@ -38,7 +84,7 @@ export function PropertiesModule() {
 			},
 			pagination: { page, per },
 			populate: ['Property'],
-			sorter: { sort: 'desc', sort_by: 'created_at' },
+			sorter,
 			search: {
 				query: searchParams.get('query') ?? undefined,
 				fields: ['Property.name', 'Property.address'],
@@ -51,50 +97,89 @@ export function PropertiesModule() {
 	const columns: ColumnDef<ClientUserProperty>[] = useMemo(() => {
 		return [
 			{
-				id: 'drag',
-				header: () => null,
-				cell: () => <Building />,
-			},
-			{
 				accessorKey: 'property.name',
-				header: 'Name',
+				header: 'Property',
+				size: 280,
+				enableSorting: true,
+				enableHiding: false,
+				meta: { pin: 'left', sortKey: 'properties.name', label: 'Property' },
 				cell: ({ getValue, row }) => {
 					return (
-						<div className="flex min-w-32 flex-col items-start gap-1">
-							<Link
-								to={`/properties/${row.original.property?.id}`}
-								aria-label={`View details for property ${getValue<string>()}`}
-							>
-								<span className="truncate text-xs text-blue-600 hover:underline dark:text-blue-500">
-									{getValue<string>()}
-								</span>
-							</Link>
-
-							<Badge variant="outline" className="text-muted-foreground px-1.5">
-								<span className="truncate text-xs text-zinc-600 dark:text-white">
+						<div className="flex min-w-0 items-center gap-3.5">
+							<div className="bg-muted border-border flex size-11 shrink-0 items-center justify-center rounded-lg border">
+								<Building className="text-foreground-soft size-5.5" />
+							</div>
+							<div className="min-w-0">
+								<Link
+									to={`/properties/${row.original.property?.id}`}
+									aria-label={`View details for property ${getValue<string>()}`}
+								>
+									<span className="text-primary block truncate text-[15px] font-semibold hover:underline">
+										{getValue<string>()}
+									</span>
+								</Link>
+								<Badge
+									variant="outline"
+									className="text-muted-foreground mt-1.5 px-1.5 font-mono text-[10.5px] font-bold tracking-wider"
+								>
 									{row.original.property?.type}
-								</span>
-							</Badge>
+								</Badge>
+							</div>
 						</div>
 					)
 				},
-				enableHiding: false,
 			},
 			{
 				accessorKey: 'property.address',
 				header: 'Address',
+				size: 260,
+				enableSorting: true,
+				meta: { sortKey: 'properties.address', label: 'Address' },
 				cell: ({ row }) => (
-					<div className="flex min-w-32 flex-col items-start gap-1">
-						<span className="truncate text-xs text-zinc-600 dark:text-white">
-							{row.original.property?.address}
-						</span>
-					</div>
+					<span className="text-foreground-soft line-clamp-2 text-sm leading-snug">
+						{row.original.property?.address}
+					</span>
 				),
 			},
 
 			{
+				accessorKey: 'property.blocks_count',
+				header: 'Blocks',
+				size: 130,
+				enableSorting: true,
+				meta: {
+					sortKey: 'properties.blocks_count',
+					label: 'Blocks',
+					align: 'right',
+				},
+				cell: ({ getValue }) => (
+					<CountCell
+						value={getValue<number>() ?? 0}
+						one="block"
+						many="blocks"
+					/>
+				),
+			},
+			{
+				accessorKey: 'property.units_count',
+				header: 'Units',
+				size: 130,
+				enableSorting: true,
+				meta: {
+					sortKey: 'properties.units_count',
+					label: 'Units',
+					align: 'right',
+				},
+				cell: ({ getValue }) => (
+					<CountCell value={getValue<number>() ?? 0} one="unit" many="units" />
+				),
+			},
+			{
 				accessorKey: 'property.status',
 				header: 'Status',
+				size: 150,
+				enableSorting: true,
+				meta: { sortKey: 'properties.status', label: 'Status' },
 				cell: ({ getValue }) => (
 					<Badge variant="outline" className="text-muted-foreground px-1.5">
 						{getValue<string>() === 'Property.Status.Active' ? (
@@ -115,23 +200,27 @@ export function PropertiesModule() {
 			{
 				accessorKey: 'created_at',
 				header: 'Created On',
+				size: 190,
+				enableSorting: true,
+				meta: {
+					sortKey: 'client_user_properties.created_at',
+					label: 'Created On',
+				},
 				cell: ({ getValue }) => (
-					<div className="min-w-32">
-						<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">
-							{localizedDayjs(getValue<Date>()).format('DD/MM/YYYY hh:mm a')}
-						</span>
-					</div>
+					<span className="text-muted-foreground font-mono text-[13px] whitespace-nowrap">
+						{localizedDayjs(getValue<Date>()).format('DD/MM/YYYY hh:mm a')}
+					</span>
 				),
 			},
 			{
 				id: 'actions',
+				header: () => null,
+				size: 84,
+				enableHiding: false,
+				meta: { pin: 'right', align: 'center' },
 				cell: ({ row }) => (
 					<Link to={`/properties/${row.original.property?.id}`}>
-						<Button
-							variant="ghost"
-							className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
-							size="icon"
-						>
+						<Button variant="outline" size="icon" className="size-9.5">
 							<Eye />
 							<span className="sr-only">Open property</span>
 						</Button>
@@ -155,8 +244,8 @@ export function PropertiesModule() {
 						total: data?.meta?.total ?? 0,
 						page,
 						page_size: per,
-						order: data?.meta?.order ?? 'desc',
-						order_by: data?.meta?.order_by ?? 'created_at',
+						order: sorter.sort,
+						order_by: sorter.sort_by,
 						has_prev_page: data?.meta?.has_prev_page ?? false,
 						has_next_page: data?.meta?.has_next_page ?? false,
 					}}

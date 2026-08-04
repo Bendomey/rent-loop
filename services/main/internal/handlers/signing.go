@@ -28,6 +28,7 @@ type GenerateTokenRequest struct {
 	Role                string  `json:"role"                  validate:"required,oneof=TENANT PM_WITNESS TENANT_WITNESS"`
 	TenantApplicationID *string `json:"tenant_application_id" validate:"omitempty,uuid4"`
 	LeaseID             *string `json:"lease_id"              validate:"omitempty,uuid4"`
+	LeaseTerminationID  *string `json:"lease_termination_id"  validate:"omitempty,uuid4"`
 	SignerName          *string `json:"signer_name"           validate:"omitempty"`
 	SignerEmail         *string `json:"signer_email"          validate:"omitempty,email"`
 	SignerPhone         *string `json:"signer_phone"          validate:"omitempty"`
@@ -69,6 +70,7 @@ func (h *SigningHandler) GenerateToken(w http.ResponseWriter, r *http.Request) {
 		DocumentID:          body.DocumentID,
 		TenantApplicationID: body.TenantApplicationID,
 		LeaseID:             body.LeaseID,
+		LeaseTerminationID:  body.LeaseTerminationID,
 		Role:                body.Role,
 		SignerName:          body.SignerName,
 		SignerEmail:         body.SignerEmail,
@@ -182,6 +184,7 @@ type ListSigningTokensFilterRequest struct {
 	DocumentID          *string `json:"document_id"           validate:"omitempty,uuid4"`
 	TenantApplicationID *string `json:"tenant_application_id" validate:"omitempty,uuid4"`
 	LeaseID             *string `json:"lease_id"              validate:"omitempty,uuid4"`
+	LeaseTerminationID  *string `json:"lease_termination_id"  validate:"omitempty,uuid4"`
 	Role                *string `json:"role"                  validate:"omitempty,oneof=TENANT PM_WITNESS TENANT_WITNESS"`
 	CreatedByID         *string `json:"created_by_id"         validate:"omitempty,uuid4"`
 }
@@ -211,6 +214,7 @@ func (h *SigningHandler) ListSigningTokens(w http.ResponseWriter, r *http.Reques
 	documentID := q.Get("document_id")
 	tenantApplicationID := q.Get("tenant_application_id")
 	leaseID := q.Get("lease_id")
+	leaseTerminationID := q.Get("lease_termination_id")
 	role := q.Get("role")
 	createdByID := q.Get("created_by_id")
 
@@ -223,6 +227,9 @@ func (h *SigningHandler) ListSigningTokens(w http.ResponseWriter, r *http.Reques
 	}
 	if leaseID != "" {
 		filters.LeaseID = &leaseID
+	}
+	if leaseTerminationID != "" {
+		filters.LeaseTerminationID = &leaseTerminationID
 	}
 	if role != "" {
 		filters.Role = &role
@@ -249,6 +256,7 @@ func (h *SigningHandler) ListSigningTokens(w http.ResponseWriter, r *http.Reques
 		DocumentID:          filters.DocumentID,
 		TenantApplicationID: filters.TenantApplicationID,
 		LeaseID:             filters.LeaseID,
+		LeaseTerminationID:  filters.LeaseTerminationID,
 		Role:                filters.Role,
 		CreatedByID:         filters.CreatedByID,
 	}
@@ -370,6 +378,7 @@ type SignDocumentPMRequest struct {
 	SignatureUrl        string  `json:"signature_url"         validate:"required,url"`
 	TenantApplicationID *string `json:"tenant_application_id" validate:"omitempty,uuid4"`
 	LeaseID             *string `json:"lease_id"              validate:"omitempty,uuid4"`
+	LeaseTerminationID  *string `json:"lease_termination_id"  validate:"omitempty,uuid4"`
 }
 
 // SignDocumentPM godoc
@@ -408,6 +417,7 @@ func (h *SigningHandler) SignDocumentPM(w http.ResponseWriter, r *http.Request) 
 		SignatureUrl:        body.SignatureUrl,
 		TenantApplicationID: body.TenantApplicationID,
 		LeaseID:             body.LeaseID,
+		LeaseTerminationID:  body.LeaseTerminationID,
 		SignedByID:          currentUser.ID,
 	})
 	if err != nil {

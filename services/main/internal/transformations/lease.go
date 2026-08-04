@@ -22,15 +22,17 @@ type OutputAdminLease struct {
 	PaymentFrequency    *string        `json:"payment_frequency,omitempty" example:"Monthly"`
 	Meta                map[string]any `json:"meta"`
 
-	MoveInDate            time.Time `json:"move_in_date"            example:"2024-07-01T00:00:00Z"`
-	StayDurationFrequency string    `json:"stay_duration_frequency" example:"Months"`
-	StayDuration          int64     `json:"stay_duration"           example:"12"`
+	MoveInDate            time.Time  `json:"move_in_date"            example:"2024-07-01T00:00:00Z"`
+	StayDurationFrequency string     `json:"stay_duration_frequency" example:"Months"`
+	StayDuration          int64      `json:"stay_duration"           example:"12"`
+	MoveOutDate           *time.Time `json:"move_out_date"           example:"2025-07-01T00:00:00Z"`
 
 	KeyHandoverDate        *time.Time `json:"key_handover_date"        example:"2024-07-01T09:00:00Z"`
 	UtilityTransfersDate   *time.Time `json:"utility_transfers_date"   example:"2024-07-02T10:00:00Z"`
 	PropertyInspectionDate *time.Time `json:"property_inspection_date" example:"2024-06-30T15:00:00Z"`
 
-	LeaseAgreementDocumentUrl string `json:"lease_agreement_document_url" example:"https://example.com/lease.pdf"`
+	LeaseAgreementDocumentUrl *string                            `json:"lease_agreement_document_url,omitempty" example:"https://example.com/lease.pdf"`
+	LeaseAgreementDocument    *OutputAdminLeaseAgreementDocument `json:"lease_agreement_document,omitempty"`
 
 	TerminationAgreementDocumentUrl                       *string    `json:"termination_agreement_document_url,omitempty"                           example:"https://example.com/termination.pdf"`
 	TerminationAgreementDocumentPropertyManagerSignedAt   *time.Time `json:"termination_agreement_document_property_manager_signed_at,omitempty"    example:"2024-12-01T10:00:00Z"`
@@ -82,10 +84,12 @@ func DBAdminLeaseToRest(i *models.Lease) any {
 		"move_in_date":                       i.MoveInDate,
 		"stay_duration_frequency":            i.StayDurationFrequency,
 		"stay_duration":                      i.StayDuration,
+		"move_out_date":                      i.MoveOutDate,
 		"key_handover_date":                  i.KeyHandoverDate,
 		"utility_transfers_date":             i.UtilityTransfersDate,
 		"property_inspection_date":           i.PropertyInspectionDate,
 		"lease_agreement_document_url":       i.LeaseAgreementDocumentUrl,
+		"lease_agreement_document":           DBAdminLeaseAgreementDocumentToRest(i.LeaseAgreementDocument),
 		"termination_agreement_document_url": i.TerminationAgreementDocumentUrl,
 		"activated_at":                       i.ActivatedAt,
 		"activated_by_id":                    i.ActivatedById,
@@ -122,15 +126,16 @@ type OutputLease struct {
 	PaymentFrequency    *string                 `json:"payment_frequency,omitempty"  example:"Monthly"`
 	Meta                map[string]any          `json:"meta"`
 
-	MoveInDate            time.Time `json:"move_in_date"            example:"2024-07-01T00:00:00Z"`
-	StayDurationFrequency string    `json:"stay_duration_frequency" example:"Months"`
-	StayDuration          int64     `json:"stay_duration"           example:"12"`
+	MoveInDate            time.Time  `json:"move_in_date"            example:"2024-07-01T00:00:00Z"`
+	StayDurationFrequency string     `json:"stay_duration_frequency" example:"Months"`
+	StayDuration          int64      `json:"stay_duration"           example:"12"`
+	MoveOutDate           *time.Time `json:"move_out_date"           example:"2025-07-01T00:00:00Z"`
 
 	KeyHandoverDate        *time.Time `json:"key_handover_date"        example:"2024-07-01T09:00:00Z"`
 	UtilityTransfersDate   *time.Time `json:"utility_transfers_date"   example:"2024-07-02T10:00:00Z"`
 	PropertyInspectionDate *time.Time `json:"property_inspection_date" example:"2024-06-30T15:00:00Z"`
 
-	LeaseAgreementDocumentUrl string `json:"lease_agreement_document_url" example:"https://example.com/lease.pdf"`
+	LeaseAgreementDocumentUrl *string `json:"lease_agreement_document_url,omitempty" example:"https://example.com/lease.pdf"`
 
 	TerminationAgreementDocumentUrl                     *string    `json:"termination_agreement_document_url,omitempty"                        example:"https://example.com/termination.pdf"`
 	TerminationAgreementDocumentPropertyManagerSignedAt *time.Time `json:"termination_agreement_document_property_manager_signed_at,omitempty" example:"2024-12-01T10:00:00Z"`
@@ -168,6 +173,7 @@ func DBLeaseToRest(i *models.Lease) any {
 		"move_in_date":                       i.MoveInDate,
 		"stay_duration_frequency":            i.StayDurationFrequency,
 		"stay_duration":                      i.StayDuration,
+		"move_out_date":                      i.MoveOutDate,
 		"key_handover_date":                  i.KeyHandoverDate,
 		"utility_transfers_date":             i.UtilityTransfersDate,
 		"property_inspection_date":           i.PropertyInspectionDate,

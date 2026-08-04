@@ -121,6 +121,8 @@ func (r *unitRepository) Delete(ctx context.Context, input DeleteUnitInput) erro
 type ListUnitsFilter struct {
 	lib.FilterQuery
 	PropertyID       string
+	PropertyIDs      *[]string
+	ClientUserID     *string
 	Status           *string
 	Type             *string
 	PaymentFrequency *string
@@ -133,6 +135,8 @@ func (r *unitRepository) List(ctx context.Context, filterQuery ListUnitsFilter) 
 	db := r.DB.WithContext(ctx).Scopes(
 		IDsFilterScope("units", filterQuery.IDs),
 		propertyFilterScope(filterQuery.PropertyID),
+		unitPropertyIDsScope(filterQuery.PropertyIDs),
+		unitClientUserAccessScope(filterQuery.ClientUserID),
 		unitStatusScope(filterQuery.Status),
 		unitTypeScope(filterQuery.Type),
 		unitBlockIDsScope(filterQuery.BlockIDs),
@@ -168,6 +172,8 @@ func (r *unitRepository) Count(ctx context.Context, filterQuery ListUnitsFilter)
 		Scopes(
 			IDsFilterScope("units", filterQuery.IDs),
 			propertyFilterScope(filterQuery.PropertyID),
+			unitPropertyIDsScope(filterQuery.PropertyIDs),
+			unitClientUserAccessScope(filterQuery.ClientUserID),
 			unitStatusScope(filterQuery.Status),
 			unitTypeScope(filterQuery.Type),
 			unitBlockIDsScope(filterQuery.BlockIDs),
@@ -191,6 +197,27 @@ func propertyFilterScope(propertyID string) func(db *gorm.DB) *gorm.DB {
 		}
 
 		return db.Where("units.property_id = ?", propertyID)
+	}
+}
+
+func unitPropertyIDsScope(propertyIDs *[]string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if propertyIDs == nil {
+			return db
+		}
+		return db.Where("units.property_id IN (?)", *propertyIDs)
+	}
+}
+
+func unitClientUserAccessScope(clientUserID *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if clientUserID == nil {
+			return db
+		}
+		return db.Where(
+			"units.property_id IN (?)",
+			accessiblePropertyIDsSubQuery(db, *clientUserID),
+		)
 	}
 }
 

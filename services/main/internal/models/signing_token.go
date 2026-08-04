@@ -28,6 +28,9 @@ type SigningToken struct {
 	LeaseID *string
 	Lease   *Lease
 
+	LeaseTerminationID *string
+	LeaseTermination   *LeaseTermination
+
 	// Role this token authorizes: "TENANT" | "PM_WITNESS" | "TENANT_WITNESS"
 	// Property managers sign via the authenticated portal, not via tokens.
 	Role string `gorm:"not null"`
@@ -65,6 +68,13 @@ func (s *SigningToken) BeforeCreate(tx *gorm.DB) error {
 		var lease Lease
 		if err := tx.Select("code").First(&lease, "id = ?", s.LeaseID).Error; err == nil {
 			appCode = lease.Code
+		}
+	}
+
+	if s.LeaseTerminationID != nil {
+		var termination LeaseTermination
+		if err := tx.Select("code").First(&termination, "id = ?", s.LeaseTerminationID).Error; err == nil {
+			appCode = termination.Code
 		}
 	}
 

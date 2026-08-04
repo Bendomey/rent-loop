@@ -5,7 +5,7 @@ import { useSearchParams } from 'react-router'
 import { MembersController } from './controller'
 import RemoveMemberModule from './remove'
 import { useGetClientUserProperties } from '~/api/client-user-properties'
-import { DataTable } from '~/components/datatable'
+import { DataTable, useDataTableSort } from '~/components/datatable'
 import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
@@ -16,8 +16,21 @@ import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 import EditPropertyMemberRoleModule from './edit-role'
 
+/**
+ * Fields the API may order by. `order_by` reaches the backend's ORDER BY
+ * clause, so only these — never a raw URL value — are forwarded.
+ */
+const SORTABLE_FIELDS = [
+	'client_user_properties.role',
+	'client_user_properties.created_at',
+]
+
 export function PropertyMembersModule() {
 	const [searchParams] = useSearchParams()
+	const sorter = useDataTableSort(SORTABLE_FIELDS, {
+		sort_by: 'client_user_properties.created_at',
+		sort: 'desc',
+	})
 	const { clientUser } = useClient()
 	const { clientUserProperty } = useProperty()
 
@@ -39,7 +52,7 @@ export function PropertyMembersModule() {
 			filters: { role: role, property_id: clientUserProperty?.property?.id },
 			pagination: { page, per },
 			populate: ['ClientUser', 'ClientUser.User'],
-			sorter: { sort: 'desc', sort_by: 'created_at' },
+			sorter,
 			search: {
 				query: searchParams.get('query') ?? undefined,
 				fields: ['property'],
@@ -72,6 +85,8 @@ export function PropertyMembersModule() {
 			{
 				accessorKey: 'role',
 				header: 'Role',
+				enableSorting: true,
+				meta: { sortKey: 'client_user_properties.role' },
 				cell: ({ getValue }) => (
 					<Badge variant="outline" className="px-1.5">
 						<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">

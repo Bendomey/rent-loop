@@ -19,7 +19,12 @@ type LeaseRepository interface {
 	Count(context context.Context, filterQuery ListLeasesFilter) (int64, error)
 	CountActiveByUnitID(context context.Context, unitID string) (int64, error)
 	CountActiveByPropertyID(context context.Context, propertyID string) (int64, error)
+	CountByPropertyIDAndStatus(context context.Context, propertyID string, status string) (int64, error)
+	CountNonBlockingByPropertyID(context context.Context, propertyID string) (int64, error)
+	DeleteNonBlockingByPropertyID(context context.Context, propertyID string) error
 	ListDueForBilling(ctx context.Context) (*[]models.Lease, error)
+	ListForMoveOutReminders(ctx context.Context) (*[]models.Lease, error)
+	ListDueForCompletion(ctx context.Context) (*[]models.Lease, error)
 }
 
 type leaseRepository struct {
@@ -86,13 +91,16 @@ type ListLeasesFilter struct {
 	lib.FilterQuery
 	TenantID                   *string
 	TenantAccountID            *string
-	PropertyID                 *string
+	PropertyIDs                *[]string
+	ClientUserID               *string
 	Status                     *string
 	ParentLeaseID              *string
 	PaymentFrequency           *string
 	StayDurationFrequency      *string
 	LeaseAgreementDocumentMode *string
 	UnitIds                    *[]string
+	MoveOutDateFrom            *time.Time
+	MoveOutDateTo              *time.Time
 }
 
 func (r *leaseRepository) List(ctx context.Context, filterQuery ListLeasesFilter) (*[]models.Lease, error) {
@@ -101,13 +109,14 @@ func (r *leaseRepository) List(ctx context.Context, filterQuery ListLeasesFilter
 	db := r.DB.WithContext(ctx).Scopes(
 		leaseFilterScope("tenant_id", filterQuery.TenantID),
 		tenantAccountLeasesScope(filterQuery.TenantAccountID),
-		propertyLeasesScope(filterQuery.PropertyID),
+		propertyLeasesScope(filterQuery.PropertyIDs, filterQuery.ClientUserID),
 		leaseFilterScope("status", filterQuery.Status),
 		leaseFilterScope("parent_lease_id", filterQuery.ParentLeaseID),
 		leaseFilterScope("payment_frequency", filterQuery.PaymentFrequency),
 		leaseFilterScope("stay_duration_frequency", filterQuery.StayDurationFrequency),
 		leaseFilterScope("lease_agreement_document_mode", filterQuery.LeaseAgreementDocumentMode),
 		leaseArrayFilterScope("unit_id", filterQuery.UnitIds),
+		leaseMoveOutDateRangeScope(filterQuery.MoveOutDateFrom, filterQuery.MoveOutDateTo),
 		IDsFilterScope("leases", filterQuery.IDs),
 		DateRangeScope("leases", filterQuery.DateRange),
 		SearchScope("leases", filterQuery.Search),
@@ -135,13 +144,14 @@ func (r *leaseRepository) Count(ctx context.Context, filterQuery ListLeasesFilte
 	result := r.DB.WithContext(ctx).Model(&models.Lease{}).Scopes(
 		leaseFilterScope("tenant_id", filterQuery.TenantID),
 		tenantAccountLeasesScope(filterQuery.TenantAccountID),
-		propertyLeasesScope(filterQuery.PropertyID),
+		propertyLeasesScope(filterQuery.PropertyIDs, filterQuery.ClientUserID),
 		leaseFilterScope("status", filterQuery.Status),
 		leaseFilterScope("parent_lease_id", filterQuery.ParentLeaseID),
 		leaseFilterScope("payment_frequency", filterQuery.PaymentFrequency),
 		leaseFilterScope("stay_duration_frequency", filterQuery.StayDurationFrequency),
 		leaseFilterScope("lease_agreement_document_mode", filterQuery.LeaseAgreementDocumentMode),
 		leaseArrayFilterScope("unit_id", filterQuery.UnitIds),
+		leaseMoveOutDateRangeScope(filterQuery.MoveOutDateFrom, filterQuery.MoveOutDateTo),
 		IDsFilterScope("leases", filterQuery.IDs),
 		DateRangeScope("leases", filterQuery.DateRange),
 		SearchScope("leases", filterQuery.Search),
@@ -172,13 +182,41 @@ func (r *leaseRepository) CountActiveByUnitID(ctx context.Context, unitID string
 	return count, nil
 }
 
-func propertyLeasesScope(propertyID *string) func(db *gorm.DB) *gorm.DB {
+// propertyLeasesScope resolves the property/client filter for leases. propertyIDs is an
+// IN-list (a one-element slice for an exact match — the nested /properties/{property_id}
+// route — or many for the cross-property route) and takes precedence when set; clientID is
+// the unrestricted-for-client case (join through units -> properties, without enumerating
+// every property). nil/nil means no filter at all.
+func propertyLeasesScope(propertyIDs *[]string, clientUserID *string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		if propertyID == nil {
-			return db
+		if propertyIDs != nil {
+			return db.Joins("INNER JOIN units ON leases.unit_id = units.id").
+				Where("units.property_id IN (?)", *propertyIDs)
 		}
+		if clientUserID != nil {
+			return db.Joins("INNER JOIN units ON leases.unit_id = units.id").
+				Where(
+					"units.property_id IN (SELECT property_id FROM client_user_properties WHERE client_user_id = ? AND deleted_at IS NULL)",
+					*clientUserID,
+				)
+		}
+		return db
+	}
+}
 
-		return db.Joins("INNER JOIN units ON leases.unit_id = units.id").Where("units.property_id = ?", propertyID)
+// leaseMoveOutDateRangeScope narrows to leases whose move-out falls inside the
+// given window — the query behind the Insights "leases expiring" drill-down.
+// Each bound applies independently so callers may supply either or both. The
+// column is table-qualified because propertyLeasesScope joins units.
+func leaseMoveOutDateRangeScope(from, to *time.Time) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if from != nil {
+			db = db.Where("leases.move_out_date >= ?", *from)
+		}
+		if to != nil {
+			db = db.Where("leases.move_out_date <= ?", *to)
+		}
+		return db
 	}
 }
 
@@ -234,12 +272,104 @@ func (r *leaseRepository) CountActiveByPropertyID(ctx context.Context, propertyI
 	return count, nil
 }
 
+func (r *leaseRepository) CountByPropertyIDAndStatus(
+	ctx context.Context,
+	propertyID string,
+	status string,
+) (int64, error) {
+	var count int64
+	err := lib.ResolveDB(ctx, r.DB).WithContext(ctx).
+		Model(&models.Lease{}).
+		Joins("INNER JOIN units ON leases.unit_id = units.id").
+		Where("units.property_id = ?", propertyID).
+		Where("leases.status = ?", status).
+		Count(&count).Error
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+func (r *leaseRepository) CountNonBlockingByPropertyID(ctx context.Context, propertyID string) (int64, error) {
+	var count int64
+	err := lib.ResolveDB(ctx, r.DB).WithContext(ctx).
+		Model(&models.Lease{}).
+		Joins("INNER JOIN units ON leases.unit_id = units.id").
+		Where("units.property_id = ?", propertyID).
+		Where("leases.status NOT IN ?", []string{
+			"Lease.Status.Pending",
+			"Lease.Status.Active",
+		}).
+		Count(&count).Error
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+func (r *leaseRepository) DeleteNonBlockingByPropertyID(ctx context.Context, propertyID string) error {
+	return lib.ResolveDB(ctx, r.DB).WithContext(ctx).
+		Where(
+			"unit_id IN (SELECT id FROM units WHERE property_id = ?) AND status NOT IN ?",
+			propertyID,
+			[]string{"Lease.Status.Pending", "Lease.Status.Active"},
+		).
+		Delete(&models.Lease{}).Error
+}
+
 func (r *leaseRepository) ListDueForBilling(ctx context.Context) (*[]models.Lease, error) {
 	var leases []models.Lease
 	result := r.DB.WithContext(ctx).
 		Where("status = ? AND next_billing_date IS NOT NULL AND next_billing_date <= ?", "Lease.Status.Active", time.Now()).
 		Preload("Unit.Property").
 		Preload("Tenant.TenantAccount").
+		Find(&leases)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &leases, nil
+}
+
+// ListForMoveOutReminders returns pending or active leases whose MoveOutDate
+// falls within the next 30 days, so the reminder cron can evaluate which
+// threshold (if any) applies without recomputing lease duration math.
+// Pending leases are included because some managers never explicitly
+// activate a lease before move-out.
+func (r *leaseRepository) ListForMoveOutReminders(ctx context.Context) (*[]models.Lease, error) {
+	var leases []models.Lease
+	now := time.Now()
+	result := r.DB.WithContext(ctx).
+		Where(
+			"status IN (?, ?) AND move_out_date IS NOT NULL AND move_out_date BETWEEN ? AND ?",
+			"Lease.Status.Pending", "Lease.Status.Active", now, now.AddDate(0, 0, 30),
+		).
+		Preload("Unit.Property").
+		Preload("Tenant.TenantAccount").
+		Preload("ActivatedBy.User").
+		Find(&leases)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return &leases, nil
+}
+
+// ListDueForCompletion returns pending or active leases whose MoveOutDate has
+// fully passed (the day after move-out, calendar-day normalized in UTC), i.e.
+// ready to transition to Lease.Status.Completed. Pending leases are included
+// because some managers never explicitly activate a lease before move-out.
+func (r *leaseRepository) ListDueForCompletion(ctx context.Context) (*[]models.Lease, error) {
+	var leases []models.Lease
+	now := time.Now().UTC()
+	startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+	result := r.DB.WithContext(ctx).
+		Where(
+			"status IN (?, ?) AND move_out_date IS NOT NULL AND move_out_date < ?",
+			"Lease.Status.Pending", "Lease.Status.Active", startOfToday,
+		).
+		Preload("Unit.Property").
+		Preload("Tenant.TenantAccount").
+		Preload("ActivatedBy.User").
 		Find(&leases)
 	if result.Error != nil {
 		return nil, result.Error

@@ -83,17 +83,19 @@ export async function cubeLoad<T = Record<string, unknown>>(
 
 /**
  * TanStack Query wrapper around cubeLoad.
- * Only runs when `token` is available (enabled: !!token).
+ * Only runs when `token` is available (enabled: !!token), and when the
+ * caller-supplied `options.enabled` (default true) is also satisfied.
  */
 export const useCubeQuery = <T = Record<string, unknown>>(
 	token: string | undefined,
 	queryKey: string[],
 	query: CubeQuery,
+	options?: { enabled?: boolean },
 ) =>
 	useQuery({
 		queryKey: ['cube', ...queryKey],
 		queryFn: () => cubeLoad<T>(token!, query),
-		enabled: !!token,
+		enabled: !!token && (options?.enabled ?? true),
 		staleTime: 5 * 60 * 1000, // 5 min cache for analytics data
 		retry: 1,
 	})

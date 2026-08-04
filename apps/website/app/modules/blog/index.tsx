@@ -1,16 +1,16 @@
 import { Link } from 'react-router'
+import { MarketingFooter, MarketingNav, TopBar } from '~/components/marketing'
 import { getSortedBlogPosts } from '~/content/blog'
-import { Footer } from '~/components/layout/footer'
-import { Header } from '~/components/layout/header'
 
 export function BlogIndexModule() {
 	const posts = getSortedBlogPosts()
 
 	return (
 		<div>
-			<Header />
+			<TopBar />
+			<MarketingNav current="blog" />
 
-			<div className="pt-24 pb-16">
+			<div className="pt-12 pb-16">
 				<div className="mx-auto max-w-7xl px-6 lg:px-8">
 					<div className="mx-auto max-w-2xl text-center">
 						<p className="text-base/7 font-semibold text-rose-600">Blog</p>
@@ -62,7 +62,7 @@ export function BlogIndexModule() {
 				</div>
 			</div>
 
-			<Footer />
+			<MarketingFooter />
 		</div>
 	)
 }

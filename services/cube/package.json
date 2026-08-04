@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "cubejs-server",
-    "start": "cubejs-server"
+    "start": "cubejs-server",
+    "test": "node --test",
+    "check:schema": "node scripts/check-schema.mjs"
   },
   "dependencies": {
     "@cubejs-backend/postgres-driver": "^1.2.0",

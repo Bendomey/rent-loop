@@ -1,8 +1,18 @@
+interface MaintenanceRequestAsset {
+	id: string
+	asset_type: 'UNIT' | 'BLOCK'
+	unit_id?: string
+	unit?: PropertyUnit
+	property_block_id?: string
+	property_block?: PropertyBlock
+}
+
 interface MaintenanceRequest {
 	id: string
 	code: string
-	unit_id: string
-	unit?: PropertyUnit
+	property_id: string
+	property?: Property
+	assets: MaintenanceRequestAsset[]
 	lease_id: Nullable<string>
 	created_by_tenant_id: Nullable<string>
 	created_by_tenant?: Nullable<Tenant>
@@ -12,7 +22,23 @@ interface MaintenanceRequest {
 	description: string
 	attachments: string[]
 	priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'EMERGENCY'
-	category: 'PLUMBING' | 'ELECTRICAL' | 'HVAC' | 'OTHER'
+	category:
+		| 'PLUMBING'
+		| 'ELECTRICAL'
+		| 'HVAC'
+		| 'APPLIANCE'
+		| 'STRUCTURAL'
+		| 'ROOFING'
+		| 'PEST_CONTROL'
+		| 'LANDSCAPING'
+		| 'LOCKS_SECURITY'
+		| 'PAINTING'
+		| 'FLOORING'
+		| 'WINDOWS_DOORS'
+		| 'SAFETY_FIRE'
+		| 'CLEANING'
+		| 'UTILITIES'
+		| 'OTHER'
 	status: 'NEW' | 'IN_PROGRESS' | 'IN_REVIEW' | 'RESOLVED' | 'CANCELED'
 	visibility: 'TENANT_VISIBLE' | 'INTERNAL_ONLY'
 	assigned_worker_id: Nullable<string>
@@ -49,7 +75,6 @@ interface MaintenanceRequestActivityLog {
 	performed_by_tenant_id: Nullable<string>
 	performed_by_tenant: Nullable<Tenant>
 	metadata: Nullable<Record<string, unknown>>
-	metadata: Nullable<Record<string, unknown>>
 	created_at: string
 	updated_at: string
 }
@@ -85,6 +110,7 @@ interface FetchMaintenanceRequestFilter {
 	tenant_id?: string
 	property_id?: string
 	unit_id?: string
+	block_id?: string
 	assigned_worker_id?: string
 	assigned_manager_id?: string
 }

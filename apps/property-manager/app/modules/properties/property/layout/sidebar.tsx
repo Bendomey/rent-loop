@@ -1,12 +1,12 @@
 import {
-	Settings2,
+	Settings,
 	LifeBuoy,
-	PieChart,
-	House,
-	BookOpenText,
-	DollarSign,
-	Contact,
-	Headset,
+	LayoutGrid,
+	Building2,
+	FileText,
+	Banknote,
+	Users,
+	Activity,
 } from 'lucide-react'
 import * as React from 'react'
 
@@ -48,12 +48,12 @@ export function PropertySidebar({
 				title: 'Overview',
 				isHome: true,
 				url: '',
-				icon: PieChart,
+				icon: LayoutGrid,
 			},
 			{
 				title: 'Assets',
 				url: '/assets',
-				icon: House,
+				icon: Building2,
 				items: [
 					{
 						title: 'Blocks',
@@ -77,7 +77,7 @@ export function PropertySidebar({
 			{
 				title: 'Occupancy',
 				url: '/occupancy',
-				icon: Contact,
+				icon: Users,
 				items: [
 					{
 						title:
@@ -113,7 +113,7 @@ export function PropertySidebar({
 			{
 				title: 'Activities',
 				url: '/activities',
-				icon: Headset,
+				icon: Activity,
 				items: [
 					{
 						title: 'Maintenance Requests',
@@ -138,7 +138,7 @@ export function PropertySidebar({
 			{
 				title: 'Financials',
 				url: '/financials',
-				icon: DollarSign,
+				icon: Banknote,
 				items: [
 					{
 						title: 'Invoice Payments',
@@ -158,7 +158,7 @@ export function PropertySidebar({
 			{
 				title: 'Settings',
 				url: '/settings',
-				icon: Settings2,
+				icon: Settings,
 			},
 		],
 		navSecondary: [
@@ -170,7 +170,7 @@ export function PropertySidebar({
 			{
 				title: 'Changelog',
 				url: '/changelog',
-				icon: BookOpenText,
+				icon: FileText,
 			},
 		],
 	}

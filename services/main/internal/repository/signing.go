@@ -118,6 +118,7 @@ type ListSigningTokensFilter struct {
 	DocumentID          *string
 	TenantApplicationID *string
 	LeaseID             *string
+	LeaseTerminationID  *string
 	Role                *string
 	CreatedByID         *string
 }
@@ -146,6 +147,15 @@ func SigningTokenLeaseIDScope(leaseID *string) func(db *gorm.DB) *gorm.DB {
 			return db
 		}
 		return db.Where("signing_tokens.lease_id = ?", *leaseID)
+	}
+}
+
+func SigningTokenLeaseTerminationIDScope(leaseID *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if leaseID == nil {
+			return db
+		}
+		return db.Where("signing_tokens.lease_termination_id = ?", *leaseID)
 	}
 }
 
@@ -181,6 +191,7 @@ func (r *signingRepository) ListSigningTokens(
 			SigningTokenDocumentIDScope(filters.DocumentID),
 			SigningTokenTenantApplicationIDScope(filters.TenantApplicationID),
 			SigningTokenLeaseIDScope(filters.LeaseID),
+			SigningTokenLeaseTerminationIDScope(filters.LeaseTerminationID),
 			SigningTokenRoleScope(filters.Role),
 			SigningTokenCreatedByIDScope(filters.CreatedByID),
 			PaginationScope(filterQuery.Page, filterQuery.PageSize),

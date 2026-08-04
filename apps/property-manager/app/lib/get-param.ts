@@ -12,7 +12,10 @@ export const getQueryParams = <FilterT>(
 		search_fields: props.search?.fields
 			? props.search.fields.join(',')
 			: undefined,
-		...(props.sorter ?? {}),
+		// The API names these `order`/`order_by`; anything else it ignores and
+		// silently falls back to `created_at desc`.
+		order: props.sorter?.sort,
+		order_by: props.sorter?.sort_by,
 		populate: props.populate ? props.populate.join(',') : undefined,
 	})
 

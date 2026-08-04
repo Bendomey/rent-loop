@@ -1,16 +1,24 @@
+import { propertyScopeSql } from './scope';
+
 /**
- * MaintenanceRequests cube — scoped to the authenticated client via properties.
+ * MaintenanceRequests cube — scoped to the authenticated client via the
+ * request's own property_id, then narrowed to the caller's permitted
+ * properties (see `../scope.js`).
+ *
+ * A request can target many units and blocks, so it no longer has a single
+ * unit. Unit-level maintenance analytics would need its own cube over
+ * `maintenance_request_assets`.
  */
 cube(`MaintenanceRequests`, {
   sql: `
     SELECT mr.*
     FROM maintenance_requests mr
-    JOIN units u ON u.id = mr.unit_id AND u.deleted_at IS NULL
-    JOIN properties p ON p.id = u.property_id AND p.deleted_at IS NULL
+    JOIN properties p ON p.id = mr.property_id AND p.deleted_at IS NULL
     WHERE mr.deleted_at IS NULL
       AND ${COMPILE_CONTEXT.securityContext?.clientId
         ? `p.client_id = '${COMPILE_CONTEXT.securityContext.clientId}'::uuid`
         : '1 = 0'}
+      AND ${propertyScopeSql(COMPILE_CONTEXT.securityContext, 'mr.property_id::text')}
   `,
 
   measures: {
@@ -48,6 +56,14 @@ cube(`MaintenanceRequests`, {
       title: `Canceled`,
       filters: [{ sql: `${CUBE}.status = 'CANCELED'` }],
     },
+
+    // Distinct properties with at least one open (unresolved) request
+    openPropertyCount: {
+      sql: `${propertyId}`,
+      type: `countDistinct`,
+      title: `Properties With Open Requests`,
+      filters: [{ sql: `${CUBE}.status IN ('NEW', 'IN_PROGRESS', 'IN_REVIEW')` }],
+    },
   },
 
   dimensions: {
@@ -76,15 +92,15 @@ cube(`MaintenanceRequests`, {
     },
 
     propertyId: {
-      sql: `(SELECT u.property_id::text FROM units u WHERE u.id = ${CUBE}.unit_id LIMIT 1)`,
+      sql: `property_id`,
       type: `string`,
       title: `Property ID`,
     },
 
-    unitId: {
-      sql: `unit_id`,
+    tenantId: {
+      sql: `created_by_tenant_id`,
       type: `string`,
-      title: `Unit ID`,
+      title: `Tenant ID`,
     },
 
     createdAt: {

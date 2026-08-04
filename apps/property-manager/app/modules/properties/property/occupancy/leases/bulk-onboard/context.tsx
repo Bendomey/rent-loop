@@ -94,10 +94,8 @@ export function useBulkOnboard() {
 export function toDraftApiEntry(
 	e: DraftApplicationEntry,
 ): BulkCreateTenantApplicationEntry {
-	const digits = e.phone.replace(/\D/g, '')
-	const phone = '+233' + digits.slice(-9)
 	return {
-		phone,
+		phone: e.phone,
 		first_name: e.first_name || undefined,
 		last_name: e.last_name || undefined,
 		email: e.email || undefined,

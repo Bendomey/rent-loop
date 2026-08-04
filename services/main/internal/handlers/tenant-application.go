@@ -484,6 +484,84 @@ func (h *TenantApplicationHandler) ListTenantApplications(w http.ResponseWriter,
 		Encode(lib.ReturnListResponse(filterQuery, tenantApplicationsTransformed, tenantApplicationsCount))
 }
 
+// ListTenantApplicationsAcrossProperties godoc
+//
+//	@Summary		List lease applications across properties (Admin, mobile)
+//	@Description	List lease applications across every property the caller is linked to, optionally narrowed with one or more property_id query values
+//	@Tags			TenantApplication
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			client_id		path		string																												false	"Client ID"
+//	@Param			property_id		query		[]string																											false	"Property ID(s) to narrow results to; omit to see every property the caller is linked to"	collectionFormat(multi)
+//	@Param			desired_unit_id	query		[]string																											false	"Desired unit ID(s) to narrow results to"													collectionFormat(multi)
+//	@Param			q				query		ListTenantApplicationsQuery																							true	"Query parameters"
+//	@Success		200				{object}	object{data=object{rows=[]transformations.OutputAdminTenantApplication,meta=lib.HTTPReturnPaginatedMetaResponse}}	"Lease applications"
+//	@Failure		400				{object}	lib.HTTPError																										"Error occurred when fetching lease applications"
+//	@Failure		401				{object}	string																												"Invalid or absent authentication token"
+//	@Failure		403				{object}	string																												"Requested property_id is outside the caller's linked properties"
+//	@Failure		500				{object}	string																												"An unexpected error occurred"
+//	@Router			/api/v1/admin/clients/{client_id}/tenant-applications [get]
+func (h *TenantApplicationHandler) ListTenantApplicationsAcrossProperties(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	filterQuery, filterQueryErr := lib.GenerateQuery(r.URL.Query())
+	if filterQueryErr != nil {
+		HandleErrorResponse(w, filterQueryErr)
+		return
+	}
+
+	if !lib.ValidateRequest(h.appCtx.Validator, filterQuery, w) {
+		return
+	}
+
+	propertyIDs, currentUserID, scopeOk := ValidateRequestedPropertyAccess(w, r, h.appCtx)
+	if !scopeOk {
+		return
+	}
+
+	input := repository.ListTenantApplicationsQuery{
+		FilterQuery:           *filterQuery,
+		ClientUserID:          &currentUserID,
+		PropertyIDs:           propertyIDs,
+		DesiredUnitIDs:        lib.NullOrStringArray(r.URL.Query()["desired_unit_id"]),
+		Status:                lib.NullOrString(r.URL.Query().Get("status")),
+		StayDurationFrequency: lib.NullOrString(r.URL.Query().Get("stay_duration_frequency")),
+		PaymentFrequency:      lib.NullOrString(r.URL.Query().Get("payment_frequency")),
+		Gender:                lib.NullOrString(r.URL.Query().Get("gender")),
+		MaritalStatus:         lib.NullOrString(r.URL.Query().Get("marital_status")),
+		CreatedById:           lib.NullOrString(r.URL.Query().Get("created_by_id")),
+		Email:                 lib.NullOrStringArray(r.URL.Query()["email"]),
+		Phone:                 lib.NullOrStringArray(r.URL.Query()["phone"]),
+	}
+
+	tenantApplications, tenantApplicationsErr := h.service.ListTenantApplications(r.Context(), input)
+	if tenantApplicationsErr != nil {
+		HandleErrorResponse(w, tenantApplicationsErr)
+		return
+	}
+
+	tenantApplicationsCount, tenantApplicationsCountErr := h.service.CountTenantApplications(r.Context(), input)
+	if tenantApplicationsCountErr != nil {
+		HandleErrorResponse(w, tenantApplicationsCountErr)
+		return
+	}
+
+	tenantApplicationsTransformed := make([]any, 0)
+	for _, tenantApplication := range tenantApplications {
+		tenantApplicationsTransformed = append(
+			tenantApplicationsTransformed,
+			transformations.DBAdminTenantApplicationToRest(
+				&tenantApplication,
+			),
+		)
+	}
+
+	json.NewEncoder(w).
+		Encode(lib.ReturnListResponse(filterQuery, tenantApplicationsTransformed, tenantApplicationsCount))
+}
+
 type GetTenantApplicationQuery struct {
 	lib.GetOneQueryInput
 }
@@ -852,16 +930,16 @@ func (h *TenantApplicationHandler) CancelTenantApplication(w http.ResponseWriter
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
-//	@Param			property_id				path	string	true	"Property ID"
-//	@Param			tenant_application_id	path	string	true	"lease application ID"
-//	@Success		204						"lease application approved successfully"
-//	@Failure		400						{object}	lib.HTTPError	"Error occurred when approving a lease application"
-//	@Failure		401						{object}	string			"Invalid or absent authentication token"
-//	@Failure		403						{object}	lib.HTTPError	"lease application not approved"
-//	@Failure		404						{object}	lib.HTTPError	"lease application not found"
-//	@Failure		409						{object}	lib.HTTPError	"lease application already approved"
-//	@Failure		422						{object}	lib.HTTPError	"Validation error"
-//	@Failure		500						{object}	string			"An unexpected error occurred"
+//	@Param			property_id				path		string											true	"Property ID"
+//	@Param			tenant_application_id	path		string											true	"lease application ID"
+//	@Success		200						{object}	object{data=transformations.OutputAdminLease}	"lease application approved successfully"
+//	@Failure		400						{object}	lib.HTTPError									"Error occurred when approving a lease application"
+//	@Failure		401						{object}	string											"Invalid or absent authentication token"
+//	@Failure		403						{object}	lib.HTTPError									"lease application not approved"
+//	@Failure		404						{object}	lib.HTTPError									"lease application not found"
+//	@Failure		409						{object}	lib.HTTPError									"lease application already approved"
+//	@Failure		422						{object}	lib.HTTPError									"Validation error"
+//	@Failure		500						{object}	string											"An unexpected error occurred"
 //	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id}/approve [patch]
 func (h *TenantApplicationHandler) ApproveTenantApplication(w http.ResponseWriter, r *http.Request) {
 	currentClientUser, currentClientUserOk := lib.ClientUserFromContext(r.Context())
@@ -872,7 +950,7 @@ func (h *TenantApplicationHandler) ApproveTenantApplication(w http.ResponseWrite
 
 	tenantApplicationID := chi.URLParam(r, "tenant_application_id")
 
-	approveTenantApplicationErr := h.service.ApproveTenantApplication(
+	lease, approveTenantApplicationErr := h.service.ApproveTenantApplication(
 		r.Context(),
 		services.ApproveTenantApplicationInput{
 			ClientUserID:        currentClientUser.ID,
@@ -884,7 +962,9 @@ func (h *TenantApplicationHandler) ApproveTenantApplication(w http.ResponseWrite
 		return
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBAdminLeaseToRest(lease),
+	})
 }
 
 type GenerateInvoiceRequest struct {
@@ -947,100 +1027,6 @@ func (h *TenantApplicationHandler) GenerateInvoice(w http.ResponseWriter, r *htt
 	json.NewEncoder(w).Encode(map[string]any{
 		"data": transformations.DBInvoiceToRest(invoice),
 	})
-}
-
-type PayInvoiceRequest struct {
-	PaymentAccountID string          `json:"payment_account_id"  validate:"required,uuid4"                                                example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b" description:"ID of the payment account used"`
-	Amount           int64           `json:"amount"              validate:"required"                                                      example:"1000"                                 description:"Amount to pay for the invoice"`
-	Provider         string          `json:"provider"            validate:"required,oneof=MTN VODAFONE AIRTELTIGO PAYSTACK BANK_API CASH" example:"CASH"                                 description:"Offline payment provider/method"`
-	Reference        *string         `json:"reference,omitempty"                                                                          example:"RCP-2024-001"                         description:"Optional reference number for the payment"`
-	Metadata         *map[string]any `json:"metadata,omitempty"                                                                                                                          description:"Additional metadata for the payment"`
-}
-
-// PayInvoice godoc
-//
-//	@Summary		Pay an invoice for a lease application (Admin)
-//	@Description	Pay an invoice for a lease application (security deposit and/or initial deposit) (Admin)
-//	@Tags			TenantApplication
-//	@Accept			json
-//	@Security		BearerAuth
-//	@Produce		json
-//	@Param			property_id				path	string				true	"Property ID"
-//	@Param			tenant_application_id	path	string				true	"lease application ID"
-//	@Param			invoice_id				path	string				true	"Invoice ID"
-//	@Param			body					body	PayInvoiceRequest	true	"Pay invoice request body"
-//	@Success		204						"Invoice paid successfully"
-//	@Failure		400						{object}	lib.HTTPError	"Error occurred when paying invoice"
-//	@Failure		401						{object}	string			"Invalid or absent authentication token"
-//	@Failure		404						{object}	lib.HTTPError	"lease application or invoice not found"
-//	@Failure		422						{object}	lib.HTTPError	"Validation error"
-//	@Failure		500						{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id}/invoice/{invoice_id}/pay [post]
-func (h *TenantApplicationHandler) PayInvoice(w http.ResponseWriter, r *http.Request) {
-	clientUser, currentClientUserOk := lib.ClientUserFromContext(r.Context())
-	if !currentClientUserOk {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	var body PayInvoiceRequest
-
-	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
-		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
-		return
-	}
-
-	isPassedValidation := lib.ValidateRequest(h.appCtx.Validator, body, w)
-	if !isPassedValidation {
-		return
-	}
-
-	tenantApplicationID := chi.URLParam(r, "tenant_application_id")
-	invoiceID := chi.URLParam(r, "invoice_id")
-
-	query := repository.GetInvoiceQuery{
-		Query: map[string]any{
-			"id":                            invoiceID,
-			"context_type":                  "TENANT_APPLICATION",
-			"context_tenant_application_id": tenantApplicationID,
-		},
-	}
-
-	_, getInvoiceErr := h.services.InvoiceService.GetByQuery(r.Context(), query)
-	if getInvoiceErr != nil {
-		HandleErrorResponse(w, getInvoiceErr)
-		return
-	}
-
-	payment, err := h.services.PaymentService.CreateOfflinePayment(r.Context(), services.CreateOfflinePaymentInput{
-		PaymentAccountID: body.PaymentAccountID,
-		InvoiceID:        invoiceID,
-		Provider:         body.Provider,
-		Amount:           body.Amount,
-		Reference:        body.Reference,
-		Metadata:         body.Metadata,
-	})
-	if err != nil {
-		HandleErrorResponse(w, err)
-		return
-	}
-
-	// verify offline payment
-	_, verifyPaymentErr := h.services.PaymentService.VerifyOfflinePayment(
-		r.Context(),
-		services.VerifyOfflinePaymentInput{
-			PaymentID:    payment.ID.String(),
-			VerifiedByID: clientUser.ID,
-			IsSuccessful: true,
-			Metadata:     body.Metadata,
-		},
-	)
-	if verifyPaymentErr != nil {
-		HandleErrorResponse(w, verifyPaymentErr)
-		return
-	}
-
-	w.WriteHeader(http.StatusNoContent)
 }
 
 // GetTenantApplicationByCode godoc

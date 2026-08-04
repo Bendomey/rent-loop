@@ -90,7 +90,7 @@ export function DocumentList({
 	return (
 		<div className="space-y-3">
 			<div className="relative">
-				<Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-zinc-400" />
+				<Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-zinc-400 dark:text-zinc-500" />
 				<Input
 					placeholder="Search documents..."
 					value={search}
@@ -108,8 +108,8 @@ export function DocumentList({
 						className={cn(
 							'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
 							filter === chip.value
-								? 'border-rose-500 bg-rose-50 text-rose-700'
-								: 'border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50',
+								? 'border-rose-500 bg-rose-50 text-rose-700 dark:border-rose-400 dark:bg-rose-950 dark:text-rose-200'
+								: 'border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:bg-zinc-900',
 						)}
 					>
 						{chip.label}
@@ -137,8 +137,9 @@ export function DocumentList({
 					<Card
 						onClick={() => onSelectDocument?.(EMPTY_DOCUMENT_SENTINEL)}
 						className={cn(
-							'relative cursor-pointer shadow-none transition-colors hover:bg-zinc-50',
-							isEmptySelected && 'border-blue-500 bg-blue-50 hover:bg-blue-50',
+							'relative cursor-pointer shadow-none transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-700',
+							isEmptySelected &&
+								'border-blue-500 bg-blue-50 hover:bg-blue-50 dark:border-blue-800 dark:bg-blue-950 dark:text-white dark:hover:bg-blue-900',
 						)}
 					>
 						{isEmptySelected && (
@@ -147,12 +148,14 @@ export function DocumentList({
 							</div>
 						)}
 						<CardContent className="flex flex-col items-center gap-3 p-4">
-							<div className="flex h-12 w-12 items-center justify-center rounded-md border-2 border-dashed border-zinc-300">
-								<Plus className="size-5 text-zinc-400" />
+							<div className="flex h-12 w-12 items-center justify-center rounded-md border-2 border-dashed border-zinc-300 dark:border-zinc-700">
+								<Plus className="size-5 text-zinc-400 dark:text-zinc-500" />
 							</div>
 							<div className="flex flex-col items-center text-center">
-								<span className="text-sm font-medium">Empty Document</span>
-								<span className="text-xs text-zinc-500">
+								<span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+									Empty Document
+								</span>
+								<span className="text-xs text-zinc-500 dark:text-zinc-400">
 									Start from scratch
 								</span>
 							</div>

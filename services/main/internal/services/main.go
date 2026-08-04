@@ -6,36 +6,41 @@ import (
 )
 
 type Services struct {
-	NotificationService       NotificationService
-	AuthService               AuthService
-	AdminService              AdminService
-	UserService               UserService
-	ClientService             ClientService
-	ClientApplicationService  ClientApplicationService
-	ClientUserService         ClientUserService
-	PropertyService           PropertyService
-	DocumentService           DocumentService
-	UnitService               UnitService
-	ClientUserPropertyService ClientUserPropertyService
-	PropertyBlockService      PropertyBlockService
-	TenantApplicationService  TenantApplicationService
-	TenantService             TenantService
-	LeaseService              LeaseService
-	TenantAccountService      TenantAccountService
-	PaymentAccountService     PaymentAccountService
-	AccountingService         AccountingService
-	InvoiceService            InvoiceService
-	PaymentService            PaymentService
-	SigningService            SigningService
-	LeaseChecklistService     LeaseChecklistService
-	LeaseChecklistItemService LeaseChecklistItemService
-	ChecklistTemplateService  ChecklistTemplateService
-	AnnouncementService       AnnouncementService
-	MaintenanceRequestService MaintenanceRequestService
-	ExpenseService            ExpenseService
-	AgreementService          AgreementService
-	UnitDateBlockService      UnitDateBlockService
-	BookingService            BookingService
+	NotificationService           NotificationService
+	AuthService                   AuthService
+	AdminService                  AdminService
+	UserService                   UserService
+	RefreshTokenService           RefreshTokenService
+	SessionService                SessionService
+	ClientService                 ClientService
+	ClientApplicationService      ClientApplicationService
+	ClientUserService             ClientUserService
+	PropertyService               PropertyService
+	DocumentService               DocumentService
+	UnitService                   UnitService
+	ClientUserPropertyService     ClientUserPropertyService
+	PropertyBlockService          PropertyBlockService
+	TenantApplicationService      TenantApplicationService
+	TenantService                 TenantService
+	LeaseService                  LeaseService
+	TenantAccountService          TenantAccountService
+	PaymentAccountService         PaymentAccountService
+	AccountingService             AccountingService
+	InvoiceService                InvoiceService
+	PaymentService                PaymentService
+	SigningService                SigningService
+	LeaseChecklistService         LeaseChecklistService
+	LeaseChecklistItemService     LeaseChecklistItemService
+	ChecklistTemplateService      ChecklistTemplateService
+	AnnouncementService           AnnouncementService
+	MaintenanceRequestService     MaintenanceRequestService
+	ExpenseService                ExpenseService
+	AgreementService              AgreementService
+	UnitDateBlockService          UnitDateBlockService
+	BookingService                BookingService
+	ExchangeRateService           ExchangeRateService
+	LeaseTerminationService       LeaseTerminationService
+	LeaseAgreementDocumentService LeaseAgreementDocumentService
 }
 
 type INewServicesParams struct {
@@ -45,11 +50,16 @@ type INewServicesParams struct {
 }
 
 func NewServices(params INewServicesParams) Services {
-	notificationService := NewNotificationService(params.AppCtx, params.Repository.FcmTokenRepository)
+	notificationService := NewNotificationService(
+		params.AppCtx,
+		params.Repository.FcmTokenRepository,
+		params.Repository.NotificationRepository,
+	)
 	accountingService := NewAccountingService(params.AppCtx)
 	invoiceService := NewInvoiceService(
 		params.AppCtx,
 		params.Repository.InvoiceRepository,
+		params.Repository.PaymentRepository,
 		accountingService,
 		notificationService,
 		params.Repository.TenantAccountRepository,
@@ -58,14 +68,34 @@ func NewServices(params INewServicesParams) Services {
 
 	authService := NewAuthService(params.AppCtx, params.Repository.TenantAccountRepository)
 	adminService := NewAdminService(params.AppCtx, params.Repository.AdminRepository)
-	userService := NewUserService(params.AppCtx, params.Repository.UserRepository)
+	sessionService := NewSessionService(
+		params.AppCtx,
+		params.Repository.SessionRepository,
+		params.Repository.RefreshTokenRepository,
+	)
+	refreshTokenService := NewRefreshTokenService(
+		params.AppCtx,
+		params.Repository.RefreshTokenRepository,
+		params.Repository.SessionRepository,
+	)
+	userService := NewUserService(
+		params.AppCtx,
+		params.Repository.UserRepository,
+		refreshTokenService,
+	)
 	clientService := NewClientService(params.AppCtx, params.Repository.ClientRepository)
+
+	clientUserPropertyService := NewClientUserPropertyService(
+		params.AppCtx,
+		params.Repository.ClientUserPropertyRepository,
+	)
 
 	clientUserService := NewClientUserService(
 		params.AppCtx,
 		params.Repository.ClientUserRepository,
 		params.Repository.ClientRepository,
 		params.Repository.UserRepository,
+		clientUserPropertyService,
 	)
 
 	clientApplicationService := NewClientApplicationService(ClientApplicationServiceDeps{
@@ -76,16 +106,16 @@ func NewServices(params INewServicesParams) Services {
 		UserService:       userService,
 	})
 
-	clientUserPropertyService := NewClientUserPropertyService(
+	propertyBlockService := NewPropertyBlockService(
 		params.AppCtx,
-		params.Repository.ClientUserPropertyRepository,
+		params.Repository.PropertyBlockRepository,
+		params.Repository.PropertyRepository,
 	)
-
-	propertyBlockService := NewPropertyBlockService(params.AppCtx, params.Repository.PropertyBlockRepository)
 
 	unitService := NewUnitService(UnitServiceDependencies{
 		AppCtx:               params.AppCtx,
 		Repo:                 params.Repository.UnitRepository,
+		PropertyRepo:         params.Repository.PropertyRepository,
 		PropertyBlockService: propertyBlockService,
 	})
 
@@ -93,11 +123,14 @@ func NewServices(params INewServicesParams) Services {
 		PropertyServiceDependencies{
 			AppCtx:                    params.AppCtx,
 			Repo:                      params.Repository.PropertyRepository,
+			ClientService:             clientService,
 			ClientUserService:         clientUserService,
 			ClientUserPropertyService: clientUserPropertyService,
 			UnitService:               unitService,
 			PropertyBlockService:      propertyBlockService,
 			LeaseRepo:                 params.Repository.LeaseRepository,
+			BookingRepo:               params.Repository.BookingRepository,
+			TenantApplicationRepo:     params.Repository.TenantApplicationRepository,
 		},
 	)
 
@@ -116,6 +149,9 @@ func NewServices(params INewServicesParams) Services {
 		invoiceService,
 		notificationService,
 		unitDateBlockService,
+		unitService,
+		params.Repository.ClientUserRepository,
+		params.Repository.UserRepository,
 	)
 
 	tenantAccountService := NewTenantAccountService(params.AppCtx, params.Repository.TenantAccountRepository)
@@ -131,7 +167,14 @@ func NewServices(params INewServicesParams) Services {
 		TenantAccountService: tenantAccountService,
 		InvoiceService:       invoiceService,
 	})
-	signingService := NewSigningService(params.AppCtx, params.Repository.SigningRepository)
+	signingService := NewSigningService(
+		params.AppCtx,
+		params.Repository.SigningRepository,
+		params.Repository.LeaseAgreementDocumentRepository,
+	)
+	leaseAgreementDocumentService := NewLeaseAgreementDocumentService(
+		params.Repository.LeaseAgreementDocumentRepository,
+	)
 
 	paymentService := NewPaymentService(PaymentServiceDeps{
 		AppCtx:                   params.AppCtx,
@@ -188,6 +231,17 @@ func NewServices(params INewServicesParams) Services {
 		UnitDateBlockRepo:    params.Repository.UnitDateBlockRepository,
 		TenantService:        tenantService,
 		InvoiceService:       invoiceService,
+		UnitService:          unitService,
+	})
+
+	exchangeRateService := NewExchangeRateService(params.AppCtx, params.Repository.ExchangeRateRepository)
+
+	leaseTerminationService := NewLeaseTerminationService(LeaseTerminationServiceDeps{
+		AppCtx:              params.AppCtx,
+		Repo:                params.Repository.LeaseTerminationRepository,
+		LeaseRepo:           params.Repository.LeaseRepository,
+		UnitService:         unitService,
+		NotificationService: notificationService,
 	})
 
 	expenseService := NewExpenseService(ExpenseServiceDeps{
@@ -203,32 +257,37 @@ func NewServices(params INewServicesParams) Services {
 		AccountingService:   accountingService,
 		InvoiceService:      invoiceService,
 
-		AuthService:               authService,
-		AdminService:              adminService,
-		UserService:               userService,
-		ClientService:             clientService,
-		ClientApplicationService:  clientApplicationService,
-		ClientUserService:         clientUserService,
-		PaymentAccountService:     paymentAccountService,
-		PropertyService:           propertyService,
-		DocumentService:           documentService,
-		UnitService:               unitService,
-		ClientUserPropertyService: clientUserPropertyService,
-		PropertyBlockService:      propertyBlockService,
-		TenantApplicationService:  tenantApplicationService,
-		TenantService:             tenantService,
-		LeaseService:              leaseService,
-		TenantAccountService:      tenantAccountService,
-		PaymentService:            paymentService,
-		SigningService:            signingService,
-		LeaseChecklistService:     leaseChecklistService,
-		LeaseChecklistItemService: leaseChecklistItemService,
-		ChecklistTemplateService:  checklistTemplateService,
-		AnnouncementService:       announcementService,
-		MaintenanceRequestService: maintenanceRequestService,
-		ExpenseService:            expenseService,
-		AgreementService:          agreementService,
-		UnitDateBlockService:      unitDateBlockService,
-		BookingService:            bookingService,
+		AuthService:                   authService,
+		AdminService:                  adminService,
+		UserService:                   userService,
+		RefreshTokenService:           refreshTokenService,
+		SessionService:                sessionService,
+		ClientService:                 clientService,
+		ClientApplicationService:      clientApplicationService,
+		ClientUserService:             clientUserService,
+		PaymentAccountService:         paymentAccountService,
+		PropertyService:               propertyService,
+		DocumentService:               documentService,
+		UnitService:                   unitService,
+		ClientUserPropertyService:     clientUserPropertyService,
+		PropertyBlockService:          propertyBlockService,
+		TenantApplicationService:      tenantApplicationService,
+		TenantService:                 tenantService,
+		LeaseService:                  leaseService,
+		TenantAccountService:          tenantAccountService,
+		PaymentService:                paymentService,
+		SigningService:                signingService,
+		LeaseChecklistService:         leaseChecklistService,
+		LeaseChecklistItemService:     leaseChecklistItemService,
+		ChecklistTemplateService:      checklistTemplateService,
+		AnnouncementService:           announcementService,
+		MaintenanceRequestService:     maintenanceRequestService,
+		ExpenseService:                expenseService,
+		AgreementService:              agreementService,
+		UnitDateBlockService:          unitDateBlockService,
+		BookingService:                bookingService,
+		ExchangeRateService:           exchangeRateService,
+		LeaseTerminationService:       leaseTerminationService,
+		LeaseAgreementDocumentService: leaseAgreementDocumentService,
 	}
 }

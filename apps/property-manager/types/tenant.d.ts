@@ -16,7 +16,8 @@ interface Tenant {
 	id_number: Nullable<string>
 	id_front_url: Nullable<string>
 	id_back_url: Nullable<string>
-	status: 'ACTIVE' | 'EXPIRED'
+	recent_lease: Nullable<Lease>
+	recent_booking: Nullable<Booking>
 	current_address: string
 	emergency_contact_name: Nullable<string>
 	emergency_contact_phone: Nullable<string>

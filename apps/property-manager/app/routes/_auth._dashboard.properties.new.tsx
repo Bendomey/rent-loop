@@ -4,6 +4,7 @@ import { createPropertyBlockForServer } from '~/api/blocks/server'
 import { createProperty } from '~/api/properties'
 import { createPropertyUnit } from '~/api/units'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
+import { resolveAuthToken } from '~/lib/actions/auth.token.server'
 import { environmentVariables } from '~/lib/actions/env.server'
 import { replaceNullUndefinedWithUndefined } from '~/lib/actions/utils.server'
 import { APP_NAME } from '~/lib/constants'
@@ -22,7 +23,7 @@ export const handle = {
 	breadcrumb: 'Add New',
 }
 
-export async function action({ request }: Route.ActionArgs) {
+export async function action({ request, context }: Route.ActionArgs) {
 	const baseUrl = environmentVariables().API_ADDRESS
 	const authSession = await getAuthSession(request.headers.get('Cookie'))
 	const clientId = safeString(authSession.get('selectedClientId'))
@@ -49,7 +50,7 @@ export async function action({ request }: Route.ActionArgs) {
 	try {
 		const authData = {
 			baseUrl,
-			authToken: authSession.get('authToken'),
+			authToken: await resolveAuthToken(request, context),
 		}
 		const property = await createProperty(
 			clientId,

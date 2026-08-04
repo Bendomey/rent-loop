@@ -16,6 +16,8 @@ type TenantApplicationRepository interface {
 	GetOneWithQuery(context context.Context, query GetTenantApplicationQuery) (*models.TenantApplication, error)
 	Update(context context.Context, tenantApplication models.TenantApplication) error
 	Delete(context context.Context, tenantApplicationID string) error
+	CountNonBlockingByPropertyID(context context.Context, propertyID string) (int64, error)
+	DeleteNonBlockingByPropertyID(context context.Context, propertyID string) error
 }
 
 type tenantApplicationRepository struct {
@@ -42,7 +44,10 @@ type ListTenantApplicationsQuery struct {
 	MaritalStatus                *string
 	CreatedById                  *string
 	DesiredUnitId                *string
+	DesiredUnitIDs               *[]string
 	PropertyId                   *string
+	PropertyIDs                  *[]string
+	ClientUserID                 *string
 	Email                        *[]string
 	Phone                        *[]string
 }
@@ -64,7 +69,10 @@ func (r *tenantApplicationRepository) List(
 		tenantApplicationFilterScope("marital_status", filterQuery.MaritalStatus),
 		tenantApplicationFilterScope("created_by_id", filterQuery.CreatedById),
 		tenantApplicationFilterScope("desired_unit_id", filterQuery.DesiredUnitId),
+		tenantApplicationDesiredUnitIdsFilterScope(filterQuery.DesiredUnitIDs),
 		tenantApplicationPropertyIdFilterScope(filterQuery.PropertyId),
+		tenantApplicationPropertyIdsFilterScope(filterQuery.PropertyIDs),
+		tenantApplicationClientUserAccessScope(filterQuery.ClientUserID),
 		tenantAplicationArrayFilterScope("email", filterQuery.Email),
 		tenantAplicationArrayFilterScope("phone", filterQuery.Phone),
 		DateRangeScope("tenant_applications", filterQuery.DateRange),
@@ -106,7 +114,10 @@ func (r *tenantApplicationRepository) Count(
 		DateRangeScope("tenant_applications", filterQuery.DateRange),
 		SearchScope("tenant_applications", filterQuery.Search),
 		tenantApplicationFilterScope("desired_unit_id", filterQuery.DesiredUnitId),
+		tenantApplicationDesiredUnitIdsFilterScope(filterQuery.DesiredUnitIDs),
 		tenantApplicationPropertyIdFilterScope(filterQuery.PropertyId),
+		tenantApplicationPropertyIdsFilterScope(filterQuery.PropertyIDs),
+		tenantApplicationClientUserAccessScope(filterQuery.ClientUserID),
 		tenantAplicationArrayFilterScope("email", filterQuery.Email),
 		tenantAplicationArrayFilterScope("phone", filterQuery.Phone),
 	).Count(&count)
@@ -137,6 +148,39 @@ func tenantAplicationArrayFilterScope(field string, value *[]string) func(db *go
 
 		query := fmt.Sprintf("tenant_applications.%s IN (?)", field)
 		return db.Where(query, *value)
+	}
+}
+
+func tenantApplicationClientUserAccessScope(clientUserID *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if clientUserID == nil {
+			return db
+		}
+		subQuery := db.Session(&gorm.Session{NewDB: true}).
+			Table("client_user_properties").
+			Select("property_id").
+			Where("client_user_id = ? AND deleted_at IS NULL", *clientUserID)
+		return db.Where("tenant_applications.property_id IN (?)", subQuery)
+	}
+}
+
+func tenantApplicationPropertyIdsFilterScope(propertyIDs *[]string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if propertyIDs == nil {
+			return db
+		}
+
+		return db.Where("tenant_applications.property_id IN (?)", *propertyIDs)
+	}
+}
+
+func tenantApplicationDesiredUnitIdsFilterScope(unitIDs *[]string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if unitIDs == nil {
+			return db
+		}
+
+		return db.Where("tenant_applications.desired_unit_id IN (?)", *unitIDs)
 	}
 }
 
@@ -194,4 +238,30 @@ func (r *tenantApplicationRepository) Delete(ctx context.Context, tenantApplicat
 	db := lib.ResolveDB(ctx, r.DB)
 
 	return db.WithContext(ctx).Where("id = ?", tenantApplicationID).Delete(&models.TenantApplication{}).Error
+}
+
+func (r *tenantApplicationRepository) CountNonBlockingByPropertyID(
+	ctx context.Context,
+	propertyID string,
+) (int64, error) {
+	var count int64
+	err := lib.ResolveDB(ctx, r.DB).WithContext(ctx).
+		Model(&models.TenantApplication{}).
+		Where("property_id = ?", propertyID).
+		Where("status != ?", "TenantApplication.Status.InProgress").
+		Count(&count).Error
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+func (r *tenantApplicationRepository) DeleteNonBlockingByPropertyID(
+	ctx context.Context,
+	propertyID string,
+) error {
+	return lib.ResolveDB(ctx, r.DB).WithContext(ctx).
+		Where("property_id = ?", propertyID).
+		Where("status != ?", "TenantApplication.Status.InProgress").
+		Delete(&models.TenantApplication{}).Error
 }
