@@ -143,7 +143,7 @@ export function MembersModule() {
 			{
 				id: 'actions',
 				cell: ({ row }) => {
-					const isCurrentUser = currentUser?.id === row.original.id
+					const isCurrentUser = currentUser?.id === row.original.user_id
 					return (
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>

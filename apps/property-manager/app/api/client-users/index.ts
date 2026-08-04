@@ -206,20 +206,23 @@ export const useGetClientUser = (
 const updateClientUser = async ({
 	clientId,
 	id,
-	name,
-	phoneNumber,
+	role,
+	property_assignments,
 }: {
 	clientId: string
 	id: string
-	name?: string
-	phoneNumber?: string
+	role?: 'ADMIN' | 'STAFF'
+	property_assignments?: Array<{
+		property_id: string
+		role: 'MANAGER' | 'STAFF'
+	}>
 }) => {
 	try {
 		const response = await fetchClient<ApiResponse<ClientUser>>(
 			`/v1/admin/clients/${clientId}/client-users/${id}`,
 			{
 				method: 'PATCH',
-				body: JSON.stringify({ name, phoneNumber }),
+				body: JSON.stringify({ role, property_assignments }),
 			},
 		)
 		return response.parsedBody.data
