@@ -40,6 +40,10 @@ func updateMigration(db *gorm.DB) error {
 		&models.Invoice{},
 		&models.InvoiceLineItem{},
 		&models.Payment{},
+		&models.FinancialAccount{},
+		&models.ChargeDefinition{},
+		&models.ChargeInstance{},
+		&models.PaymentAllocation{},
 		&models.DocumentSignature{},
 		&models.SigningToken{},
 		&models.FcmToken{},
@@ -129,6 +133,7 @@ func ServiceAutoMigration(db *gorm.DB) error {
 		jobs.AddPropertyArchiveFields(),
 		jobs.SplitSessionsFromRefreshTokens(),
 		jobs.AddMaintenanceRequestAssets(),
+		jobs.AddFinancialAccountTables(),
 	})
 	if err := m.Migrate(); err != nil {
 		return fmt.Errorf("[Migration.Migrate]: %v", err)

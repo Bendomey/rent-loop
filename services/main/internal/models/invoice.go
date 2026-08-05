@@ -57,6 +57,12 @@ type Invoice struct {
 	ContextLeaseTerminationID *string
 	ContextLeaseTermination   *LeaseTermination
 
+	// Non-null means this invoice is account-backed: every line must claim a
+	// charge instance, and line items may only be changed through the
+	// composition engine.
+	FinancialAccountID *string `gorm:"index;"`
+	FinancialAccount   *FinancialAccount
+
 	TotalAmount int64  `gorm:"not null;"` // in smallest currency unit, e.g., pesewas
 	Taxes       int64  `gorm:"not null;default:0"`
 	SubTotal    int64  `gorm:"not null;"`                // TotalAmount - Taxes
@@ -87,6 +93,11 @@ type InvoiceLineItem struct {
 
 	InvoiceID *string
 	Invoice   *Invoice
+
+	// Required when the parent invoice is account-backed. The line claims
+	// TotalAmount of this charge — full or partial.
+	ChargeInstanceID *string `gorm:"index;"`
+	ChargeInstance   *ChargeInstance
 
 	Label    string `gorm:"not null;"` // "January Rent", "Security Deposit"
 	Category string `gorm:"not null;"` // 'RENT', 'SECURITY_DEPOSIT', 'INITIAL_DEPOSIT', 'MAINTENANCE_FEE', 'SAAS_FEE', 'EXPENSE', 'BOOKING_FEE', 'OTHER', DEPOSIT_REFUND, RENT_REFUND, EARLY_TERMINATION_FEE DAMAGE_CHARGE

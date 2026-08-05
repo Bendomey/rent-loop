@@ -2,6 +2,7 @@ package services
 
 import (
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
+	"github.com/Bendomey/rent-loop/services/main/internal/services/financials"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 )
 
@@ -41,6 +42,7 @@ type Services struct {
 	ExchangeRateService           ExchangeRateService
 	LeaseTerminationService       LeaseTerminationService
 	LeaseAgreementDocumentService LeaseAgreementDocumentService
+	Financials                    *financials.Financials
 }
 
 type INewServicesParams struct {
@@ -56,6 +58,17 @@ func NewServices(params INewServicesParams) Services {
 		params.Repository.NotificationRepository,
 	)
 	accountingService := NewAccountingService(params.AppCtx)
+
+	// Built before InvoiceService because InvoiceService depends on it.
+	// Issuance is attached afterwards (see SetIssuance below) — issuance
+	// composes invoices while InvoiceService allocates charges, so neither can
+	// be fully constructed first.
+	financialsFacade := financials.New(
+		params.Repository.FinancialAccountRepository,
+		params.Repository.ChargeRepository,
+		params.Repository.PaymentAllocationRepository,
+	)
+
 	invoiceService := NewInvoiceService(
 		params.AppCtx,
 		params.Repository.InvoiceRepository,
@@ -256,6 +269,7 @@ func NewServices(params INewServicesParams) Services {
 		NotificationService: notificationService,
 		AccountingService:   accountingService,
 		InvoiceService:      invoiceService,
+		Financials:          financialsFacade,
 
 		AuthService:                   authService,
 		AdminService:                  adminService,
