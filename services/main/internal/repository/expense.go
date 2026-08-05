@@ -11,7 +11,6 @@ import (
 type ListExpensesFilter struct {
 	PropertyIDs                 *[]string
 	ClientUserID                *string
-	ContextLeaseID              *string
 	ContextMaintenanceRequestID *string
 	ContextType                 *string
 }
@@ -56,15 +55,6 @@ func expenseClientUserAccessScope(clientUserID *string) func(db *gorm.DB) *gorm.
 			"expenses.property_id IN (?)",
 			accessiblePropertyIDsSubQuery(db, *clientUserID),
 		)
-	}
-}
-
-func expenseLeaseScope(leaseID *string) func(db *gorm.DB) *gorm.DB {
-	return func(db *gorm.DB) *gorm.DB {
-		if leaseID == nil {
-			return db
-		}
-		return db.Where("expenses.context_lease_id = ?", *leaseID)
 	}
 }
 
@@ -119,7 +109,6 @@ func (r *expenseRepository) List(
 			SearchScope("expenses", filterQuery.Search),
 			expensePropertyIDsScope(filters.PropertyIDs),
 			expenseClientUserAccessScope(filters.ClientUserID),
-			expenseLeaseScope(filters.ContextLeaseID),
 			expenseMaintenanceRequestScope(filters.ContextMaintenanceRequestID),
 			expenseContextTypeScope(filters.ContextType),
 			PaginationScope(filterQuery.Page, filterQuery.PageSize),
@@ -152,7 +141,6 @@ func (r *expenseRepository) Count(
 			SearchScope("expenses", filterQuery.Search),
 			expensePropertyIDsScope(filters.PropertyIDs),
 			expenseClientUserAccessScope(filters.ClientUserID),
-			expenseLeaseScope(filters.ContextLeaseID),
 			expenseMaintenanceRequestScope(filters.ContextMaintenanceRequestID),
 			expenseContextTypeScope(filters.ContextType),
 		).

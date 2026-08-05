@@ -208,8 +208,6 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 								r.Get("/", handlers.ExpenseHandler.GetExpense)
 								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
 									Delete("/", handlers.ExpenseHandler.DeleteExpense)
-								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
-									Post("/generate:invoice", handlers.ExpenseHandler.GenerateExpenseInvoice)
 							})
 						})
 
@@ -254,7 +252,10 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
 								Patch("/{tenant_application_id}/cancel", handlers.TenantApplicationHandler.CancelTenantApplication)
 							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
-								Post("/{tenant_application_id}/invoice:generate", handlers.TenantApplicationHandler.GenerateInvoice)
+								Post(
+									"/{tenant_application_id}/charges:prepare",
+									handlers.TenantApplicationHandler.PrepareCharges,
+								)
 							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
 								Patch("/{tenant_application_id}/approve", handlers.TenantApplicationHandler.ApproveTenantApplication)
 						})
@@ -309,10 +310,6 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 										})
 									})
 								})
-							})
-
-							r.Route("/expenses", func(r chi.Router) {
-								r.Get("/", handlers.ExpenseHandler.ListLeaseExpenses)
 							})
 
 							r.Route("/terminations", func(r chi.Router) {
@@ -375,6 +372,19 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 									r.Get("/", handlers.ExpenseHandler.ListMRExpenses)
 								})
 							})
+						})
+
+						r.Route("/financial-accounts/{account_id}", func(r chi.Router) {
+							r.Get("/", handlers.FinancialAccountHandler.GetAccount)
+							r.Get("/charges", handlers.FinancialAccountHandler.ListCharges)
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+								Post("/charges", handlers.FinancialAccountHandler.CreateCharge)
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+								Patch("/charges/{charge_id}/void", handlers.FinancialAccountHandler.VoidCharge)
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+								Patch("/billing-policy", handlers.FinancialAccountHandler.UpdateBillingPolicy)
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+								Post("/invoices:compose", handlers.FinancialAccountHandler.ComposeInvoice)
 						})
 
 						r.Route("/invoices", func(r chi.Router) {

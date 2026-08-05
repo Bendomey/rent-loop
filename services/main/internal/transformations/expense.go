@@ -11,7 +11,6 @@ type OutputExpense struct {
 	Code                        string    `json:"code"`
 	ContextType                 string    `json:"context_type"`
 	PropertyID                  string    `json:"property_id"`
-	ContextLeaseID              *string   `json:"context_lease_id,omitempty"`
 	ContextMaintenanceRequestID string    `json:"context_maintenance_request_id"`
 	Description                 string    `json:"description"`
 	Amount                      float64   `json:"amount"`
@@ -27,23 +26,15 @@ func DBExpenseToRest(e *models.Expense) any {
 		return nil
 	}
 
-	invoices := make([]any, len(e.Invoices))
-
-	for i := range e.Invoices {
-		invoices[i] = DBInvoiceToRest(&e.Invoices[i])
-	}
-
 	return map[string]any{
 		"id":                             e.ID.String(),
 		"code":                           e.Code,
 		"context_type":                   e.ContextType,
 		"property_id":                    e.PropertyID,
-		"context_lease_id":               e.ContextLeaseID,
 		"context_maintenance_request_id": e.ContextMaintenanceRequestID,
 		"description":                    e.Description,
 		"amount":                         e.Amount,
 		"currency":                       e.Currency,
-		"invoices":                       invoices,
 		"created_by_client_user_id":      e.CreatedByClientUserID,
 		"created_at":                     e.CreatedAt,
 		"updated_at":                     e.UpdatedAt,

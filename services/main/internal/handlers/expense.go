@@ -28,22 +28,11 @@ type ListExpensesQuery struct {
 }
 
 type AddExpenseBody struct {
-	ContextType                 string  `json:"context_type"                   validate:"required,oneof=LEASE MAINTENANCE"`
-	ContextLeaseID              *string `json:"context_lease_id"               validate:"omitempty,uuid4"`
+	ContextType                 string  `json:"context_type"                   validate:"required,oneof=MAINTENANCE"`
 	ContextMaintenanceRequestID *string `json:"context_maintenance_request_id" validate:"omitempty,uuid4"`
 	Description                 string  `json:"description"                    validate:"required"`
 	Amount                      int64   `json:"amount"                         validate:"required,gt=0"`
 	Currency                    string  `json:"currency"                       validate:"omitempty"`
-}
-
-type GenerateExpenseInvoicePayerBody struct {
-	Amount    int64  `json:"amount"     validate:"required,gt=0"`
-	PayerType string `json:"payer_type" validate:"required,oneof=TENANT PROPERTY_OWNER EXTERNAL"`
-	PayeeType string `json:"payee_type" validate:"required,oneof=TENANT PROPERTY_OWNER EXTERNAL"`
-}
-
-type GenerateExpenseInvoiceBody struct {
-	Payers []GenerateExpenseInvoicePayerBody `json:"payers" validate:"required,min=1,dive"`
 }
 
 // ─── Handlers ─────────────────────────────────────────────────────────────────
@@ -82,7 +71,6 @@ func (h *ExpenseHandler) AddExpense(w http.ResponseWriter, r *http.Request) {
 	expense, err := h.service.AddExpense(r.Context(), services.AddExpenseInput{
 		PropertyID:                  chi.URLParam(r, "property_id"),
 		ContextType:                 body.ContextType,
-		ContextLeaseID:              body.ContextLeaseID,
 		ContextMaintenanceRequestID: body.ContextMaintenanceRequestID,
 		Description:                 body.Description,
 		Amount:                      body.Amount,
@@ -161,71 +149,6 @@ func (h *ExpenseHandler) DeleteExpense(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(map[string]any{"data": true})
-}
-
-// GenerateExpenseInvoice godoc
-//
-//	@Summary		Generate invoices from an expense
-//	@Description	Create one invoice per payer from a specific expense (Admin)
-//	@Tags			Expenses
-//	@Accept			json
-//	@Produce		json
-//	@Security		BearerAuth
-//	@Param			property_id	path		string											true	"Property ID"
-//	@Param			expense_id	path		string											true	"Expense ID"
-//	@Param			body		body		GenerateExpenseInvoiceBody						true	"Payers for this expense"
-//	@Success		201			{object}	object{data=[]transformations.OutputInvoice}	"Generated invoices"
-//	@Failure		400			{object}	lib.HTTPError									"Validation error or no payers provided"
-//	@Failure		401			{object}	string											"Invalid or absent authentication token"
-//	@Failure		404			{object}	lib.HTTPError									"Expense not found"
-//	@Failure		422			{object}	lib.HTTPError									"Validation error"
-//	@Failure		500			{object}	string											"An unexpected error occurred"
-//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/expenses/{expense_id}/generate:invoice [post]
-func (h *ExpenseHandler) GenerateExpenseInvoice(w http.ResponseWriter, r *http.Request) {
-	currentUser, ok := lib.ClientUserFromContext(r.Context())
-	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	var body GenerateExpenseInvoiceBody
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
-		return
-	}
-	if !lib.ValidateRequest(h.appCtx.Validator, body, w) {
-		return
-	}
-
-	var payers []services.GenerateExpenseInvoicePayerInput
-	for _, p := range body.Payers {
-		payers = append(payers, services.GenerateExpenseInvoicePayerInput{
-			Amount:    p.Amount,
-			PayerType: p.PayerType,
-			PayeeType: p.PayeeType,
-		})
-	}
-
-	invoices, err := h.service.GenerateExpenseInvoice(
-		r.Context(),
-		services.GenerateExpenseInvoiceInput{
-			ExpenseID: chi.URLParam(r, "expense_id"),
-			ClientID:  currentUser.ClientID,
-			Payers:    payers,
-		},
-	)
-	if err != nil {
-		HandleErrorResponse(w, err)
-		return
-	}
-
-	rows := make([]any, len(invoices))
-	for i := range invoices {
-		rows[i] = transformations.DBInvoiceToRest(&invoices[i])
-	}
-
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]any{"data": rows})
 }
 
 // ListPropertyExpenses godoc
@@ -326,66 +249,6 @@ func (h *ExpenseHandler) ListExpensesAcrossProperties(w http.ResponseWriter, r *
 	filters := repository.ListExpensesFilter{
 		PropertyIDs:  propertyIDs,
 		ClientUserID: &currentUserID,
-	}
-
-	expenses, listErr := h.service.ListExpenses(r.Context(), *filterQuery, filters)
-	count, countErr := h.service.CountExpenses(r.Context(), *filterQuery, filters)
-	if listErr != nil {
-		HandleErrorResponse(w, listErr)
-		return
-	}
-	if countErr != nil {
-		HandleErrorResponse(w, countErr)
-		return
-	}
-
-	rows := make([]any, len(expenses))
-	for i := range expenses {
-		rows[i] = transformations.DBExpenseToRest(&expenses[i])
-	}
-
-	json.NewEncoder(w).Encode(lib.ReturnListResponse(filterQuery, rows, count))
-}
-
-// ListLeaseExpenses godoc
-//
-//	@Summary		List expenses for a lease
-//	@Description	List expenses with pagination scoped to a lease (Admin)
-//	@Tags			Expenses
-//	@Accept			json
-//	@Produce		json
-//	@Security		BearerAuth
-//	@Param			property_id	path		string																								true	"Property ID"
-//	@Param			lease_id	path		string																								true	"Lease ID"
-//	@Param			q			query		ListExpensesQuery																					false	"Query parameters"
-//	@Success		200			{object}	object{data=object{rows=[]transformations.OutputExpense,meta=lib.HTTPReturnPaginatedMetaResponse}}	"Expenses"
-//	@Failure		401			{object}	string																								"Invalid or absent authentication token"
-//	@Failure		500			{object}	string																								"An unexpected error occurred"
-//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/expenses [get]
-func (h *ExpenseHandler) ListLeaseExpenses(w http.ResponseWriter, r *http.Request) {
-	_, ok := lib.ClientUserFromContext(r.Context())
-	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	var listQuery ListExpensesQuery
-	if !lib.ValidateRequest(h.appCtx.Validator, listQuery, w) {
-		return
-	}
-
-	filterQuery, err := lib.GenerateQuery(r.URL.Query())
-	if err != nil {
-		HandleErrorResponse(w, err)
-		return
-	}
-
-	leaseID := chi.URLParam(r, "lease_id")
-	propertyID := chi.URLParam(r, "property_id")
-	propertyIDs := []string{propertyID}
-	filters := repository.ListExpensesFilter{
-		PropertyIDs:    &propertyIDs,
-		ContextLeaseID: &leaseID,
 	}
 
 	expenses, listErr := h.service.ListExpenses(r.Context(), *filterQuery, filters)

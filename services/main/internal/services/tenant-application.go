@@ -11,6 +11,7 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/lib/emailtemplates"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
+	"github.com/Bendomey/rent-loop/services/main/internal/services/financials"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
@@ -42,7 +43,10 @@ type TenantApplicationService interface {
 		tenantApplicationID string,
 		invoiceID string,
 	) (*models.Invoice, error)
-	GenerateInvoice(context context.Context, input GenerateInvoiceInput) (*models.Invoice, error)
+	// PrepareCharges turns the application's agreed terms into a ledger. It
+	// replaces GenerateInvoice: charges come first, and invoices are composed
+	// against them whenever the landlord and tenant agree on a payment.
+	PrepareCharges(context context.Context, tenantApplicationID string) (*models.FinancialAccount, error)
 	ApproveTenantApplication(context context.Context, input ApproveTenantApplicationInput) (*models.Lease, error)
 	BulkCreateTenantApplications(
 		ctx context.Context,
@@ -59,6 +63,7 @@ type tenantApplicationService struct {
 	leaseService         LeaseService
 	tenantAccountService TenantAccountService
 	invoiceService       InvoiceService
+	financials           *financials.Financials
 }
 
 type TenantApplicationServiceDeps struct {
@@ -70,6 +75,7 @@ type TenantApplicationServiceDeps struct {
 	LeaseService         LeaseService
 	TenantAccountService TenantAccountService
 	InvoiceService       InvoiceService
+	Financials           *financials.Financials
 }
 
 func NewTenantApplicationService(deps TenantApplicationServiceDeps) TenantApplicationService {
@@ -82,6 +88,7 @@ func NewTenantApplicationService(deps TenantApplicationServiceDeps) TenantApplic
 		leaseService:         deps.LeaseService,
 		tenantAccountService: deps.TenantAccountService,
 		invoiceService:       deps.InvoiceService,
+		financials:           deps.Financials,
 	}
 }
 
@@ -1037,19 +1044,10 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 		return nil, pkg.BadRequestError("UnitNoLongerAvailable", nil)
 	}
 
-	_, getInvoiceErr := s.invoiceService.GetByQuery(ctx, repository.GetInvoiceQuery{
-		Query: map[string]any{
-			"context_type":                  "TENANT_APPLICATION",
-			"context_tenant_application_id": input.TenantApplicationID,
-			"status":                        "PAID",
-		},
-	})
-
-	if getInvoiceErr != nil {
-		if errors.Is(getInvoiceErr, gorm.ErrRecordNotFound) {
-			return nil, pkg.BadRequestError("TenantApplicationInvoiceNotPaid", nil)
-		}
-	}
+	// Approval is deliberately NOT gated on payment. Charges, invoices and
+	// payments work identically before and after approval, so requiring a paid
+	// invoice here only forced landlords to fake one. What the tenant owes is
+	// the account balance, which approval does not touch.
 
 	// update lease application status
 	transaction := s.appCtx.DB.Begin()
@@ -1128,6 +1126,24 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 	if createLeaseErr != nil {
 		transaction.Rollback()
 		return nil, createLeaseErr
+	}
+
+	// The entire application -> lease financial transition: two columns. Not a
+	// single charge, invoice, payment or allocation moves, which is why paying
+	// before and after approval are the same operation.
+	//
+	// An application approved before charges were prepared simply has no
+	// account yet; that is not an error.
+	if account, accErr := s.financials.Accounts.GetByApplication(
+		transCtx, input.TenantApplicationID,
+	); accErr == nil && account != nil {
+		linkErr := s.financials.Accounts.LinkLease(
+			transCtx, account.ID.String(), lease.ID.String(), tenant.ID.String(),
+		)
+		if linkErr != nil {
+			transaction.Rollback()
+			return nil, linkErr
+		}
 	}
 
 	// create tenant account
@@ -1247,130 +1263,81 @@ func (s *tenantApplicationService) GetInvoiceForTenantApplication(
 	return invoice, nil
 }
 
-type GenerateInvoiceInput struct {
-	TenantApplicationID string
-	DueDate             *time.Time
-}
-
-func (s *tenantApplicationService) GenerateInvoice(
+// PrepareCharges turns the application's agreed terms into a ledger: a
+// FinancialAccount, charge definitions, and the full set of charge instances.
+//
+// This is the moment money becomes representable. From here the landlord can
+// compose invoices in any combination — full, partial, several charges at once
+// — before or after approval, because approval is not a financial event.
+//
+// InitialDepositFee deliberately produces NO charge. It is advance rent, so it
+// becomes the account's billing cadence; a charge for it would double-count
+// against the rent instances covering the same periods.
+func (s *tenantApplicationService) PrepareCharges(
 	ctx context.Context,
-	input GenerateInvoiceInput,
-) (*models.Invoice, error) {
-	// Fetch lease application with unit and property details
+	tenantApplicationID string,
+) (*models.FinancialAccount, error) {
 	populate := []string{"DesiredUnit", "DesiredUnit.Property"}
-	tenantApplication, getTenantApplicationErr := s.repo.GetOneWithQuery(ctx, repository.GetTenantApplicationQuery{
-		TenantApplicationID: input.TenantApplicationID,
+	tenantApplication, getErr := s.repo.GetOneWithQuery(ctx, repository.GetTenantApplicationQuery{
+		TenantApplicationID: tenantApplicationID,
 		Populate:            &populate,
 	})
-	if getTenantApplicationErr != nil {
-		if errors.Is(getTenantApplicationErr, gorm.ErrRecordNotFound) {
-			return nil, pkg.NotFoundError("TenantApplicationNotFound", &pkg.RentLoopErrorParams{
-				Err: getTenantApplicationErr,
-			})
+	if getErr != nil {
+		if errors.Is(getErr, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("TenantApplicationNotFound", &pkg.RentLoopErrorParams{Err: getErr})
 		}
-		return nil, pkg.InternalServerError(getTenantApplicationErr.Error(), &pkg.RentLoopErrorParams{
-			Err: getTenantApplicationErr,
-			Metadata: map[string]string{
-				"function": "GenerateInvoice",
-				"action":   "fetching lease application",
-			},
+		return nil, pkg.InternalServerError(getErr.Error(), &pkg.RentLoopErrorParams{
+			Err:      getErr,
+			Metadata: map[string]string{"function": "PrepareCharges", "action": "fetching application"},
 		})
 	}
 
-	// Require a unit to be assigned before generating an invoice
+	if existing, existErr := s.financials.Accounts.GetByApplication(ctx, tenantApplicationID); existErr == nil &&
+		existing != nil {
+		return nil, pkg.BadRequestError("ChargesAlreadyPrepared", nil)
+	}
+
 	if tenantApplication.DesiredUnitId == nil {
 		return nil, pkg.BadRequestError("ApplicationMissingUnit", nil)
 	}
-	if tenantApplication.RentFeeCurrency == nil {
+	if tenantApplication.RentFee == nil || tenantApplication.PaymentFrequency == nil {
 		return nil, pkg.BadRequestError("ApplicationMissingRentDetails", nil)
 	}
-
-	// Validate that at least one of security deposit or initial deposit is set
-	hasSecurityDeposit := tenantApplication.SecurityDepositFee != nil && *tenantApplication.SecurityDepositFee > 0
-	hasInitialDeposit := tenantApplication.InitialDepositFee != nil && *tenantApplication.InitialDepositFee > 0
-
-	if !hasSecurityDeposit && !hasInitialDeposit {
-		return nil, pkg.BadRequestError("NoDepositFeesConfigured", &pkg.RentLoopErrorParams{
-			Metadata: map[string]string{
-				"function": "GenerateInvoice",
-				"message":  "At least one of security deposit or initial deposit must be configured",
-			},
-		})
+	if tenantApplication.DesiredMoveInDate == nil {
+		return nil, pkg.BadRequestError("ApplicationMissingMoveInDate", nil)
+	}
+	if tenantApplication.StayDuration == nil || tenantApplication.StayDurationFrequency == nil {
+		return nil, pkg.BadRequestError("ApplicationMissingStayDuration", nil)
 	}
 
-	// Build line items
-	var lineItems []LineItemInput
-	var totalAmount int64 = 0
-	tenantApplicationID := tenantApplication.ID.String()
-
-	// Add initial deposit line item if configured
-	if hasInitialDeposit {
-		initialDepositAmount := *tenantApplication.InitialDepositFee
-		lineItems = append(lineItems, LineItemInput{
-			Label:       "Initial Deposit",
-			Category:    "INITIAL_DEPOSIT",
-			Quantity:    1,
-			UnitAmount:  initialDepositAmount,
-			TotalAmount: initialDepositAmount,
-			Currency:    tenantApplication.InitialDepositFeeCurrency,
-			Metadata: &map[string]any{
-				"tenant_application_id": tenantApplicationID,
-				"unit_id":               tenantApplication.DesiredUnitId,
-				"unit_name":             tenantApplication.DesiredUnit.Name,
-			},
-		})
-
-		totalAmount += initialDepositAmount
+	currency := "GHS"
+	if tenantApplication.RentFeeCurrency != nil {
+		currency = *tenantApplication.RentFeeCurrency
 	}
 
-	// Add security deposit line item if configured
-	if hasSecurityDeposit {
-		securityDepositAmount := *tenantApplication.SecurityDepositFee
-		lineItems = append(lineItems, LineItemInput{
-			Label:       "Security Deposit",
-			Category:    "SECURITY_DEPOSIT",
-			Quantity:    1,
-			UnitAmount:  securityDepositAmount,
-			TotalAmount: securityDepositAmount,
-			Currency:    tenantApplication.SecurityDepositFeeCurrency,
-			Metadata: &map[string]any{
-				"tenant_application_id": tenantApplicationID,
-				"unit_id":               tenantApplication.DesiredUnitId,
-				"unit_name":             tenantApplication.DesiredUnit.Name,
-			},
-		})
-		totalAmount += securityDepositAmount
+	var initialDeposit, securityDeposit int64
+	if tenantApplication.InitialDepositFee != nil {
+		initialDeposit = *tenantApplication.InitialDepositFee
+	}
+	if tenantApplication.SecurityDepositFee != nil {
+		securityDeposit = *tenantApplication.SecurityDepositFee
 	}
 
-	// Create the invoice
-	taClientID := tenantApplication.DesiredUnit.Property.ClientID
-	taPropertyID := tenantApplication.DesiredUnit.PropertyID
-	invoice, createErr := s.invoiceService.CreateInvoice(ctx, CreateInvoiceInput{
-		ClientID:                   &taClientID,
-		PropertyID:                 &taPropertyID,
-		PayerType:                  "TENANT_APPLICATION",
-		PayeeType:                  "PROPERTY_OWNER",
-		PayeeClientID:              &taClientID,
-		ContextType:                "TENANT_APPLICATION",
-		ContextTenantApplicationID: &tenantApplicationID,
-		TotalAmount:                totalAmount,
-		Taxes:                      0,
-		SubTotal:                   totalAmount,
-		Currency:                   *tenantApplication.RentFeeCurrency,
-		Status:                     "ISSUED",
-		DueDate:                    input.DueDate,
-		LineItems:                  lineItems,
+	clientID := tenantApplication.DesiredUnit.Property.ClientID
+	propertyID := tenantApplication.DesiredUnit.PropertyID
+
+	return s.financials.Accounts.PrepareCharges(ctx, financials.PrepareChargesInput{
+		TenantApplicationID:   tenantApplicationID,
+		ClientID:              &clientID,
+		PropertyID:            &propertyID,
+		Currency:              currency,
+		RentFee:               *tenantApplication.RentFee,
+		PaymentFrequency:      *tenantApplication.PaymentFrequency,
+		MoveInDate:            *tenantApplication.DesiredMoveInDate,
+		StayDuration:          *tenantApplication.StayDuration,
+		StayDurationFrequency: *tenantApplication.StayDurationFrequency,
+		InitialDepositFee:     initialDeposit,
+		SecurityDepositFee:    securityDeposit,
+		SecurityDepositDue:    *tenantApplication.DesiredMoveInDate,
 	})
-
-	if createErr != nil {
-		return nil, pkg.InternalServerError("Failed to create invoice", &pkg.RentLoopErrorParams{
-			Err: createErr,
-			Metadata: map[string]string{
-				"function":            "GenerateInvoice",
-				"tenantApplicationId": input.TenantApplicationID,
-			},
-		})
-	}
-
-	return invoice, nil
 }

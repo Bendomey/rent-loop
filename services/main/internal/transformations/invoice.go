@@ -46,9 +46,6 @@ type OutputInvoice struct {
 
 	ContextMaintenanceRequestID *string `json:"context_maintenance_request_id,omitempty" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
 
-	ContextExpenseID *string        `json:"context_expense_id,omitempty" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
-	ContextExpense   *OutputExpense `json:"context_expense,omitempty"`
-
 	TotalAmount int64  `json:"total_amount" example:"100000"`
 	Taxes       int64  `json:"taxes"        example:"0"`
 	SubTotal    int64  `json:"sub_total"    example:"100000"`
@@ -104,8 +101,6 @@ func DBInvoiceToRest(i *models.Invoice) any {
 		"context_lease_id":               i.ContextLeaseID,
 		"context_lease":                  DBAdminLeaseToRest(i.ContextLease),
 		"context_maintenance_request_id": i.ContextMaintenanceRequestID,
-		"context_expense_id":             i.ContextExpenseID,
-		"context_expense":                DBExpenseToRest(i.ContextExpense),
 		"total_amount":                   i.TotalAmount,
 		"taxes":                          i.Taxes,
 		"sub_total":                      i.SubTotal,

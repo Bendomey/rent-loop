@@ -77,7 +77,17 @@ func NewServices(params INewServicesParams) Services {
 		notificationService,
 		params.Repository.TenantAccountRepository,
 		params.Repository.TenantRepository,
+		financialsFacade,
 	)
+
+	// Attach issuance now that InvoiceService exists. Issuance composes
+	// invoices while InvoiceService allocates charges, so neither can be
+	// constructed with the other already complete.
+	financialsFacade.SetIssuance(financials.NewIssuanceService(
+		params.Repository.FinancialAccountRepository,
+		financialsFacade.Charges,
+		invoiceService,
+	))
 
 	authService := NewAuthService(params.AppCtx, params.Repository.TenantAccountRepository)
 	adminService := NewAdminService(params.AppCtx, params.Repository.AdminRepository)
@@ -165,6 +175,7 @@ func NewServices(params INewServicesParams) Services {
 		unitService,
 		params.Repository.ClientUserRepository,
 		params.Repository.UserRepository,
+		financialsFacade,
 	)
 
 	tenantAccountService := NewTenantAccountService(params.AppCtx, params.Repository.TenantAccountRepository)
@@ -179,6 +190,7 @@ func NewServices(params INewServicesParams) Services {
 		LeaseService:         leaseService,
 		TenantAccountService: tenantAccountService,
 		InvoiceService:       invoiceService,
+		Financials:           financialsFacade,
 	})
 	signingService := NewSigningService(
 		params.AppCtx,
@@ -198,6 +210,7 @@ func NewServices(params INewServicesParams) Services {
 		NotificationService:      notificationService,
 		LeaseService:             leaseService,
 		TenantApplicationService: tenantApplicationService,
+		Financials:               financialsFacade,
 	})
 
 	leaseChecklistItemService := NewLeaseChecklistItemService(
@@ -258,11 +271,11 @@ func NewServices(params INewServicesParams) Services {
 	})
 
 	expenseService := NewExpenseService(ExpenseServiceDeps{
-		AppCtx:         params.AppCtx,
-		Repo:           params.Repository.ExpenseRepository,
-		LeaseRepo:      params.Repository.LeaseRepository,
-		MRRepo:         params.Repository.MaintenanceRequestRepository,
-		InvoiceService: invoiceService,
+		AppCtx:            params.AppCtx,
+		Repo:              params.Repository.ExpenseRepository,
+		LeaseRepo:         params.Repository.LeaseRepository,
+		MRRepo:            params.Repository.MaintenanceRequestRepository,
+		AccountingService: accountingService,
 	})
 
 	return Services{

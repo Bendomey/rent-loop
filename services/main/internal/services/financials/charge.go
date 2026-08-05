@@ -78,6 +78,10 @@ type ChargeService interface {
 	VoidInstance(ctx context.Context, input VoidChargeInput) error
 	RederiveRent(ctx context.Context, input RederiveRentInput) error
 	ListViews(ctx context.Context, financialAccountID string) ([]ChargeView, error)
+	// ListInstances returns the persisted models. The transformation layer
+	// needs Name, Currency and VoidedAt, which ChargeView deliberately does
+	// not carry — it exists for arithmetic, not for presentation.
+	ListInstances(ctx context.Context, financialAccountID string) ([]models.ChargeInstance, error)
 }
 
 type chargeService struct {
@@ -86,6 +90,22 @@ type chargeService struct {
 
 func NewChargeService(repo repository.ChargeRepository) ChargeService {
 	return &chargeService{repo: repo}
+}
+
+func (s *chargeService) ListInstances(
+	ctx context.Context,
+	financialAccountID string,
+) ([]models.ChargeInstance, error) {
+	instances, err := s.repo.ListInstances(ctx, repository.ListChargeInstancesFilter{
+		FinancialAccountID: &financialAccountID,
+	})
+	if err != nil {
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err:      err,
+			Metadata: map[string]string{"function": "ListInstances", "action": "listing charge instances"},
+		})
+	}
+	return *instances, nil
 }
 
 func (s *chargeService) ListViews(ctx context.Context, financialAccountID string) ([]ChargeView, error) {

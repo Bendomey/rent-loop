@@ -14,6 +14,7 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/lib/emailtemplates"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
+	"github.com/Bendomey/rent-loop/services/main/internal/services/financials"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
@@ -41,6 +42,7 @@ type paymentService struct {
 	notificationService      NotificationService
 	leaseService             LeaseService
 	tenantApplicationService TenantApplicationService
+	financials               *financials.Financials
 }
 
 type PaymentServiceDeps struct {
@@ -52,6 +54,7 @@ type PaymentServiceDeps struct {
 	NotificationService      NotificationService
 	LeaseService             LeaseService
 	TenantApplicationService TenantApplicationService
+	Financials               *financials.Financials
 }
 
 func NewPaymentService(deps PaymentServiceDeps) PaymentService {
@@ -64,6 +67,7 @@ func NewPaymentService(deps PaymentServiceDeps) PaymentService {
 		notificationService:      deps.NotificationService,
 		leaseService:             deps.LeaseService,
 		tenantApplicationService: deps.TenantApplicationService,
+		financials:               deps.Financials,
 	}
 }
 
@@ -198,7 +202,10 @@ func (s *paymentService) CreateOfflinePayment(
 		})
 	}
 
-	if input.Amount > remainingBalance {
+	// Account-backed invoices accept over-payment: a round-number MoMo
+	// transfer becomes account credit and is consumed by the next invoice,
+	// rather than being refused at the API for being real money.
+	if invoice.FinancialAccountID == nil && input.Amount > remainingBalance {
 		return nil, pkg.BadRequestError("payment amount exceeds invoice balance", &pkg.RentLoopErrorParams{
 			Metadata: map[string]string{
 				"invoice_id":        input.InvoiceID,
@@ -339,6 +346,10 @@ type VerifyOfflinePaymentInput struct {
 	PaymentID    string
 	IsSuccessful bool
 	Metadata     *map[string]any
+	// Allocations is the landlord's explicit split across the invoice's
+	// charges. Nil means allocate oldest-due-date first, which is the default
+	// the UI pre-fills.
+	Allocations []financials.Claim
 }
 
 func (s *paymentService) VerifyOfflinePayment(
@@ -474,6 +485,40 @@ func (s *paymentService) VerifyOfflinePayment(
 					"action":     "updating payment to SUCCESSFUL",
 				},
 			})
+		}
+
+		// Allocate the money onto the obligations it satisfies, inside the same
+		// transaction — a payment can never be SUCCESSFUL without its
+		// allocations existing. Any residue beyond the invoice total stays
+		// unallocated and becomes account credit at the next composition.
+		if payment.Invoice.FinancialAccountID != nil {
+			lines := make([]financials.ComposedLine, 0, len(payment.Invoice.LineItems))
+			for _, lineItem := range payment.Invoice.LineItems {
+				if lineItem.ChargeInstanceID == nil {
+					continue
+				}
+				lines = append(lines, financials.ComposedLine{
+					ChargeInstanceID: *lineItem.ChargeInstanceID,
+					Label:            lineItem.Label,
+					Category:         lineItem.Category,
+					Amount:           lineItem.TotalAmount,
+					Currency:         lineItem.Currency,
+				})
+			}
+
+			allocateErr := s.financials.Allocation.AllocatePayment(transCtx, financials.AllocatePaymentInput{
+				PaymentID:   payment.ID.String(),
+				Lines:       lines,
+				Amount:      payment.Amount,
+				Currency:    payment.Currency,
+				Allocations: input.Allocations,
+			})
+			if allocateErr != nil {
+				if !hasOuterTx {
+					transaction.Rollback()
+				}
+				return nil, allocateErr
+			}
 		}
 
 		// Calculate remaining balance after this payment

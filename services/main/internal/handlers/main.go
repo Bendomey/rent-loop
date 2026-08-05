@@ -33,6 +33,7 @@ type Handlers struct {
 	AnnouncementHandler           AnnouncementHandler
 	MaintenanceRequestHandler     MaintenanceRequestHandler
 	ExpenseHandler                ExpenseHandler
+	FinancialAccountHandler       FinancialAccountHandler
 	AgreementHandler              AgreementHandler
 	BookingHandler                BookingHandler
 	LeaseTerminationHandler       LeaseTerminationHandler
@@ -79,6 +80,12 @@ func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
 		services.TenantAccountService,
 	)
 	expenseHandler := NewExpenseHandler(appCtx, services.ExpenseService)
+	financialAccountHandler := NewFinancialAccountHandler(
+		appCtx,
+		services.Financials,
+		services.InvoiceService,
+		services.LeaseService,
+	)
 	agreementHandler := NewAgreementHandler(appCtx, services.AgreementService)
 	bookingHandler := NewBookingHandler(appCtx, services)
 	leaseTerminationHandler := NewLeaseTerminationHandler(
@@ -116,6 +123,7 @@ func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
 		AnnouncementHandler:           announcementHandler,
 		MaintenanceRequestHandler:     maintenanceRequestHandler,
 		ExpenseHandler:                expenseHandler,
+		FinancialAccountHandler:       financialAccountHandler,
 		AgreementHandler:              agreementHandler,
 		BookingHandler:                bookingHandler,
 		LeaseTerminationHandler:       leaseTerminationHandler,
