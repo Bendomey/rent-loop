@@ -10,10 +10,8 @@ import { propertyScopeSql } from './scope';
 // existing `invoices i` join rather than re-querying invoices — one less
 // correlated subquery per row than the dimension's version.
 const PAYMENT_PROPERTY_ID_SQL = `COALESCE(
-  (SELECT u.property_id::text FROM tenant_applications ta JOIN units u ON ta.desired_unit_id = u.id WHERE ta.id = i.context_tenant_application_id LIMIT 1),
-  (SELECT u.property_id::text FROM leases l JOIN units u ON l.unit_id = u.id WHERE l.id = i.context_lease_id LIMIT 1),
+  (SELECT fa.property_id::text FROM financial_accounts fa WHERE fa.id = i.financial_account_id AND fa.deleted_at IS NULL LIMIT 1),
   (SELECT b.property_id::text FROM bookings b WHERE b.id = i.context_booking_id LIMIT 1),
-  (SELECT e.property_id::text FROM expenses e WHERE e.id = i.context_expense_id LIMIT 1),
   i.payer_property_id::text
 )`;
 
@@ -61,10 +59,8 @@ cube(`Payments`, {
     propertyId: {
       sql: `(
         SELECT COALESCE(
-          (SELECT u.property_id::text FROM tenant_applications ta JOIN units u ON ta.desired_unit_id = u.id WHERE ta.id = inv.context_tenant_application_id LIMIT 1),
-          (SELECT u.property_id::text FROM leases l JOIN units u ON l.unit_id = u.id WHERE l.id = inv.context_lease_id LIMIT 1),
+          (SELECT fa.property_id::text FROM financial_accounts fa WHERE fa.id = inv.financial_account_id AND fa.deleted_at IS NULL LIMIT 1),
           (SELECT b.property_id::text FROM bookings b WHERE b.id = inv.context_booking_id LIMIT 1),
-          (SELECT e.property_id::text FROM expenses e WHERE e.id = inv.context_expense_id LIMIT 1),
           inv.payer_property_id::text
         )
         FROM invoices inv
@@ -74,19 +70,14 @@ cube(`Payments`, {
       title: `Property ID`,
     },
 
-    // Derived via the parent invoice's lease/booking/tenant-application context.
-    // tenant_applications has no tenant_id of its own (the tenant doesn't exist
-    // yet at application time) — a lease is the only bridge, created once the
-    // application is approved. So application-stage payments (e.g. security
-    // deposit paid before approval) are resolved by looking up the lease that
-    // was later created from that application, mirroring the Go backend's own
-    // invoiceTenantOwnerContextScope OR-based lookup.
+    // The parent invoice's financial account carries tenant_id directly, set
+    // when approval links the lease. Application-stage payments resolve to NULL
+    // until approval — correct, because no tenant exists yet.
     tenantId: {
       sql: `(
         SELECT COALESCE(
-          (SELECT l.tenant_id::text FROM leases l WHERE l.id = inv.context_lease_id LIMIT 1),
-          (SELECT b.tenant_id::text FROM bookings b WHERE b.id = inv.context_booking_id LIMIT 1),
-          (SELECT l.tenant_id::text FROM leases l WHERE l.tenant_application_id = inv.context_tenant_application_id LIMIT 1)
+          (SELECT fa.tenant_id::text FROM financial_accounts fa WHERE fa.id = inv.financial_account_id AND fa.deleted_at IS NULL LIMIT 1),
+          (SELECT b.tenant_id::text FROM bookings b WHERE b.id = inv.context_booking_id LIMIT 1)
         )
         FROM invoices inv
         WHERE inv.id = ${CUBE}.invoice_id

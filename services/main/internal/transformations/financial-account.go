@@ -127,3 +127,44 @@ func DBFinancialAccountToRest(m *models.FinancialAccount) *OutputFinancialAccoun
 		UpdatedAt:           m.UpdatedAt,
 	}
 }
+
+// OutputTenantApplicationFinancials is the application's financial summary.
+//
+// It replaces the old `application_payment_invoice` field. An application now
+// has a financial account with many charges and any number of invoices, so the
+// UI needs the balance rather than "the" invoice:
+//
+//	charges prepared  ->  financial_account is present
+//	fully paid        ->  outstanding_amount == 0
+//	part paid         ->  total_settled > 0
+type OutputTenantApplicationFinancials struct {
+	ID                string `json:"id"                 example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
+	Code              string `json:"code"               example:"FA-2608-A1B2C3"`
+	Currency          string `json:"currency"           example:"GHS"`
+	TotalCharged      int64  `json:"total_charged"      example:"1300000"`
+	TotalSettled      int64  `json:"total_settled"      example:"1300000"`
+	OutstandingAmount int64  `json:"outstanding_amount" example:"0"`
+	AvailableCredit   int64  `json:"available_credit"   example:"0"`
+	ChargeCount       int64  `json:"charge_count"       example:"13"`
+	InvoiceCount      int64  `json:"invoice_count"      example:"1"`
+}
+
+func DBTenantApplicationFinancialsToRest(
+	m *models.TenantApplicationFinancials,
+) *OutputTenantApplicationFinancials {
+	if m == nil || m.Account == nil {
+		return nil
+	}
+
+	return &OutputTenantApplicationFinancials{
+		ID:                m.Account.ID.String(),
+		Code:              m.Account.Code,
+		Currency:          m.Account.Currency,
+		TotalCharged:      m.TotalCharged,
+		TotalSettled:      m.TotalSettled,
+		OutstandingAmount: m.OutstandingAmount,
+		AvailableCredit:   m.AvailableCredit,
+		ChargeCount:       m.ChargeCount,
+		InvoiceCount:      m.InvoiceCount,
+	}
+}

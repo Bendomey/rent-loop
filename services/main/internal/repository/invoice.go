@@ -105,6 +105,7 @@ type ListInvoicesFilter struct {
 	ClientID                   *string
 	ContextLeaseID             *string
 	ContextTenantApplicationID *string
+	FinancialAccountID         *string
 }
 
 func (r *invoiceRepository) List(ctx context.Context, filterQuery ListInvoicesFilter) (*[]models.Invoice, error) {
@@ -129,6 +130,7 @@ func (r *invoiceRepository) List(ctx context.Context, filterQuery ListInvoicesFi
 		invoiceClientUserAccessScope(filterQuery.ClientUserID),
 		invoiceClientIDScope(filterQuery.ClientID),
 		invoiceLeaseContextScope(filterQuery.ContextLeaseID, filterQuery.ContextTenantApplicationID),
+		invoiceFinancialAccountScope(filterQuery.FinancialAccountID),
 
 		PaginationScope(filterQuery.Page, filterQuery.PageSize),
 		OrderScope("invoices", filterQuery.OrderBy, filterQuery.Order),
@@ -299,10 +301,13 @@ func invoicePayerTenantIDScope(payerTenantID *string) func(db *gorm.DB) *gorm.DB
 		if payerTenantID == nil {
 			return db
 		}
+		// payer_lease_id stays (it is not being dropped); the application-stage
+		// fallback now resolves through the financial account, which carries
+		// both the application and the tenant.
 		return db.Where(
 			`invoices.payer_lease_id IN (SELECT id FROM leases WHERE tenant_id = ?)
-			 OR invoices.context_tenant_application_id IN (
-				SELECT tenant_application_id FROM leases WHERE tenant_id = ? AND tenant_application_id IS NOT NULL
+			 OR invoices.financial_account_id IN (
+				SELECT id FROM financial_accounts WHERE deleted_at IS NULL AND tenant_id = ?
 			 )`,
 			*payerTenantID,
 			*payerTenantID,
@@ -402,21 +407,53 @@ func invoiceLeaseTerminationIDScope(leaseTerminationID *string) func(db *gorm.DB
 	}
 }
 
+// invoiceLeaseContextScope resolves lease and application context through the
+// financial account rather than through the invoice's own columns.
+//
+// Those columns were only ever written by ComposeFromAccount, so they
+// duplicated what financial_account_id already implies — and an invoice that
+// forgot to set them vanished from this scope with no error at all. Both are
+// dropped by DropLegacyFinancialColumns.
+func invoiceFinancialAccountScope(accountID *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if accountID == nil {
+			return db
+		}
+		return db.Where("invoices.financial_account_id = ?", *accountID)
+	}
+}
+
 func invoiceLeaseContextScope(leaseID *string, tenantApplicationID *string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if leaseID == nil && tenantApplicationID == nil {
 			return db
 		}
-		if leaseID != nil && tenantApplicationID != nil {
+
+		switch {
+		case leaseID != nil && tenantApplicationID != nil:
 			return db.Where(
-				"invoices.context_lease_id = ? OR invoices.context_tenant_application_id = ?",
+				`invoices.financial_account_id IN (
+					SELECT id FROM financial_accounts
+					WHERE deleted_at IS NULL AND (lease_id = ? OR tenant_application_id = ?)
+				 )`,
 				*leaseID, *tenantApplicationID,
 			)
+		case leaseID != nil:
+			return db.Where(
+				`invoices.financial_account_id IN (
+					SELECT id FROM financial_accounts WHERE deleted_at IS NULL AND lease_id = ?
+				 )`,
+				*leaseID,
+			)
+		default:
+			return db.Where(
+				`invoices.financial_account_id IN (
+					SELECT id FROM financial_accounts
+					WHERE deleted_at IS NULL AND tenant_application_id = ?
+				 )`,
+				*tenantApplicationID,
+			)
 		}
-		if leaseID != nil {
-			return db.Where("invoices.context_lease_id = ?", *leaseID)
-		}
-		return db.Where("invoices.context_tenant_application_id = ?", *tenantApplicationID)
 	}
 }
 
@@ -426,7 +463,8 @@ func invoiceLeaseContextScope(leaseID *string, tenantApplicationID *string) func
 // invoices may not have payer_lease_id set, so when an applicationID is also
 // provided we include them via OR:
 //
-//	invoices.payer_lease_id = ? OR invoices.context_tenant_application_id = ?
+//	invoices.payer_lease_id = ? OR the invoice belongs to the application's
+//	financial account
 //
 // When no application ID is provided it falls back to:
 //
@@ -439,8 +477,15 @@ func invoiceTenantOwnerContextScope(leaseID, applicationID *string) func(db *gor
 			return db
 		}
 		if applicationID != nil {
+			// Application-stage invoices predate the lease, so they carry no
+			// payer_lease_id. They are reached through the financial account,
+			// which is anchored on the application.
 			return db.Where(
-				"invoices.payer_lease_id = ? OR invoices.context_tenant_application_id = ?",
+				`invoices.payer_lease_id = ?
+				 OR invoices.financial_account_id IN (
+					SELECT id FROM financial_accounts
+					WHERE deleted_at IS NULL AND tenant_application_id = ?
+				 )`,
 				*leaseID,
 				*applicationID,
 			)
@@ -530,7 +575,7 @@ func (r *invoiceRepository) ListForReminders(ctx context.Context) (*[]models.Inv
 			startOfToday,
 		).
 		Preload("PayerLease.Tenant.TenantAccount").
-		Preload("ContextLease.Unit").
+		Preload("PayerLease.Unit").
 		Find(&invoices)
 	if result.Error != nil {
 		return nil, result.Error

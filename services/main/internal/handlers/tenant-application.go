@@ -1020,8 +1020,6 @@ func (h *TenantApplicationHandler) GetTenantApplicationByCode(w http.ResponseWri
 	populate := []string{
 		"DesiredUnit",
 		"DesiredUnit.Property",
-		"ApplicationPaymentInvoice",
-		"ApplicationPaymentInvoice.LineItems",
 	}
 	query := repository.GetTenantApplicationQuery{
 		Code:     code,
@@ -1218,8 +1216,6 @@ func (h *TenantApplicationHandler) VerifyTrackingOtp(w http.ResponseWriter, r *h
 	populate := []string{
 		"DesiredUnit",
 		"DesiredUnit.Property",
-		"ApplicationPaymentInvoice",
-		"ApplicationPaymentInvoice.LineItems",
 	}
 	ta, err := h.service.GetOneTenantApplication(r.Context(), repository.GetTenantApplicationQuery{
 		Code:     code,
@@ -1286,11 +1282,18 @@ func (h *TenantApplicationHandler) PayTrackingInvoice(w http.ResponseWriter, r *
 		return
 	}
 
-	// Validate invoice belongs to this application
+	// Validate the invoice belongs to this application, via its financial
+	// account — the invoice's own context column has been dropped.
+	account, accErr := h.services.Financials.Accounts.GetByApplication(r.Context(), ta.ID.String())
+	if accErr != nil {
+		HandleErrorResponse(w, accErr)
+		return
+	}
+
 	invoice, invoiceErr := h.services.InvoiceService.GetByQuery(r.Context(), repository.GetInvoiceQuery{
 		Query: map[string]any{
-			"id":                            invoiceID,
-			"context_tenant_application_id": ta.ID.String(),
+			"id":                   invoiceID,
+			"financial_account_id": account.ID.String(),
 		},
 	})
 	if invoiceErr != nil {

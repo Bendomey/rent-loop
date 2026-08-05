@@ -903,9 +903,17 @@ func (h *InvoiceHandler) TenantGetInvoice(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	// Ownership: either the invoice names this lease as payer, or it belongs to
+	// the financial account anchored on this lease's application (the
+	// application-stage case, where no lease existed when it was issued).
 	leaseIDStr := lease.ID.String()
-	ownedByTenant := (invoice.PayerLeaseID != nil && *invoice.PayerLeaseID == leaseIDStr) ||
-		(invoice.ContextTenantApplicationID != nil && *invoice.ContextTenantApplicationID == lease.TenantApplicationId)
+	ownedByTenant := invoice.PayerLeaseID != nil && *invoice.PayerLeaseID == leaseIDStr
+	if !ownedByTenant && invoice.FinancialAccountID != nil {
+		account, accErr := h.services.Financials.Accounts.GetByID(r.Context(), *invoice.FinancialAccountID)
+		if accErr == nil && account != nil {
+			ownedByTenant = account.TenantApplicationID == lease.TenantApplicationId
+		}
+	}
 
 	if !ownedByTenant {
 		http.Error(w, "Forbidden", http.StatusForbidden)

@@ -63,3 +63,16 @@ func (f *FinancialAccount) BeforeCreate(tx *gorm.DB) error {
 	f.Code = *uniqueCode
 	return nil
 }
+
+// TenantApplicationFinancials is a computed summary attached to a
+// TenantApplication in memory. It lives here rather than in the services layer
+// so the model can carry it without an import cycle.
+type TenantApplicationFinancials struct {
+	Account           *FinancialAccount
+	TotalCharged      int64
+	TotalSettled      int64
+	OutstandingAmount int64
+	AvailableCredit   int64
+	ChargeCount       int64
+	InvoiceCount      int64
+}

@@ -115,8 +115,6 @@ type CreateInvoiceInput struct {
 	PayeeClientID               *string
 	PayeeTenantID               *string
 	ContextType                 string
-	ContextTenantApplicationID  *string
-	ContextLeaseID              *string
 	ContextBookingID            *string
 	ContextMaintenanceRequestID *string
 	ContextLeaseTerminationID   *string
@@ -210,8 +208,6 @@ func (s *invoiceService) CreateInvoice(ctx context.Context, input CreateInvoiceI
 		PayeeClientID:               input.PayeeClientID,
 		PayeeTenantID:               input.PayeeTenantID,
 		ContextType:                 input.ContextType,
-		ContextTenantApplicationID:  input.ContextTenantApplicationID,
-		ContextLeaseID:              input.ContextLeaseID,
 		ContextBookingID:            input.ContextBookingID,
 		ContextMaintenanceRequestID: input.ContextMaintenanceRequestID,
 		ContextLeaseTerminationID:   input.ContextLeaseTerminationID,
@@ -1411,36 +1407,24 @@ func (s *invoiceService) ComposeFromAccount(
 
 	accountID := input.FinancialAccountID
 
-	// Set BOTH context IDs from the account, never from the caller. Existing
-	// listing and lookup queries filter on context_tenant_application_id and
-	// context_lease_id — invoiceLeaseContextScope, the tenant invoice list's
-	// fallback, and GetInvoiceForTenantApplication — so an invoice missing
-	// them is silently invisible everywhere it should appear.
-	//
-	// The application ID is always present (it is the account's anchor); the
-	// lease ID appears once approval links it.
-	contextApplicationID := summary.Account.TenantApplicationID
-
 	return s.CreateInvoice(ctx, CreateInvoiceInput{
-		FinancialAccountID:         &accountID,
-		composed:                   true,
-		ClientID:                   summary.Account.ClientID,
-		PropertyID:                 summary.Account.PropertyID,
-		PayerType:                  input.PayerType,
-		PayerLeaseID:               input.PayerLeaseID,
-		PayeeType:                  input.PayeeType,
-		PayeeClientID:              input.PayeeClientID,
-		ContextType:                input.ContextType,
-		ContextTenantApplicationID: &contextApplicationID,
-		ContextLeaseID:             summary.Account.LeaseID,
-		TotalAmount:                total,
-		SubTotal:                   total,
-		Currency:                   summary.Account.Currency,
-		Status:                     input.Status,
-		DueDate:                    input.DueDate,
-		LineItems:                  lineItems,
-		SendNotifications:          input.Status == "ISSUED",
-		NotificationTenantID:       input.NotificationTenantID,
+		FinancialAccountID:   &accountID,
+		composed:             true,
+		ClientID:             summary.Account.ClientID,
+		PropertyID:           summary.Account.PropertyID,
+		PayerType:            input.PayerType,
+		PayerLeaseID:         input.PayerLeaseID,
+		PayeeType:            input.PayeeType,
+		PayeeClientID:        input.PayeeClientID,
+		ContextType:          input.ContextType,
+		TotalAmount:          total,
+		SubTotal:             total,
+		Currency:             summary.Account.Currency,
+		Status:               input.Status,
+		DueDate:              input.DueDate,
+		LineItems:            lineItems,
+		SendNotifications:    input.Status == "ISSUED",
+		NotificationTenantID: input.NotificationTenantID,
 	})
 }
 

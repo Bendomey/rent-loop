@@ -39,12 +39,6 @@ type Invoice struct {
 
 	ContextType string `gorm:"not null;"` // 'TENANT_APPLICATION' | 'LEASE_RENT' | 'MAINTENANCE' | 'SAAS_FEE' | 'BOOKING_FEE' | 'LEASE_TERMINATION'
 
-	ContextTenantApplicationID *string
-	ContextTenantApplication   *TenantApplication
-
-	ContextLeaseID *string
-	ContextLease   *Lease
-
 	ContextBookingID *string
 	ContextBooking   *Booking
 

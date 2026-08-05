@@ -26372,14 +26372,6 @@ const docTemplate = `{
                     "type": "string",
                     "example": "INV-2024-0001"
                 },
-                "context_lease": {
-                    "type": "object",
-                    "additionalProperties": {}
-                },
-                "context_lease_id": {
-                    "type": "string",
-                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
-                },
                 "context_lease_termination": {
                     "$ref": "#/definitions/transformations.OutputLeaseTermination"
                 },
@@ -26388,13 +26380,6 @@ const docTemplate = `{
                     "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
                 },
                 "context_maintenance_request_id": {
-                    "type": "string",
-                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
-                },
-                "context_tenant_application": {
-                    "$ref": "#/definitions/transformations.OutputAdminTenantApplication"
-                },
-                "context_tenant_application_id": {
                     "type": "string",
                     "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
                 },

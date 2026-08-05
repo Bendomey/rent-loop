@@ -565,7 +565,52 @@ func (s *tenantApplicationService) GetOneTenantApplication(
 		})
 	}
 
+	s.attachFinancials(ctx, tenantApplication)
+
 	return tenantApplication, nil
+}
+
+// attachFinancials computes the application's financial summary and attaches
+// it in memory.
+//
+// It replaces the old ApplicationPaymentInvoice has-one. An application now has
+// a financial account with many charges and any number of invoices, so what the
+// UI actually needs is the balance, not "the" invoice.
+//
+// Failures are non-fatal: an application whose charges have not been prepared
+// simply has no financials, which the UI renders as "not set up yet".
+func (s *tenantApplicationService) attachFinancials(
+	ctx context.Context,
+	application *models.TenantApplication,
+) {
+	if application == nil {
+		return
+	}
+
+	account, accErr := s.financials.Accounts.GetByApplication(ctx, application.ID.String())
+	if accErr != nil || account == nil {
+		return
+	}
+
+	accountID := account.ID.String()
+	summary, summaryErr := s.financials.Accounts.Summary(ctx, accountID)
+	if summaryErr != nil {
+		return
+	}
+
+	_, invoiceCount, _ := s.invoiceService.ListInvoices(ctx, repository.ListInvoicesFilter{
+		FinancialAccountID: &accountID,
+	})
+
+	application.Financials = &models.TenantApplicationFinancials{
+		Account:           account,
+		TotalCharged:      summary.TotalCharged,
+		TotalSettled:      summary.TotalSettled,
+		OutstandingAmount: summary.OutstandingAmount,
+		AvailableCredit:   summary.AvailableCredit,
+		ChargeCount:       int64(len(summary.Charges)),
+		InvoiceCount:      invoiceCount,
+	}
 }
 
 type UpdateTenantApplicationInput struct {
@@ -1248,11 +1293,18 @@ func (s *tenantApplicationService) GetInvoiceForTenantApplication(
 	tenantApplicationID string,
 	invoiceID string,
 ) (*models.Invoice, error) {
+	// Resolve through the financial account: the invoice's own
+	// context_tenant_application_id duplicated what the account already says
+	// and is dropped by DropLegacyFinancialColumns.
+	account, accErr := s.financials.Accounts.GetByApplication(ctx, tenantApplicationID)
+	if accErr != nil {
+		return nil, pkg.NotFoundError("FinancialAccountNotFound", &pkg.RentLoopErrorParams{Err: accErr})
+	}
+
 	invoice, err := s.invoiceService.GetByQuery(ctx, repository.GetInvoiceQuery{
 		Query: map[string]any{
-			"id":                            invoiceID,
-			"context_type":                  "TENANT_APPLICATION",
-			"context_tenant_application_id": tenantApplicationID,
+			"id":                   invoiceID,
+			"financial_account_id": account.ID.String(),
 		},
 		Populate: nil,
 	})

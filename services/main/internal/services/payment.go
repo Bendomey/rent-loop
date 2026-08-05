@@ -278,11 +278,22 @@ func (s *paymentService) CreateOfflinePayment(
 		return &payment, nil
 	}
 
+	// Lease and application context now come from the financial account; the
+	// invoice's own context columns duplicated it and have been dropped.
+	var notifyLeaseID, notifyApplicationID *string
+	if invoice.FinancialAccountID != nil && s.financials != nil {
+		if account, accErr := s.financials.Accounts.GetByID(ctx, *invoice.FinancialAccountID); accErr == nil {
+			notifyLeaseID = account.LeaseID
+			applicationID := account.TenantApplicationID
+			notifyApplicationID = &applicationID
+		}
+	}
+
 	go func() {
 		bgCtx := context.Background()
-		if invoice.ContextLeaseID != nil && s.leaseService != nil {
+		if notifyLeaseID != nil && s.leaseService != nil {
 			lease, leaseErr := s.leaseService.GetByIDWithPopulate(bgCtx, repository.GetLeaseQuery{
-				ID:       *invoice.ContextLeaseID,
+				ID:       *notifyLeaseID,
 				Populate: &[]string{"ActivatedBy", "ActivatedBy.User", "Unit", "Tenant"},
 			})
 			if leaseErr != nil || lease.ActivatedById == nil || lease.ActivatedBy == nil ||
@@ -309,9 +320,9 @@ func (s *paymentService) CreateOfflinePayment(
 				HtmlBody:  htmlBody,
 				TextBody:  textBody,
 			})
-		} else if invoice.ContextTenantApplicationID != nil && s.tenantApplicationService != nil {
+		} else if notifyApplicationID != nil && s.tenantApplicationService != nil {
 			ta, taErr := s.tenantApplicationService.GetOneTenantApplication(bgCtx, repository.GetTenantApplicationQuery{
-				TenantApplicationID: *invoice.ContextTenantApplicationID,
+				TenantApplicationID: *notifyApplicationID,
 				Populate:            &[]string{"CreatedBy", "CreatedBy.User"},
 			})
 			if taErr != nil || ta.CreatedBy.User.Email == "" {
@@ -361,6 +372,7 @@ func (s *paymentService) VerifyOfflinePayment(
 		"Invoice",
 		"Invoice.LineItems",
 		"Invoice.PayerLease.Tenant.TenantAccount",
+		"Invoice.PayerLease.Unit",
 		"Invoice.ContextLease.Unit",
 	}
 	payment, paymentErr := s.repo.GetByIDWithQuery(ctx, repository.GetPaymentQuery{
@@ -645,10 +657,8 @@ func (s *paymentService) VerifyOfflinePayment(
 	// Fire-and-forget payment confirmation notifications when invoice is fully paid
 	if invoiceFullyPaid && payment.Invoice.PayerLease != nil && payment.Invoice.PayerLease.TenantId != "" {
 		tenant := payment.Invoice.PayerLease.Tenant
-		unitName := ""
-		if payment.Invoice.ContextLease != nil {
-			unitName = payment.Invoice.ContextLease.Unit.Name
-		}
+		// Unit comes from PayerLease now that Invoice.ContextLease is gone.
+		unitName := payment.Invoice.PayerLease.Unit.Name
 		smsR := strings.NewReplacer(
 			"{{tenant_name}}", tenant.FirstName,
 			"{{invoice_code}}", payment.Invoice.Code,
