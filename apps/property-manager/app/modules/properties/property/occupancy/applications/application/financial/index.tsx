@@ -1,5 +1,7 @@
 import { useTenantApplicationContext } from '../context'
+import { AgreedRent } from './agreed-rent'
 import { MoveInGate } from './move-in-gate'
+import { SchedulePreview } from './schedule/preview'
 import { SummaryBar } from './summary-bar'
 import { useGetFinancialAccount } from '~/api/financial-accounts'
 import { safeString } from '~/lib/strings'
@@ -60,6 +62,15 @@ export function PropertyTenantApplicationFinancial() {
 
 	const mode = resolveMode(tenantApplication, summary ?? null)
 
+	// The rent the existing RENT charges were derived from. Reading it off the
+	// ledger rather than the application means the rebuild warning compares what
+	// is actually there against what is being typed.
+	const rentCharges = (summary?.charges ?? []).filter(
+		(charge) => charge.category === 'RENT' && !charge.voided_at,
+	)
+	const accountRent = rentCharges[0]?.amount ?? null
+	const periods = rentCharges.length || (tenantApplication.stay_duration ?? 0)
+
 	return (
 		<div className="space-y-4">
 			{mode === 'blocked' ? (
@@ -73,9 +84,28 @@ export function PropertyTenantApplicationFinancial() {
 				<SummaryBar summary={summary} readonly={mode === 'readonly'} />
 			) : null}
 
+			{mode === 'blocked' ? null : (
+				<AgreedRent
+					mode={mode}
+					application={tenantApplication}
+					clientId={clientId}
+					propertyId={propertyId}
+					accountRent={accountRent}
+					periods={periods}
+				/>
+			)}
+
+			{mode === 'setup' ? (
+				<SchedulePreview
+					application={tenantApplication}
+					clientId={clientId}
+					propertyId={propertyId}
+				/>
+			) : null}
+
 			{/*
-			 * Sections land in Tasks 6-10:
-			 *   1  AgreedRent      2  Schedule (preview | ledger)
+			 * Sections still to land:
+			 *   2  Ledger (live/locked/readonly)
 			 *   3  CollectionPlan  4  Collect
 			 */}
 		</div>

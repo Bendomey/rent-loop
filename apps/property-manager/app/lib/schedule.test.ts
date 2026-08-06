@@ -26,8 +26,9 @@ describe('buildSchedule', () => {
 	const base = {
 		rent: 100000,
 		moveIn: '2026-09-01T00:00:00Z',
-		periods: 12,
-		frequency: 'MONTHLY' as const,
+		stayDuration: 12,
+		stayFrequency: 'MONTHLY' as const,
+		paymentFrequency: 'MONTHLY' as const,
 	}
 
 	test('produces one period per month of the term', () => {
@@ -54,14 +55,41 @@ describe('buildSchedule', () => {
 	})
 
 	test('quarterly terms step three months and use a 14 day grace', () => {
-		const s = buildSchedule({ ...base, periods: 4, frequency: 'QUARTERLY' })
+		const s = buildSchedule({
+			...base,
+			paymentFrequency: 'QUARTERLY',
+			stayFrequency: 'QUARTERLY',
+			stayDuration: 4,
+		})
 		expect(s).toHaveLength(4)
 		expect(at(s, 1).periodStart.toISOString()).toBe('2026-12-01T00:00:00.000Z')
 		expect(at(s, 0).dueDate.toISOString()).toBe('2026-09-15T00:00:00.000Z')
 	})
 
 	test('a zero or negative term produces nothing', () => {
-		expect(buildSchedule({ ...base, periods: 0 })).toHaveLength(0)
+		expect(buildSchedule({ ...base, stayDuration: 0 })).toHaveLength(0)
+	})
+
+	// The term and the billing rhythm are independent. A twelve-month stay
+	// billed quarterly is FOUR charges — deriving the count from stayDuration
+	// would show twelve quarterly periods, three years of rent, and treble the
+	// total the landlord is agreeing to.
+	test('a monthly term billed quarterly produces one charge per quarter', () => {
+		const s = buildSchedule({ ...base, paymentFrequency: 'QUARTERLY' })
+		expect(s).toHaveLength(4)
+		expect(at(s, 0).periodStart.toISOString().slice(0, 10)).toBe('2026-09-01')
+		expect(at(s, 3).periodStart.toISOString().slice(0, 10)).toBe('2027-06-01')
+		// 14 day grace follows the payment frequency, not the term's.
+		expect(at(s, 0).dueDate.toISOString().slice(0, 10)).toBe('2026-09-15')
+	})
+
+	test('a one-year term billed monthly produces twelve charges', () => {
+		const s = buildSchedule({
+			...base,
+			stayDuration: 1,
+			stayFrequency: 'ANNUALLY',
+		})
+		expect(s).toHaveLength(12)
 	})
 
 	// A month-end move-in overflows rather than clamping, because Go's
@@ -70,13 +98,22 @@ describe('buildSchedule', () => {
 	// clamp — it would put the preview out of step with the charges actually
 	// created.
 	test('a month-end move-in overflows exactly as the backend does', () => {
-		const s = buildSchedule({ ...base, moveIn: '2026-01-31T00:00:00Z', periods: 3 })
+		const s = buildSchedule({
+			...base,
+			moveIn: '2026-01-31T00:00:00Z',
+			stayDuration: 3,
+		})
 		expect(at(s, 0).periodStart.toISOString().slice(0, 10)).toBe('2026-01-31')
 		expect(at(s, 1).periodStart.toISOString().slice(0, 10)).toBe('2026-03-03')
 	})
 
 	test('an annual term labels by year rather than month', () => {
-		const s = buildSchedule({ ...base, periods: 2, frequency: 'ANNUALLY' })
+		const s = buildSchedule({
+			...base,
+			stayDuration: 2,
+			stayFrequency: 'ANNUALLY',
+			paymentFrequency: 'ANNUALLY',
+		})
 		expect(at(s, 0).name).toBe('Rent – 2026')
 		expect(at(s, 0).dueDate.toISOString().slice(0, 10)).toBe('2026-10-01')
 	})

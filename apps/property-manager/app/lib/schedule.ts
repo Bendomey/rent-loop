@@ -16,8 +16,12 @@ export interface SchedulePeriod {
 export interface ScheduleInput {
 	rent: number
 	moveIn: string | Date
-	periods: number
-	frequency: PaymentFrequency
+	/** How long the tenant is staying, in stayFrequency units. */
+	stayDuration: number
+	/** The unit the term is expressed in — not necessarily how rent is billed. */
+	stayFrequency: PaymentFrequency
+	/** How often rent falls due. May differ from stayFrequency. */
+	paymentFrequency: PaymentFrequency
 }
 
 // Payment grace AFTER the period starts. Mirrors lib.RentInvoiceGracePeriod.
@@ -60,30 +64,51 @@ export const periodLabel = (date: Date, frequency: PaymentFrequency) => {
 	return `Rent – ${month} ${date.getUTCFullYear()}`
 }
 
+/** Mirrors termEndDate in materialise.go. */
+export const termEndDate = (
+	moveIn: Date,
+	stayDuration: number,
+	stayFrequency: PaymentFrequency,
+) => advance(moveIn, stayFrequency, stayDuration)
+
+// The backend caps materialisation to guard against a sentinel end date.
+const MAX_PERIODS = 120
+
 /**
  * The rent schedule charges:prepare will create, computed client-side so the
- * landlord sees what they are agreeing to before it exists. Mirrors
- * internal/services/financials/materialise.go — if that changes, this must.
+ * landlord sees what they are agreeing to before it exists.
+ *
+ * Mirrors internal/services/financials/materialise.go — if that changes, this
+ * must. Note the two frequencies are independent: the TERM is stayDuration in
+ * stayFrequency units, and rent falls due every paymentFrequency within it. A
+ * twelve-month stay billed quarterly is four charges, not twelve — deriving the
+ * count from stayDuration alone would treble the total shown to the landlord.
  */
 export const buildSchedule = ({
 	rent,
 	moveIn,
-	periods,
-	frequency,
+	stayDuration,
+	stayFrequency,
+	paymentFrequency,
 }: ScheduleInput): SchedulePeriod[] => {
-	if (periods <= 0) return []
-	const start = new Date(moveIn)
-	const grace = GRACE_DAYS[frequency]
+	if (stayDuration <= 0) return []
 
-	return Array.from({ length: periods }, (_, n) => {
-		const periodStart = advance(start, frequency, n)
+	const start = new Date(moveIn)
+	const end = termEndDate(start, stayDuration, stayFrequency)
+	const grace = GRACE_DAYS[paymentFrequency]
+
+	const periods: SchedulePeriod[] = []
+	for (let n = 0; n < MAX_PERIODS; n += 1) {
+		const periodStart = advance(start, paymentFrequency, n)
+		if (periodStart >= end) break
 		const dueDate = new Date(periodStart.getTime())
 		dueDate.setUTCDate(dueDate.getUTCDate() + grace)
-		return {
-			name: periodLabel(periodStart, frequency),
+		periods.push({
+			name: periodLabel(periodStart, paymentFrequency),
 			amount: rent,
 			periodStart,
 			dueDate,
-		}
-	})
+		})
+	}
+	return periods
 }
