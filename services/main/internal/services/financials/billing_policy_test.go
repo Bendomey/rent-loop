@@ -15,14 +15,27 @@ func TestDeriveRentBillingPolicyTwelveMonthsUpfront(t *testing.T) {
 	}
 }
 
-// No initial deposit means ordinary period-by-period billing.
-func TestDeriveRentBillingPolicyNoInitialDeposit(t *testing.T) {
+// No initial deposit means the landlord has said nothing about collection, so
+// nothing is collected automatically. The account is billable the moment
+// charges exist — and the sweep does not care whether the application is
+// approved — so anything but MANUAL would start invoicing on a cadence nobody
+// picked.
+func TestDeriveRentBillingPolicyNoInitialDepositWaits(t *testing.T) {
 	got := DeriveRentBillingPolicy(0, 100_000)
-	if got.Cadence != CadenceEveryPeriod {
-		t.Errorf("got cadence %q, want %q", got.Cadence, CadenceEveryPeriod)
+	if got.Cadence != CadenceManual {
+		t.Errorf("got cadence %q, want %q", got.Cadence, CadenceManual)
 	}
 	if got.Interval != 1 {
 		t.Errorf("got interval %d, want 1", got.Interval)
+	}
+}
+
+// A deposit covering one period or less IS a stated intent — collect period by
+// period — so it keeps ordinary billing rather than waiting.
+func TestDeriveRentBillingPolicyOnePeriodDepositBillsPeriodically(t *testing.T) {
+	got := DeriveRentBillingPolicy(100_000, 100_000)
+	if got.Cadence != CadenceEveryPeriod {
+		t.Errorf("got cadence %q, want %q", got.Cadence, CadenceEveryPeriod)
 	}
 }
 
@@ -51,7 +64,7 @@ func TestDeriveRentBillingPolicyNonMultipleKeepsWholePeriods(t *testing.T) {
 // Guard against divide-by-zero on a free unit.
 func TestDeriveRentBillingPolicyZeroRentFee(t *testing.T) {
 	got := DeriveRentBillingPolicy(1_200_000, 0)
-	if got.Cadence != CadenceEveryPeriod || got.Interval != 1 {
-		t.Errorf("got %+v, want EVERY_PERIOD/1", got)
+	if got.Cadence != CadenceManual || got.Interval != 1 {
+		t.Errorf("got %+v, want MANUAL/1", got)
 	}
 }
