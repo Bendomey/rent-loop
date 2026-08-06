@@ -129,7 +129,6 @@ func ServiceAutoMigration(db *gorm.DB) error {
 		jobs.AddPropertyArchiveFields(),
 		jobs.SplitSessionsFromRefreshTokens(),
 		jobs.AddMaintenanceRequestAssets(),
-		jobs.AddUserProfilePhotoUrl(),
 	})
 	if err := m.Migrate(); err != nil {
 		return fmt.Errorf("[Migration.Migrate]: %v", err)

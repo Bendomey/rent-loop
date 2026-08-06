@@ -7,14 +7,13 @@ import {
 	SuccessBadge,
 	comingSoon,
 } from '~/components/blocks/settings-ui'
-import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
+import { Avatar, AvatarFallback } from '~/components/ui/avatar'
 import { Button } from '~/components/ui/button'
 
 interface Props {
 	name: string
 	email: string
 	initials: string
-	photoUrl?: Maybe<string>
 	onChangeName: () => void
 	onUploadPhoto: () => void
 	onRemovePhoto: () => void
@@ -24,7 +23,6 @@ export function ProfileTab({
 	name,
 	email,
 	initials,
-	photoUrl,
 	onChangeName,
 	onUploadPhoto,
 	onRemovePhoto,
@@ -35,7 +33,6 @@ export function ProfileTab({
 				<div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center">
 					<div className="relative shrink-0">
 						<Avatar className="size-23">
-							{photoUrl ? <AvatarImage src={photoUrl} alt={name} /> : null}
 							<AvatarFallback className="bg-primary font-serif text-3xl text-white">
 								{initials}
 							</AvatarFallback>
