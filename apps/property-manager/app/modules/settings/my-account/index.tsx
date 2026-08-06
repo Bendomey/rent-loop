@@ -30,8 +30,6 @@ export function MyAccountSettingsModule() {
 	const [openUpdateClientProfileModal, setOpenUpdateClientProfileModal] =
 		useState(false)
 	const [openUpdatePasswordModal, setOpenUpdatePasswordModal] = useState(false)
-
-	// New UI — nothing behind these yet
 	const [openUploadPhotoModal, setOpenUploadPhotoModal] = useState(false)
 	const [openRemovePhotoModal, setOpenRemovePhotoModal] = useState(false)
 	const [openSignOutAllModal, setOpenSignOutAllModal] = useState(false)
@@ -45,6 +43,7 @@ export function MyAccountSettingsModule() {
 	const initials = getNameInitials(name)
 	const activeTab = TABS.find((t) => t.value === tab)
 
+	console.log('currentUser?.profile_photo_url', currentUser)
 	return (
 		<div className="mx-auto max-w-4xl">
 			<header>
@@ -73,6 +72,7 @@ export function MyAccountSettingsModule() {
 						name={name}
 						email={email}
 						initials={initials}
+						photoUrl={currentUser?.profile_photo_url}
 						onChangeName={() => setOpenUpdateClientProfileModal(true)}
 						onUploadPhoto={() => setOpenUploadPhotoModal(true)}
 						onRemovePhoto={() => setOpenRemovePhotoModal(true)}
@@ -96,7 +96,6 @@ export function MyAccountSettingsModule() {
 				</TabsContent>
 			</Tabs>
 
-			{/* Existing, API-backed flows */}
 			<UpdateClientProfileModal
 				opened={openUpdateClientProfileModal}
 				setOpened={setOpenUpdateClientProfileModal}
@@ -107,10 +106,10 @@ export function MyAccountSettingsModule() {
 				setOpened={setOpenUpdatePasswordModal}
 			/>
 
-			{/* Photo actions remain UI-only; sessions below are live */}
 			<UploadPhotoModal
 				opened={openUploadPhotoModal}
 				setOpened={setOpenUploadPhotoModal}
+				currentPhotoUrl={currentUser?.profile_photo_url}
 			/>
 			<RemovePhotoModal
 				opened={openRemovePhotoModal}
