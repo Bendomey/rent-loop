@@ -142,7 +142,6 @@ func (s *tenantApplicationService) CreateTenantApplication(
 	tenantApplication := models.TenantApplication{
 		PropertyId:                     &unit.PropertyID,
 		DesiredUnitId:                  &input.DesiredUnitId,
-		RentFee:                        &unit.RentFee,
 		RentFeeCurrency:                &unit.RentFeeCurrency,
 		StayDurationFrequency:          &unit.PaymentFrequency,
 		PaymentFrequency:               &unit.PaymentFrequency,
@@ -404,7 +403,6 @@ func (s *tenantApplicationService) BulkCreateTenantApplications(
 				return nil, pkg.BadRequestError("UnitNoLongerAvailable", nil)
 			}
 
-			rentFee = &unit.RentFee
 			rentFeeCurrency = &unit.RentFeeCurrency
 			stayDurationFrequency = &unit.PaymentFrequency
 			paymentFrequency = &unit.PaymentFrequency
