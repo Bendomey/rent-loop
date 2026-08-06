@@ -43,7 +43,6 @@ export function MyAccountSettingsModule() {
 	const initials = getNameInitials(name)
 	const activeTab = TABS.find((t) => t.value === tab)
 
-	console.log('currentUser?.profile_photo_url', currentUser)
 	return (
 		<div className="mx-auto max-w-4xl">
 			<header>
