@@ -132,9 +132,32 @@ func TestSelectIssuableIncludesOverdue(t *testing.T) {
 
 // Only rent participates in cadence-driven issuance. One-off charges are
 // composed ad-hoc by the landlord and must not be swept up silently.
-func TestSelectIssuableIgnoresNonRentCategories(t *testing.T) {
+// A due one-off is billed alongside the rent the cadence selects. Without this
+// a tenant who paid nothing before approval would never be asked for the
+// deposit at all — nothing else in the system bills it.
+func TestSelectIssuableIncludesDueOneOffs(t *testing.T) {
 	charges := []ChargeView{
 		{ID: "dep", Category: CategorySecurityDeposit, Amount: 100_000, DueDate: mustDate(t, "2027-01-01")},
+		{ID: "jan", Category: CategoryRent, Amount: 100_000, DueDate: mustDate(t, "2027-01-01")},
+		{ID: "feb", Category: CategoryRent, Amount: 100_000, DueDate: mustDate(t, "2027-02-01")},
+	}
+	now := mustDate(t, "2026-12-28")
+
+	got := SelectIssuableCharges(charges, now, RentBillingPolicy{Cadence: CadenceEveryPeriod, Interval: 1}, 5)
+
+	if len(got) != 2 {
+		t.Fatalf("got %d charges, want the deposit plus one rent period", len(got))
+	}
+	ids := map[string]bool{got[0].ID: true, got[1].ID: true}
+	if !ids["dep"] || !ids["jan"] {
+		t.Errorf("got %v, want dep and jan", ids)
+	}
+}
+
+// A one-off that is not due yet waits, exactly as rent does.
+func TestSelectIssuableSkipsFutureOneOffs(t *testing.T) {
+	charges := []ChargeView{
+		{ID: "vat", Category: CategoryVAT, Amount: 20_000, DueDate: mustDate(t, "2027-06-01")},
 		{ID: "jan", Category: CategoryRent, Amount: 100_000, DueDate: mustDate(t, "2027-01-01")},
 	}
 	now := mustDate(t, "2026-12-28")
@@ -143,5 +166,47 @@ func TestSelectIssuableIgnoresNonRentCategories(t *testing.T) {
 
 	if len(got) != 1 || got[0].ID != "jan" {
 		t.Fatalf("got %+v, want only the rent charge", got)
+	}
+}
+
+// The end-of-term case. Every rent period is billed, then a damage charge is
+// raised. There is no rent left to trigger the sweep, so without a one-off
+// trigger the charge would never be billed by anything.
+func TestSelectIssuableOneOffTriggersWithoutRent(t *testing.T) {
+	charges := []ChargeView{
+		{ID: "dmg", Category: CategoryDamageCharge, Amount: 40_000, DueDate: mustDate(t, "2027-01-01")},
+	}
+	now := mustDate(t, "2026-12-28")
+
+	got := SelectIssuableCharges(charges, now, RentBillingPolicy{Cadence: CadenceEveryPeriod, Interval: 1}, 5)
+
+	if len(got) != 1 || got[0].ID != "dmg" {
+		t.Fatalf("got %+v, want the damage charge to issue on its own", got)
+	}
+}
+
+// The interval multiplies rent periods, never the one-offs riding along.
+func TestSelectIssuableOneOffsNotMultipliedByInterval(t *testing.T) {
+	charges := []ChargeView{
+		{ID: "dep", Category: CategorySecurityDeposit, Amount: 100_000, DueDate: mustDate(t, "2027-01-01")},
+	}
+	charges = append(charges, rentMonths(t, []string{
+		"2027-01-01", "2027-02-01", "2027-03-01", "2027-04-01",
+	})...)
+	now := mustDate(t, "2026-12-28")
+
+	got := SelectIssuableCharges(charges, now, RentBillingPolicy{Cadence: CadenceEveryNPeriods, Interval: 4}, 5)
+
+	if len(got) != 5 {
+		t.Fatalf("got %d charges, want four rent periods plus one deposit", len(got))
+	}
+	deposits := 0
+	for _, c := range got {
+		if c.Category == CategorySecurityDeposit {
+			deposits++
+		}
+	}
+	if deposits != 1 {
+		t.Errorf("got %d deposit lines, want exactly 1", deposits)
 	}
 }

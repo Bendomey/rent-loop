@@ -96,11 +96,12 @@ type accountSummaryResponse struct {
 //	@Tags			FinancialAccounts
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			property_id	path		string								true	"Property ID"
-//	@Param			account_id	path		string								true	"Financial account ID"
-//	@Success		200			{object}	object{data=accountSummaryResponse}	"Financial account summary"
-//	@Failure		401			{object}	string								"Invalid or absent authentication token"
-//	@Failure		404			{object}	lib.HTTPError						"Financial account not found"
+//	@Param			property_id		path		string								true	"Property ID"
+//	@Param			account_id		path		string								true	"Financial account ID"
+//	@Param			include_voided	query		bool								false	"Include voided charges in the list. Totals are unaffected."
+//	@Success		200				{object}	object{data=accountSummaryResponse}	"Financial account summary"
+//	@Failure		401				{object}	string								"Invalid or absent authentication token"
+//	@Failure		404				{object}	lib.HTTPError						"Financial account not found"
 //	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/financial-accounts/{account_id} [get]
 func (h *FinancialAccountHandler) GetAccount(w http.ResponseWriter, r *http.Request) {
 	if _, ok := lib.ClientUserFromContext(r.Context()); !ok {
@@ -130,11 +131,12 @@ func (h *FinancialAccountHandler) GetAccount(w http.ResponseWriter, r *http.Requ
 //	@Tags			FinancialAccounts
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			property_id	path		string												true	"Property ID"
-//	@Param			account_id	path		string												true	"Financial account ID"
-//	@Success		200			{object}	object{data=[]transformations.OutputChargeInstance}	"Charges"
-//	@Failure		401			{object}	string												"Invalid or absent authentication token"
-//	@Failure		404			{object}	lib.HTTPError										"Financial account not found"
+//	@Param			property_id		path		string												true	"Property ID"
+//	@Param			account_id		path		string												true	"Financial account ID"
+//	@Param			include_voided	query		bool												false	"Include voided charges in the list. Totals are unaffected."
+//	@Success		200				{object}	object{data=[]transformations.OutputChargeInstance}	"Charges"
+//	@Failure		401				{object}	string												"Invalid or absent authentication token"
+//	@Failure		404				{object}	lib.HTTPError										"Financial account not found"
 //	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/financial-accounts/{account_id}/charges [get]
 func (h *FinancialAccountHandler) ListCharges(w http.ResponseWriter, r *http.Request) {
 	if _, ok := lib.ClientUserFromContext(r.Context()); !ok {
@@ -413,11 +415,12 @@ func (h *FinancialAccountHandler) ComposeInvoice(w http.ResponseWriter, r *http.
 //	@Tags			FinancialAccounts
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			lease_id	path		string								true	"Lease ID"
-//	@Success		200			{object}	object{data=accountSummaryResponse}	"Financial account summary"
-//	@Failure		401			{object}	string								"Invalid or absent authentication token"
-//	@Failure		403			{object}	lib.HTTPError						"Lease does not belong to this tenant"
-//	@Failure		404			{object}	lib.HTTPError						"Financial account not found"
+//	@Param			lease_id		path		string								true	"Lease ID"
+//	@Param			include_voided	query		bool								false	"Include voided charges in the list. Totals are unaffected."
+//	@Success		200				{object}	object{data=accountSummaryResponse}	"Financial account summary"
+//	@Failure		401				{object}	string								"Invalid or absent authentication token"
+//	@Failure		403				{object}	lib.HTTPError						"Lease does not belong to this tenant"
+//	@Failure		404				{object}	lib.HTTPError						"Financial account not found"
 //	@Router			/api/v1/leases/{lease_id}/financial-account [get]
 func (h *FinancialAccountHandler) TenantGetAccount(w http.ResponseWriter, r *http.Request) {
 	summary, err := h.tenantAccountSummary(r)
@@ -442,11 +445,12 @@ func (h *FinancialAccountHandler) TenantGetAccount(w http.ResponseWriter, r *htt
 //	@Tags			FinancialAccounts
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			lease_id	path		string												true	"Lease ID"
-//	@Success		200			{object}	object{data=[]transformations.OutputChargeInstance}	"Charges"
-//	@Failure		401			{object}	string												"Invalid or absent authentication token"
-//	@Failure		403			{object}	lib.HTTPError										"Lease does not belong to this tenant"
-//	@Failure		404			{object}	lib.HTTPError										"Financial account not found"
+//	@Param			lease_id		path		string												true	"Lease ID"
+//	@Param			include_voided	query		bool												false	"Include voided charges in the list. Totals are unaffected."
+//	@Success		200				{object}	object{data=[]transformations.OutputChargeInstance}	"Charges"
+//	@Failure		401				{object}	string												"Invalid or absent authentication token"
+//	@Failure		403				{object}	lib.HTTPError										"Lease does not belong to this tenant"
+//	@Failure		404				{object}	lib.HTTPError										"Financial account not found"
 //	@Router			/api/v1/leases/{lease_id}/financial-account/charges [get]
 func (h *FinancialAccountHandler) TenantListCharges(w http.ResponseWriter, r *http.Request) {
 	summary, err := h.tenantAccountSummary(r)
@@ -500,11 +504,20 @@ func (h *FinancialAccountHandler) tenantAccountSummary(
 // summaryToRest builds the response from the persisted instances rather than
 // from AccountSummary.Charges: ChargeView carries only what the arithmetic
 // needs, so rendering from it would drop Name, Currency and the derived status.
+//
+// ?include_voided=true adds voided charges to the list. The totals are
+// deliberately NOT affected: they come from AccountSummary, which is computed
+// over live charges only, so a voided charge is visible without ever counting
+// towards what is owed.
 func (h *FinancialAccountHandler) summaryToRest(
 	r *http.Request,
 	summary *financials.AccountSummary,
 ) (accountSummaryResponse, error) {
-	instances, err := h.financials.Charges.ListInstances(r.Context(), summary.Account.ID.String())
+	includeVoided := r.URL.Query().Get("include_voided") == "true"
+
+	instances, err := h.financials.Charges.ListInstances(
+		r.Context(), summary.Account.ID.String(), includeVoided,
+	)
 	if err != nil {
 		return accountSummaryResponse{}, err
 	}

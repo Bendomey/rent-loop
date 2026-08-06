@@ -2,6 +2,7 @@ package queue
 
 import (
 	"context"
+	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/services/financials"
 	"github.com/hibiken/asynq"
@@ -30,7 +31,7 @@ func FinancialAccountInvoicingHandlers(svc financials.IssuanceService) HandlerRe
 
 func handleInvoiceIssuance(svc financials.IssuanceService) asynq.HandlerFunc {
 	return func(ctx context.Context, t *asynq.Task) error {
-		issued, failed, err := svc.IssueDueInvoices(ctx)
+		issued, failed, err := svc.IssueDueInvoices(ctx, time.Now())
 		if err != nil {
 			log.WithError(err).Error("[Cron] invoice issuance sweep failed")
 			return err

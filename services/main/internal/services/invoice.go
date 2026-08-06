@@ -405,18 +405,31 @@ func (s *invoiceService) UpdateInvoice(ctx context.Context, input UpdateInvoiceI
 		})
 	}
 
-	// if the invoice is already issued, we can't continue
+	// An issued invoice is a document the tenant has already been shown, so
+	// what it asks for is fixed. The due date is the exception: moving a
+	// deadline — granting an extension, dating a bill that was composed without
+	// one — changes no amount and no allocation, and the landlord owns that
+	// decision.
 	if invoice.Status == "ISSUED" {
-		return nil, pkg.BadRequestError(
-			"Cannot update an invoice that has already been issued",
-			&pkg.RentLoopErrorParams{
-				Metadata: map[string]string{
-					"function": "UpdateInvoice",
-					"action":   "checking invoice status",
-					"status":   invoice.Status,
+		onlyDueDate := input.DueDate != nil &&
+			input.Status == nil &&
+			input.Currency == nil &&
+			input.Taxes == nil &&
+			input.IssuedAt == nil &&
+			input.AllowedPaymentRails == nil
+
+		if !onlyDueDate {
+			return nil, pkg.BadRequestError(
+				"Cannot update an invoice that has already been issued",
+				&pkg.RentLoopErrorParams{
+					Metadata: map[string]string{
+						"function": "UpdateInvoice",
+						"action":   "checking invoice status",
+						"status":   invoice.Status,
+					},
 				},
-			},
-		)
+			)
+		}
 	}
 
 	issuingNow := input.Status != nil && *input.Status == "ISSUED" && invoice.Status == "DRAFT"

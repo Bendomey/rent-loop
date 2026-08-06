@@ -31,36 +31,53 @@ func SelectIssuableCharges(
 		return nil
 	}
 
-	issuable := make([]ChargeView, 0, len(charges))
+	cutoff := now.AddDate(0, 0, int(autoIssueDaysBefore))
+
+	// Rent recurs, so the cadence decides how many periods to take. One-offs —
+	// the deposit, agency fee, VAT, a damage recharge — do not recur, so they
+	// are taken once, when due, and never multiplied by an interval.
+	rent := make([]ChargeView, 0, len(charges))
+	oneOffs := make([]ChargeView, 0, len(charges))
 	for _, c := range charges {
-		if c.Category != CategoryRent {
-			continue
-		}
 		if c.UnsettledAmount() == 0 || c.UninvoicedAmount() == 0 {
 			continue
 		}
-		issuable = append(issuable, c)
+		if c.Category == CategoryRent {
+			rent = append(rent, c)
+			continue
+		}
+		// Same due-date test rent gets. Anything already past due keeps
+		// qualifying, so a one-off can never be stranded.
+		if !c.DueDate.After(cutoff) {
+			oneOffs = append(oneOffs, c)
+		}
 	}
 
-	sort.SliceStable(issuable, func(i, j int) bool {
-		return issuable[i].DueDate.Before(issuable[j].DueDate)
-	})
+	byDueDate := func(s []ChargeView) {
+		sort.SliceStable(s, func(i, j int) bool { return s[i].DueDate.Before(s[j].DueDate) })
+	}
+	byDueDate(rent)
+	byDueDate(oneOffs)
 
-	// 1. Trigger.
-	cutoff := now.AddDate(0, 0, int(autoIssueDaysBefore))
-	triggered := false
-	for _, c := range issuable {
-		if !c.DueDate.After(cutoff) {
-			triggered = true
-			break
+	// 1. Trigger — a due one-off is reason enough to issue on its own. Without
+	// that, a charge raised after the final rent period has no invoice to ride
+	// along on and is never billed.
+	triggered := len(oneOffs) > 0
+	if !triggered {
+		for _, c := range rent {
+			if !c.DueDate.After(cutoff) {
+				triggered = true
+				break
+			}
 		}
 	}
 	if !triggered {
 		return nil
 	}
 
-	// 2. Quantity.
-	take := len(issuable)
+	// 2. Quantity — drawn from ALL issuable rent, not just what is inside the
+	// window, so EVERY_N_PERIODS/12 bills twelve lines rather than one.
+	take := len(rent)
 	switch policy.Cadence {
 	case CadenceEveryPeriod:
 		take = 1
@@ -71,6 +88,9 @@ func SelectIssuableCharges(
 	case CadenceUpfront:
 		// take everything
 	}
+	if take > len(rent) {
+		take = len(rent)
+	}
 
-	return issuable[:take]
+	return append(oneOffs, rent[:take]...)
 }

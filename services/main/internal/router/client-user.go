@@ -69,6 +69,13 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 				r.Post("/{notification_id}/read", handlers.NotificationHandler.PMMarkNotificationRead)
 			})
 
+			// Dev-only. Never registered in production — the route simply does
+			// not exist there, which is a stronger guarantee than a runtime
+			// check inside the handler.
+			if appCtx.Config.Env != "production" {
+				r.Post("/v1/dev/jobs/invoice-issuance", handlers.DevHandler.RunInvoiceIssuance)
+			}
+
 			// client-scoped routes — require valid client membership
 			r.Route("/v1/admin/clients/{client_id}", func(r chi.Router) {
 				r.Use(middlewares.ValidateClientMembershipMiddleware(appCtx))

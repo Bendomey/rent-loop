@@ -90,8 +90,22 @@ type InvoiceLineItem struct {
 	ChargeInstanceID *string `gorm:"index;"`
 	ChargeInstance   *ChargeInstance
 
-	Label    string `gorm:"not null;"` // "January Rent", "Security Deposit"
-	Category string `gorm:"not null;"` // 'RENT', 'SECURITY_DEPOSIT', 'INITIAL_DEPOSIT', 'MAINTENANCE_FEE', 'SAAS_FEE', 'EXPENSE', 'BOOKING_FEE', 'OTHER', DEPOSIT_REFUND, RENT_REFUND, EARLY_TERMINATION_FEE DAMAGE_CHARGE
+	Label string `gorm:"not null;"` // "January Rent", "Security Deposit"
+
+	// Category mirrors ChargeInstance.Category for account-backed lines, plus
+	// the three categories that belong to invoices with no financial account
+	// behind them:
+	//
+	//	tenant charges  RENT, SECURITY_DEPOSIT, AGENCY_FEE, VAT, UTILITY,
+	//	                DAMAGE_CHARGE, EARLY_TERMINATION_FEE, OTHER
+	//	non-account     MAINTENANCE_FEE, SAAS_FEE, BOOKING_FEE
+	//
+	// Historical rows may still carry INITIAL_DEPOSIT, EXPENSE, DEPOSIT_REFUND
+	// or RENT_REFUND. None can be written any more: the initial deposit is a
+	// billing interval rather than a charge, expenses no longer bill tenants,
+	// and refunds are negative amounts on the original category rather than
+	// categories of their own.
+	Category string `gorm:"not null;"`
 
 	Quantity    int64  `gorm:"not null;"`
 	UnitAmount  int64  `gorm:"not null;"`

@@ -81,7 +81,14 @@ type ChargeService interface {
 	// ListInstances returns the persisted models. The transformation layer
 	// needs Name, Currency and VoidedAt, which ChargeView deliberately does
 	// not carry — it exists for arithmetic, not for presentation.
-	ListInstances(ctx context.Context, financialAccountID string) ([]models.ChargeInstance, error)
+	// includeVoided brings back charges that have been voided. They are
+	// excluded by default because they are not obligations; a caller asks for
+	// them to review what was cancelled and why.
+	ListInstances(
+		ctx context.Context,
+		financialAccountID string,
+		includeVoided bool,
+	) ([]models.ChargeInstance, error)
 }
 
 type chargeService struct {
@@ -95,9 +102,11 @@ func NewChargeService(repo repository.ChargeRepository) ChargeService {
 func (s *chargeService) ListInstances(
 	ctx context.Context,
 	financialAccountID string,
+	includeVoided bool,
 ) ([]models.ChargeInstance, error) {
 	instances, err := s.repo.ListInstances(ctx, repository.ListChargeInstancesFilter{
 		FinancialAccountID: &financialAccountID,
+		IncludeVoided:      includeVoided,
 	})
 	if err != nil {
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{

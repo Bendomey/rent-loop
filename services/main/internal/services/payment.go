@@ -202,11 +202,8 @@ func (s *paymentService) CreateOfflinePayment(
 		})
 	}
 
-	// Account-backed invoices accept over-payment: a round-number MoMo
-	// transfer becomes account credit and is consumed by the next invoice,
-	// rather than being refused at the API for being real money.
-	if invoice.FinancialAccountID == nil && input.Amount > remainingBalance {
-		return nil, pkg.BadRequestError("payment amount exceeds invoice balance", &pkg.RentLoopErrorParams{
+	if input.Amount > remainingBalance {
+		return nil, pkg.BadRequestError("PaymentExceedsInvoiceBalance", &pkg.RentLoopErrorParams{
 			Metadata: map[string]string{
 				"invoice_id":        input.InvoiceID,
 				"invoice_total":     fmt.Sprintf("%d", invoice.TotalAmount),
@@ -373,7 +370,6 @@ func (s *paymentService) VerifyOfflinePayment(
 		"Invoice.LineItems",
 		"Invoice.PayerLease.Tenant.TenantAccount",
 		"Invoice.PayerLease.Unit",
-		"Invoice.ContextLease.Unit",
 	}
 	payment, paymentErr := s.repo.GetByIDWithQuery(ctx, repository.GetPaymentQuery{
 		PaymentID: input.PaymentID,

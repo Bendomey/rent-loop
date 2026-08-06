@@ -844,8 +844,43 @@ func (s *tenantApplicationService) UpdateTenantApplication(
 		tenantApplication.LeaseAgreementDocumentStatus = input.LeaseAgreementDocumentStatus.Ptr()
 	}
 
-	updateTenantApplicationErr := s.repo.Update(ctx, *tenantApplication)
+	// The terms and the schedule derived from them move together or not at all.
+	//
+	// RederiveRent rejects with ChargesAlreadyBilled once a charge has been
+	// invoiced or settled. Persisting the application first and re-deriving
+	// afterwards would leave the rejected case with new terms on the
+	// application and old amounts on the charges — the caller sees a 400 and
+	// reasonably assumes nothing changed. That desync is precisely what the
+	// guard exists to prevent, so both writes share one transaction.
+	outerTx, hasOuterTx := lib.TransactionFromContext(ctx)
+	hasOuterTx = hasOuterTx && outerTx != nil
+
+	var transaction *gorm.DB
+	if hasOuterTx {
+		transaction = outerTx
+	} else {
+		transaction = s.appCtx.DB.Begin()
+		if transaction.Error != nil {
+			return nil, pkg.InternalServerError("failed to begin transaction", &pkg.RentLoopErrorParams{
+				Err: transaction.Error,
+				Metadata: map[string]string{
+					"function": "UpdateTenantApplication",
+					"action":   "beginning transaction",
+				},
+			})
+		}
+	}
+	transCtx := lib.WithTransaction(ctx, transaction)
+
+	rollback := func() {
+		if !hasOuterTx {
+			transaction.Rollback()
+		}
+	}
+
+	updateTenantApplicationErr := s.repo.Update(transCtx, *tenantApplication)
 	if updateTenantApplicationErr != nil {
+		rollback()
 		return nil, pkg.InternalServerError(updateTenantApplicationErr.Error(), &pkg.RentLoopErrorParams{
 			Err: updateTenantApplicationErr,
 			Metadata: map[string]string{
@@ -855,7 +890,67 @@ func (s *tenantApplicationService) UpdateTenantApplication(
 		})
 	}
 
+	if rentTermsChanged(input) {
+		if rederiveErr := s.rederiveRentCharges(transCtx, tenantApplication); rederiveErr != nil {
+			rollback()
+			return nil, rederiveErr
+		}
+	}
+
+	if !hasOuterTx {
+		if commitErr := transaction.Commit().Error; commitErr != nil {
+			return nil, pkg.InternalServerError("failed to commit transaction", &pkg.RentLoopErrorParams{
+				Err: commitErr,
+				Metadata: map[string]string{
+					"function": "UpdateTenantApplication",
+					"action":   "committing transaction",
+				},
+			})
+		}
+	}
+
 	return tenantApplication, nil
+}
+
+// rentTermsChanged reports whether this update touched anything the rent
+// schedule is derived from.
+func rentTermsChanged(input UpdateTenantApplicationInput) bool {
+	return input.RentFee != nil ||
+		input.RentFeeCurrency != nil ||
+		input.DesiredMoveInDate.IsSet ||
+		input.StayDuration.IsSet ||
+		input.StayDurationFrequency.IsSet ||
+		input.PaymentFrequency.IsSet
+}
+
+// rederiveRentCharges regenerates the rent schedule for an application whose
+// charges have already been prepared. An application with no financial account
+// yet has nothing to re-derive — charges:prepare will read the new terms when
+// it runs.
+func (s *tenantApplicationService) rederiveRentCharges(
+	ctx context.Context,
+	application *models.TenantApplication,
+) error {
+	account, accountErr := s.financials.Accounts.GetByApplication(ctx, application.ID.String())
+	if accountErr != nil || account == nil {
+		return nil
+	}
+
+	if application.RentFee == nil || application.RentFeeCurrency == nil ||
+		application.PaymentFrequency == nil || application.DesiredMoveInDate == nil ||
+		application.StayDuration == nil || application.StayDurationFrequency == nil {
+		return nil
+	}
+
+	return s.financials.Charges.RederiveRent(ctx, financials.RederiveRentInput{
+		FinancialAccountID:    account.ID.String(),
+		RentFee:               *application.RentFee,
+		Currency:              *application.RentFeeCurrency,
+		PaymentFrequency:      *application.PaymentFrequency,
+		MoveInDate:            *application.DesiredMoveInDate,
+		StayDuration:          *application.StayDuration,
+		StayDurationFrequency: *application.StayDurationFrequency,
+	})
 }
 
 func (s *tenantApplicationService) DeleteTenantApplication(
