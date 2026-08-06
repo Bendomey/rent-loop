@@ -23202,6 +23202,10 @@ const docTemplate = `{
                 "phone_number": {
                     "type": "string",
                     "example": "+233281234569"
+                },
+                "profile_photo_url": {
+                    "type": "string",
+                    "example": "https://example.com/photo.jpg"
                 }
             }
         },
@@ -27453,6 +27457,10 @@ const docTemplate = `{
                 "phone_number": {
                     "type": "string",
                     "example": "+233281234569"
+                },
+                "profile_photo_url": {
+                    "type": "string",
+                    "example": "https://example.com/photo.jpg"
                 },
                 "updated_at": {
                     "type": "string",

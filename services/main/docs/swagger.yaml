@@ -1952,6 +1952,9 @@ definitions:
       phone_number:
         example: "+233281234569"
         type: string
+      profile_photo_url:
+        example: https://example.com/photo.jpg
+        type: string
     type: object
   handlers.UpdatePasswordRequest:
     properties:
@@ -5030,6 +5033,9 @@ definitions:
         type: string
       phone_number:
         example: "+233281234569"
+        type: string
+      profile_photo_url:
+        example: https://example.com/photo.jpg
         type: string
       updated_at:
         example: "2023-01-01T00:00:00Z"
