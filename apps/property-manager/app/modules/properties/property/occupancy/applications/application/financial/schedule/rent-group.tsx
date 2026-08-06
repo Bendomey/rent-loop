@@ -59,15 +59,18 @@ export function RentGroup({
 
 	return (
 		<div className="border-t first:border-t-0">
+			{/* Wrapping row: on a phone the label takes the whole width and the
+			    total drops beneath it. Squeezed onto one line the label collapsed
+			    to one word per line, because the money can't compress. */}
 			<button
 				type="button"
 				onClick={onToggle}
-				className="flex w-full items-center gap-3 py-3.5 text-left"
+				className="flex w-full flex-wrap items-center gap-x-3 gap-y-1 py-3.5 text-left"
 			>
 				<ChevronRight
 					className={`text-muted-foreground size-4 shrink-0 transition-transform ${open ? 'rotate-90' : ''}`}
 				/>
-				<div className="min-w-0 flex-1">
+				<div className="min-w-0 basis-[calc(100%-1.75rem)] sm:flex-1 sm:basis-0">
 					<p className="text-sm font-semibold">
 						{rows.length} rent {rows.length === 1 ? 'charge' : 'charges'}
 					</p>
@@ -80,10 +83,10 @@ export function RentGroup({
 						{billed > 0 ? ` · ${billed} billed` : null}
 					</p>
 				</div>
-				<span className="text-sm font-semibold tabular-nums">
+				<span className="ml-7 shrink-0 text-sm font-semibold tabular-nums sm:ml-0">
 					{money(total)}
 				</span>
-				<span className="w-8" />
+				<span className="hidden w-8 sm:block" />
 			</button>
 
 			{open ? (
@@ -95,9 +98,9 @@ export function RentGroup({
 						return (
 							<div
 								key={row.id}
-								className="flex items-center gap-3 border-t py-3 first:border-t-0"
+								className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t py-3 first:border-t-0"
 							>
-								<div className="min-w-0 flex-1">
+								<div className="min-w-0 basis-full sm:flex-1 sm:basis-0">
 									<p className="truncate text-sm font-medium">{row.name}</p>
 									<p className="text-muted-foreground mt-0.5 text-xs">
 										Due {shortDate(row.dueDate)}
@@ -106,7 +109,7 @@ export function RentGroup({
 								{status ? (
 									<Badge variant="outline">{status.label}</Badge>
 								) : null}
-								<span className="min-w-24 text-right text-sm font-semibold tabular-nums">
+								<span className="ml-auto shrink-0 text-sm font-semibold tabular-nums sm:ml-0 sm:min-w-24 sm:text-right">
 									{money(row.amount)}
 								</span>
 								{onRemove && row.charge ? (
@@ -120,7 +123,7 @@ export function RentGroup({
 										<Trash2 className="size-3.5" />
 									</Button>
 								) : (
-									<span className="w-8 shrink-0" />
+									<span className="hidden w-8 shrink-0 sm:block" />
 								)}
 							</div>
 						)

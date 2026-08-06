@@ -1,4 +1,10 @@
-import { Check, ChevronRight, Lock, TriangleAlert } from 'lucide-react'
+import {
+	ArrowRight,
+	Check,
+	ChevronRight,
+	Lock,
+	TriangleAlert,
+} from 'lucide-react'
 import { Link, useLocation } from 'react-router'
 import { ChecklistMarker } from './checklist-marker'
 import type {
@@ -115,6 +121,10 @@ function subState(
 	parent: ChecklistStepState,
 	item: ChecklistItem,
 ): ChecklistStepState {
+	// An optional item never inherits. A finished step whose optional part is
+	// outstanding is genuinely finished, but ticking "First payment" while the
+	// account reads GH₵ 0.00 settled would be a lie the reader can see through.
+	if (item.optional) return item.done ? 'done' : 'todo'
 	if (parent === 'done' || parent === 'locked') return 'done'
 	if (parent === 'blocked' || parent === 'todo') return 'todo'
 	// The data is still there but can no longer be trusted, so what was done
@@ -190,9 +200,15 @@ function ChecklistRow({
 				) : null}
 
 				{blocked && !open ? (
-					<span className="text-warning text-xs font-bold whitespace-nowrap">
-						Fix that first →
-					</span>
+					<>
+						{/* On a phone the full phrase costs more room than the label it
+						    is competing with, and the orange note already names the
+						    blocker — so the arrow carries it alone. */}
+						<span className="text-warning hidden shrink-0 text-xs font-bold whitespace-nowrap sm:inline">
+							Fix that first →
+						</span>
+						<ArrowRight className="text-warning size-4 shrink-0 sm:hidden" />
+					</>
 				) : (
 					<ChevronRight
 						className={cn(

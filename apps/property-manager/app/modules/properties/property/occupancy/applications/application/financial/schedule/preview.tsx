@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRevalidator } from 'react-router'
 import { toast } from 'sonner'
 import { RentGroup } from './rent-group'
+import { STACKED_CARD_ACTION, STACKED_CARD_TEXT } from '../card-action'
 import { useCreateCharge, usePrepareCharges } from '~/api/financial-accounts'
 import { Alert, AlertDescription } from '~/components/ui/alert'
 import { Button } from '~/components/ui/button'
@@ -162,14 +163,18 @@ export function SchedulePreview({
 	return (
 		<Card className="shadow-none">
 			<CardHeader>
-				<CardTitle className="flex items-center gap-2 text-lg">
+				<CardTitle
+					className={`flex items-center gap-2 text-lg ${STACKED_CARD_TEXT}`}
+				>
 					<span className="bg-muted text-muted-foreground flex size-7 items-center justify-center rounded-full font-mono text-xs font-bold">
 						2
 					</span>
 					Charges
 					{!ready ? <Lock className="text-muted-foreground size-3.5" /> : null}
 				</CardTitle>
-				<p className="text-muted-foreground mt-1 text-sm">
+				<p
+					className={`text-muted-foreground mt-1 text-sm ${STACKED_CARD_TEXT}`}
+				>
 					{ready ? (
 						<>
 							<span className="text-foreground font-semibold">
@@ -183,7 +188,7 @@ export function SchedulePreview({
 					)}
 				</p>
 				{ready ? (
-					<CardAction>
+					<CardAction className={STACKED_CARD_ACTION}>
 						<Button size="sm" disabled={busy} onClick={() => void create()}>
 							{busy ? <Spinner /> : <Check className="size-4" />}
 							Create these charges
@@ -255,9 +260,9 @@ export function SchedulePreview({
 							</div>
 						))}
 
-						<div className="flex items-center justify-between border-t py-4">
+						<div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-t py-4">
 							<span className="text-sm font-semibold">Total over the term</span>
-							<span className="text-lg font-bold tabular-nums">
+							<span className="ml-auto text-lg font-bold tabular-nums">
 								{money(rentTotal + extrasTotal)}
 							</span>
 						</div>
@@ -282,10 +287,12 @@ export function SchedulePreview({
 										size="sm"
 										// Chosen chips go black, not crimson — crimson is the
 										// brand accent, and a row of it here would compete with
-										// the primary action in the same card.
+										// the primary action in the same card. Important, because
+										// the outline variant's `dark:bg-input/30` outranks a
+										// plain `bg-foreground` and would win in dark mode.
 										className={
 											on
-												? 'bg-foreground text-background hover:bg-foreground/90 hover:text-background border-transparent'
+												? 'bg-foreground! text-background! hover:bg-foreground/90! border-transparent'
 												: ''
 										}
 										onClick={() =>
@@ -319,11 +326,17 @@ export function SchedulePreview({
 
 					<Alert>
 						<Info className="size-4" />
+						{/* One <p>, because AlertDescription lays its children out on a
+						    grid — loose text and a <strong> sibling each take a row of
+						    their own, which broke the sentence into stacked fragments. */}
 						<AlertDescription>
-							Rent falls due <strong>{graceDays(paymentFrequency)} days</strong>{' '}
-							after each period starts. Creating the charges is one-way, but you
-							can still change the rent or the term afterwards while nothing has
-							been billed.
+							<p>
+								Rent falls due{' '}
+								<strong>{graceDays(paymentFrequency)} days</strong> after each
+								period starts. Creating the charges is one-way, but you can
+								still change the rent or the term afterwards while nothing has
+								been billed.
+							</p>
 						</AlertDescription>
 					</Alert>
 				</CardContent>

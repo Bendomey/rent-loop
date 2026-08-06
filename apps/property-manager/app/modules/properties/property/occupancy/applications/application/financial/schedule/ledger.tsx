@@ -1,6 +1,7 @@
 import { Eye, EyeOff, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { RentGroup } from './rent-group'
+import { STACKED_CARD_ACTION, STACKED_CARD_TEXT } from '../card-action'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import {
@@ -42,10 +43,12 @@ function ChargeRow({
 	const voided = Boolean(charge.voided_at)
 
 	return (
+		// Wraps on a phone — the name takes the row and the status and amount drop
+		// beneath it, rather than the name collapsing to one word per line.
 		<div
-			className={`flex items-center gap-3 border-t py-3 first:border-t-0 ${voided ? 'opacity-55' : ''}`}
+			className={`flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t py-3 first:border-t-0 ${voided ? 'opacity-55' : ''}`}
 		>
-			<div className="min-w-0 flex-1">
+			<div className="min-w-0 basis-full sm:flex-1 sm:basis-0">
 				<p
 					className={`truncate text-sm font-medium ${voided ? 'line-through' : ''}`}
 				>
@@ -58,7 +61,7 @@ function ChargeRow({
 				</p>
 			</div>
 			<Badge variant="outline">{status.label}</Badge>
-			<span className="min-w-24 text-right text-sm font-semibold tabular-nums">
+			<span className="ml-auto shrink-0 text-sm font-semibold tabular-nums sm:ml-0 sm:min-w-24 sm:text-right">
 				{formatAmount(convertPesewasToCedis(charge.amount), currency)}
 			</span>
 			{onRemove && !voided ? (
@@ -72,7 +75,7 @@ function ChargeRow({
 					<Trash2 className="size-3.5" />
 				</Button>
 			) : (
-				<span className="w-8 shrink-0" />
+				<span className="hidden w-8 shrink-0 sm:block" />
 			)}
 		</div>
 	)
@@ -110,13 +113,17 @@ export function Ledger({
 	return (
 		<Card className="shadow-none">
 			<CardHeader>
-				<CardTitle className="flex items-center gap-2 text-lg">
+				<CardTitle
+					className={`flex items-center gap-2 text-lg ${STACKED_CARD_TEXT}`}
+				>
 					<span className="bg-muted text-muted-foreground flex size-7 items-center justify-center rounded-full font-mono text-xs font-bold">
 						2
 					</span>
 					Charges
 				</CardTitle>
-				<p className="text-muted-foreground mt-1 text-sm">
+				<p
+					className={`text-muted-foreground mt-1 text-sm ${STACKED_CARD_TEXT}`}
+				>
 					<span className="text-foreground font-semibold">
 						{live.length} charges ·{' '}
 						{formatAmount(
@@ -127,7 +134,7 @@ export function Ledger({
 					— in due-date order, the order payment fills them.
 				</p>
 				{!readonly ? (
-					<CardAction>
+					<CardAction className={STACKED_CARD_ACTION}>
 						<Button variant="outline" size="sm" onClick={onAdd}>
 							<Plus className="size-4" />
 							Add charge
@@ -171,7 +178,7 @@ export function Ledger({
 							))
 						: null}
 
-					<div className="flex items-center justify-between border-t py-3">
+					<div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-t py-3">
 						<Button
 							variant="ghost"
 							size="sm"
@@ -185,7 +192,9 @@ export function Ledger({
 							)}
 							{showVoided ? 'Hide removed charges' : 'Show removed charges'}
 						</Button>
-						<span className="text-lg font-bold tabular-nums">
+						{/* ml-auto so the total keeps the right edge once the toggle
+						    takes a line of its own. */}
+						<span className="ml-auto text-lg font-bold tabular-nums">
 							{formatAmount(
 								convertPesewasToCedis(summary.total_charged),
 								currency,

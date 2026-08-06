@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Link, useRevalidator } from 'react-router'
 import { toast } from 'sonner'
 import type { FinancialMode } from './index'
+import { STACKED_CARD_ACTION, STACKED_CARD_TEXT } from './card-action'
 import { useAdminUpdateTenantApplication } from '~/api/tenant-applications'
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
 import { Button } from '~/components/ui/button'
@@ -100,19 +101,23 @@ export function AgreedRent({
 	return (
 		<Card className="shadow-none">
 			<CardHeader>
-				<CardTitle className="flex items-center gap-2 text-lg">
+				<CardTitle
+					className={`flex items-center gap-2 text-lg ${STACKED_CARD_TEXT}`}
+				>
 					<span className="bg-muted text-muted-foreground flex size-7 items-center justify-center rounded-full font-mono text-xs font-bold">
 						1
 					</span>
 					Agreed rent
 				</CardTitle>
-				<p className="text-muted-foreground mt-1 text-sm">
+				<p
+					className={`text-muted-foreground mt-1 text-sm ${STACKED_CARD_TEXT}`}
+				>
 					{locked
 						? 'Fixed — rent charges have already been billed.'
 						: 'The figure the lease is written against. It is not inherited from the unit; you state it here.'}
 				</p>
 				{!locked ? (
-					<CardAction className="flex gap-2">
+					<CardAction className={`flex gap-2 ${STACKED_CARD_ACTION}`}>
 						{rebuilds ? (
 							<>
 								<Button

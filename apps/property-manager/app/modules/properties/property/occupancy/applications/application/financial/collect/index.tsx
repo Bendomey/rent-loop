@@ -358,10 +358,10 @@ export function Collect({
 							</div>
 						)}
 
-						<div className="mt-5 flex items-baseline justify-between border-t pt-4">
+						<div className="mt-5 flex flex-wrap items-baseline justify-between gap-x-3 border-t pt-4">
 							<span className="text-sm font-semibold">Total</span>
 							<span
-								className={`text-2xl font-bold tracking-tight tabular-nums ${over ? 'text-destructive' : ''}`}
+								className={`ml-auto text-2xl font-bold tracking-tight tabular-nums ${over ? 'text-destructive' : ''}`}
 							>
 								{money(total)}
 							</span>
