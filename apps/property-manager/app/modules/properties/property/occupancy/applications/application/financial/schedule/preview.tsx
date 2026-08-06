@@ -164,7 +164,7 @@ export function SchedulePreview({
 					<span className="bg-muted text-muted-foreground flex size-7 items-center justify-center rounded-full font-mono text-xs font-bold">
 						2
 					</span>
-					Schedule
+					Charges
 					{!ready ? (
 						<Lock className="text-muted-foreground size-3.5" />
 					) : null}
@@ -179,7 +179,7 @@ export function SchedulePreview({
 							— a preview. Nothing exists until you create it.
 						</>
 					) : (
-						'Set the agreed rent above and the schedule appears here.'
+						'Set the agreed rent above and the charges appear here.'
 					)}
 				</p>
 				{ready ? (

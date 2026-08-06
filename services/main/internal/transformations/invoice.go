@@ -35,6 +35,9 @@ type OutputInvoice struct {
 
 	ContextType string `json:"context_type" example:"LEASE_RENT"`
 
+	// Present on account-backed invoices — the tenant ledger this bills against.
+	FinancialAccountID *string `json:"financial_account_id,omitempty" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
+
 	ContextLeaseTerminationID *string                 `json:"context_lease_termination_id,omitempty" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
 	ContextLeaseTermination   *OutputLeaseTermination `json:"context_lease_termination,omitempty"`
 
@@ -88,6 +91,7 @@ func DBInvoiceToRest(i *models.Invoice) any {
 		"payee_tenant_id":                i.PayeeTenantID,
 		"payee_tenant":                   DBTenantToRest(i.PayeeTenant),
 		"context_type":                   i.ContextType,
+		"financial_account_id":           i.FinancialAccountID,
 		"context_lease_termination_id":   i.ContextLeaseTerminationID,
 		"context_lease_termination":      DBAdminLeaseTerminationToRest(i.ContextLeaseTermination),
 		"context_maintenance_request_id": i.ContextMaintenanceRequestID,

@@ -104,8 +104,14 @@ function MenuItem({ label, subItems, href }: MenuItemProps) {
 	const { pathname } = useLocation()
 
 	const isActive = pathname === href
-	const doneCount = subItems.filter((i) => i.done).length
-	const allDone = subItems.length > 0 && doneCount === subItems.length
+	// The badge counts what the step actually needs. An optional sub-item still
+	// renders its own state below, but it neither adds to the denominator nor
+	// keeps the step from ticking.
+	const requiredItems = subItems.filter((item) => !item.optional)
+	const doneCount = requiredItems.filter((item) => item.done).length
+	const allDone =
+		subItems.length > 0 &&
+		(requiredItems.length === 0 || doneCount === requiredItems.length)
 
 	return (
 		<Link to={href} className="cursor-pointer">
@@ -133,7 +139,7 @@ function MenuItem({ label, subItems, href }: MenuItemProps) {
 												: 'bg-zinc-100 text-zinc-500 dark:bg-zinc-700 dark:text-zinc-400',
 									)}
 								>
-									{doneCount}/{subItems.length}
+									{doneCount}/{requiredItems.length}
 								</span>
 							</TooltipTrigger>
 							<TooltipContent side="left" className="max-w-xs p-3">

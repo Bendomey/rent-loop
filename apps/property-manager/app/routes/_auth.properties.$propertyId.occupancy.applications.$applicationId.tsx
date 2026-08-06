@@ -32,8 +32,6 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 					'LeaseAgreementDocumentSignatures',
 					'LeaseAgreementDocumentSignatures.SignedBy',
 					'LeaseAgreementDocumentSignatures.SignedBy.User',
-					'ApplicationPaymentInvoice',
-					'ApplicationPaymentInvoice.LineItems',
 				],
 			},
 			{

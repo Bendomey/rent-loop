@@ -23,7 +23,10 @@ export function getFinancialItems(
 			done: Boolean(account),
 		},
 		{
+			// Optional: a landlord may approve an application and collect later,
+			// so this must not gate the step or the approval.
 			label: 'First payment',
+			optional: true,
 			done: Boolean(account && account.total_settled > 0),
 		},
 	]

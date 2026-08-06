@@ -400,46 +400,6 @@ const updateTenantApplication = async ({
 export const useUpdateTenantApplication = () =>
 	useMutation({ mutationFn: updateTenantApplication })
 
-/**
- * Generate application payment invoice
- * Backend derives rent_fee, payment_frequency, periods etc. from the saved
- * lease application fields. Only an optional due_date can be provided.
- */
-interface GenerateApplicationPaymentInvoiceInput {
-	client_id: string
-	property_id: string
-	id: string
-	due_date?: string
-}
-
-const generateApplicationPaymentInvoice = async ({
-	client_id,
-	property_id,
-	id,
-	due_date,
-}: GenerateApplicationPaymentInvoiceInput) => {
-	try {
-		const response = await fetchClient<ApiResponse<Invoice>>(
-			`/v1/admin/clients/${client_id}/properties/${property_id}/tenant-applications/${id}/invoice:generate`,
-			{
-				method: 'POST',
-				body: JSON.stringify(due_date ? { due_date } : {}),
-			},
-		)
-		return response.parsedBody.data
-	} catch (error) {
-		if (error instanceof Response) {
-			const response = await error.json()
-			throw new Error(response.errors?.message || 'Unknown error')
-		}
-		if (error instanceof Error) {
-			throw error
-		}
-	}
-}
-
-export const useGenerateApplicationPaymentInvoice = () =>
-	useMutation({ mutationFn: generateApplicationPaymentInvoice })
 
 /**
  * Bulk create lease applications from CSV/Excel upload.

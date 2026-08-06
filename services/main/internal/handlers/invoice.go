@@ -337,6 +337,7 @@ type ListInvoicesQuery struct {
 	ContextLeaseTerminationID *string   `json:"context_lease_termination_id" query:"context_lease_termination_id"`
 	Status                    *[]string `json:"status"                       query:"status"                                                                                                                         validate:"omitempty,dive,oneof=DRAFT ISSUED PARTIALLY_PAID PAID VOID"`
 	Active                    *bool     `json:"active"                       query:"active"                       description:"Filter invoices by active status. true for active invoices, false for VOID invoices"`
+	FinancialAccountID        *string   `json:"financial_account_id"         query:"financial_account_id"         description:"Filter to one tenant's financial account. The only way to list an application's invoices before a lease exists"`
 }
 
 // ListInvoices godoc
@@ -383,6 +384,11 @@ func (h *InvoiceHandler) ListInvoices(w http.ResponseWriter, r *http.Request) {
 		Status:                    lib.NullOrStringArray(r.URL.Query()["status"]),
 		Active:                    lib.NullOrBool(r.URL.Query().Get("active")),
 		PropertyIDs:               &propertyIDs,
+		// An account-backed invoice belongs to a financial account, and before
+		// approval there is no lease to filter by — so this is the only way to
+		// ask "what has this tenant been billed?". The repository scope already
+		// existed; only the binding was missing.
+		FinancialAccountID: lib.NullOrString(r.URL.Query().Get("financial_account_id")),
 	}
 
 	invoices, count, err := h.service.ListInvoices(r.Context(), input)

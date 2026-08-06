@@ -38,6 +38,8 @@ interface Invoice {
 		| 'MAINTENANCE_EXPENSE'
 		| 'SAAS_FEE'
 		| 'GENERAL_EXPENSE'
+	/** Present on account-backed invoices — the tenant ledger this bills against. */
+	financial_account_id: Nullable<string>
 	context_tenant_application_id: Nullable<string>
 	context_tenant_application: Nullable<TenantApplication>
 	context_lease: Nullable<Lease>
@@ -63,6 +65,11 @@ interface Invoice {
 }
 
 interface FetchInvoiceFilter {
+	/**
+	 * Narrow to one tenant ledger. Before approval there is no lease to filter
+	 * by, so this is the only way to list an application's invoices.
+	 */
+	financial_account_id?: string
 	payee_type?: string
 	payer_type?: string
 	status?: string

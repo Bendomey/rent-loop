@@ -18,9 +18,9 @@ interface MoveInGateProps {
  */
 export function MoveInGate({ propertyId, applicationId }: MoveInGateProps) {
 	return (
-		<Card className="border-amber-200 bg-amber-50/60 shadow-none dark:border-amber-900/50 dark:bg-amber-950/20">
+		<Card className="bg-warning-bg border-transparent shadow-none">
 			<CardContent className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-				<div className="bg-amber-100 text-amber-700 flex size-11 shrink-0 items-center justify-center rounded-xl dark:bg-amber-900/40 dark:text-amber-300">
+				<div className="bg-warning-bg text-warning flex size-11 shrink-0 items-center justify-center rounded-xl">
 					<CalendarClock className="size-5" />
 				</div>
 				<div className="flex-1">

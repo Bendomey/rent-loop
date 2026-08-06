@@ -1,5 +1,4 @@
 import { Card, CardContent } from '~/components/ui/card'
-import { Separator } from '~/components/ui/separator'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 
 interface SummaryBarProps {
@@ -19,15 +18,15 @@ function Stat({
 	emphasis?: boolean
 }) {
 	return (
-		<div className="min-w-0 flex-1">
+		<div className="min-w-0">
 			<p className="text-muted-foreground text-[11px] font-medium tracking-wide uppercase">
 				{label}
 			</p>
 			<p
 				className={
 					emphasis
-						? 'text-primary mt-1.5 text-2xl font-bold tracking-tight'
-						: 'mt-1.5 text-xl font-bold tracking-tight'
+						? 'text-primary mt-1.5 text-xl font-bold tracking-tight tabular-nums'
+						: 'mt-1.5 text-lg font-bold tracking-tight tabular-nums'
 				}
 			>
 				{value}
@@ -55,8 +54,8 @@ export function SummaryBar({ summary, readonly }: SummaryBarProps) {
 
 	return (
 		<Card className="shadow-none">
-			<CardContent className="flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-8">
-				<div className="min-w-40">
+			<CardContent className="grid grid-cols-2 gap-x-6 gap-y-5 2xl:grid-cols-4">
+				<div className="min-w-0">
 					<p className="text-muted-foreground text-[11px] font-medium tracking-wide uppercase">
 						Financial account
 					</p>
@@ -68,12 +67,8 @@ export function SummaryBar({ summary, readonly }: SummaryBarProps) {
 					</p>
 				</div>
 
-				<Separator orientation="vertical" className="hidden h-14 sm:block" />
-
 				<Stat label="Charged" value={money(summary.total_charged)} />
 				<Stat label="Settled" value={money(summary.total_settled)} />
-
-				<Separator orientation="vertical" className="hidden h-14 sm:block" />
 
 				<Stat
 					label="Outstanding"
