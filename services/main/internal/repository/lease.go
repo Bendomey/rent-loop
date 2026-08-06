@@ -22,7 +22,6 @@ type LeaseRepository interface {
 	CountByPropertyIDAndStatus(context context.Context, propertyID string, status string) (int64, error)
 	CountNonBlockingByPropertyID(context context.Context, propertyID string) (int64, error)
 	DeleteNonBlockingByPropertyID(context context.Context, propertyID string) error
-	ListDueForBilling(ctx context.Context) (*[]models.Lease, error)
 	ListForMoveOutReminders(ctx context.Context) (*[]models.Lease, error)
 	ListDueForCompletion(ctx context.Context) (*[]models.Lease, error)
 }
@@ -315,19 +314,6 @@ func (r *leaseRepository) DeleteNonBlockingByPropertyID(ctx context.Context, pro
 			[]string{"Lease.Status.Pending", "Lease.Status.Active"},
 		).
 		Delete(&models.Lease{}).Error
-}
-
-func (r *leaseRepository) ListDueForBilling(ctx context.Context) (*[]models.Lease, error) {
-	var leases []models.Lease
-	result := r.DB.WithContext(ctx).
-		Where("status = ? AND next_billing_date IS NOT NULL AND next_billing_date <= ?", "Lease.Status.Active", time.Now()).
-		Preload("Unit.Property").
-		Preload("Tenant.TenantAccount").
-		Find(&leases)
-	if result.Error != nil {
-		return nil, result.Error
-	}
-	return &leases, nil
 }
 
 // ListForMoveOutReminders returns pending or active leases whose MoveOutDate

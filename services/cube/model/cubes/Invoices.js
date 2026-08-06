@@ -10,19 +10,15 @@ import { propertyScopeSql } from './scope';
 // `invoices` table so it can be used inside the cube's base SQL (the
 // dimension's `${CUBE}` alias only exists at query time).
 //
-// This intentionally includes a `context_booking_id` branch that the
-// `propertyId` dimension below does **not** have — the Payments cube's
-// equivalent dimension does include it, so the omission there looks like an
-// oversight rather than a decision. Leaving the dimension alone (changing it
-// would move existing Insights numbers, which is not this change's job) but
-// covering bookings here, because under-deriving in a *security* predicate
-// silently hides booking-only invoices from restricted users. Worth
-// reconciling the dimension separately.
+// Both the tenant-application and lease branches collapse into a single
+// financial_accounts lookup: the account carries a denormalised property_id and
+// is the canonical link for every tenant invoice. That removes two correlated
+// subqueries (each with a join) from a predicate that runs on EVERY Insights
+// query, and it closes the old propertyId-vs-security-predicate divergence —
+// both now derive identically because there is one source.
 const INVOICE_PROPERTY_ID_SQL = `COALESCE(
-  (SELECT u.property_id::text FROM tenant_applications ta JOIN units u ON ta.desired_unit_id = u.id WHERE ta.id = invoices.context_tenant_application_id LIMIT 1),
-  (SELECT u.property_id::text FROM leases l JOIN units u ON l.unit_id = u.id WHERE l.id = invoices.context_lease_id LIMIT 1),
+  (SELECT fa.property_id::text FROM financial_accounts fa WHERE fa.id = invoices.financial_account_id AND fa.deleted_at IS NULL LIMIT 1),
   (SELECT b.property_id::text FROM bookings b WHERE b.id = invoices.context_booking_id LIMIT 1),
-  (SELECT e.property_id::text FROM expenses e WHERE e.id = invoices.context_expense_id LIMIT 1),
   invoices.payer_property_id::text
 )`;
 
@@ -99,12 +95,13 @@ cube(`Invoices`, {
       primaryKey: true,
     },
 
-    // Derived property ID — resolves via context join (TA → unit, Lease → unit, Expense → property, payer_property_id)
+    // Derived property ID. Now identical to the security predicate above —
+    // the old divergence (the predicate covered bookings, this did not) is
+    // closed, since both resolve from the same two sources plus the payer.
     propertyId: {
       sql: `COALESCE(
-        (SELECT u.property_id::text FROM tenant_applications ta JOIN units u ON ta.desired_unit_id = u.id WHERE ta.id = ${CUBE}.context_tenant_application_id LIMIT 1),
-        (SELECT u.property_id::text FROM leases l JOIN units u ON l.unit_id = u.id WHERE l.id = ${CUBE}.context_lease_id LIMIT 1),
-        (SELECT e.property_id::text FROM expenses e WHERE e.id = ${CUBE}.context_expense_id LIMIT 1),
+        (SELECT fa.property_id::text FROM financial_accounts fa WHERE fa.id = ${CUBE}.financial_account_id AND fa.deleted_at IS NULL LIMIT 1),
+        (SELECT b.property_id::text FROM bookings b WHERE b.id = ${CUBE}.context_booking_id LIMIT 1),
         ${CUBE}.payer_property_id::text
       )`,
       type: `string`,
@@ -117,18 +114,13 @@ cube(`Invoices`, {
       title: `Invoice Status`,
     },
 
-    // Derived via the invoice's own lease/booking/tenant-application context,
-    // mirroring Payments.tenantId. tenant_applications has no tenant_id of its
-    // own (the tenant doesn't exist yet at application time) — a lease is the
-    // only bridge, created once the application is approved. So
-    // application-stage invoices (e.g. security deposit before approval) are
-    // resolved by looking up the lease that was later created from that
-    // application.
+    // The financial account carries tenant_id directly, set when approval links
+    // the lease. Application-stage invoices therefore resolve to NULL until
+    // approval — which is correct: there is no tenant yet.
     tenantId: {
       sql: `COALESCE(
-        (SELECT l.tenant_id::text FROM leases l WHERE l.id = ${CUBE}.context_lease_id LIMIT 1),
-        (SELECT b.tenant_id::text FROM bookings b WHERE b.id = ${CUBE}.context_booking_id LIMIT 1),
-        (SELECT l.tenant_id::text FROM leases l WHERE l.tenant_application_id = ${CUBE}.context_tenant_application_id LIMIT 1)
+        (SELECT fa.tenant_id::text FROM financial_accounts fa WHERE fa.id = ${CUBE}.financial_account_id AND fa.deleted_at IS NULL LIMIT 1),
+        (SELECT b.tenant_id::text FROM bookings b WHERE b.id = ${CUBE}.context_booking_id LIMIT 1)
       )`,
       type: `string`,
       title: `Tenant ID`,

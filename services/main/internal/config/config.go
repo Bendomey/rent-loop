@@ -91,6 +91,11 @@ type IChartOfAccounts struct {
 
 	// Expense Accounts
 	PropertyManagementExpenseID string
+	MaintenanceExpenseID        string
+
+	// Contra-revenue Accounts. Debited when a negative charge reverses nothing
+	// — a goodwill credit has no originating category to reverse.
+	TenantConcessionsID string
 }
 
 type IOpenExchangeRatesAPI struct {
@@ -234,6 +239,10 @@ func Load() Config {
 
 			// Expense Accounts
 			PropertyManagementExpenseID: getEnv("FINCORE_ACCOUNT_PROPERTY_MGMT_EXPENSE", ""),
+			MaintenanceExpenseID:        getEnv("FINCORE_ACCOUNT_MAINTENANCE_EXPENSE", ""),
+
+			// Contra-revenue Accounts
+			TenantConcessionsID: getEnv("FINCORE_ACCOUNT_TENANT_CONCESSIONS", ""),
 		},
 	}
 }

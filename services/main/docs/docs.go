@@ -7024,24 +7024,21 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/clients/{client_id}/properties/{property_id}/expenses/{expense_id}/generate:invoice": {
-            "post": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/financial-accounts/{account_id}": {
+            "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Create one invoice per payer from a specific expense (Admin)",
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "Returns the account, every charge with its derived status, and the balance figures. Outstanding amount is the sum of unsettled charges — including charges that have never been invoiced, which is what invoice-derived balances cannot see.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Expenses"
+                    "FinancialAccounts"
                 ],
-                "summary": "Generate invoices from an expense",
+                "summary": "Get a financial account with its balance",
                 "parameters": [
                     {
                         "type": "string",
@@ -7052,38 +7049,96 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Expense ID",
-                        "name": "expense_id",
+                        "description": "Financial account ID",
+                        "name": "account_id",
                         "in": "path",
                         "required": true
-                    },
-                    {
-                        "description": "Payers for this expense",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.GenerateExpenseInvoiceBody"
-                        }
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "Generated invoices",
+                    "200": {
+                        "description": "Financial account summary",
                         "schema": {
                             "type": "object",
                             "properties": {
                                 "data": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/definitions/transformations.OutputInvoice"
-                                    }
+                                    "$ref": "#/definitions/handlers.accountSummaryResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Financial account not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/financial-accounts/{account_id}/billing-policy": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Controls how the issuance sweep bills rent: one period at a time, N periods at a time, the whole remaining term upfront, or never (MANUAL). Auto-issue days is the lead time before a charge's due date, not the payment grace after it.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "FinancialAccounts"
+                ],
+                "summary": "Update the rent billing policy on a financial account",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Financial account ID",
+                        "name": "account_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Billing policy",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateBillingPolicyBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Policy updated",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "boolean"
                                 }
                             }
                         }
                     },
                     "400": {
-                        "description": "Validation error or no payers provided",
+                        "description": "Invalid cadence or interval",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -7095,9 +7150,138 @@ const docTemplate = `{
                         }
                     },
                     "404": {
-                        "description": "Expense not found",
+                        "description": "Financial account not found",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/financial-accounts/{account_id}/charges": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Every obligation on the account, oldest due date first, each with a status derived from its invoiced and settled amounts.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "FinancialAccounts"
+                ],
+                "summary": "List the charges on a financial account",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Financial account ID",
+                        "name": "account_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Charges",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/transformations.OutputChargeInstance"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Financial account not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Adds a one-off obligation with no definition behind it — a damage charge, a utility bill, or a refund. A negative amount is a refund of that category; when it names the charge it reverses, it inherits that category and is capped at what was settled.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "FinancialAccounts"
+                ],
+                "summary": "Add an ad-hoc charge to a financial account",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Financial account ID",
+                        "name": "account_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Charge to add",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreateChargeBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Charge created",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputChargeInstance"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Zero amount, non-negative reversal, or a reversal exceeding what was settled",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
                         }
                     },
                     "422": {
@@ -7105,11 +7289,164 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/financial-accounts/{account_id}/charges/{charge_id}/void": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Removes a charge from the ledger. A charge that has already been invoiced or settled cannot be voided — void the invoice first, which releases its claim.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "FinancialAccounts"
+                ],
+                "summary": "Void a charge",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
                     },
-                    "500": {
-                        "description": "An unexpected error occurred",
+                    {
+                        "type": "string",
+                        "description": "Financial account ID",
+                        "name": "account_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Charge instance ID",
+                        "name": "charge_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Void reason",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.VoidChargeBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Charge voided",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Charge already voided, or already invoiced/settled",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
                         "schema": {
                             "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Charge not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/financial-accounts/{account_id}/invoices:compose": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "The only way an account-backed invoice is created. Each line claims part or all of one charge, so \"pay some rent and all of the deposit\" is one ordinary document. Give explicit claims, or just an amount to fill oldest-due-date first. Available account credit is consumed before anything is asked for.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "FinancialAccounts"
+                ],
+                "summary": "Compose an invoice from charges on a financial account",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Financial account ID",
+                        "name": "account_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Charges to bill",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ComposeInvoiceBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Invoice composed",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputInvoice"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "No charges selected, a claim exceeding the charge balance, a sign or currency mismatch, or both claims and amount given",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Financial account or charge not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
                         }
                     }
                 }
@@ -9965,159 +10302,6 @@ const docTemplate = `{
                         "description": "Checklist not found",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/expenses": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "List expenses with pagination scoped to a lease (Admin)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Expenses"
-                ],
-                "summary": "List expenses for a lease",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Property ID",
-                        "name": "property_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Lease ID",
-                        "name": "lease_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "enum": [
-                            "LEASE",
-                            "MAINTENANCE"
-                        ],
-                        "type": "string",
-                        "name": "context_type",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "end_date",
-                        "in": "query"
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "multi",
-                        "example": [
-                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
-                        ],
-                        "name": "ids",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "asc",
-                            "desc"
-                        ],
-                        "type": "string",
-                        "name": "order",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "order_by",
-                        "in": "query"
-                    },
-                    {
-                        "minimum": 0,
-                        "type": "integer",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "minimum": 0,
-                        "type": "integer",
-                        "name": "page_size",
-                        "in": "query"
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "populate",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "query",
-                        "in": "query"
-                    },
-                    {
-                        "minItems": 1,
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "search_fields",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "start_date",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Expenses",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "type": "object",
-                                    "properties": {
-                                        "meta": {
-                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
-                                        },
-                                        "rows": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/transformations.OutputExpense"
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
                         }
                     },
                     "500": {
@@ -13737,93 +13921,6 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Error occurred when cancelling a lease application",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "lease application not found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "422": {
-                        "description": "Validation error",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id}/invoice:generate": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Generate an invoice for a lease application (security deposit and/or initial deposit) (Admin)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "TenantApplication"
-                ],
-                "summary": "Generate an invoice for a lease application (Admin)",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Property ID",
-                        "name": "property_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "lease application ID",
-                        "name": "tenant_application_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Generate Invoice Request Body",
-                        "name": "body",
-                        "in": "body",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.GenerateInvoiceRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Invoice generated successfully",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputInvoice"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Error occurred when generating invoice",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -18001,6 +18098,123 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/leases/{lease_id}/financial-account": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Read-only. Lets a tenant see what they owe, what they have paid and what is coming. Tenants cannot create charges or issue invoices — the landlord controls issuance, so a tenant pays only what has been issued to them.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "FinancialAccounts"
+                ],
+                "summary": "Get the financial account for a lease (tenant)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Lease ID",
+                        "name": "lease_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Financial account summary",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/handlers.accountSummaryResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Lease does not belong to this tenant",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Financial account not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/leases/{lease_id}/financial-account/charges": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Read-only breakdown of every obligation with its status.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "FinancialAccounts"
+                ],
+                "summary": "List charges on a lease's financial account (tenant)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Lease ID",
+                        "name": "lease_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Charges",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/transformations.OutputChargeInstance"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Lease does not belong to this tenant",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Financial account not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/leases/{lease_id}/invoices": {
             "get": {
                 "security": [
@@ -19000,6 +19214,79 @@ const docTemplate = `{
                     },
                     "422": {
                         "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/properties/{property_id}/tenant-applications/{tenant_application_id}/charges:prepare": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Turns the application's agreed terms into a financial account with charge definitions and instances. Replaces invoice:generate — invoices are afterwards composed against these charges, in any combination, before or after approval. The initial deposit becomes the account's rent billing cadence rather than a charge of its own.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "TenantApplication"
+                ],
+                "summary": "Prepare charges for a tenant application",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Tenant application ID",
+                        "name": "tenant_application_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Charges prepared successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputFinancialAccount"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Charges already prepared, or the application is missing rent terms, a unit, a move-in date or a stay duration",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Tenant application not found",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -20532,16 +20819,12 @@ const docTemplate = `{
                 "amount": {
                     "type": "integer"
                 },
-                "context_lease_id": {
-                    "type": "string"
-                },
                 "context_maintenance_request_id": {
                     "type": "string"
                 },
                 "context_type": {
                     "type": "string",
                     "enum": [
-                        "LEASE",
                         "MAINTENANCE"
                     ]
                 },
@@ -21163,6 +21446,47 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.ClaimBody": {
+            "type": "object",
+            "required": [
+                "amount",
+                "charge_instance_id"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "integer",
+                    "example": 100000
+                },
+                "charge_instance_id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                }
+            }
+        },
+        "handlers.ComposeInvoiceBody": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "example": 250000
+                },
+                "claims": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.ClaimBody"
+                    }
+                },
+                "due_date": {
+                    "type": "string",
+                    "example": "2027-03-01T00:00:00Z"
+                },
+                "issue": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
         "handlers.CreateAdminRequest": {
             "type": "object",
             "required": [
@@ -21289,6 +21613,53 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "unit_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.CreateChargeBody": {
+            "type": "object",
+            "required": [
+                "amount",
+                "category",
+                "currency",
+                "due_date",
+                "name"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "integer",
+                    "example": 10000
+                },
+                "category": {
+                    "description": "Sign carries direction: a negative amount is a refund of this category.\nThere are deliberately no refund-specific categories.",
+                    "type": "string",
+                    "enum": [
+                        "RENT",
+                        "SECURITY_DEPOSIT",
+                        "AGENCY_FEE",
+                        "VAT",
+                        "UTILITY",
+                        "DAMAGE_CHARGE",
+                        "EARLY_TERMINATION_FEE",
+                        "OTHER"
+                    ],
+                    "example": "UTILITY"
+                },
+                "currency": {
+                    "type": "string",
+                    "example": "GHS"
+                },
+                "due_date": {
+                    "type": "string",
+                    "example": "2027-03-01T00:00:00Z"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Water bill — March"
+                },
+                "reverses_charge_instance_id": {
+                    "description": "ReversesChargeInstanceID marks this as a refund of an existing charge.\nThe refund inherits that charge's category and is capped at what was\nactually settled — you cannot refund money never received.",
                     "type": "string"
                 }
             }
@@ -22297,59 +22668,6 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.GenerateExpenseInvoiceBody": {
-            "type": "object",
-            "required": [
-                "payers"
-            ],
-            "properties": {
-                "payers": {
-                    "type": "array",
-                    "minItems": 1,
-                    "items": {
-                        "$ref": "#/definitions/handlers.GenerateExpenseInvoicePayerBody"
-                    }
-                }
-            }
-        },
-        "handlers.GenerateExpenseInvoicePayerBody": {
-            "type": "object",
-            "required": [
-                "amount",
-                "payee_type",
-                "payer_type"
-            ],
-            "properties": {
-                "amount": {
-                    "type": "integer"
-                },
-                "payee_type": {
-                    "type": "string",
-                    "enum": [
-                        "TENANT",
-                        "PROPERTY_OWNER",
-                        "EXTERNAL"
-                    ]
-                },
-                "payer_type": {
-                    "type": "string",
-                    "enum": [
-                        "TENANT",
-                        "PROPERTY_OWNER",
-                        "EXTERNAL"
-                    ]
-                }
-            }
-        },
-        "handlers.GenerateInvoiceRequest": {
-            "type": "object",
-            "properties": {
-                "due_date": {
-                    "type": "string",
-                    "example": "2024-07-01T00:00:00Z"
-                }
-            }
-        },
         "handlers.GenerateTokenRequest": {
             "type": "object",
             "required": [
@@ -22865,6 +23183,31 @@ const docTemplate = `{
                         "EMERGENCY"
                     ],
                     "example": "COMMUNITY"
+                }
+            }
+        },
+        "handlers.UpdateBillingPolicyBody": {
+            "type": "object",
+            "properties": {
+                "auto_issue_days_before": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "example": 5
+                },
+                "cadence": {
+                    "type": "string",
+                    "enum": [
+                        "EVERY_PERIOD",
+                        "EVERY_N_PERIODS",
+                        "UPFRONT",
+                        "MANUAL"
+                    ],
+                    "example": "EVERY_N_PERIODS"
+                },
+                "interval": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "example": 12
                 }
             }
         },
@@ -23782,11 +24125,49 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.VoidChargeBody": {
+            "type": "object",
+            "required": [
+                "reason"
+            ],
+            "properties": {
+                "reason": {
+                    "type": "string",
+                    "example": "Entered in error"
+                }
+            }
+        },
         "handlers.VoidInvoiceBody": {
             "type": "object",
             "properties": {
                 "voided_reason": {
                     "type": "string"
+                }
+            }
+        },
+        "handlers.accountSummaryResponse": {
+            "type": "object",
+            "properties": {
+                "account": {
+                    "$ref": "#/definitions/transformations.OutputFinancialAccount"
+                },
+                "available_credit": {
+                    "type": "integer"
+                },
+                "charges": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/transformations.OutputChargeInstance"
+                    }
+                },
+                "outstanding_amount": {
+                    "type": "integer"
+                },
+                "total_charged": {
+                    "type": "integer"
+                },
+                "total_settled": {
+                    "type": "integer"
                 }
             }
         },
@@ -25358,6 +25739,71 @@ const docTemplate = `{
                 }
             }
         },
+        "transformations.OutputChargeInstance": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "integer",
+                    "example": 100000
+                },
+                "category": {
+                    "type": "string",
+                    "example": "RENT"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string",
+                    "example": "GHS"
+                },
+                "due_date": {
+                    "type": "string"
+                },
+                "financial_account_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "invoiced_amount": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Rent – February 2027"
+                },
+                "outstanding_amount": {
+                    "type": "integer",
+                    "example": 100000
+                },
+                "period_end": {
+                    "type": "string"
+                },
+                "period_start": {
+                    "type": "string"
+                },
+                "settled_amount": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "status": {
+                    "type": "string",
+                    "example": "OUTSTANDING"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "voided_at": {
+                    "type": "string"
+                },
+                "voided_reason": {
+                    "type": "string"
+                }
+            }
+        },
         "transformations.OutputChecklistTemplate": {
             "type": "object",
             "properties": {
@@ -25816,9 +26262,6 @@ const docTemplate = `{
                 "code": {
                     "type": "string"
                 },
-                "context_lease_id": {
-                    "type": "string"
-                },
                 "context_maintenance_request_id": {
                     "type": "string"
                 },
@@ -25841,6 +26284,63 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "property_id": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "transformations.OutputFinancialAccount": {
+            "type": "object",
+            "properties": {
+                "auto_issue_days_before": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "client_id": {
+                    "type": "string"
+                },
+                "closed_at": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string",
+                    "example": "FA-2608-A1B2C3"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string",
+                    "example": "GHS"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "lease_id": {
+                    "type": "string"
+                },
+                "property_id": {
+                    "type": "string"
+                },
+                "rent_billing_cadence": {
+                    "type": "string",
+                    "example": "EVERY_N_PERIODS"
+                },
+                "rent_billing_interval": {
+                    "type": "integer",
+                    "example": 12
+                },
+                "status": {
+                    "type": "string",
+                    "example": "ACTIVE"
+                },
+                "tenant_application_id": {
+                    "type": "string"
+                },
+                "tenant_id": {
                     "type": "string"
                 },
                 "updated_at": {
@@ -25872,21 +26372,6 @@ const docTemplate = `{
                     "type": "string",
                     "example": "INV-2024-0001"
                 },
-                "context_expense": {
-                    "$ref": "#/definitions/transformations.OutputExpense"
-                },
-                "context_expense_id": {
-                    "type": "string",
-                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
-                },
-                "context_lease": {
-                    "type": "object",
-                    "additionalProperties": {}
-                },
-                "context_lease_id": {
-                    "type": "string",
-                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
-                },
                 "context_lease_termination": {
                     "$ref": "#/definitions/transformations.OutputLeaseTermination"
                 },
@@ -25895,13 +26380,6 @@ const docTemplate = `{
                     "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
                 },
                 "context_maintenance_request_id": {
-                    "type": "string",
-                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
-                },
-                "context_tenant_application": {
-                    "$ref": "#/definitions/transformations.OutputAdminTenantApplication"
-                },
-                "context_tenant_application_id": {
                     "type": "string",
                     "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
                 },

@@ -21,6 +21,9 @@ const (
 	// Expense Accounts
 	AccountKeyMaintenanceExpense        AccountKey = "MAINTENANCE_EXPENSE"         // Property maintenance costs
 	AccountKeyPropertyManagementExpense AccountKey = "PROPERTY_MANAGEMENT_EXPENSE" // Property management fees
+
+	// Contra-revenue Accounts
+	AccountKeyTenantConcessions AccountKey = "TENANT_CONCESSIONS" // Goodwill credits issued to tenants
 )
 
 // String returns the string representation of the account key

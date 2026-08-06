@@ -50,6 +50,11 @@ export FINCORE_ACCOUNT_EXPENSE_INCOME=
 
 # Expense Accounts
 export FINCORE_ACCOUNT_PROPERTY_MGMT_EXPENSE=
+export FINCORE_ACCOUNT_MAINTENANCE_EXPENSE=
+
+# Contra-revenue. Debited when a negative charge reverses nothing — a goodwill
+# credit has no originating category whose accounts could be reversed.
+export FINCORE_ACCOUNT_TENANT_CONCESSIONS=
 
 # Gatekeeper API
 export GATEKEEPER_API_BASE_URL=https://api.gatekeeperpro.live/api

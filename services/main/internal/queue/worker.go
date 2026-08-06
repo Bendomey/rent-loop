@@ -56,7 +56,7 @@ func RegisterWorkers(redisURL string, appCtx pkg.AppContext, repo repository.Rep
 	go func() {
 		mux := NewServeMux(
 			AnnouncementHandlers(svcs.AnnouncementService),
-			LeaseInvoicingHandlers(repo.LeaseRepository, svcs.LeaseService),
+			FinancialAccountInvoicingHandlers(svcs.Financials.Issuance),
 			InvoiceReminderHandlers(repo.InvoiceRepository, appCtx, svcs.NotificationService),
 			ForexSyncHandlers(svcs.ExchangeRateService),
 			LeaseLifecycleHandlers(
@@ -86,15 +86,16 @@ func RegisterScheduler(redisURL string) {
 	scheduler := asynq.NewScheduler(opt, &asynq.SchedulerOpts{Location: time.UTC})
 
 	// TODO:  Hourly — catches Hourly leases on time;(bring this back when our redis resources support it)
-	// Every day at midnight longer-frequency leases are
-	// skipped naturally when NextBillingDate is still in the future.
+	// Every day at midnight. Accounts with nothing due inside their lead
+	// window are skipped naturally — the sweep reads charge state rather than
+	// a cursor, so running it more often than necessary is harmless.
 	if _, err = scheduler.Register(
 		"0 0 * * *",
-		asynq.NewTask(TypeLeaseRentInvoiceGeneration, nil),
+		asynq.NewTask(TypeFinancialAccountInvoiceIssuance, nil),
 		asynq.MaxRetry(1),
 	); err != nil {
 		raven.CaptureError(err, nil)
-		log.Fatal("failed to register lease invoicing schedule:", err)
+		log.Fatal("failed to register invoice issuance schedule:", err)
 	}
 
 	// Every day at midnight — reminders are day-granularity (pre_due_1d, overdue_Nd).

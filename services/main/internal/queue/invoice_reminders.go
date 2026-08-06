@@ -108,10 +108,9 @@ func handleInvoiceReminder(
 			}
 			tenant := &invoice.PayerLease.Tenant
 
-			unitName := ""
-			if invoice.ContextLease != nil {
-				unitName = invoice.ContextLease.Unit.Name
-			}
+			// Unit comes from PayerLease now that Invoice.ContextLease is gone;
+			// this branch already guarantees PayerLease is present.
+			unitName := invoice.PayerLease.Unit.Name
 
 			reminderData := emailtemplates.InvoiceReminderData{
 				TenantName:  tenant.FirstName,

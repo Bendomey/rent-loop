@@ -2,6 +2,7 @@ package migration
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/Bendomey/rent-loop/services/main/init/migration/jobs"
 	log "github.com/sirupsen/logrus"
@@ -35,11 +36,14 @@ func updateMigration(db *gorm.DB) error {
 		&models.LeaseChecklistAcknowledgment{},
 		&models.ChecklistTemplate{},
 		&models.ChecklistTemplateItem{},
-		&models.LeasePayment{},
 		&models.TenantAccount{},
 		&models.Invoice{},
 		&models.InvoiceLineItem{},
 		&models.Payment{},
+		&models.FinancialAccount{},
+		&models.ChargeDefinition{},
+		&models.ChargeInstance{},
+		&models.PaymentAllocation{},
 		&models.DocumentSignature{},
 		&models.SigningToken{},
 		&models.FcmToken{},
@@ -85,7 +89,7 @@ func ServiceAutoMigration(db *gorm.DB) error {
 		return err
 	}
 
-	m = gormigrate.New(db, gormigrate.DefaultOptions, []*gormigrate.Migration{
+	financialJobs := []*gormigrate.Migration{
 		jobs.SeedSuperAdmin(),
 		jobs.SeedSystemOfflinePaymentAccount(),
 		jobs.DropTenantAccountNotificationToken(),
@@ -129,7 +133,30 @@ func ServiceAutoMigration(db *gorm.DB) error {
 		jobs.AddPropertyArchiveFields(),
 		jobs.SplitSessionsFromRefreshTokens(),
 		jobs.AddMaintenanceRequestAssets(),
-	})
+		jobs.AddFinancialAccountTables(),
+		jobs.BackfillFinancialAccounts(),
+	}
+
+	// DropLegacyFinancialColumns is opt-in. Without this gate `make update-db`
+	// would backfill and destroy in a single invocation, leaving no point at
+	// which the backfill can be inspected — which is the entire reason the
+	// destructive changes are a separate job.
+	//
+	// The gate gates REGISTRATION, not the job body: a job that skipped its own
+	// work would still be recorded as applied and would never run again.
+	//
+	//	FINANCIAL_MIGRATION_ALLOW_DROP=true make update-db
+	if os.Getenv("FINANCIAL_MIGRATION_ALLOW_DROP") == "true" {
+		log.Warn("[Migration] FINANCIAL_MIGRATION_ALLOW_DROP is set — legacy financial columns will be DROPPED")
+		financialJobs = append(financialJobs, jobs.DropLegacyFinancialColumns())
+	} else {
+		log.Info(
+			"[Migration] skipping DropLegacyFinancialColumns " +
+				"(set FINANCIAL_MIGRATION_ALLOW_DROP=true to run it)",
+		)
+	}
+
+	m = gormigrate.New(db, gormigrate.DefaultOptions, financialJobs)
 	if err := m.Migrate(); err != nil {
 		return fmt.Errorf("[Migration.Migrate]: %v", err)
 	}

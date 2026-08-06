@@ -472,7 +472,7 @@ func (h *InvoiceHandler) ListInvoicesAcrossProperties(w http.ResponseWriter, r *
 
 type AddLineItemRequest struct {
 	Label       string          `json:"label"              validate:"required"                                                                                                                                                         example:"January Rent" description:"Label for the line item"`
-	Category    string          `json:"category"           validate:"required,oneof=RENT SECURITY_DEPOSIT INITIAL_DEPOSIT MAINTENANCE_FEE SAAS_FEE BOOKING_FEE EXPENSE DEPOSIT_REFUND EARLY_TERMINATION_FEE DAMAGE_CHARGE RENT_REFUND" example:"OTHER"        description:"Category of line item"`
+	Category    string          `json:"category"           validate:"required,oneof=RENT SECURITY_DEPOSIT AGENCY_FEE VAT UTILITY DAMAGE_CHARGE EARLY_TERMINATION_FEE OTHER MAINTENANCE_FEE SAAS_FEE BOOKING_FEE" example:"OTHER"        description:"Category of line item"`
 	Quantity    int64           `json:"quantity"           validate:"required,min=1"                                                                                                                                                   example:"1"            description:"Quantity"`
 	UnitAmount  int64           `json:"unit_amount"        validate:"required,min=0"                                                                                                                                                   example:"100000"       description:"Unit amount in smallest currency unit"`
 	TotalAmount int64           `json:"total_amount"       validate:"required,min=0"                                                                                                                                                   example:"100000"       description:"Total amount in smallest currency unit"`
@@ -634,7 +634,7 @@ func (h *InvoiceHandler) RemoveLineItem(w http.ResponseWriter, r *http.Request) 
 
 type UpdateLineItemRequest struct {
 	Label       *string         `json:"label,omitempty"        validate:"omitempty"                                                                                                                                                         example:"January Rent" description:"Label for the line item"`
-	Category    *string         `json:"category,omitempty"     validate:"omitempty,oneof=RENT SECURITY_DEPOSIT INITIAL_DEPOSIT MAINTENANCE_FEE SAAS_FEE BOOKING_FEE EXPENSE DEPOSIT_REFUND EARLY_TERMINATION_FEE DAMAGE_CHARGE RENT_REFUND" example:"OTHER"        description:"Category of line item"`
+	Category    *string         `json:"category,omitempty"     validate:"omitempty,oneof=RENT SECURITY_DEPOSIT AGENCY_FEE VAT UTILITY DAMAGE_CHARGE EARLY_TERMINATION_FEE OTHER MAINTENANCE_FEE SAAS_FEE BOOKING_FEE" example:"OTHER"        description:"Category of line item"`
 	Quantity    *int64          `json:"quantity,omitempty"     validate:"omitempty,min=1"                                                                                                                                                   example:"1"            description:"Quantity"`
 	UnitAmount  *int64          `json:"unit_amount,omitempty"  validate:"omitempty,min=0"                                                                                                                                                   example:"100000"       description:"Unit amount in smallest currency unit"`
 	TotalAmount *int64          `json:"total_amount,omitempty" validate:"omitempty,min=0"                                                                                                                                                   example:"100000"       description:"Total amount in smallest currency unit"`
@@ -903,9 +903,17 @@ func (h *InvoiceHandler) TenantGetInvoice(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	// Ownership: either the invoice names this lease as payer, or it belongs to
+	// the financial account anchored on this lease's application (the
+	// application-stage case, where no lease existed when it was issued).
 	leaseIDStr := lease.ID.String()
-	ownedByTenant := (invoice.PayerLeaseID != nil && *invoice.PayerLeaseID == leaseIDStr) ||
-		(invoice.ContextTenantApplicationID != nil && *invoice.ContextTenantApplicationID == lease.TenantApplicationId)
+	ownedByTenant := invoice.PayerLeaseID != nil && *invoice.PayerLeaseID == leaseIDStr
+	if !ownedByTenant && invoice.FinancialAccountID != nil {
+		account, accErr := h.services.Financials.Accounts.GetByID(r.Context(), *invoice.FinancialAccountID)
+		if accErr == nil && account != nil {
+			ownedByTenant = account.TenantApplicationID == lease.TenantApplicationId
+		}
+	}
 
 	if !ownedByTenant {
 		http.Error(w, "Forbidden", http.StatusForbidden)

@@ -967,65 +967,40 @@ func (h *TenantApplicationHandler) ApproveTenantApplication(w http.ResponseWrite
 	})
 }
 
-type GenerateInvoiceRequest struct {
-	DueDate *time.Time `json:"due_date,omitempty" validate:"omitempty" example:"2024-07-01T00:00:00Z" description:"Due date for the invoice"`
-}
-
-// GenerateInvoice godoc
+// PrepareCharges godoc
 //
-//	@Summary		Generate an invoice for a lease application (Admin)
-//	@Description	Generate an invoice for a lease application (security deposit and/or initial deposit) (Admin)
+//	@Summary		Prepare charges for a tenant application
+//	@Description	Turns the application's agreed terms into a financial account with charge definitions and instances. Replaces invoice:generate — invoices are afterwards composed against these charges, in any combination, before or after approval. The initial deposit becomes the account's rent billing cadence rather than a charge of its own.
 //	@Tags			TenantApplication
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
-//	@Param			property_id				path		string										true	"Property ID"
-//	@Param			tenant_application_id	path		string										true	"lease application ID"
-//	@Param			body					body		GenerateInvoiceRequest						false	"Generate Invoice Request Body"
-//	@Success		201						{object}	object{data=transformations.OutputInvoice}	"Invoice generated successfully"
-//	@Failure		400						{object}	lib.HTTPError								"Error occurred when generating invoice"
-//	@Failure		401						{object}	string										"Invalid or absent authentication token"
-//	@Failure		404						{object}	lib.HTTPError								"lease application not found"
-//	@Failure		422						{object}	lib.HTTPError								"Validation error"
-//	@Failure		500						{object}	string										"An unexpected error occurred"
-//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id}/invoice:generate [post]
-func (h *TenantApplicationHandler) GenerateInvoice(w http.ResponseWriter, r *http.Request) {
+//	@Param			property_id				path		string												true	"Property ID"
+//	@Param			tenant_application_id	path		string												true	"Tenant application ID"
+//	@Success		201						{object}	object{data=transformations.OutputFinancialAccount}	"Charges prepared successfully"
+//	@Failure		400						{object}	lib.HTTPError										"Charges already prepared, or the application is missing rent terms, a unit, a move-in date or a stay duration"
+//	@Failure		401						{object}	string												"Invalid or absent authentication token"
+//	@Failure		404						{object}	lib.HTTPError										"Tenant application not found"
+//	@Failure		500						{object}	string												"An unexpected error occurred"
+//	@Router			/api/v1/properties/{property_id}/tenant-applications/{tenant_application_id}/charges:prepare [post]
+func (h *TenantApplicationHandler) PrepareCharges(w http.ResponseWriter, r *http.Request) {
 	_, currentClientUserOk := lib.ClientUserFromContext(r.Context())
 	if !currentClientUserOk {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
-	var body GenerateInvoiceRequest
-	decodeErr := json.NewDecoder(r.Body).Decode(&body)
-	if decodeErr != nil {
-		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
-		return
-	}
-
-	isPassedValidation := lib.ValidateRequest(h.appCtx.Validator, body, w)
-	if !isPassedValidation {
-		return
-	}
-
 	tenantApplicationID := chi.URLParam(r, "tenant_application_id")
 
-	invoice, generateInvoiceErr := h.service.GenerateInvoice(
-		r.Context(),
-		services.GenerateInvoiceInput{
-			TenantApplicationID: tenantApplicationID,
-			DueDate:             body.DueDate,
-		},
-	)
-
-	if generateInvoiceErr != nil {
-		HandleErrorResponse(w, generateInvoiceErr)
+	account, prepareErr := h.service.PrepareCharges(r.Context(), tenantApplicationID)
+	if prepareErr != nil {
+		HandleErrorResponse(w, prepareErr)
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformations.DBInvoiceToRest(invoice),
+		"data": transformations.DBFinancialAccountToRest(account),
 	})
 }
 
@@ -1045,8 +1020,6 @@ func (h *TenantApplicationHandler) GetTenantApplicationByCode(w http.ResponseWri
 	populate := []string{
 		"DesiredUnit",
 		"DesiredUnit.Property",
-		"ApplicationPaymentInvoice",
-		"ApplicationPaymentInvoice.LineItems",
 	}
 	query := repository.GetTenantApplicationQuery{
 		Code:     code,
@@ -1243,8 +1216,6 @@ func (h *TenantApplicationHandler) VerifyTrackingOtp(w http.ResponseWriter, r *h
 	populate := []string{
 		"DesiredUnit",
 		"DesiredUnit.Property",
-		"ApplicationPaymentInvoice",
-		"ApplicationPaymentInvoice.LineItems",
 	}
 	ta, err := h.service.GetOneTenantApplication(r.Context(), repository.GetTenantApplicationQuery{
 		Code:     code,
@@ -1311,11 +1282,18 @@ func (h *TenantApplicationHandler) PayTrackingInvoice(w http.ResponseWriter, r *
 		return
 	}
 
-	// Validate invoice belongs to this application
+	// Validate the invoice belongs to this application, via its financial
+	// account — the invoice's own context column has been dropped.
+	account, accErr := h.services.Financials.Accounts.GetByApplication(r.Context(), ta.ID.String())
+	if accErr != nil {
+		HandleErrorResponse(w, accErr)
+		return
+	}
+
 	invoice, invoiceErr := h.services.InvoiceService.GetByQuery(r.Context(), repository.GetInvoiceQuery{
 		Query: map[string]any{
-			"id":                            invoiceID,
-			"context_tenant_application_id": ta.ID.String(),
+			"id":                   invoiceID,
+			"financial_account_id": account.ID.String(),
 		},
 	})
 	if invoiceErr != nil {
