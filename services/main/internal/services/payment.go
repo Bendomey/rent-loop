@@ -23,14 +23,6 @@ import (
 type PaymentService interface {
 	CreateOfflinePayment(context context.Context, input CreateOfflinePaymentInput) (*models.Payment, error)
 	VerifyOfflinePayment(context context.Context, input VerifyOfflinePaymentInput) (*models.Payment, error)
-	// GetPayment(context context.Context, query repository.GetPaymentQuery) (*models.Payment, error)
-	// ListPayments(
-	// 	context context.Context,
-	// 	filterQuery repository.ListPaymentsFilter,
-	// ) ([]models.Payment, error)
-	// CountPayments(context context.Context, filterQuery repository.ListPaymentsFilter) (int64, error)
-	// UpdatePayment(context context.Context, input UpdatePaymentInput) (*models.Payment, error)
-	// DeletePayment(context context.Context, input repository.DeletePaymentInput) error
 }
 
 type paymentService struct {
@@ -187,11 +179,7 @@ func (s *paymentService) CreateOfflinePayment(
 		}
 	}
 
-	remainingBalance, remainingBalanceErr := getRemainingInvoiceBalance(ctx, GetRemainingInvoiceBalanceInput{
-		repo:     s.repo,
-		invoice:  *invoice,
-		statuses: []string{"SUCCESSFUL"},
-	})
+	remainingBalance, remainingBalanceErr := getRemainingInvoiceBalance(ctx, s.repo, *invoice)
 	if remainingBalanceErr != nil {
 		return nil, pkg.InternalServerError(remainingBalanceErr.Error(), &pkg.RentLoopErrorParams{
 			Metadata: map[string]string{
@@ -530,11 +518,7 @@ func (s *paymentService) VerifyOfflinePayment(
 		}
 
 		// Calculate remaining balance after this payment
-		remainingBalance, remainingBalanceErr := getRemainingInvoiceBalance(transCtx, GetRemainingInvoiceBalanceInput{
-			repo:     s.repo,
-			invoice:  payment.Invoice,
-			statuses: []string{"SUCCESSFUL"},
-		})
+		remainingBalance, remainingBalanceErr := getRemainingInvoiceBalance(transCtx, s.repo, payment.Invoice)
 		if remainingBalanceErr != nil {
 			if !hasOuterTx {
 				transaction.Rollback()
@@ -729,12 +713,6 @@ func (s *paymentService) VerifyOfflinePayment(
 	return payment, nil
 }
 
-type GetRemainingInvoiceBalanceInput struct {
-	repo     repository.PaymentRepository
-	invoice  models.Invoice
-	statuses []string
-}
-
 func failOfflinePayment(
 	ctx context.Context,
 	repo repository.PaymentRepository,
@@ -757,14 +735,22 @@ func failOfflinePayment(
 	return repo.Update(ctx, payment)
 }
 
+// getRemainingInvoiceBalance is what the invoice still expects to receive.
+//
+// Only SUCCESSFUL payments count, deliberately: a PENDING payment is a claim
+// nobody has verified, and treating it as money received would let an
+// unverified claim block or shrink a real one. Both callers depend on that
+// meaning — the guard in CreateOfflinePayment and the PAID/PARTIALLY_PAID
+// decision in VerifyOfflinePayment — so it is fixed here rather than passed in.
 func getRemainingInvoiceBalance(
 	ctx context.Context,
-	input GetRemainingInvoiceBalanceInput,
+	repo repository.PaymentRepository,
+	invoice models.Invoice,
 ) (int64, error) {
-	totalPaid, err := input.repo.SumAmountByInvoice(ctx, input.invoice.ID.String(), input.statuses)
+	totalPaid, err := repo.SumAmountByInvoice(ctx, invoice.ID.String(), []string{"SUCCESSFUL"})
 	if err != nil {
 		return 0, err
 	}
 
-	return input.invoice.TotalAmount - totalPaid, nil
+	return invoice.TotalAmount - totalPaid, nil
 }
