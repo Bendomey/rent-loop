@@ -232,6 +232,8 @@ export interface UpdateUserMeInput {
 	name?: string
 	phone_number?: string
 	email?: string
+	/** Pass `null` to clear the photo (falls back to initials). */
+	profile_photo_url?: string | null
 }
 
 const updateUserMe = async (props: UpdateUserMeInput) => {
