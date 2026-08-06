@@ -41,9 +41,10 @@ export function PropertyTenantApplicationContainer() {
 		if (!hasCompletedTour()) startTour()
 	}, [hasCompletedTour, startTour])
 
-	const isInvoicePaid = ['PAID', 'PARTIALLY_PAID'].includes(
-		tenantApplication?.application_payment_invoice?.status ?? '',
-	)
+	// Money has moved once anything on the account is settled. There is no
+	// single "the invoice" any more — an application has a ledger.
+	const isInvoicePaid =
+		(tenantApplication?.financial_account?.total_settled ?? 0) > 0
 
 	const isCompleted =
 		tenantApplication?.status === 'TenantApplication.Status.Completed'

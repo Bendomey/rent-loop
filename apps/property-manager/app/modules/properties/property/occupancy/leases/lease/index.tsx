@@ -192,10 +192,14 @@ export function LeaseDetailModule() {
 											<div className="grid grid-cols-2 gap-4">
 												<DetailField
 													label="Rent Fee"
-													value={formatAmount(
-														convertPesewasToCedis(application.rent_fee),
-														application.rent_fee_currency,
-													)}
+													value={
+														application.rent_fee == null
+															? '-'
+															: formatAmount(
+																	convertPesewasToCedis(application.rent_fee),
+																	application.rent_fee_currency,
+																)
+													}
 												/>
 												{application.initial_deposit_fee != null && (
 													<DetailField
@@ -230,15 +234,13 @@ export function LeaseDetailModule() {
 													}
 												/>
 											</div>
-											{application.application_payment_invoice && (
+											{application.financial_account && (
 												<DocumentRow
 													icon={<FileText className="size-[18px]" />}
 													tone="blue"
-													title="Invoice"
-													subtitle={
-														application.application_payment_invoice.code
-													}
-													to={`/properties/${propertyId}/financials/invoices/${application.application_payment_invoice.id}`}
+													title="Financial account"
+													subtitle={`${application.financial_account.code} · ${application.financial_account.invoice_count} ${application.financial_account.invoice_count === 1 ? 'invoice' : 'invoices'}`}
+													to={`/properties/${propertyId}/financials/invoices`}
 													actionLabel="Open"
 												/>
 											)}

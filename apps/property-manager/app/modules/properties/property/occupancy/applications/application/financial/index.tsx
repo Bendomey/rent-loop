@@ -1,43 +1,46 @@
-import { Pencil } from 'lucide-react'
-import { useState } from 'react'
-import { useRevalidator } from 'react-router'
-import { toast } from 'sonner'
 import { useTenantApplicationContext } from '../context'
-import { InitialPaymentSetup } from './initial-payment-setup'
-import { RentSetup } from './rent-setup'
-import { SecurityDeposit } from './security-deposit'
-import { useAdminUpdateTenantApplication } from '~/api/tenant-applications'
-import { Button } from '~/components/ui/button'
-import {
-	Card,
-	CardContent,
-	CardFooter,
-	CardHeader,
-	CardTitle,
-} from '~/components/ui/card'
-import { Spinner } from '~/components/ui/spinner'
-import {
-	convertCedisToPesewas,
-	convertPesewasToCedis,
-	formatAmount,
-} from '~/lib/format-amount'
-import { getPaymentFrequencyLabel } from '~/lib/properties.utils'
+import { MoveInGate } from './move-in-gate'
+import { SummaryBar } from './summary-bar'
+import { useGetFinancialAccount } from '~/api/financial-accounts'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 
-interface FieldDisplayProps {
-	label: string
-	value: string | null | undefined
-}
+export type FinancialMode =
+	| 'blocked'
+	| 'setup'
+	| 'live'
+	| 'locked'
+	| 'readonly'
 
-function FieldDisplay({ label, value }: FieldDisplayProps) {
-	return (
-		<div>
-			<p className="text-muted-foreground text-sm">{label}</p>
-			<p className="text-sm font-medium">{value || '-'}</p>
-		</div>
+/**
+ * Move-in setup supplies three of the six fields charges:prepare needs, so
+ * without it the server refuses. The agreed rent is the fourth and is null on a
+ * new application — which is what makes the rent field the gate rather than a
+ * convenience.
+ */
+const moveInComplete = (application: TenantApplication) =>
+	Boolean(
+		application.desired_move_in_date &&
+			application.stay_duration &&
+			application.stay_duration_frequency,
 	)
+
+export const resolveMode = (
+	application: TenantApplication,
+	summary: Nullable<AccountSummary>,
+): FinancialMode => {
+	if (application.status === 'TenantApplication.Status.Completed')
+		return 'readonly'
+	if (!moveInComplete(application)) return 'blocked'
+	if (!application.financial_account || !summary) return 'setup'
+
+	// Any charge that has been invoiced or settled freezes the rent terms —
+	// RederiveRent returns 400 ChargesAlreadyBilled from that point on.
+	const billed = summary.charges.some(
+		(charge) => charge.invoiced_amount !== 0 || charge.settled_amount !== 0,
+	)
+	return billed ? 'locked' : 'live'
 }
 
 export function PropertyTenantApplicationFinancial() {
@@ -45,194 +48,36 @@ export function PropertyTenantApplicationFinancial() {
 	const { clientUserProperty } = useProperty()
 	const { clientUser } = useClient()
 
-	const revalidator = useRevalidator()
+	const clientId = safeString(clientUser?.client_id)
+	const propertyId = safeString(clientUserProperty?.property_id)
+	const accountId = tenantApplication.financial_account?.id ?? null
 
-	const unit = tenantApplication.desired_unit
-
-	// API stores fees in pesewas — convert to cedis for display/form state
-	const savedRentFee = convertPesewasToCedis(
-		tenantApplication.rent_fee || unit?.rent_fee || 0,
-	)
-	const savedPaymentFrequency =
-		tenantApplication.payment_frequency || unit?.payment_frequency
-	const savedSecurityDepositFee = convertPesewasToCedis(
-		tenantApplication.security_deposit_fee ?? 0,
-	)
-	const savedSecurityDepositEnabled = Boolean(
-		tenantApplication.security_deposit_fee,
+	const { data: summary } = useGetFinancialAccount(
+		clientId,
+		propertyId,
+		accountId,
 	)
 
-	const [isEditing, setIsEditing] = useState(false)
-	const [rentAmount, setRentAmount] = useState(savedRentFee)
-	const [paymentFrequency, setPaymentFrequency] = useState(
-		savedPaymentFrequency,
-	)
-	const [depositEnabled, setDepositEnabled] = useState(
-		savedSecurityDepositEnabled,
-	)
-	const [depositAmount, setDepositAmount] = useState(savedSecurityDepositFee)
-
-	const { isPending, mutate } = useAdminUpdateTenantApplication()
-
-	const hasFinancialChanges =
-		rentAmount !== savedRentFee ||
-		depositEnabled !== savedSecurityDepositEnabled ||
-		(depositEnabled && depositAmount !== savedSecurityDepositFee)
-
-	const hasInvoice = Boolean(tenantApplication.application_payment_invoice)
-
-	const handleReset = () => {
-		setRentAmount(convertPesewasToCedis(unit.rent_fee))
-		setPaymentFrequency(unit.payment_frequency)
-	}
-
-	const handleCancel = () => {
-		setRentAmount(savedRentFee)
-		setPaymentFrequency(savedPaymentFrequency)
-		setDepositEnabled(savedSecurityDepositEnabled)
-		setDepositAmount(savedSecurityDepositFee)
-		setIsEditing(false)
-	}
-
-	const handleSave = () => {
-		mutate(
-			{
-				client_id: safeString(clientUser?.client_id),
-				property_id: safeString(clientUserProperty?.property_id),
-				id: tenantApplication.id,
-				data: {
-					rent_fee: convertCedisToPesewas(rentAmount),
-					payment_frequency: paymentFrequency,
-					security_deposit_fee: depositEnabled
-						? convertCedisToPesewas(depositAmount)
-						: null,
-					security_deposit_fee_currency: depositEnabled ? 'GHS' : null,
-					initial_deposit_fee_currency: null,
-					initial_deposit_fee: null,
-				},
-			},
-			{
-				onError: () => {
-					toast.error('Failed to save financial setup. Please try again.')
-				},
-				onSuccess: () => {
-					toast.success('Financial setup saved.')
-					setIsEditing(false)
-					void revalidator.revalidate()
-				},
-			},
-		)
-	}
+	const mode = resolveMode(tenantApplication, summary ?? null)
 
 	return (
 		<div className="space-y-4">
-			<Card className="shadow-none">
-				<CardHeader>
-					<CardTitle className="flex items-center justify-between">
-						Financial Setup
-						{!isEditing &&
-							!hasInvoice &&
-							tenantApplication?.status ===
-								'TenantApplication.Status.InProgress' && (
-								<Button
-									variant="ghost"
-									size="sm"
-									onClick={() => setIsEditing(true)}
-								>
-									<Pencil className="size-4" />
-									Edit
-								</Button>
-							)}
-						{isEditing && (
-							<Button
-								variant="ghost"
-								size="sm"
-								onClick={handleCancel}
-								disabled={isPending}
-							>
-								Cancel
-							</Button>
-						)}
-					</CardTitle>
-				</CardHeader>
+			{mode === 'blocked' ? (
+				<MoveInGate
+					propertyId={propertyId}
+					applicationId={tenantApplication.id}
+				/>
+			) : null}
 
-				{!isEditing ? (
-					<CardContent className="space-y-4">
-						<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-							<FieldDisplay
-								label="Agreed Rent Fee"
-								value={`${formatAmount(savedRentFee, tenantApplication.rent_fee_currency)}${savedPaymentFrequency ? ` / ${getPaymentFrequencyLabel(savedPaymentFrequency)}` : ''}`}
-							/>
-							<FieldDisplay
-								label="Security Deposit"
-								value={
-									savedSecurityDepositEnabled
-										? formatAmount(
-												savedSecurityDepositFee,
-												tenantApplication.rent_fee_currency,
-											)
-										: '-'
-								}
-							/>
-						</div>
-					</CardContent>
-				) : (
-					<>
-						<CardContent className="space-y-3">
-							<RentSetup
-								rentAmount={rentAmount}
-								paymentFrequency={paymentFrequency}
-								defaultRentAmount={convertPesewasToCedis(unit?.rent_fee ?? 0)}
-								defaultPaymentFrequency={unit?.payment_frequency}
-								onRentAmountChange={setRentAmount}
-								onPaymentFrequencyChange={setPaymentFrequency}
-								onReset={handleReset}
-								currency={tenantApplication.rent_fee_currency}
-							/>
+			{summary ? (
+				<SummaryBar summary={summary} readonly={mode === 'readonly'} />
+			) : null}
 
-							<SecurityDeposit
-								enabled={depositEnabled}
-								amount={depositAmount}
-								onEnabledChange={setDepositEnabled}
-								onAmountChange={setDepositAmount}
-							/>
-						</CardContent>
-
-						<CardFooter className="flex justify-end">
-							<div className="flex items-center gap-2">
-								<Button
-									variant="outline"
-									onClick={handleCancel}
-									disabled={isPending}
-								>
-									Cancel
-								</Button>
-								<Button
-									disabled={!hasFinancialChanges || isPending}
-									onClick={handleSave}
-								>
-									{isPending ? <Spinner /> : null}
-									Save
-								</Button>
-							</div>
-						</CardFooter>
-					</>
-				)}
-			</Card>
-
-			<InitialPaymentSetup
-				propertyId={safeString(clientUserProperty?.property_id)}
-				applicationId={tenantApplication.id}
-				existingInvoice={tenantApplication.application_payment_invoice ?? null}
-				hasFinancialChanges={hasFinancialChanges}
-				stayDuration={tenantApplication.stay_duration}
-				stayDurationFrequency={tenantApplication.stay_duration_frequency}
-				rentAmount={rentAmount}
-				paymentFrequency={paymentFrequency}
-				securityDepositEnabled={depositEnabled}
-				securityDepositAmount={depositAmount}
-				initialDepositFee={tenantApplication.initial_deposit_fee}
-			/>
+			{/*
+			 * Sections land in Tasks 6-10:
+			 *   1  AgreedRent      2  Schedule (preview | ledger)
+			 *   3  CollectionPlan  4  Collect
+			 */}
 		</div>
 	)
 }

@@ -1,23 +1,30 @@
 import type { ChecklistItem } from './checklist-types'
 
+/**
+ * The financial step's sub-items.
+ *
+ * There is no longer a single "the invoice" — an application has a financial
+ * account carrying many charges and any number of invoices, so progress is read
+ * from the account summary instead:
+ *
+ *   charges prepared  ->  financial_account is present
+ *   money collected   ->  total_settled > 0
+ */
 export function getFinancialItems(
 	application: TenantApplication,
 ): ChecklistItem[] {
-	const invoice = application.application_payment_invoice
+	const account = application.financial_account
 
 	return [
-		{ label: 'Rent fee', done: Boolean(application.rent_fee) },
+		{ label: 'Agreed rent', done: Boolean(application.rent_fee) },
+		{ label: 'Charges created', done: Boolean(account) },
 		{
-			label: 'Payment frequency',
-			done: Boolean(application.payment_frequency),
+			label: 'Collection plan',
+			done: Boolean(account),
 		},
 		{
-			label: 'Invoice generated',
-			done: Boolean(invoice),
-		},
-		{
-			label: 'Invoice paid',
-			done: invoice?.status === 'PAID',
+			label: 'First payment',
+			done: Boolean(account && account.total_settled > 0),
 		},
 	]
 }

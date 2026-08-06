@@ -10,6 +10,8 @@
     "types:check": "react-router typegen && tsc",
     "lint": "eslint .",
     "lint:ci": "eslint . --quiet",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "format": "prettier --write \"**/*.+(js|jsx|json|yml|yaml|css|less|scss|ts|tsx|md|gql|graphql|mdx|vue)\"",
     "quality": "npm run types:check && npm run format && npm run lint --fix"
   },
@@ -122,7 +124,8 @@
     "typescript": "5.9.2",
     "vite": "7.1.7",
     "vite-plugin-pwa": "1.2.0",
-    "vite-tsconfig-paths": "5.1.4"
+    "vite-tsconfig-paths": "5.1.4",
+    "vitest": "2.1.8"
   },
   "license": "ISC",
   "prettier": "@epic-web/config/prettier",

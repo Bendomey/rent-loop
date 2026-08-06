@@ -79,9 +79,8 @@ export function PropertyTenantApplicationMoveIn() {
 	const { tenantApplication: application } = useTenantApplicationContext()
 	const { clientUser } = useClient()
 
-	const isInvoicePaid = ['PAID', 'PARTIALLY_PAID'].includes(
-		application?.application_payment_invoice?.status ?? '',
-	)
+	// Money has moved once anything on the account is settled.
+	const isInvoicePaid = (application?.financial_account?.total_settled ?? 0) > 0
 
 	const revalidator = useRevalidator()
 

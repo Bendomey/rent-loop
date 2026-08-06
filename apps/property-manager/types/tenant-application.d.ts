@@ -50,7 +50,12 @@ interface TenantApplication {
 	stay_duration_frequency: Nullable<string>
 	stay_duration: Nullable<number>
 
-	rent_fee: number
+	/**
+	 * The agreed rent, in minor units. NULL on a new application — the unit's
+	 * rent is a prefill the UI offers, never inherited by the API. Until this is
+	 * set, charges:prepare returns 400 ApplicationMissingRentDetails.
+	 */
+	rent_fee: Nullable<number>
 	rent_fee_currency: string
 	payment_frequency: Nullable<string>
 
@@ -60,7 +65,11 @@ interface TenantApplication {
 	security_deposit_fee: Nullable<number>
 	security_deposit_fee_currency: Nullable<string>
 
-	application_payment_invoice: Nullable<Invoice>
+	/**
+	 * Null until charges:prepare runs. Its presence is what switches the
+	 * financial setup page from preview mode to the live ledger.
+	 */
+	financial_account: Nullable<TenantApplicationFinancials>
 
 	lease_agreement_document_mode: Nullable<'MANUAL' | 'ONLINE'>
 	lease_agreement_document_url: Nullable<string>
