@@ -9,12 +9,7 @@ import { useGetInvoices } from '~/api/invoices'
 import { useGetPaymentAccounts } from '~/api/payment-accounts'
 import { Alert, AlertDescription } from '~/components/ui/alert'
 import { Button } from '~/components/ui/button'
-import {
-	Card,
-	CardContent,
-	CardHeader,
-	CardTitle,
-} from '~/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
 import {
@@ -121,7 +116,9 @@ export function Collect({
 	const invoiceMinor = convertCedisToPesewas(
 		Number.parseFloat(invoiceAmount.replace(/,/g, '')) || 0,
 	)
-	const over = Boolean(selectedInvoice && invoiceMinor > remainingOn(selectedInvoice))
+	const over = Boolean(
+		selectedInvoice && invoiceMinor > remainingOn(selectedInvoice),
+	)
 
 	const composeTotal = Object.values(picked).reduce((sum, v) => sum + v, 0)
 	const total = tab === 'invoice' ? invoiceMinor : composeTotal
@@ -235,8 +232,8 @@ export function Collect({
 					{hasInvoices ? (
 						<>
 							<span className="text-foreground font-semibold">
-								{unpaid.length} {unpaid.length === 1 ? 'invoice is' : 'invoices are'}{' '}
-								out.
+								{unpaid.length}{' '}
+								{unpaid.length === 1 ? 'invoice is' : 'invoices are'} out.
 							</span>{' '}
 							Money usually arrives against an invoice that already exists —
 							record it there. Those charges can't be put on a second invoice.

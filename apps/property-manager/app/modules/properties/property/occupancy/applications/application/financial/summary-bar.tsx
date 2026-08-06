@@ -31,9 +31,7 @@ function Stat({
 			>
 				{value}
 			</p>
-			{sub ? (
-				<p className="text-muted-foreground mt-1 text-xs">{sub}</p>
-			) : null}
+			{sub ? <p className="text-muted-foreground mt-1 text-xs">{sub}</p> : null}
 		</div>
 	)
 }

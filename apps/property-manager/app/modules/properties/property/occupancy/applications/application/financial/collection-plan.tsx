@@ -4,15 +4,14 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { useUpdateBillingPolicy } from '~/api/financial-accounts'
 import { Button } from '~/components/ui/button'
-import {
-	Card,
-	CardContent,
-	CardHeader,
-	CardTitle,
-} from '~/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { Spinner } from '~/components/ui/spinner'
 import type { CollectionChoice } from '~/lib/cadence'
-import { COLLECTION_CHOICES, cadenceForChoice, choiceForPolicy } from '~/lib/cadence'
+import {
+	COLLECTION_CHOICES,
+	cadenceForChoice,
+	choiceForPolicy,
+} from '~/lib/cadence'
 import { QUERY_KEYS } from '~/lib/constants'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 
@@ -150,7 +149,7 @@ export function CollectionPlan({
 				>
 					<Clock className="text-muted-foreground size-4" />
 					<span className="text-sm font-medium">Issue each invoice</span>
-					<div className="flex items-center rounded-lg border bg-background">
+					<div className="bg-background flex items-center rounded-lg border">
 						<Button
 							variant="ghost"
 							size="icon"

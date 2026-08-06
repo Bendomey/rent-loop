@@ -1,37 +1,52 @@
 import type { ChecklistItem } from './checklist-types'
 
+/**
+ * Seventeen fields, reported as four groups.
+ *
+ * The rail shows these inline under the active step, and seventeen rows in a
+ * sidebar is the density the redesign set out to remove. Grouping changes
+ * nothing about what is required — a group is done only when every field in it
+ * is saved — it just stops the list from burying the one field that is missing.
+ */
 export function getTenantDetailItems(
 	application: TenantApplication,
 ): ChecklistItem[] {
+	const all = (...values: Array<unknown>) => values.every(Boolean)
+
 	return [
-		{ label: 'First name', done: Boolean(application.first_name) },
-		{ label: 'Last name', done: Boolean(application.last_name) },
-		{ label: 'Phone', done: Boolean(application.phone) },
-		{ label: 'Gender', done: Boolean(application.gender) },
-		{ label: 'Date of birth', done: Boolean(application.date_of_birth) },
-		{ label: 'Nationality', done: Boolean(application.nationality) },
-		{ label: 'Marital status', done: Boolean(application.marital_status) },
-		{ label: 'ID type', done: Boolean(application.id_type) },
-		{ label: 'ID number', done: Boolean(application.id_number) },
-		{ label: 'Current address', done: Boolean(application.current_address) },
 		{
-			label: 'Emergency contact name',
-			done: Boolean(application.emergency_contact_name),
+			label: 'Contact details',
+			done: all(
+				application.first_name,
+				application.last_name,
+				application.phone,
+				application.gender,
+				application.date_of_birth,
+				application.nationality,
+				application.marital_status,
+				application.current_address,
+			),
 		},
 		{
-			label: 'Emergency contact phone',
-			done: Boolean(application.emergency_contact_phone),
+			label: 'Proof of ID',
+			done: all(application.id_type, application.id_number),
 		},
 		{
-			label: 'Relationship to emergency contact',
-			done: Boolean(application.relationship_to_emergency_contact),
+			label: 'Employment',
+			done: all(
+				application.employer_type,
+				application.occupation,
+				application.employer,
+				application.occupation_address,
+			),
 		},
-		{ label: 'Employment type', done: Boolean(application.employer_type) },
-		{ label: 'Occupation', done: Boolean(application.occupation) },
-		{ label: 'Employer', done: Boolean(application.employer) },
 		{
-			label: 'Occupation address',
-			done: Boolean(application.occupation_address),
+			label: 'Emergency contact',
+			done: all(
+				application.emergency_contact_name,
+				application.emergency_contact_phone,
+				application.relationship_to_emergency_contact,
+			),
 		},
 	]
 }

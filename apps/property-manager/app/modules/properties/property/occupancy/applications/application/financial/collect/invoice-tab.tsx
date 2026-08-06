@@ -158,7 +158,9 @@ export function InvoiceTab({
 						<Button
 							variant="outline"
 							size="sm"
-							onClick={() => setAmount(String(convertPesewasToCedis(remaining)))}
+							onClick={() =>
+								setAmount(String(convertPesewasToCedis(remaining)))
+							}
 						>
 							Use {money(remaining)}
 						</Button>

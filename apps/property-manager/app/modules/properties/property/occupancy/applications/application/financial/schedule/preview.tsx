@@ -149,7 +149,9 @@ export function SchedulePreview({
 
 		const created = schedule.length + extras.length - failed.length
 		if (failed.length === 0) {
-			toast.success(`${created} charges created · ${money(rentTotal + extrasTotal)}`)
+			toast.success(
+				`${created} charges created · ${money(rentTotal + extrasTotal)}`,
+			)
 		} else {
 			toast.warning(
 				`${created} charges created, but ${failed.join(' and ')} could not be added. Add ${failed.length === 1 ? 'it' : 'them'} from the ledger.`,
@@ -165,9 +167,7 @@ export function SchedulePreview({
 						2
 					</span>
 					Charges
-					{!ready ? (
-						<Lock className="text-muted-foreground size-3.5" />
-					) : null}
+					{!ready ? <Lock className="text-muted-foreground size-3.5" /> : null}
 				</CardTitle>
 				<p className="text-muted-foreground mt-1 text-sm">
 					{ready ? (
@@ -278,8 +278,16 @@ export function SchedulePreview({
 								return (
 									<Button
 										key={suggestion.category}
-										variant={on ? 'default' : 'outline'}
+										variant="outline"
 										size="sm"
+										// Chosen chips go black, not crimson — crimson is the
+										// brand accent, and a row of it here would compete with
+										// the primary action in the same card.
+										className={
+											on
+												? 'bg-foreground text-background hover:bg-foreground/90 hover:text-background border-transparent'
+												: ''
+										}
 										onClick={() =>
 											setExtras(
 												on
@@ -312,10 +320,9 @@ export function SchedulePreview({
 					<Alert>
 						<Info className="size-4" />
 						<AlertDescription>
-							Rent falls due{' '}
-							<strong>{graceDays(paymentFrequency)} days</strong> after
-							each period starts. Creating the charges is one-way, but you can
-							still change the rent or the term afterwards while nothing has
+							Rent falls due <strong>{graceDays(paymentFrequency)} days</strong>{' '}
+							after each period starts. Creating the charges is one-way, but you
+							can still change the rent or the term afterwards while nothing has
 							been billed.
 						</AlertDescription>
 					</Alert>

@@ -15,12 +15,7 @@ import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 
-export type FinancialMode =
-	| 'blocked'
-	| 'setup'
-	| 'live'
-	| 'locked'
-	| 'readonly'
+export type FinancialMode = 'blocked' | 'setup' | 'live' | 'locked' | 'readonly'
 
 /**
  * Move-in setup supplies three of the six fields charges:prepare needs, so
@@ -89,7 +84,8 @@ export function PropertyTenantApplicationFinancial() {
 
 	// Charges have to exist before there is a cadence to choose or money to take
 	// against, so steps 3 and 4 open together with the ledger.
-	const chargesExist = Boolean(summary) && mode !== 'setup' && mode !== 'blocked'
+	const chargesExist =
+		Boolean(summary) && mode !== 'setup' && mode !== 'blocked'
 
 	return (
 		<div className="space-y-4">

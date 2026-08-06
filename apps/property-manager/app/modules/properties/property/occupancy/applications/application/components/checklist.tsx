@@ -1,23 +1,22 @@
-import { Check, ChevronRight, X } from 'lucide-react'
+import { Check, ChevronRight, Lock, TriangleAlert } from 'lucide-react'
 import { Link, useLocation } from 'react-router'
-import type { ChecklistItem } from './checklist-types'
+import { ChecklistMarker } from './checklist-marker'
+import type {
+	ChecklistItem,
+	ChecklistStep,
+	ChecklistStepState,
+} from './checklist-types'
+import { requiredItems } from './checklist-types'
 import { useCalculateChecklist } from './use-calculate-checklist'
 import {
 	Card,
 	CardContent,
-	CardDescription,
 	CardFooter,
 	CardHeader,
 	CardTitle,
 } from '~/components/ui/card'
-import { Checkbox } from '~/components/ui/checkbox'
-import { Label } from '~/components/ui/label'
 import { Progress } from '~/components/ui/progress'
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipTrigger,
-} from '~/components/ui/tooltip'
+import { localizedDayjs } from '~/lib/date'
 import { cn } from '~/lib/utils'
 
 interface Props {
@@ -32,138 +31,203 @@ export function PropertyTenantApplicationChecklist({
 	footer,
 }: Props) {
 	const baseUrl = `/properties/${propertyId}/occupancy/applications/${application.id}`
+	const { pathname } = useLocation()
 
-	const {
-		progress,
-		unitItems,
-		tenantDetailItems,
-		moveInItems,
-		financialItems,
-		docsItems,
-	} = useCalculateChecklist(application)
+	const { steps, progress, needsAttention } = useCalculateChecklist(
+		application,
+		baseUrl,
+	)
+	const approved = application.status === 'TenantApplication.Status.Completed'
 
 	return (
-		<Card className="rounded-md shadow-none">
+		<Card className="shadow-none">
 			<CardHeader>
-				<CardTitle className="text-2xl font-bold">
-					Complete Application Info
+				<CardTitle className="text-lg">
+					{approved ? 'Application complete' : 'Complete application'}
 				</CardTitle>
-				<CardDescription className="text-base">
-					As you fill out the lease application, your progress will be shown
-					here.
-				</CardDescription>
-				<div className="mt-4 flex items-center gap-3 space-x-3">
-					<span>{Math.round(progress)}%</span>
-					<Progress value={progress} />
-				</div>
+				<p className="text-muted-foreground mt-1.5 text-sm leading-relaxed">
+					{approved
+						? 'This application became a lease. Its steps are kept for the record.'
+						: 'Five steps before this application can be approved into a lease.'}
+				</p>
+
+				{approved ? (
+					<div className="bg-success-bg mt-4 flex items-center gap-2.5 rounded-xl px-3 py-2.5">
+						<Check className="text-success size-4 shrink-0" />
+						<span className="text-success text-xs font-bold">
+							Approved
+							{application.completed_at
+								? ` ${localizedDayjs(application.completed_at).format('D MMM YYYY')}`
+								: null}
+						</span>
+					</div>
+				) : (
+					<div className="mt-4 flex items-center gap-3">
+						{/* Neutral track, as in the boards — only the fill carries colour,
+						    and it turns orange the moment a step comes undone. */}
+						<Progress
+							value={progress}
+							className={cn(
+								'bg-muted',
+								needsAttention ? '[&>*]:bg-warning!' : '',
+							)}
+						/>
+						<span className="font-mono text-xs font-bold tabular-nums">
+							{Math.round(progress)}%
+						</span>
+					</div>
+				)}
+
+				{needsAttention ? (
+					<div className="bg-warning-bg mt-3 flex items-start gap-2.5 rounded-xl px-3 py-2.5">
+						<TriangleAlert className="text-warning mt-0.5 size-4 shrink-0" />
+						<span className="text-warning text-xs leading-relaxed font-semibold">
+							One step needs attention. Nothing after it can proceed.
+						</span>
+					</div>
+				) : null}
 			</CardHeader>
 
-			<CardContent className="p-0">
-				<MenuItem
-					href={`${baseUrl}`}
-					subItems={unitItems}
-					label="Select a unit"
-				/>
-				<MenuItem
-					href={`${baseUrl}/tenant-details`}
-					subItems={tenantDetailItems}
-					label="Add tenants details"
-				/>
-				<MenuItem
-					href={`${baseUrl}/move-in`}
-					subItems={moveInItems}
-					label="Move In Setup"
-				/>
-				<MenuItem
-					href={`${baseUrl}/financial`}
-					subItems={financialItems}
-					label="Add financial Setup"
-				/>
-				<MenuItem
-					href={`${baseUrl}/docs`}
-					subItems={docsItems}
-					label="Add lease docs setup"
-				/>
+			<CardContent className="px-3">
+				{steps.map((step, index) => (
+					<ChecklistRow
+						key={step.key}
+						step={step}
+						first={index === 0}
+						// Only the step being worked on opens. The other four stay one line
+						// each — which is the answer to "is this overkill".
+						active={pathname === step.href}
+					/>
+				))}
 			</CardContent>
-			{footer && (
+
+			{footer ? (
 				<CardFooter className="flex justify-end gap-2 border-t pt-4">
 					{footer}
 				</CardFooter>
-			)}
+			) : null}
 		</Card>
 	)
 }
 
-interface MenuItemProps {
-	label: string
-	subItems: ChecklistItem[]
-	href: string
+/** A sub-step inherits from its parent, then reports its own truth. */
+function subState(
+	parent: ChecklistStepState,
+	item: ChecklistItem,
+): ChecklistStepState {
+	if (parent === 'done' || parent === 'locked') return 'done'
+	if (parent === 'blocked' || parent === 'todo') return 'todo'
+	// The data is still there but can no longer be trusted, so what was done
+	// goes orange with its parent.
+	if (parent === 'attention') return item.done ? 'attention' : 'todo'
+	return item.done ? 'done' : 'todo'
 }
 
-function MenuItem({ label, subItems, href }: MenuItemProps) {
-	const { pathname } = useLocation()
+function ChecklistRow({
+	step,
+	first,
+	active,
+}: {
+	step: ChecklistStep
+	first: boolean
+	active: boolean
+}) {
+	const { state, note, items } = step
+	const blocked = state === 'blocked'
+	const required = requiredItems(items)
+	const doneCount = required.filter((item) => item.done).length
+	const open = active && items.length > 0
 
-	const isActive = pathname === href
-	// The badge counts what the step actually needs. An optional sub-item still
-	// renders its own state below, but it neither adds to the denominator nor
-	// keeps the step from ticking.
-	const requiredItems = subItems.filter((item) => !item.optional)
-	const doneCount = requiredItems.filter((item) => item.done).length
-	const allDone =
-		subItems.length > 0 &&
-		(requiredItems.length === 0 || doneCount === requiredItems.length)
+	// A blocked row sends you to the thing in the way, not to itself — tapping
+	// into it would only lead to a write the server refuses.
+	const href = blocked ? (step.blockerHref ?? step.href) : step.href
 
 	return (
-		<Link to={href} className="cursor-pointer">
-			<div
-				className={cn(
-					'flex items-center gap-3 px-5 py-2.5 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-700/60',
-					{
-						'bg-zinc-100 dark:bg-zinc-700': isActive,
-					},
-				)}
-			>
-				<Checkbox checked={allDone} />
-				<Label className="text-base font-light">{label}</Label>
-				<div className="ml-auto flex items-center gap-2">
-					{isActive ? (
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<span
-									className={cn(
-										'rounded-full px-2 py-0.5 text-xs font-medium',
-										allDone
-											? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400'
-											: doneCount > 0
-												? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400'
-												: 'bg-zinc-100 text-zinc-500 dark:bg-zinc-700 dark:text-zinc-400',
-									)}
-								>
-									{doneCount}/{requiredItems.length}
-								</span>
-							</TooltipTrigger>
-							<TooltipContent side="left" className="max-w-xs p-3">
-								<ul className="space-y-1">
-									{subItems.map((item) => (
-										<li
-											key={item.label}
-											className="flex items-center gap-2 text-xs"
-										>
-											{item.done ? (
-												<Check className="h-3 w-3 text-green-400" />
-											) : (
-												<X className="h-3 w-3 text-red-400" />
-											)}
-											<span>{item.label}</span>
-										</li>
-									))}
-								</ul>
-							</TooltipContent>
-						</Tooltip>
+		<Link
+			to={href}
+			className={cn(
+				'block px-3',
+				first ? '' : 'border-t',
+				active ? 'bg-primary/8 rounded-xl border-transparent' : '',
+			)}
+		>
+			<div className="flex items-center gap-3 py-3">
+				<ChecklistMarker state={state} />
+
+				<div className="min-w-0 flex-1">
+					<div className="flex items-center gap-1.5">
+						<span
+							className={cn(
+								'text-sm',
+								active ? 'font-bold' : 'font-medium',
+								blocked ? 'text-muted-foreground' : '',
+							)}
+						>
+							{step.label}
+						</span>
+						{state === 'locked' ? (
+							<Lock className="text-muted-foreground size-3" />
+						) : null}
+					</div>
+					{note && !open ? (
+						<p
+							className={cn(
+								'mt-0.5 text-xs font-semibold',
+								blocked || state === 'attention'
+									? 'text-warning'
+									: 'text-muted-foreground',
+							)}
+						>
+							{note}
+						</p>
 					) : null}
-					<ChevronRight className="h-4 w-4 shrink-0 text-zinc-400 dark:text-zinc-500" />
 				</div>
+
+				{open ? (
+					<span className="text-muted-foreground font-mono text-[11px] font-bold whitespace-nowrap">
+						{doneCount} of {required.length}
+					</span>
+				) : null}
+
+				{blocked && !open ? (
+					<span className="text-warning text-xs font-bold whitespace-nowrap">
+						Fix that first →
+					</span>
+				) : (
+					<ChevronRight
+						className={cn(
+							'text-muted-foreground size-4 shrink-0',
+							open ? 'rotate-90' : '',
+						)}
+					/>
+				)}
 			</div>
+
+			{open ? (
+				<div className="-mt-1 pb-3 pl-8">
+					{items.map((item) => (
+						<div key={item.label} className="flex items-center gap-2.5 py-1">
+							<ChecklistMarker state={subState(state, item)} size="sm" />
+							<span
+								className={cn(
+									'text-xs font-medium',
+									item.done ? 'text-foreground/80' : 'text-muted-foreground',
+								)}
+							>
+								{item.label}
+							</span>
+							{item.optional ? (
+								<span className="text-muted-foreground rounded border px-1 py-px text-[9px] font-bold tracking-wide uppercase">
+									Optional
+								</span>
+							) : null}
+						</div>
+					))}
+					{(blocked || state === 'attention') && note ? (
+						<p className="text-warning mt-2 text-xs font-bold">{note} →</p>
+					) : null}
+				</div>
+			) : null}
 		</Link>
 	)
 }

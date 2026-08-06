@@ -400,7 +400,6 @@ const updateTenantApplication = async ({
 export const useUpdateTenantApplication = () =>
 	useMutation({ mutationFn: updateTenantApplication })
 
-
 /**
  * Bulk create lease applications from CSV/Excel upload.
  */
