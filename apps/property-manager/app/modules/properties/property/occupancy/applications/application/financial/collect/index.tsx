@@ -2,11 +2,15 @@ import { useQueryClient } from '@tanstack/react-query'
 import { ArrowRight, CheckCircle2, Lock } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { ComposeTab, claimable } from './compose-tab'
 import { InvoiceTab, remainingOn } from './invoice-tab'
 import { useComposeInvoice, usePayInvoice } from '~/api/financial-accounts'
 import { useGetInvoices } from '~/api/invoices'
 import { useGetPaymentAccounts } from '~/api/payment-accounts'
+import {
+	ChargePicker,
+	claimable,
+} from '~/components/blocks/financials/charge-picker'
+import { PAYMENT_PROVIDERS } from '~/components/blocks/financials/payment-providers'
 import { Alert, AlertDescription } from '~/components/ui/alert'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
@@ -26,15 +30,6 @@ import {
 	convertPesewasToCedis,
 	formatAmount,
 } from '~/lib/format-amount'
-
-const PROVIDERS = [
-	{ value: 'CASH', label: 'Cash' },
-	{ value: 'MTN', label: 'MTN MoMo' },
-	{ value: 'VODAFONE', label: 'Telecel Cash' },
-	{ value: 'AIRTELTIGO', label: 'AT Money' },
-	{ value: 'PAYSTACK', label: 'Paystack' },
-	{ value: 'BANK_API', label: 'Bank transfer' },
-]
 
 interface CollectProps {
 	summary: AccountSummary
@@ -60,10 +55,13 @@ export function Collect({
 	const money = (minor: number) =>
 		formatAmount(convertPesewasToCedis(minor), currency)
 
-	// Only account-backed invoices, and only ones still owed money.
+	// Only account-backed invoices, and only ones still owed money. Payments has
+	// to be populated — remainingOn subtracts them, so without it a part-paid
+	// invoice offers its whole total as the amount still to collect.
 	const { data: invoicePage } = useGetInvoices(clientId, propertyId, {
 		pagination: { page: 1, per: 200 },
 		filters: { financial_account_id: summary.account.id },
+		populate: ['LineItems', 'Payments'],
 	})
 	const unpaid = (invoicePage?.rows ?? []).filter(
 		(invoice) =>
@@ -282,7 +280,7 @@ export function Collect({
 								currency={currency}
 							/>
 						) : (
-							<ComposeTab
+							<ChargePicker
 								summary={summary}
 								picked={picked}
 								setPicked={setPicked}
@@ -331,7 +329,7 @@ export function Collect({
 											<SelectValue />
 										</SelectTrigger>
 										<SelectContent>
-											{PROVIDERS.map((option) => (
+											{PAYMENT_PROVIDERS.map((option) => (
 												<SelectItem key={option.value} value={option.value}>
 													{option.label}
 												</SelectItem>

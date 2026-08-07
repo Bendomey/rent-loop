@@ -9,7 +9,9 @@ import { LeaseAgreementDocumentSetup } from './components/lease-agreement-docume
 import { LeaseHeader } from './components/lease-header'
 import { LeaseSummaryCard } from './components/lease-summary-card'
 import { StartLeaseDialog } from './components/start-lease-dialog'
-import { LeaseExpensesTab } from './expenses-tab'
+import { LeaseFinancialsTab } from './financials'
+import { overdueTotal } from './financials/account'
+import { useGetInvoices } from '~/api/invoices'
 import { useHasPropertyPermissions } from '~/components/permissions/use-has-role'
 import { Avatar, AvatarFallback } from '~/components/ui/avatar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
@@ -21,8 +23,9 @@ import {
 	getPaymentFrequencyLabel,
 	getPaymentFrequencyPeriodLabel,
 } from '~/lib/properties.utils'
-import { getInitials, toFirstUpperCase } from '~/lib/strings'
+import { getInitials, safeString, toFirstUpperCase } from '~/lib/strings'
 import { LEASE_DETAIL_TOUR_STEPS, TOUR_KEYS } from '~/lib/tours'
+import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 import type { loader } from '~/routes/_auth.properties.$propertyId.occupancy.leases.$leaseId'
 
@@ -32,6 +35,7 @@ export function LeaseDetailModule() {
 	const [searchParams] = useSearchParams()
 	const initialTab = searchParams.get('tab') ?? 'details'
 	const { clientUserProperty: ctxProp } = useProperty()
+	const { clientUser } = useClient()
 	const { hasPermissions: managerPermission } = useHasPropertyPermissions({
 		roles: ['MANAGER'],
 	})
@@ -47,6 +51,22 @@ export function LeaseDetailModule() {
 
 	const propertyId =
 		clientUserProperty?.property_id ?? ctxProp?.property_id ?? ''
+	const clientId = safeString(clientUser?.client_id)
+
+	// The tab carries a dot while anything is overdue, so the badge is read off
+	// the same invoice list the tab renders rather than a second source.
+	const accountId = lease?.financial_account?.id ?? null
+	const { data: invoicePage } = useGetInvoices(clientId, propertyId, {
+		pagination: { page: 1, per: 200 },
+		filters: { financial_account_id: accountId ?? undefined },
+		// Payments is not optional: the balance on every row is total_amount less
+		// the SUCCESSFUL payments, so without it a part-paid invoice reads as
+		// wholly unpaid and the overdue figure is overstated.
+		populate: ['LineItems', 'Payments'],
+	})
+	const overdue = overdueTotal(
+		(invoicePage?.rows ?? []).filter((invoice) => invoice.status !== 'VOID'),
+	)
 
 	if (!lease) {
 		return (
@@ -98,14 +118,28 @@ export function LeaseDetailModule() {
 					</div>
 
 					{/* Main Content */}
-					<div className="col-span-12 lg:col-span-8">
-						<div className="overflow-x-auto pb-1">
+					{/* min-w-0: a grid item defaults to min-width:auto, so without this
+					    the column grows to fit the tab strip and the whole page scrolls
+					    sideways instead of the strip scrolling inside it. */}
+					<div className="col-span-12 min-w-0 lg:col-span-8">
+						<div>
 							<Tabs defaultValue={initialTab}>
-								<TabsList id="lease-tabs">
+								<TabsList
+									id="lease-tabs"
+									className="max-w-full justify-start overflow-x-auto"
+								>
 									<TabsTrigger value="details">Lease Details</TabsTrigger>
 									<TabsTrigger value="tenant">Tenant Profile</TabsTrigger>
 									<TabsTrigger value="documents">Documents</TabsTrigger>
-									<TabsTrigger value="expenses">Expenses</TabsTrigger>
+									<TabsTrigger value="financials">
+										Financials
+										{overdue > 0 ? (
+											<span
+												aria-label="Overdue"
+												className="bg-primary size-1.5 rounded-full"
+											/>
+										) : null}
+									</TabsTrigger>
 								</TabsList>
 
 								{/* Details Tab */}
@@ -479,14 +513,13 @@ export function LeaseDetailModule() {
 									)}
 								</TabsContent>
 
-								{/* Expenses Tab */}
-								<TabsContent value="expenses" className="mt-4">
-									<DetailPanel>
-										<LeaseExpensesTab
-											leaseId={lease.id}
-											propertyId={propertyId}
-										/>
-									</DetailPanel>
+								{/* Financials Tab */}
+								<TabsContent value="financials" className="mt-4">
+									<LeaseFinancialsTab
+										lease={lease}
+										clientId={clientId}
+										propertyId={propertyId}
+									/>
 								</TabsContent>
 							</Tabs>
 						</div>

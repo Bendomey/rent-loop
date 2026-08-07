@@ -63,3 +63,19 @@ export const invoiceDisplayStatus = (
 			return { label: 'Unpaid', tone: 'info' }
 	}
 }
+
+/**
+ * The tone pairs from app.css, as classes.
+ *
+ * app.css says every state resolves to one of five tones and to use
+ * `text-success bg-success-bg` rather than hard-coding a colour. `info` is the
+ * blue one — it is what "Billed" and "Unpaid" mean: out with the tenant, not
+ * yet paid, and not yet late.
+ */
+export const TONE_CLASS: Record<DisplayTone, string> = {
+	neutral: 'text-muted-foreground bg-muted border-transparent',
+	info: 'text-info bg-info-bg border-transparent',
+	warning: 'text-warning bg-warning-bg border-transparent',
+	success: 'text-success bg-success-bg border-transparent',
+	danger: 'text-danger bg-danger-bg border-transparent',
+}

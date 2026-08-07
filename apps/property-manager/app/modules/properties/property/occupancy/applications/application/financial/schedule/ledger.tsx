@@ -1,7 +1,7 @@
 import { Eye, EyeOff, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
-import { RentGroup } from './rent-group'
 import { STACKED_CARD_ACTION, STACKED_CARD_TEXT } from '../card-action'
+import { RentGroup } from '~/components/blocks/financials/rent-group'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import {
@@ -11,7 +11,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from '~/components/ui/card'
-import { chargeDisplayStatus } from '~/lib/display-status'
+import { TONE_CLASS, chargeDisplayStatus } from '~/lib/display-status'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 
 interface LedgerProps {
@@ -60,7 +60,9 @@ function ChargeRow({
 						: `Due ${shortDate(charge.due_date)}`}
 				</p>
 			</div>
-			<Badge variant="outline">{status.label}</Badge>
+			<Badge variant="outline" className={TONE_CLASS[status.tone]}>
+				{status.label}
+			</Badge>
 			<span className="ml-auto shrink-0 text-sm font-semibold tabular-nums sm:ml-0 sm:min-w-24 sm:text-right">
 				{formatAmount(convertPesewasToCedis(charge.amount), currency)}
 			</span>

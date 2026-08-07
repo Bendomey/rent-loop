@@ -3,16 +3,17 @@ import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
-import { invoiceDisplayStatus } from '~/lib/display-status'
-import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
+import { TONE_CLASS, invoiceDisplayStatus } from '~/lib/display-status'
+import {
+	convertCedisToPesewas,
+	convertPesewasToCedis,
+	formatAmount,
+} from '~/lib/format-amount'
+import { paidSoFar, remainingOn } from '~/lib/invoice'
 
-export const paidSoFar = (invoice: Invoice) =>
-	(invoice.payments ?? [])
-		.filter((payment) => payment.status === 'SUCCESSFUL')
-		.reduce((sum, payment) => sum + payment.amount, 0)
-
-export const remainingOn = (invoice: Invoice) =>
-	invoice.total_amount - paidSoFar(invoice)
+// Re-exported for the callers already importing them from here; they live in
+// ~/lib/invoice now that the lease account needs them too.
+export { paidSoFar, remainingOn }
 
 interface InvoiceTabProps {
 	invoices: Invoice[]
@@ -44,6 +45,9 @@ export function InvoiceTab({
 		formatAmount(convertPesewasToCedis(minor), currency)
 	const selected = invoices.find((invoice) => invoice.id === selectedId)
 	const remaining = selected ? remainingOn(selected) : 0
+	const entered = convertCedisToPesewas(
+		Number.parseFloat(amount.replace(/,/g, '')) || 0,
+	)
 
 	return (
 		<div className="space-y-4">
@@ -76,7 +80,12 @@ export function InvoiceTab({
 										<span className="font-mono text-sm font-bold">
 											{invoice.code}
 										</span>
-										<Badge variant="outline">{status.label}</Badge>
+										<Badge
+											variant="outline"
+											className={TONE_CLASS[status.tone]}
+										>
+											{status.label}
+										</Badge>
 									</div>
 									<p className="text-muted-foreground mt-0.5 text-xs">
 										{invoice.due_date
@@ -125,15 +134,20 @@ export function InvoiceTab({
 												onChange={(event) => setAmount(event.target.value)}
 											/>
 										</div>
-										<Button
-											variant="outline"
-											size="sm"
-											onClick={() =>
-												setAmount(String(convertPesewasToCedis(balance)))
-											}
-										>
-											Pay the balance · {money(balance)}
-										</Button>
+										{/* Only when the amount falls short. At the balance it is a
+										    shortcut to where you already are, and above it the
+										    overpayment notice offers the same correction. */}
+										{entered < balance ? (
+											<Button
+												variant="outline"
+												size="sm"
+												onClick={() =>
+													setAmount(String(convertPesewasToCedis(balance)))
+												}
+											>
+												Pay the balance · {money(balance)}
+											</Button>
+										) : null}
 									</div>
 									<p className="text-muted-foreground text-xs">
 										Less than the balance leaves the invoice part paid — the

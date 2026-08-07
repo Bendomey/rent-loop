@@ -333,7 +333,49 @@ func (s *leaseService) GetByIDWithPopulate(ctx context.Context, query repository
 		})
 	}
 
+	s.attachFinancials(ctx, lease)
+
 	return lease, nil
+}
+
+// attachFinancials hangs the account's balance off the lease.
+//
+// The account is created against the application and linked to the lease at
+// approval, so lease_id is the only handle a lease has on it — the preloaded
+// TenantApplication cannot carry it, because its own Financials field is a
+// computed view rather than a relation and GORM leaves it nil.
+//
+// Failures are non-fatal: a lease whose charges were never prepared simply has
+// no financials, which the UI renders as "no account".
+func (s *leaseService) attachFinancials(ctx context.Context, lease *models.Lease) {
+	if lease == nil {
+		return
+	}
+
+	account, accErr := s.financials.Accounts.GetByLease(ctx, lease.ID.String())
+	if accErr != nil || account == nil {
+		return
+	}
+
+	accountID := account.ID.String()
+	summary, summaryErr := s.financials.Accounts.Summary(ctx, accountID)
+	if summaryErr != nil {
+		return
+	}
+
+	_, invoiceCount, _ := s.invoiceService.ListInvoices(ctx, repository.ListInvoicesFilter{
+		FinancialAccountID: &accountID,
+	})
+
+	lease.Financials = &models.TenantApplicationFinancials{
+		Account:           account,
+		TotalCharged:      summary.TotalCharged,
+		TotalSettled:      summary.TotalSettled,
+		OutstandingAmount: summary.OutstandingAmount,
+		AvailableCredit:   summary.AvailableCredit,
+		ChargeCount:       int64(len(summary.Charges)),
+		InvoiceCount:      invoiceCount,
+	}
 }
 
 func (s *leaseService) ListLeases(ctx context.Context, filters repository.ListLeasesFilter) ([]models.Lease, error) {

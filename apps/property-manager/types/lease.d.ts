@@ -54,6 +54,14 @@ interface Lease {
 	terminated_by_id: Nullable<string>
 	terminated_by: Nullable<ClientUser>
 
+	/**
+	 * The tenant ledger this lease bills against, attached by the service from
+	 * financial_accounts.lease_id. Absent until the application's charges were
+	 * prepared — it is NOT reachable through tenant_application, whose own
+	 * financial_account is a computed view GORM leaves nil on a preload.
+	 */
+	financial_account: Nullable<TenantApplicationFinancials>
+
 	tenant_id: string
 	tenant: Tenant
 	tenant_application_id: string

@@ -1,7 +1,7 @@
 import { ChevronRight, Trash2 } from 'lucide-react'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
-import { chargeDisplayStatus } from '~/lib/display-status'
+import { TONE_CLASS, chargeDisplayStatus } from '~/lib/display-status'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 
 /** The shape both the computed preview and the live ledger can supply. */
@@ -107,7 +107,9 @@ export function RentGroup({
 									</p>
 								</div>
 								{status ? (
-									<Badge variant="outline">{status.label}</Badge>
+									<Badge variant="outline" className={TONE_CLASS[status.tone]}>
+										{status.label}
+									</Badge>
 								) : null}
 								<span className="ml-auto shrink-0 text-sm font-semibold tabular-nums sm:ml-0 sm:min-w-24 sm:text-right">
 									{money(row.amount)}

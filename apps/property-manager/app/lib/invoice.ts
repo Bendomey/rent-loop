@@ -65,3 +65,19 @@ export function getInvoiceAllowedRailsLabel(
 
 	return labelMap[payment_method] ?? payment_method
 }
+
+/**
+ * What has actually landed on an invoice.
+ *
+ * There is no amount_paid field — an invoice carries its payments, and only
+ * SUCCESSFUL ones count. A pending or failed payment must not reduce the
+ * balance, or the UI would offer to collect less than is owed.
+ */
+export const paidSoFar = (invoice: Invoice) =>
+	(invoice.payments ?? [])
+		.filter((payment) => payment.status === 'SUCCESSFUL')
+		.reduce((sum, payment) => sum + payment.amount, 0)
+
+/** What the invoice still has left on it. Never negative — overpayment is refused. */
+export const remainingOn = (invoice: Invoice) =>
+	invoice.total_amount - paidSoFar(invoice)
