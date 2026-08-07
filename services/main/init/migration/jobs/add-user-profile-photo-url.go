@@ -5,7 +5,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// AddUserProfilePhotoUrl adds the profile_photo_url column to users.
+// AddUserProfilePhotoUrl adds the profile_photo_url column to users table.
 func AddUserProfilePhotoUrl() *gormigrate.Migration {
 	return &gormigrate.Migration{
 		ID: "202608060001_ADD_USER_PROFILE_PHOTO_URL",
