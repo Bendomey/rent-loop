@@ -269,6 +269,7 @@ type UpdateUnitInput struct {
 	Features            *map[string]any
 	MaxOccupantsAllowed *int
 	Status              *string
+	PropertyBlockID     *string
 }
 
 func (s *unitService) UpdateUnit(ctx context.Context, input UpdateUnitInput) (*models.Unit, error) {
@@ -300,6 +301,23 @@ func (s *unitService) UpdateUnit(ctx context.Context, input UpdateUnitInput) (*m
 	if rentalInfoChanged &&
 		(unit.Status == "Unit.Status.Occupied" || unit.Status == "Unit.Status.PartiallyOccupied") {
 		return nil, pkg.ForbiddenError("UnitIsOccupied", nil)
+	}
+
+	previousBlockID := unit.PropertyBlockID
+	blockChanged := input.PropertyBlockID != nil && *input.PropertyBlockID != previousBlockID
+
+	if blockChanged {
+		// Confirms the target block exists and belongs to this property —
+		// GetPropertyBlock scopes by both, so a block from another property
+		// (or a typo'd id) surfaces as PropertyBlockNotFound rather than
+		// silently reparenting the unit to the wrong property.
+		if _, getBlockErr := s.propertyBlockService.GetPropertyBlock(ctx, repository.GetPropertyBlockQuery{
+			PropertyBlockID: *input.PropertyBlockID,
+			PropertyID:      input.PropertyID,
+		}); getBlockErr != nil {
+			return nil, getBlockErr
+		}
+		unit.PropertyBlockID = *input.PropertyBlockID
 	}
 
 	if input.Name != nil {
@@ -352,13 +370,59 @@ func (s *unitService) UpdateUnit(ctx context.Context, input UpdateUnitInput) (*m
 
 	unit.Area = input.Area
 
-	updateUnitErr := s.repo.Update(ctx, unit)
-	if updateUnitErr != nil {
+	if !blockChanged {
+		updateUnitErr := s.repo.Update(ctx, unit)
+		if updateUnitErr != nil {
+			return nil, pkg.InternalServerError(updateUnitErr.Error(), &pkg.RentLoopErrorParams{
+				Err: updateUnitErr,
+				Metadata: map[string]string{
+					"function": "UpdateUnit",
+					"action":   "updating unit",
+				},
+			})
+		}
+		return unit, nil
+	}
+
+	// A block move touches two blocks' unit counts alongside the unit itself,
+	// so it needs the same all-or-nothing guarantee CreateUnit/DeleteUnit use.
+	transaction := s.appCtx.DB.Begin()
+	transCtx := lib.WithTransaction(ctx, transaction)
+
+	if updateUnitErr := s.repo.Update(transCtx, unit); updateUnitErr != nil {
+		transaction.Rollback()
 		return nil, pkg.InternalServerError(updateUnitErr.Error(), &pkg.RentLoopErrorParams{
 			Err: updateUnitErr,
 			Metadata: map[string]string{
 				"function": "UpdateUnit",
 				"action":   "updating unit",
+			},
+		})
+	}
+
+	for _, blockID := range []string{previousBlockID, unit.PropertyBlockID} {
+		if updateCountErr := s.updateUnitCount(transCtx, UpdateUnitCountInput{
+			PropertyID:      input.PropertyID,
+			PropertyBlockID: blockID,
+		}); updateCountErr != nil {
+			transaction.Rollback()
+			return nil, pkg.InternalServerError(updateCountErr.Error(), &pkg.RentLoopErrorParams{
+				Err: updateCountErr,
+				Metadata: map[string]string{
+					"function": "UpdateUnit",
+					"action":   "updating property block unit counts",
+				},
+			})
+		}
+	}
+
+	if commitErr := transaction.Commit().Error; commitErr != nil {
+		transaction.Rollback()
+		return nil, pkg.InternalServerError(commitErr.Error(), &pkg.RentLoopErrorParams{
+			Err: commitErr,
+			Metadata: map[string]string{
+				"function": "UpdateUnit",
+				"action":   "committing transaction",
 			},
 		})
 	}

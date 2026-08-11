@@ -23669,6 +23669,10 @@ const docTemplate = `{
                     ],
                     "example": "WEEKLY"
                 },
+                "property_block_id": {
+                    "type": "string",
+                    "example": "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                },
                 "rent_fee": {
                     "type": "integer",
                     "example": 1500
