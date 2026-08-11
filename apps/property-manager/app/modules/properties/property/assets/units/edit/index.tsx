@@ -17,9 +17,7 @@ import { Link, useNavigate, useRouteLoaderData } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { useUpdatePropertyUnit } from '~/api/units'
-import { ExternalLink } from '~/components/external-link'
 import { FeatureInput } from '~/components/feature'
-import { BlockSelect } from '~/components/SingleSelect/block-select'
 import { Button } from '~/components/ui/button'
 import { FieldGroup } from '~/components/ui/field'
 import {
@@ -60,9 +58,6 @@ import { useProperty } from '~/providers/property-provider'
 import type { loader } from '~/routes/_auth.properties.$propertyId.assets.units.$unitId'
 
 const ValidationSchema = z.object({
-	property_block_id: z
-		.string({ error: 'Please select a block' })
-		.refine(Boolean, { message: 'Please select a block' }),
 	name: z
 		.string({ error: 'Name is required' })
 		.min(2, 'Please enter a valid name'),
@@ -169,7 +164,6 @@ export function EditPropertyAssetUnitModule() {
 	const rhfMethods = useForm<FormSchema>({
 		resolver: zodResolver(ValidationSchema),
 		defaultValues: {
-			property_block_id: '',
 			name: '',
 			description: '',
 			images: [],
@@ -217,7 +211,6 @@ export function EditPropertyAssetUnitModule() {
 	useEffect(() => {
 		if (unit) {
 			rhfMethods.reset({
-				property_block_id: safeString(unit.property_block_id),
 				name: safeString(unit.name),
 				description: safeString(unit.description),
 				images: unit.images ?? [],
@@ -243,9 +236,6 @@ export function EditPropertyAssetUnitModule() {
 				id: safeString(unit?.id),
 				data: {
 					property_id,
-					property_block_id: dirtyFields.property_block_id
-						? formData.property_block_id
-						: undefined,
 					name: dirtyFields.name ? formData.name : undefined,
 					description: dirtyFields.description
 						? formData.description
@@ -296,38 +286,6 @@ export function EditPropertyAssetUnitModule() {
 					<TypographyMuted>
 						Update the details for this property unit.
 					</TypographyMuted>
-				</div>
-
-				<hr />
-
-				{/* Block Select */}
-				<div>
-					<BlockSelect
-						property_id={property_id}
-						value={watch('property_block_id')}
-						onChange={({ id }) =>
-							setValue('property_block_id', id, {
-								shouldDirty: true,
-								shouldValidate: true,
-							})
-						}
-					/>
-					<p className="text-muted-foreground mt-1.5 text-sm">
-						A block groups related units within a property — e.g., "Block A" or
-						"West Wing". Blocks are managed under{' '}
-						<ExternalLink
-							to={`/properties/${property_id}/assets/blocks`}
-							className="text-rose-600 hover:underline"
-						>
-							property blocks
-						</ExternalLink>
-						.
-					</p>
-					{formState.errors?.property_block_id && (
-						<TypographySmall className="text-destructive mt-2">
-							{formState.errors.property_block_id.message}
-						</TypographySmall>
-					)}
 				</div>
 
 				<hr />
