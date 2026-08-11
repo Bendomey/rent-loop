@@ -174,17 +174,21 @@ export function LeaseSummaryCard({
 							<span className="text-muted-foreground text-[11px]">
 								Month {termProgress.monthOf} of {termProgress.monthsTotal}
 							</span>
-							<span
-								className={cn(
-									'text-[11px] font-semibold',
-									termProgress.isEndingSoon
-										? 'text-amber-600 dark:text-amber-400'
-										: 'text-muted-foreground',
-								)}
-							>
-								{termProgress.daysLeft} days left
-								{termProgress.isEndingSoon ? ' · ends soon' : ''}
-							</span>
+							{/* Past the move-out date there is no time left to count, and
+							    the countdown would read "-9 days left". */}
+							{termProgress.daysLeft > 0 ? (
+								<span
+									className={cn(
+										'text-[11px] font-semibold',
+										termProgress.isEndingSoon
+											? 'text-amber-600 dark:text-amber-400'
+											: 'text-muted-foreground',
+									)}
+								>
+									{termProgress.daysLeft} days left
+									{termProgress.isEndingSoon ? ' · ends soon' : ''}
+								</span>
+							) : null}
 						</div>
 					</div>
 				) : (
