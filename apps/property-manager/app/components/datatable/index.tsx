@@ -371,14 +371,14 @@ export function DataTable<T extends { id: string }>({
 		body = Array.from({ length: SKELETON_ROWS }).map((_, rowIndex) => (
 			<TableRow
 				key={`skeleton-${rowIndex}`}
-				className="group/row bg-card border-border/60 hover:bg-card h-[76px]"
+				className="group/row bg-card border-border/60 hover:bg-card h-14"
 			>
 				{leafColumns.map((column, columnIndex) => (
 					<TableCell
 						key={column.id}
 						style={{ ...sizeStyle(column), ...pinStyle(column) }}
 						className={cn(
-							'border-border/60 h-[76px] border-r border-b px-[22px] align-middle last:border-r-0',
+							'border-border/60 h-14 border-r border-b px-4 align-middle last:border-r-0',
 							pinEdgeClasses(column, 'bg-card z-10'),
 						)}
 					>
@@ -429,7 +429,7 @@ export function DataTable<T extends { id: string }>({
 				data-state={row.getIsSelected() ? 'selected' : undefined}
 				onClick={onRowClick ? () => onRowClick(row.original) : undefined}
 				className={cn(
-					'group/row bg-card border-border/60 h-[76px] hover:bg-[var(--row-hover)] data-[state=selected]:bg-[var(--row-selected)]',
+					'group/row bg-card border-border/60 h-14 hover:bg-[var(--row-hover)] data-[state=selected]:bg-[var(--row-selected)]',
 					onRowClick && 'cursor-pointer',
 				)}
 			>
@@ -440,7 +440,7 @@ export function DataTable<T extends { id: string }>({
 							key={cell.id}
 							style={{ ...sizeStyle(cell.column), ...pinStyle(cell.column) }}
 							className={cn(
-								'border-border/60 h-[76px] border-r border-b px-[22px] align-middle whitespace-normal last:border-r-0',
+								'border-border/60 h-14 border-r border-b px-4 align-middle whitespace-normal last:border-r-0',
 								ALIGNMENT[meta?.align ?? 'left'],
 								pinEdgeClasses(
 									cell.column,
@@ -510,7 +510,7 @@ export function DataTable<T extends { id: string }>({
 											}}
 											className={cn(
 												'text-foreground border-border/60 sticky top-0 z-20 border-r border-b',
-												'h-14 px-[22px] text-[13px] font-bold tracking-[0.2px] whitespace-nowrap last:border-r-0',
+												'h-11 px-4 text-[13px] font-bold tracking-[0.2px] whitespace-nowrap last:border-r-0',
 												sorted && 'bg-foreground/[0.035]',
 												pinEdgeClasses(header.column, 'bg-muted z-30'),
 												meta?.headerClassName,
