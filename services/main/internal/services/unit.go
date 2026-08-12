@@ -370,22 +370,10 @@ func (s *unitService) UpdateUnit(ctx context.Context, input UpdateUnitInput) (*m
 
 	unit.Area = input.Area
 
-	if !blockChanged {
-		updateUnitErr := s.repo.Update(ctx, unit)
-		if updateUnitErr != nil {
-			return nil, pkg.InternalServerError(updateUnitErr.Error(), &pkg.RentLoopErrorParams{
-				Err: updateUnitErr,
-				Metadata: map[string]string{
-					"function": "UpdateUnit",
-					"action":   "updating unit",
-				},
-			})
-		}
-		return unit, nil
-	}
-
 	// A block move touches two blocks' unit counts alongside the unit itself,
-	// so it needs the same all-or-nothing guarantee CreateUnit/DeleteUnit use.
+	// so every update runs behind the same all-or-nothing guarantee
+	// CreateUnit/DeleteUnit use, even though only a block change has a second
+	// step to roll back.
 	transaction := s.appCtx.DB.Begin()
 	transCtx := lib.WithTransaction(ctx, transaction)
 
@@ -400,19 +388,21 @@ func (s *unitService) UpdateUnit(ctx context.Context, input UpdateUnitInput) (*m
 		})
 	}
 
-	for _, blockID := range []string{previousBlockID, unit.PropertyBlockID} {
-		if updateCountErr := s.updateUnitCount(transCtx, UpdateUnitCountInput{
-			PropertyID:      input.PropertyID,
-			PropertyBlockID: blockID,
-		}); updateCountErr != nil {
-			transaction.Rollback()
-			return nil, pkg.InternalServerError(updateCountErr.Error(), &pkg.RentLoopErrorParams{
-				Err: updateCountErr,
-				Metadata: map[string]string{
-					"function": "UpdateUnit",
-					"action":   "updating property block unit counts",
-				},
-			})
+	if blockChanged {
+		for _, blockID := range []string{previousBlockID, unit.PropertyBlockID} {
+			if updateCountErr := s.updateUnitCount(transCtx, UpdateUnitCountInput{
+				PropertyID:      input.PropertyID,
+				PropertyBlockID: blockID,
+			}); updateCountErr != nil {
+				transaction.Rollback()
+				return nil, pkg.InternalServerError(updateCountErr.Error(), &pkg.RentLoopErrorParams{
+					Err: updateCountErr,
+					Metadata: map[string]string{
+						"function": "UpdateUnit",
+						"action":   "updating property block unit counts",
+					},
+				})
+			}
 		}
 	}
 
