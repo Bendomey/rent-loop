@@ -4084,6 +4084,11 @@ definitions:
       due_date:
         example: "2024-07-01T00:00:00Z"
         type: string
+      financial_account_id:
+        description: Present on account-backed invoices — the tenant ledger this bills
+          against.
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
       id:
         example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
         type: string
@@ -4216,6 +4221,8 @@ definitions:
       created_at:
         example: "2024-06-01T09:00:00Z"
         type: string
+      financial_account:
+        $ref: '#/definitions/transformations.OutputTenantApplicationFinancials'
       id:
         example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
         type: string
@@ -7683,6 +7690,9 @@ paths:
       - in: query
         name: end_date
         type: string
+      - in: query
+        name: financial_account_id
+        type: string
       - collectionFormat: multi
         example:
         - a8098c1a-f86e-11da-bd1a-00112444be1e
@@ -10119,6 +10129,9 @@ paths:
         type: string
       - in: query
         name: end_date
+        type: string
+      - in: query
+        name: financial_account_id
         type: string
       - collectionFormat: multi
         example:

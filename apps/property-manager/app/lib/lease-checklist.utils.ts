@@ -186,7 +186,7 @@ export function isChecklistEditable(status: LeaseChecklistStatus): boolean {
 }
 
 export interface LeaseTermProgress {
-	percent: number // elapsed / total duration, clamped 0–100
+	percent: number // elapsed / total duration, clamped 0–100, rounded to 2dp
 	daysLeft: number // days from today to the lease end date (can be negative)
 	monthOf: number // 1-based current month, clamped to [1, monthsTotal]
 	monthsTotal: number
@@ -210,7 +210,10 @@ export function getLeaseTermProgress(lease: Lease): LeaseTermProgress | null {
 
 	const now = new Date()
 	const elapsedMs = Math.max(0, now.getTime() - start.getTime())
-	const percent = Math.min(100, Math.max(0, (elapsedMs / totalMs) * 100))
+	const percent =
+		Math.round(
+			Math.min(100, Math.max(0, (elapsedMs / totalMs) * 100)) * 100,
+		) / 100
 	const daysLeft = Math.ceil((end.getTime() - now.getTime()) / 86_400_000)
 
 	const totalDays = totalMs / 86_400_000

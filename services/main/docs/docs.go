@@ -3571,6 +3571,11 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "type": "string",
+                        "name": "financial_account_id",
+                        "in": "query"
+                    },
+                    {
                         "type": "array",
                         "items": {
                             "type": "string"
@@ -7515,6 +7520,11 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "financial_account_id",
                         "in": "query"
                     },
                     {
@@ -26515,6 +26525,11 @@ const docTemplate = `{
                     "type": "string",
                     "example": "2024-07-01T00:00:00Z"
                 },
+                "financial_account_id": {
+                    "description": "Present on account-backed invoices — the tenant ledger this bills against.",
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
                 "id": {
                     "type": "string",
                     "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
@@ -26695,6 +26710,9 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string",
                     "example": "2024-06-01T09:00:00Z"
+                },
+                "financial_account": {
+                    "$ref": "#/definitions/transformations.OutputTenantApplicationFinancials"
                 },
                 "id": {
                     "type": "string",
