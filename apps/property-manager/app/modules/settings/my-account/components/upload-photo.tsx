@@ -33,9 +33,11 @@ export default function UploadPhotoModal({
 	const queryClient = useQueryClient()
 	const revalidator = useRevalidator()
 
-	const { upload, objectUrl, isLoading: isUploading } = useUploadObject(
-		'users/profile-photos',
-	)
+	const {
+		upload,
+		objectUrl,
+		isLoading: isUploading,
+	} = useUploadObject('users/profile-photos')
 	const { mutate, isPending } = useUpdateUserMe()
 
 	const handleSave = () => {
