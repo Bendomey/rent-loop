@@ -33,17 +33,17 @@ test('changing the unit keeps the agreed rent by default', async ({ page }) => {
 	)
 
 	// ── change the unit, accepting whatever rent the modal defaults to ─────
-	// The unit step has its own page now; the application root is the overview.
+	// The picker is on the page now — there is no Change Unit modal.
 	await page.goto(
 		`/properties/${s.propertyId}/occupancy/applications/${application.id}/unit`,
 	)
-	await page.getByRole('button', { name: 'Change', exact: true }).click()
+	await page.getByRole('button', { name: /pick a different unit/i }).click()
 
-	const modal = page.getByRole('alertdialog', { name: 'Change Unit' })
-	await expect(modal).toBeVisible({ timeout: 20_000 })
-	await modal.getByText(dearer.name).click()
-	await modal.getByRole('button', { name: 'Save', exact: true }).click()
-	await expect(modal).toBeHidden({ timeout: SAVE_TIMEOUT })
+	await page.locator(`[data-unit-id="${dearer.id}"]`).click()
+	await page.locator('#confirm-unit').click()
+	await expect(page.locator('#confirm-unit')).toBeHidden({
+		timeout: SAVE_TIMEOUT,
+	})
 
 	// ── the lease is still priced at what was agreed ───────────────────────
 	await page.goto(

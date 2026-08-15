@@ -49,18 +49,16 @@ test('a partially occupied unit is selectable when changing unit', async ({
 	// A second application, on its own unit, which we now try to move across.
 	const mover = await makeApprovableApplication(s, 'f4-mover', { seq: 220 })
 
-	// The unit step has its own page now; the application root is the overview.
+	// The picker is on the page now — there is no Change Unit modal.
 	await page.goto(
 		`/properties/${s.propertyId}/occupancy/applications/${mover.application.id}/unit`,
 	)
-	await page.getByRole('button', { name: 'Change', exact: true }).click()
+	await page.getByRole('button', { name: /pick a different unit/i }).click()
 
-	const modal = page.getByRole('alertdialog', { name: 'Change Unit' })
-	await expect(modal).toBeVisible({ timeout: 20_000 })
-
-	// The shared unit has room, so it must be offered — not greyed out.
-	const option = modal.getByRole('button', { name: new RegExp(shared.name) })
-	await expect(option).toBeVisible()
+	// The shared unit has room, so it must be offered under Free now — not
+	// collapsed into the "can't take" group.
+	const option = page.locator(`#unit-grid [data-unit-id="${shared.id}"]`)
+	await expect(option).toBeVisible({ timeout: 20_000 })
 	await expect(
 		option,
 		'a unit with spare capacity should still be selectable',
