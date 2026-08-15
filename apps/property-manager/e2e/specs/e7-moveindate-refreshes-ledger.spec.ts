@@ -34,9 +34,11 @@ test('changing the term refreshes the ledger without a reload', async ({
 		`/properties/${s.propertyId}/occupancy/applications/${application.id}/move-in`,
 	)
 
-	// Shorten by one period, then confirm the rebuild.
+	// Shorten by one period, then confirm the rebuild. The stepper lives behind
+	// "Something else" now — the presets are whole terms, not increments.
+	await page.getByRole('button', { name: /something else/i }).click()
 	await page.getByRole('button', { name: 'Shorten the term' }).click()
-	await page.getByRole('button', { name: /save/i }).click()
+	await page.locator('#save-move-in').click()
 
 	const confirm = page.getByRole('alertdialog', {
 		name: /rebuild the rent charges/i,
@@ -46,11 +48,21 @@ test('changing the term refreshes the ledger without a reload', async ({
 	await expect(confirm).toBeHidden({ timeout: SAVE_TIMEOUT })
 
 	// Client-side navigation to the ledger — no reload, which is the workaround
-	// under test.
+	// under test. The checklist rail is gone; the step header carries the link.
 	await page
-		.getByRole('link', { name: /financial setup/i })
+		.getByRole('link', { name: /next: rent & payments/i })
 		.first()
 		.click()
+	await page.waitForURL(/\/financial$/, { timeout: 20_000 })
+
+	// Wait for the charges panel to exist before polling its contents.
+	// `expect.poll` propagates a throw from its callback rather than retrying,
+	// and `chargesSummary` throws when the panel has not rendered yet — so
+	// polling straight after navigation fails on the first tick rather than
+	// waiting for the ledger. The assertion below is unchanged.
+	await expect(page.getByText(/\d+ charges? ·/i).first()).toBeVisible({
+		timeout: SAVE_TIMEOUT,
+	})
 
 	await expect
 		.poll(

@@ -37,7 +37,9 @@ export function OverviewStepCard({
 				// markers, which carry the same colour.
 				data-lead={lead ? 'true' : undefined}
 				className={cn(
-					'flex flex-row items-start gap-4 p-5 shadow-none transition-colors',
+					// Wraps on a phone so the CTA drops to its own row rather than
+					// squeezing the description into a third of the card.
+					'flex flex-row flex-wrap items-start gap-x-4 gap-y-3 p-5 shadow-none transition-colors',
 					blocked ? 'bg-muted' : 'bg-card hover:border-foreground/20',
 					lead ? 'border-primary shadow-[0_2px_0_var(--primary)]' : '',
 				)}
@@ -46,7 +48,7 @@ export function OverviewStepCard({
 					<ChecklistMarker state={step.state} />
 				</div>
 
-				<div className="min-w-0 flex-1">
+				<div className="min-w-0 flex-1 basis-[65%]">
 					<div className="flex items-center gap-2">
 						<span
 							className={cn(
@@ -98,7 +100,7 @@ export function OverviewStepCard({
 					</div>
 				</div>
 
-				<div className="flex shrink-0 items-center gap-2 pt-1">
+				<div className="flex w-full shrink-0 items-center justify-end gap-2 sm:w-auto sm:pt-1">
 					{/*
 					 * Styled as a button but rendered as a span: the whole card is
 					 * already a Link, and a <button> inside an <a> is invalid HTML that

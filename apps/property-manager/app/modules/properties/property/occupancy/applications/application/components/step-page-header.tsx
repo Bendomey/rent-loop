@@ -39,7 +39,9 @@ export function StepPageHeader({
 		>
 			<div className="min-w-0">
 				<div className="flex flex-wrap items-center gap-3">
-					<h1 className="text-3xl font-bold tracking-tight">{title}</h1>
+					<h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+						{title}
+					</h1>
 					<Badge
 						variant="secondary"
 						className={cn(
@@ -55,15 +57,19 @@ export function StepPageHeader({
 				<p className="text-muted-foreground mt-2 text-sm">{subtitle}</p>
 			</div>
 
-			<div className="flex shrink-0 flex-wrap gap-2">
-				<Button variant="outline" asChild>
+			{/* Full width and evenly split on a phone, where two auto-width
+			    buttons leave a ragged half-empty row. */}
+			<div className="flex w-full shrink-0 flex-wrap gap-2 sm:w-auto">
+				<Button variant="outline" className="flex-1 sm:flex-none" asChild>
 					<Link to={backHref}>
 						<ArrowLeft className="size-4" />
-						Back to the application
+						{/* The full phrase costs more room than it earns on a phone. */}
+						<span className="hidden sm:inline">Back to the application</span>
+						<span className="sm:hidden">Back</span>
 					</Link>
 				</Button>
 				{nextHref && nextLabel ? (
-					<Button asChild>
+					<Button className="flex-1 sm:flex-none" asChild>
 						<Link to={nextHref}>
 							{nextLabel}
 							<ArrowRight className="size-4" />
