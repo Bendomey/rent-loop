@@ -49,8 +49,9 @@ test('a partially occupied unit is selectable when changing unit', async ({
 	// A second application, on its own unit, which we now try to move across.
 	const mover = await makeApprovableApplication(s, 'f4-mover', { seq: 220 })
 
+	// The unit step has its own page now; the application root is the overview.
 	await page.goto(
-		`/properties/${s.propertyId}/occupancy/applications/${mover.application.id}`,
+		`/properties/${s.propertyId}/occupancy/applications/${mover.application.id}/unit`,
 	)
 	await page.getByRole('button', { name: 'Change', exact: true }).click()
 

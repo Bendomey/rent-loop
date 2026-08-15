@@ -33,8 +33,9 @@ test('changing the unit keeps the agreed rent by default', async ({ page }) => {
 	)
 
 	// ── change the unit, accepting whatever rent the modal defaults to ─────
+	// The unit step has its own page now; the application root is the overview.
 	await page.goto(
-		`/properties/${s.propertyId}/occupancy/applications/${application.id}`,
+		`/properties/${s.propertyId}/occupancy/applications/${application.id}/unit`,
 	)
 	await page.getByRole('button', { name: 'Change', exact: true }).click()
 

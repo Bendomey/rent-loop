@@ -24,7 +24,11 @@ test('approving an application creates a lease and occupies the unit', async ({
 		`/properties/${s.propertyId}/occupancy/applications/${application.id}`,
 	)
 
-	const approve = page.getByRole('button', { name: /^approve$/i })
+	// The application's own URL is now the overview, and its lead card carries
+	// the only approve button in the product.
+	const approve = page.getByRole('button', {
+		name: /approve & make the lease/i,
+	})
 	await expect(approve).toBeEnabled({ timeout: 20_000 })
 
 	await approve.click()

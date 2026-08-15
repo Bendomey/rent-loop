@@ -102,7 +102,7 @@ export function getChecklistSources(
 	return [
 		{
 			key: 'unit',
-			path: '',
+			path: '/unit',
 			items: getUnitItems(application),
 			doneNote: unit
 				? `${unit.name} · ${toFirstUpperCase(unit.type.toLowerCase())}`

@@ -109,29 +109,29 @@ export const TENANT_APPLICATION_TOUR_STEPS: DriveStep[] = [
 	{
 		element: '#application-header',
 		popover: {
-			title: 'Application Overview',
+			title: 'Where the application stands',
 			description:
-				'Review the application code, current status, and submission details. The status badge updates as you progress through the steps.',
+				'The status and the progress bar tell you how far along this application is, and update as you work through the steps.',
 			side: 'bottom',
 			align: 'start',
 		},
 	},
 	{
-		element: '#application-checklist',
+		element: '#application-lead',
 		popover: {
-			title: 'Completion Checklist',
+			title: 'What to do next',
 			description:
-				'Each section must be filled in before you can approve. Work through unit selection, tenant details, move-in setup, financials, and lease documents.',
-			side: 'left',
+				'One action at a time, in plain words, with the reason behind it. When every step is done, this is where you approve.',
+			side: 'bottom',
 			align: 'start',
 		},
 	},
 	{
-		element: '#application-actions',
+		element: '#application-steps',
 		popover: {
-			title: 'Approve or Cancel',
+			title: 'The five steps',
 			description:
-				'Once the checklist reaches 100%, the Approve button becomes active. You can also cancel the application here if needed.',
+				'Each one opens its own page. A step is greyed out when something it depends on is unfinished — click it and you go to the thing in the way.',
 			side: 'left',
 			align: 'start',
 		},

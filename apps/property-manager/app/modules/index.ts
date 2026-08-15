@@ -67,7 +67,8 @@ export * from './properties/property/occupancy/tenants/tenant/maintenance-reques
 
 export * from './properties/property/occupancy/applications'
 export * from './properties/property/occupancy/applications/new'
-export * from './properties/property/occupancy/applications/application'
+export * from './properties/property/occupancy/applications/application/step-layout'
+export * from './properties/property/occupancy/applications/application/overview'
 export * from './properties/property/occupancy/applications/application/unit'
 export * from './properties/property/occupancy/applications/application/tenant'
 export * from './properties/property/occupancy/applications/application/move-in'
