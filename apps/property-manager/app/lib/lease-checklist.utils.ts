@@ -211,9 +211,8 @@ export function getLeaseTermProgress(lease: Lease): LeaseTermProgress | null {
 	const now = new Date()
 	const elapsedMs = Math.max(0, now.getTime() - start.getTime())
 	const percent =
-		Math.round(
-			Math.min(100, Math.max(0, (elapsedMs / totalMs) * 100)) * 100,
-		) / 100
+		Math.round(Math.min(100, Math.max(0, (elapsedMs / totalMs) * 100)) * 100) /
+		100
 	const daysLeft = Math.ceil((end.getTime() - now.getTime()) / 86_400_000)
 
 	const totalDays = totalMs / 86_400_000

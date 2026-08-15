@@ -12,6 +12,8 @@
     "lint:ci": "eslint . --quiet",
     "test": "vitest run",
     "test:watch": "vitest",
+    "e2e": "playwright test --config e2e/playwright.config.ts",
+    "e2e:ui": "playwright test --config e2e/playwright.config.ts --ui",
     "format": "prettier --write \"**/*.+(js|jsx|json|yml|yaml|css|less|scss|ts|tsx|md|gql|graphql|mdx|vue)\"",
     "quality": "npm run types:check && npm run format && npm run lint --fix"
   },
@@ -109,6 +111,7 @@
     "zod": "4.1.12"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@react-router/dev": "7.9.2",
     "@tailwindcss/vite": "4.1.13",
     "@types/jsdom": "27.0.0",

@@ -7,3 +7,9 @@
 # React Router
 /.react-router/
 /build/
+
+# Playwright E2E
+e2e/.e2e-state.json
+e2e/.e2e-storage.json
+playwright-report/
+test-results/

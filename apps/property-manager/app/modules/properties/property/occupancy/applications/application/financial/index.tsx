@@ -39,10 +39,15 @@ export const resolveMode = (
 	if (!moveInComplete(application)) return 'blocked'
 	if (!application.financial_account || !summary) return 'setup'
 
-	// Any charge that has been invoiced or settled freezes the rent terms —
-	// RederiveRent returns 400 ChargesAlreadyBilled from that point on.
+	// A billed *rent* charge freezes the terms — RederiveRent returns 400
+	// ChargesAlreadyBilled from that point on. Scoped to rent because only rent
+	// derives from the move-in date and unit; this previously looked at every
+	// charge, which locked rent as soon as a deposit was billed even though the
+	// service would still have allowed the change.
 	const billed = summary.charges.some(
-		(charge) => charge.invoiced_amount !== 0 || charge.settled_amount !== 0,
+		(charge) =>
+			charge.category === 'RENT' &&
+			(charge.invoiced_amount !== 0 || charge.settled_amount !== 0),
 	)
 	return billed ? 'locked' : 'live'
 }

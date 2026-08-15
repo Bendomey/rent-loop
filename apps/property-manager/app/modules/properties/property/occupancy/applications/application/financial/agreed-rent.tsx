@@ -1,10 +1,12 @@
 import { ArrowRight, Check, Lock, Plus, RefreshCw } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useRevalidator } from 'react-router'
+import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { STACKED_CARD_ACTION, STACKED_CARD_TEXT } from './card-action'
 import type { FinancialMode } from './index'
 import { useAdminUpdateTenantApplication } from '~/api/tenant-applications'
+import { QUERY_KEYS } from '~/lib/constants'
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
 import { Button } from '~/components/ui/button'
 import {
@@ -48,6 +50,7 @@ export function AgreedRent({
 }: AgreedRentProps) {
 	const revalidator = useRevalidator()
 	const { isPending, mutate } = useAdminUpdateTenantApplication()
+	const queryClient = useQueryClient()
 
 	const currency = application.rent_fee_currency
 	const unitRent = application.desired_unit?.rent_fee ?? 0
@@ -81,6 +84,12 @@ export function AgreedRent({
 						rebuilds ? 'Rent saved and schedule rebuilt.' : 'Rent saved.',
 					)
 					void revalidator.revalidate()
+					void queryClient.invalidateQueries({
+						queryKey: [QUERY_KEYS.FINANCIAL_ACCOUNT],
+					})
+					void queryClient.invalidateQueries({
+						queryKey: [QUERY_KEYS.INVOICES],
+					})
 				},
 				onError: (mutationError: Error) => {
 					// The server rolls the application back with the charges, so

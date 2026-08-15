@@ -147,6 +147,10 @@ type OutputTenantApplicationFinancials struct {
 	AvailableCredit   int64  `json:"available_credit"   example:"0"`
 	ChargeCount       int64  `json:"charge_count"       example:"13"`
 	InvoiceCount      int64  `json:"invoice_count"      example:"1"`
+	// RentTermsLocked is true once a rent charge has been invoiced or settled.
+	// The move-in date and the unit can no longer be changed — RederiveRent
+	// returns 400 ChargesAlreadyBilled — so the UI should stop offering them.
+	RentTermsLocked bool `json:"rent_terms_locked"  example:"false"`
 }
 
 func DBTenantApplicationFinancialsToRest(
@@ -166,5 +170,6 @@ func DBTenantApplicationFinancialsToRest(
 		AvailableCredit:   m.AvailableCredit,
 		ChargeCount:       m.ChargeCount,
 		InvoiceCount:      m.InvoiceCount,
+		RentTermsLocked:   m.RentTermsLocked,
 	}
 }

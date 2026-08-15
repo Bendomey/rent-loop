@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 import { useRevalidator } from 'react-router'
+import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { useTenantApplicationContext } from '../context'
 import { DurationStepper } from './duration-stepper'
@@ -15,8 +16,19 @@ import { durationLabel, formatDay } from './term'
 import { TermSummary } from './term-summary'
 import { useUnitAvailability } from './use-unit-availability'
 import { useAdminUpdateTenantApplication } from '~/api/tenant-applications'
+import { QUERY_KEYS } from '~/lib/constants'
 import { DatePickerInput } from '~/components/date-picker-input'
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from '~/components/ui/alert-dialog'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent } from '~/components/ui/card'
 import { Label } from '~/components/ui/label'
@@ -49,6 +61,8 @@ export function PropertyTenantApplicationMoveIn() {
 	const { clientUser } = useClient()
 	const revalidator = useRevalidator()
 	const { isPending, mutate } = useAdminUpdateTenantApplication()
+	const queryClient = useQueryClient()
+	const [confirmRebuild, setConfirmRebuild] = useState(false)
 
 	const unit = application.desired_unit
 	const clientId = safeString(clientUser?.client_id)
@@ -60,8 +74,12 @@ export function PropertyTenantApplicationMoveIn() {
 	// ChargesAlreadyBilled the moment a charge is on an invoice. Locking only on
 	// settlement would leave an invoiced-but-unpaid term editable, and the save
 	// would come back a 400.
-	const locked =
-		(account?.total_settled ?? 0) > 0 || (account?.invoice_count ?? 0) > 0
+	//
+	// Read the server's own flag rather than inferring it. `total_settled > 0`
+	// and `invoice_count > 0` are both account-wide, so an invoice covering only
+	// a deposit locked the move-in date even though the service would have
+	// allowed the change.
+	const locked = Boolean(account?.rent_terms_locked)
 	const readonly =
 		application.status !== 'TenantApplication.Status.InProgress' || locked
 
@@ -129,6 +147,12 @@ export function PropertyTenantApplicationMoveIn() {
 							: 'Move-in setup saved.',
 					)
 					void revalidator.revalidate()
+					void queryClient.invalidateQueries({
+						queryKey: [QUERY_KEYS.FINANCIAL_ACCOUNT],
+					})
+					void queryClient.invalidateQueries({
+						queryKey: [QUERY_KEYS.INVOICES],
+					})
 				},
 				onError: (error: Error) => {
 					toast.error(
@@ -301,13 +325,39 @@ export function PropertyTenantApplicationMoveIn() {
 						) : null}
 						<Button
 							disabled={!date || !dirty || clashes || isPending}
-							onClick={save}
+							onClick={() => (rebuilds ? setConfirmRebuild(true) : save())}
 						>
 							{isPending ? <Spinner /> : <Check className="size-4" />}
 							{rebuilds ? 'Save and rebuild charges' : 'Save move-in'}
 						</Button>
 					</div>
 				) : null}
+
+				<AlertDialog open={confirmRebuild} onOpenChange={setConfirmRebuild}>
+					<AlertDialogContent>
+						<AlertDialogHeader>
+							<AlertDialogTitle>Rebuild the rent charges?</AlertDialogTitle>
+							<AlertDialogDescription>
+								The {account?.charge_count ?? 0} charges on this application
+								were worked out from the current move-in date and term. Saving
+								replaces every rent charge with a new schedule. Charges you
+								added yourself are kept, and nothing that has been billed is
+								touched.
+							</AlertDialogDescription>
+						</AlertDialogHeader>
+						<AlertDialogFooter>
+							<AlertDialogCancel>Keep current schedule</AlertDialogCancel>
+							<AlertDialogAction
+								onClick={() => {
+									setConfirmRebuild(false)
+									save()
+								}}
+							>
+								Save and rebuild
+							</AlertDialogAction>
+						</AlertDialogFooter>
+					</AlertDialogContent>
+				</AlertDialog>
 			</Card>
 
 			<Card className="shadow-none">

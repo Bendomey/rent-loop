@@ -93,4 +93,13 @@ interface TenantApplicationFinancials {
 	available_credit: number
 	charge_count: number
 	invoice_count: number
+	/**
+	 * True once a rent charge has been invoiced or settled, at which point the
+	 * move-in date and the unit can no longer change — RederiveRent returns 400
+	 * ChargesAlreadyBilled.
+	 *
+	 * Rent-scoped on purpose: a billed deposit does not freeze anything, so do
+	 * not substitute `total_settled > 0`, which is the whole account.
+	 */
+	rent_terms_locked: boolean
 }

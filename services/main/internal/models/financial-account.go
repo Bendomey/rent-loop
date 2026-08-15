@@ -75,4 +75,8 @@ type TenantApplicationFinancials struct {
 	AvailableCredit   int64
 	ChargeCount       int64
 	InvoiceCount      int64
+	// RentTermsLocked mirrors the service guard: true once a rent charge has
+	// been invoiced or settled, at which point move-in date and unit changes
+	// are refused.
+	RentTermsLocked bool
 }

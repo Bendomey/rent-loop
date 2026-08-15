@@ -14,10 +14,18 @@ import {
 	AlertDialogTitle,
 } from '~/components/ui/alert-dialog'
 import { Badge } from '~/components/ui/badge'
+import { AlertTriangle } from 'lucide-react'
+import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
 import { Button } from '~/components/ui/button'
+import { Input } from '~/components/ui/input'
+import { Label } from '~/components/ui/label'
 import { Spinner } from '~/components/ui/spinner'
 import { QUERY_KEYS } from '~/lib/constants'
-import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
+import {
+	convertCedisToPesewas,
+	convertPesewasToCedis,
+	formatAmount,
+} from '~/lib/format-amount'
 import { getPropertyUnitStatusLabel } from '~/lib/properties.utils'
 import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
@@ -27,6 +35,22 @@ interface Props {
 	applicationId: string
 	propertyId: string
 	currentUnitId?: string
+	/**
+	 * How many charges already exist on the application's account. Changing the
+	 * unit rebuilds the rent schedule, so the landlord is told before it happens
+	 * rather than discovering it afterwards.
+	 */
+	chargeCount?: number
+	/**
+	 * The rent already agreed for this lease, in pesewas, if one has been
+	 * stated. Rent is stated rather than inherited from the unit, so moving to
+	 * another unit must not silently re-price the lease — the landlord is asked
+	 * which figure the rebuilt charges use, defaulting to the one they agreed.
+	 *
+	 * Null before any rent is stated, where there is nothing to preserve and the
+	 * new unit's listed rent is the sensible starting point.
+	 */
+	currentRent?: Nullable<number>
 	opened: boolean
 	setOpened: Dispatch<SetStateAction<boolean>>
 }
@@ -35,6 +59,8 @@ export function ChangeUnitModal({
 	applicationId,
 	propertyId,
 	currentUnitId,
+	chargeCount = 0,
+	currentRent,
 	opened,
 	setOpened,
 }: Props) {
@@ -43,6 +69,11 @@ export function ChangeUnitModal({
 	const { clientUser } = useClient()
 	const [selectedUnitId, setSelectedUnitId] = useState<string | undefined>(
 		currentUnitId,
+	)
+
+	// Defaults to the agreed figure, so the safe outcome is also the fastest.
+	const [rent, setRent] = useState(
+		currentRent == null ? '' : String(convertPesewasToCedis(currentRent)),
 	)
 
 	const { data, isPending: isLoadingUnits } = useGetPropertyUnits(
@@ -68,7 +99,15 @@ export function ChangeUnitModal({
 				property_id: propertyId,
 				data: {
 					desired_unit_id: selectedUnitId,
-					rent_fee: unit?.rent_fee,
+					// Currency and frequency are properties of the unit and follow it.
+					// Rent is not — it is the figure the lease is written against, so
+					// it carries over unless the landlord says otherwise here.
+					rent_fee:
+						currentRent == null
+							? unit?.rent_fee
+							: convertCedisToPesewas(
+									Number.parseFloat(rent.replace(/,/g, '')) || 0,
+								),
 					rent_fee_currency: unit?.rent_fee_currency,
 					payment_frequency: unit?.payment_frequency,
 					stay_duration_frequency: unit?.payment_frequency,
@@ -85,6 +124,12 @@ export function ChangeUnitModal({
 					void queryClient.invalidateQueries({
 						queryKey: [QUERY_KEYS.PROPERTY_TENANT_APPLICATIONS],
 					})
+					void queryClient.invalidateQueries({
+						queryKey: [QUERY_KEYS.FINANCIAL_ACCOUNT],
+					})
+					void queryClient.invalidateQueries({
+						queryKey: [QUERY_KEYS.INVOICES],
+					})
 					setOpened(false)
 				},
 			},
@@ -92,6 +137,9 @@ export function ChangeUnitModal({
 	}
 
 	const units = data?.rows ?? []
+	const selectedUnit = units.find((u) => u.id === selectedUnitId)
+	const listedRent = convertPesewasToCedis(selectedUnit?.rent_fee ?? 0)
+	const enteredRent = Number.parseFloat(rent.replace(/,/g, '')) || 0
 
 	const statusColor = (status: PropertyUnit['status']) => {
 		switch (status) {
@@ -108,7 +156,7 @@ export function ChangeUnitModal({
 
 	return (
 		<AlertDialog open={opened} onOpenChange={setOpened}>
-			<AlertDialogContent className="max-h-[80vh] max-w-lg">
+			<AlertDialogContent className="max-h-[85vh] max-w-lg overflow-y-auto">
 				<AlertDialogHeader>
 					<AlertDialogTitle>Change Unit</AlertDialogTitle>
 					<AlertDialogDescription>
@@ -116,7 +164,20 @@ export function ChangeUnitModal({
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 
-				<div className="max-h-[50vh] space-y-2 overflow-y-auto pr-1">
+				{chargeCount > 0 ? (
+					<Alert>
+						<AlertTriangle className="size-4" />
+						<AlertTitle>Rent charges will be rebuilt</AlertTitle>
+						<AlertDescription>
+							The {chargeCount} charge{chargeCount === 1 ? '' : 's'} on this
+							application were worked out against the current unit. Moving to
+							another unit rebuilds the rent schedule from the agreed terms.
+							Charges you added yourself are kept.
+						</AlertDescription>
+					</Alert>
+				) : null}
+
+				<div className="max-h-[38vh] space-y-2 overflow-y-auto pr-1">
 					{isLoadingUnits ? (
 						<div className="flex items-center justify-center py-8">
 							<Spinner />
@@ -194,6 +255,47 @@ export function ChangeUnitModal({
 						})
 					)}
 				</div>
+
+				{/*
+				 * Only once another unit is picked, and only when a rent has been
+				 * agreed — before that there is nothing to preserve and the unit's
+				 * listing is the right starting point.
+				 */}
+				{currentRent != null &&
+				selectedUnitId &&
+				selectedUnitId !== currentUnitId ? (
+					<div className="rounded-lg border p-3">
+						<Label htmlFor="change-unit-rent">Rent for this lease</Label>
+						<div className="mt-2 flex items-center gap-2">
+							<span className="text-muted-foreground text-sm font-semibold">
+								{selectedUnit?.rent_fee_currency ?? 'GH₵'}
+							</span>
+							<Input
+								id="change-unit-rent"
+								inputMode="decimal"
+								className="w-40 font-semibold"
+								value={rent}
+								disabled={isPending}
+								onChange={(event) => setRent(event.target.value)}
+							/>
+							{listedRent > 0 && listedRent !== enteredRent ? (
+								<Button
+									type="button"
+									variant="outline"
+									size="sm"
+									onClick={() => setRent(String(listedRent))}
+								>
+									Use listed rent (
+									{formatAmount(listedRent, selectedUnit?.rent_fee_currency)})
+								</Button>
+							) : null}
+						</div>
+						<p className="text-muted-foreground mt-2 text-xs">
+							Carried over from the current agreement. The rebuilt charges use
+							this figure, not the unit&apos;s listing.
+						</p>
+					</div>
+				) : null}
 
 				<AlertDialogFooter>
 					<Button

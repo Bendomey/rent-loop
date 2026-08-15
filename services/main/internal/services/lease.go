@@ -375,6 +375,7 @@ func (s *leaseService) attachFinancials(ctx context.Context, lease *models.Lease
 		AvailableCredit:   summary.AvailableCredit,
 		ChargeCount:       int64(len(summary.Charges)),
 		InvoiceCount:      invoiceCount,
+		RentTermsLocked:   financials.RentTermsLocked(summary.Charges),
 	}
 }
 

@@ -33,12 +33,18 @@ export function PropertyTenantApplicationUnitSetup() {
 	const propertyId = safeString(clientUserProperty?.property_id)
 	const isSingleProperty = clientUserProperty?.property?.type === 'SINGLE'
 
-	// Money has moved once anything on the account is settled.
-	const isInvoicePaid = (application?.financial_account?.total_settled ?? 0) > 0
+	// Changing the unit rebuilds the rent schedule, so it is refused once a rent
+	// charge has been billed. Read the server's own flag rather than inferring
+	// from totals: `total_settled > 0` is account-wide, so it blocked on a paid
+	// deposit the service would have allowed, and stayed open when rent was
+	// invoiced-but-unpaid, which the service refuses.
+	const rentTermsLocked = Boolean(
+		application?.financial_account?.rent_terms_locked,
+	)
 	const isDocSigned = ['SIGNED', 'SIGNING'].includes(
 		safeString(application?.lease_agreement_document_status),
 	)
-	const isChangeLocked = isInvoicePaid || isDocSigned
+	const isChangeLocked = rentTermsLocked || isDocSigned
 
 	const statusLabel = unit ? getPropertyUnitStatusLabel(unit.status) : ''
 	const statusColor =
@@ -66,6 +72,8 @@ export function PropertyTenantApplicationUnitSetup() {
 				<ChangeUnitModal
 					applicationId={safeString(application?.id)}
 					propertyId={propertyId}
+					chargeCount={application?.financial_account?.charge_count ?? 0}
+					currentRent={application?.rent_fee ?? null}
 					opened={changeUnitOpen}
 					setOpened={setChangeUnitOpen}
 				/>
@@ -136,9 +144,9 @@ export function PropertyTenantApplicationUnitSetup() {
 								</TooltipTrigger>
 								{isChangeLocked && (
 									<TooltipContent>
-										{isInvoicePaid
-											? 'Cannot change unit after initial payments has been paid'
-											: 'Cannot change unit after lease has been signed'}
+										{rentTermsLocked
+											? 'Rent has already been billed on this application. Void or refund those invoices before changing the unit.'
+											: 'The lease agreement has been signed, so the unit can no longer change.'}
 									</TooltipContent>
 								)}
 							</Tooltip>
@@ -151,6 +159,8 @@ export function PropertyTenantApplicationUnitSetup() {
 				applicationId={safeString(application?.id)}
 				propertyId={propertyId}
 				currentUnitId={unit.id}
+				chargeCount={application?.financial_account?.charge_count ?? 0}
+				currentRent={application?.rent_fee ?? null}
 				opened={changeUnitOpen}
 				setOpened={setChangeUnitOpen}
 			/>
