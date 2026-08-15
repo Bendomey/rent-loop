@@ -39,16 +39,25 @@ export interface ApprovableApplication {
 export async function makeApprovableApplication(
 	s: RunState,
 	label: string,
-	opts: { rentFee?: number; stayDuration?: number; seq?: number } = {},
+	opts: {
+		rentFee?: number
+		stayDuration?: number
+		seq?: number
+		/** Use an existing unit instead of creating one — for cases that need a
+		 * particular unit, such as one already partly occupied. */
+		unitId?: string
+	} = {},
 ): Promise<ApprovableApplication> {
 	const rentFee = opts.rentFee ?? 50_000
 	const stayDuration = opts.stayDuration ?? 12
 	const seq = opts.seq ?? 1
 
-	const unit = await createUnit(s.token, s.clientId, s.propertyId, s.blockId, {
-		name: tag(s.runId, label),
-		rentFee,
-	})
+	const unit = opts.unitId
+		? { id: opts.unitId, name: tag(s.runId, label), slug: '' }
+		: await createUnit(s.token, s.clientId, s.propertyId, s.blockId, {
+				name: tag(s.runId, label),
+				rentFee,
+			})
 
 	const application = await createApplication(
 		s.token,

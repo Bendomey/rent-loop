@@ -102,6 +102,7 @@ export function PropertyTenantApplicationMoveIn() {
 		propertyId,
 		unit.id,
 		application.id,
+		unit.max_occupants_allowed,
 	)
 	const clashes = Boolean(date && freeFrom && freeFrom > date)
 

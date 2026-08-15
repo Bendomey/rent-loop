@@ -189,23 +189,23 @@ export function ChangeUnitModal({
 					) : (
 						units.map((unit) => {
 							const isSelected = selectedUnitId === unit.id
-							const isAvailable = unit.status === 'Unit.Status.Available'
+							const hasRoom =
+								unit.status === 'Unit.Status.Available' ||
+								unit.status === 'Unit.Status.PartiallyOccupied'
 							const isCurrent = currentUnitId === unit.id
 
 							return (
 								<button
 									key={unit.id}
 									type="button"
-									disabled={!isAvailable && !isCurrent}
+									disabled={!hasRoom && !isCurrent}
 									onClick={() => setSelectedUnitId(unit.id)}
 									className={cn(
 										'relative flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-all',
 										isSelected
 											? 'border-primary bg-primary/5 ring-primary ring-1'
 											: 'hover:bg-gray-50',
-										!isAvailable &&
-											!isCurrent &&
-											'cursor-not-allowed opacity-50',
+										!hasRoom && !isCurrent && 'cursor-not-allowed opacity-50',
 									)}
 								>
 									{unit.images?.[0] ? (

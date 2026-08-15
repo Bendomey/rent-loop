@@ -14,12 +14,21 @@ const endOf = (lease: Lease) => {
 }
 
 /**
- * When the desired unit actually becomes free.
+ * When the desired unit actually has room for another term.
  *
- * A unit under notice can't take a term that starts before the sitting tenant
- * leaves — the two leases would overlap. The old step let that through and the
- * problem only surfaced at approval, so the dates are checked here instead,
- * while they are still the thing being decided.
+ * A full unit can't take a term that starts before a sitting tenant leaves —
+ * the leases would overlap. The old step let that through and the problem only
+ * surfaced at approval, so the dates are checked here instead, while they are
+ * still the thing being decided.
+ *
+ * Capacity is the whole question. A unit holding fewer live leases than
+ * `max_occupants_allowed` has a spare bed and is free now, which is what the
+ * service means by PartiallyOccupied. Counting leases without consulting
+ * capacity declared every shared unit occupied until its first tenant left.
+ *
+ * And when a unit *is* full, the slot opens as soon as enough leases end — for
+ * a full two-bed unit that is the earliest-ending lease, not the latest. Using
+ * the latest overstated the wait by however long the longer tenancy runs.
  */
 export function useUnitAvailability(
 	clientId: string,
@@ -27,6 +36,8 @@ export function useUnitAvailability(
 	unitId: string,
 	/** This application's own lease, once approved, must not block itself. */
 	applicationId: string,
+	/** The unit's `max_occupants_allowed`. Defaults to a single occupant. */
+	capacity = 1,
 ) {
 	const { data } = useGetPropertyLeases(clientId, propertyId, {
 		pagination: { page: 1, per: 20 },
@@ -40,16 +51,22 @@ export function useUnitAvailability(
 			lease.tenant_application_id !== applicationId &&
 			BLOCKING.includes(lease.status),
 	)
-	if (blocking.length === 0) return { freeFrom: null, occupant: null }
+	// How many tenancies must end before a bed frees up. At or below zero the
+	// unit already has room.
+	const slotsNeeded = blocking.length - Math.max(1, capacity) + 1
+	if (slotsNeeded <= 0) return { freeFrom: null, occupant: null }
 
-	const latest = blocking.reduce((held, lease) =>
-		endOf(lease) > endOf(held) ? lease : held,
+	// The Nth earliest ending lease is the one that frees the slot.
+	const byEnd = [...blocking].sort(
+		(a, b) => endOf(a).getTime() - endOf(b).getTime(),
 	)
+	const frees = byEnd[slotsNeeded - 1]
+	if (!frees) return { freeFrom: null, occupant: null }
 
 	return {
-		freeFrom: endOf(latest),
+		freeFrom: endOf(frees),
 		occupant:
-			[latest.tenant?.first_name, latest.tenant?.last_name]
+			[frees.tenant?.first_name, frees.tenant?.last_name]
 				.filter(Boolean)
 				.join(' ') || null,
 	}

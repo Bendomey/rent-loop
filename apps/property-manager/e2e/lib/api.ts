@@ -191,7 +191,14 @@ export async function createUnit(
 	clientId: string,
 	propertyId: string,
 	blockId: string,
-	opts: { name: string; rentFee: number; paymentFrequency?: string },
+	opts: {
+		name: string
+		rentFee: number
+		paymentFrequency?: string
+		/** Capacity. Above 1, the unit becomes PartiallyOccupied rather than
+		 * Occupied once its first lease starts. */
+		maxOccupants?: number
+	},
 ): Promise<Unit> {
 	const res = await call<{ data: Unit }>(
 		'POST',
@@ -205,7 +212,7 @@ export async function createUnit(
 				rent_fee: opts.rentFee,
 				rent_fee_currency: 'GHS',
 				payment_frequency: opts.paymentFrequency ?? 'MONTHLY',
-				max_occupants_allowed: 1,
+				max_occupants_allowed: opts.maxOccupants ?? 1,
 			},
 		},
 	)
