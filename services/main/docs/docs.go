@@ -26649,6 +26649,11 @@ const docTemplate = `{
                     "type": "string",
                     "example": "RENT"
                 },
+                "charge_instance_id": {
+                    "description": "ChargeInstanceID is the charge this line claims, present on every\naccount-backed line and null otherwise. Without it a client cannot tell\nwhich obligation a bill covers, and has to guess from the label — which\ncollides as soon as two charges share a name or an amount.",
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
                 "created_at": {
                     "type": "string",
                     "example": "2024-06-01T09:00:00Z"
@@ -27977,6 +27982,11 @@ const docTemplate = `{
                 "outstanding_amount": {
                     "type": "integer",
                     "example": 0
+                },
+                "rent_terms_locked": {
+                    "description": "RentTermsLocked is true once a rent charge has been invoiced or settled.\nThe move-in date and the unit can no longer be changed — RederiveRent\nreturns 400 ChargesAlreadyBilled — so the UI should stop offering them.",
+                    "type": "boolean",
+                    "example": false
                 },
                 "total_charged": {
                     "type": "integer",

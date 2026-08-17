@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { Lock, Pencil, Undo2 } from 'lucide-react'
+import { Lock, Pencil } from 'lucide-react'
 import { useState } from 'react'
 import { useRevalidator } from 'react-router'
 import { toast } from 'sonner'
@@ -17,7 +17,6 @@ import {
 	convertPesewasToCedis,
 	formatAmount,
 } from '~/lib/format-amount'
-import type { Pronouns } from '~/lib/pronouns'
 import type { PaymentFrequency } from '~/lib/schedule'
 import { cn } from '~/lib/utils'
 
@@ -47,7 +46,6 @@ export function SideCards({
 	currency,
 	frequency,
 	applicantName,
-	pronouns,
 	rentLocked,
 	readonly,
 	clientId,
@@ -55,7 +53,6 @@ export function SideCards({
 	accountId,
 	applicationId,
 	charges,
-	onRefund,
 }: {
 	choice: CollectionChoice
 	leadDays: number
@@ -63,7 +60,6 @@ export function SideCards({
 	currency: string
 	frequency: PaymentFrequency
 	applicantName: string
-	pronouns: Pronouns
 	rentLocked: boolean
 	readonly: boolean
 	clientId: string
@@ -71,8 +67,6 @@ export function SideCards({
 	accountId: string
 	applicationId: string
 	charges: ChargeInstance[]
-	/** Absent once approved — refunds are a lease matter from then on. */
-	onRefund?: () => void
 }) {
 	const queryClient = useQueryClient()
 	const revalidator = useRevalidator()
@@ -298,17 +292,13 @@ export function SideCards({
 										anything {applicantName} has paid, and void the bill it
 										was on.
 									</p>
-									{onRefund ? (
-										<Button
-											variant="outline"
-											size="sm"
-											className="mt-2.5"
-											onClick={onRefund}
-										>
-											<Undo2 className="size-3.5" />
-											Refund a payment
-										</Button>
-									) : null}
+									{/*
+									 * Hidden until refunds are finished: the dialog exists and
+									 * the API supports it (a negative charge naming what it
+									 * reverses), but it has no e2e cover yet and this is a
+									 * money path. Restore with `onRefund ? (…) : null` once
+									 * that lands.
+									 */}
 								</div>
 							) : null}
 							<p className="text-muted-foreground mt-3 flex items-center gap-2 text-sm font-semibold">

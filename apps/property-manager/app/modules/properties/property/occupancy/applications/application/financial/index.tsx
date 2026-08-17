@@ -14,6 +14,7 @@ import { AskRent } from './setup/ask-rent'
 import { PlainSummary } from './setup/plain-summary'
 import { useStartBilling } from './setup/use-start-billing'
 import { useGetFinancialAccount } from '~/api/financial-accounts'
+import { deriveAccountView } from '~/lib/account-view'
 import { RemoveChargeDialog } from '~/components/blocks/financials/remove-charge-dialog'
 import { Card, CardContent } from '~/components/ui/card'
 import { type CollectionChoice, choiceForPolicy } from '~/lib/cadence'
@@ -24,7 +25,6 @@ import { buildSchedule } from '~/lib/schedule'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
 import type { loader } from '~/routes/_auth.properties.$propertyId.occupancy.applications.$applicationId'
-import { deriveAccountView } from '~/lib/account-view'
 
 export type FinancialMode = 'blocked' | 'setup' | 'live' | 'locked' | 'readonly'
 
@@ -76,7 +76,9 @@ export function PropertyTenantApplicationFinancial() {
 	const accountId = application?.financial_account?.id ?? null
 	const baseUrl = `/properties/${propertyId}/occupancy/applications/${application?.id}`
 
-	const [showVoided, setShowVoided] = useState(true)
+	// Removed fees stay on the record, so they are always fetched — the page
+	// lists them separately rather than hiding them behind a toggle.
+	const showVoided = true
 	const [payOpen, setPayOpen] = useState(false)
 	const [feeOpen, setFeeOpen] = useState(false)
 	const [refundOpen, setRefundOpen] = useState(false)
@@ -283,7 +285,6 @@ export function PropertyTenantApplicationFinancial() {
 							currency={summary.account.currency}
 							frequency={frequency}
 							applicantName={applicantName}
-							pronouns={pronouns}
 							rentLocked={rentLocked}
 							readonly={readonly}
 							clientId={clientId}
@@ -291,7 +292,6 @@ export function PropertyTenantApplicationFinancial() {
 							accountId={summary.account.id}
 							applicationId={application.id}
 							charges={summary.charges}
-							onRefund={readonly ? undefined : () => setRefundOpen(true)}
 						/>
 					</div>
 				</div>

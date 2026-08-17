@@ -131,15 +131,16 @@ func DBInvoiceLineItemsToRest(items []models.InvoiceLineItem) []any {
 }
 
 type OutputInvoiceLineItem struct {
-	ID          string `json:"id"                 example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
-	InvoiceID   string `json:"invoice_id"         example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
-	Label       string `json:"label"              example:"January Rent"`
-	Category    string `json:"category"           example:"RENT"`
-	Quantity    int64  `json:"quantity"           example:"1"`
-	UnitAmount  int64  `json:"unit_amount"        example:"100000"`
-	TotalAmount int64  `json:"total_amount"       example:"100000"`
-	Currency    string `json:"currency"           example:"GHS"`
-	Metadata    any    `json:"metadata,omitempty"`
+	ID        string `json:"id"                 example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
+	InvoiceID string `json:"invoice_id"         example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
+	ChargeInstanceID *string `json:"charge_instance_id" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
+	Label            string  `json:"label"              example:"January Rent"`
+	Category         string  `json:"category"           example:"RENT"`
+	Quantity         int64   `json:"quantity"           example:"1"`
+	UnitAmount       int64   `json:"unit_amount"        example:"100000"`
+	TotalAmount      int64   `json:"total_amount"       example:"100000"`
+	Currency         string  `json:"currency"           example:"GHS"`
+	Metadata         any     `json:"metadata,omitempty"`
 
 	CreatedAt time.Time `json:"created_at" example:"2024-06-01T09:00:00Z"`
 	UpdatedAt time.Time `json:"updated_at" example:"2024-06-10T09:00:00Z"`
@@ -151,17 +152,18 @@ func DBInvoiceLineItemToRest(i *models.InvoiceLineItem) any {
 	}
 
 	data := map[string]any{
-		"id":           i.ID,
-		"invoice_id":   i.InvoiceID,
-		"label":        i.Label,
-		"category":     i.Category,
-		"quantity":     i.Quantity,
-		"unit_amount":  i.UnitAmount,
-		"total_amount": i.TotalAmount,
-		"currency":     i.Currency,
-		"metadata":     i.Metadata,
-		"created_at":   i.CreatedAt,
-		"updated_at":   i.UpdatedAt,
+		"id":                 i.ID,
+		"invoice_id":         i.InvoiceID,
+		"charge_instance_id": i.ChargeInstanceID,
+		"label":              i.Label,
+		"category":           i.Category,
+		"quantity":           i.Quantity,
+		"unit_amount":        i.UnitAmount,
+		"total_amount":       i.TotalAmount,
+		"currency":           i.Currency,
+		"metadata":           i.Metadata,
+		"created_at":         i.CreatedAt,
+		"updated_at":         i.UpdatedAt,
 	}
 
 	return data

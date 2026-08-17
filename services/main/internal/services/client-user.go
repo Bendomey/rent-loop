@@ -585,11 +585,14 @@ func (s *clientUserService) UpdateClientUser(
 			})
 		}
 
-		replaceErr := s.clientUserPropertyService.ReplaceClientUserProperties(transCtx, ReplaceClientUserPropertiesInput{
-			ClientUserID: input.ClientUserID,
-			Assignments:  assignments,
-			CreatedByID:  input.UpdatedByID,
-		})
+		replaceErr := s.clientUserPropertyService.ReplaceClientUserProperties(
+			transCtx,
+			ReplaceClientUserPropertiesInput{
+				ClientUserID: input.ClientUserID,
+				Assignments:  assignments,
+				CreatedByID:  input.UpdatedByID,
+			},
+		)
 		if replaceErr != nil {
 			tx.Rollback()
 			return nil, replaceErr
