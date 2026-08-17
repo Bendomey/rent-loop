@@ -133,6 +133,7 @@ func ServiceAutoMigration(db *gorm.DB) error {
 		jobs.AddPropertyArchiveFields(),
 		jobs.SplitSessionsFromRefreshTokens(),
 		jobs.AddMaintenanceRequestAssets(),
+		jobs.AddUserProfilePhotoUrl(),
 		jobs.AddFinancialAccountTables(),
 		jobs.BackfillFinancialAccounts(),
 	}

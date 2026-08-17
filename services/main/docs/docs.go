@@ -23545,6 +23545,10 @@ const docTemplate = `{
                 "phone_number": {
                     "type": "string",
                     "example": "+233281234569"
+                },
+                "profile_photo_url": {
+                    "type": "string",
+                    "example": "https://example.com/photo.jpg"
                 }
             }
         },
@@ -24007,6 +24011,10 @@ const docTemplate = `{
                         "ANNUALLY"
                     ],
                     "example": "WEEKLY"
+                },
+                "property_block_id": {
+                    "type": "string",
+                    "example": "a8098c1a-f86e-11da-bd1a-00112444be1e"
                 },
                 "rent_fee": {
                     "type": "integer",
@@ -27931,6 +27939,10 @@ const docTemplate = `{
                 "phone_number": {
                     "type": "string",
                     "example": "+233281234569"
+                },
+                "profile_photo_url": {
+                    "type": "string",
+                    "example": "https://example.com/photo.jpg"
                 },
                 "updated_at": {
                     "type": "string",
