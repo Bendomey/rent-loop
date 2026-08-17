@@ -938,10 +938,7 @@ func rentTermsChanged(input UpdateTenantApplicationInput) bool {
 		input.DesiredUnitId != nil
 }
 
-// rederiveRentCharges regenerates the rent schedule for an application whose
-// charges have already been prepared. An application with no financial account
-// yet has nothing to re-derive — charges:prepare will read the new terms when
-// it runs.
+
 // relocateFinancialAccount keeps the account's denormalised property and client
 // in step with the application's unit. Silent when the application has no
 // account yet — charges have not been prepared, so there is nothing to move.
@@ -966,6 +963,10 @@ func (s *tenantApplicationService) relocateFinancialAccount(
 	return s.financials.Accounts.Relocate(ctx, account.ID.String(), unit.PropertyID)
 }
 
+// rederiveRentCharges regenerates the rent schedule for an application whose
+// charges have already been prepared. An application with no financial account
+// yet has nothing to re-derive — charges:prepare will read the new terms when
+// it runs.
 func (s *tenantApplicationService) rederiveRentCharges(
 	ctx context.Context,
 	application *models.TenantApplication,
