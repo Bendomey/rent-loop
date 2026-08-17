@@ -79,7 +79,7 @@ export function PropertyTenantApplicationMoveIn() {
 	const savedDuration = application?.stay_duration ?? null
 
 	const [date, setDate] = useState<Nullable<Date>>(savedDate)
-	const [duration, setDuration] = useState(savedDuration ?? 12)
+	const [duration, setDuration] = useState(savedDuration ?? 6)
 
 	// M3 — capacity-aware: consults max_occupants_allowed, and the slot is
 	// freed by the Nth earliest-ending lease.
