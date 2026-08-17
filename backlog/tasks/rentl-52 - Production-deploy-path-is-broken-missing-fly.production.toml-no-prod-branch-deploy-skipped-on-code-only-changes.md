@@ -6,6 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-08-17 20:58'
+updated_date: '2026-08-17 21:57'
 labels:
   - infrastructure
   - ci
@@ -41,4 +42,19 @@ Also correct `docs/runbooks/financial-account-backfill.md`, which states "**Migr
 - [ ] #2 The production deploy workflow can actually trigger (prod branch exists, or the trigger is changed to whatever the real production ref is)
 - [ ] #3 A push touching only Go code outside services/main/init/ still deploys to production
 - [ ] #4 docs/runbooks/financial-account-backfill.md no longer claims migrations do not run on deploy, and states that CI runs jobs 1+2 while job 3 stays manual
+- [ ] #5 Staging has its own database, distinct from production, OR the naming is corrected so nobody believes a staging safety net exists when it does not
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-08-17: The staging-vs-production question is ANSWERED — they are the same database. Confirmed by the user, and corroborated by `.envrc`, where the Supabase pooler block (aws-1-eu-west-1.pooler.supabase.com, dbname `postgres`) is labelled "# Staging Creds" yet is the database the `rentloop_prod.sql` dump came from and the one all three migration jobs are now recorded against.
+
+This means `STAGING_DB_*` in CI points at production. Consequences worth acting on:
+
+- There is no staging safety net. "Merge to main, let CI migrate staging first" migrates PRODUCTION. Any future backfill lands on live data with no rehearsal step in between.
+- `fly.staging.toml` (app `rentloop-api-staging`) is therefore the production app, which is why no production fly config exists.
+- Defects 1 and 2 in this task are consistent with that: the production workflow and `fly.production.toml` were never needed because the staging pipeline IS the production pipeline.
+
+The highest-value fix here is probably to stand up a genuinely separate staging database rather than to repair the unused production workflow.
+<!-- SECTION:NOTES:END -->

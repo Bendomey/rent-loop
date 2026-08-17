@@ -4,6 +4,7 @@ title: Retire the two dead one-off SQL scripts and harden the e2e approve assert
 status: To Do
 assignee: []
 created_date: '2026-08-17 20:58'
+updated_date: '2026-08-17 21:58'
 labels:
   - backend
   - cleanup
@@ -38,7 +39,17 @@ During the rehearsal, approval was failing with a hard HTTP 400 (`column "next_b
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 delete-phantom-term-end-invoices.sql and renew-lease-gifty-gosu.sql are deleted or moved to an archive directory and clearly marked historical
+- [x] #1 delete-phantom-term-end-invoices.sql and renew-lease-gifty-gosu.sql are deleted or moved to an archive directory and clearly marked historical
 - [ ] #2 Every e2e case that calls approve_application asserts its status before using LEASE_ID
 - [ ] #3 ./run-all.sh still passes after the changes
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-08-17: Item 1 is done as part of the Stage 3 cleanup. `delete-phantom-term-end-invoices.sql` and `renew-lease-gifty-gosu.sql` are deleted from the working tree, and `verify-financial-backfill.sql` was replaced by `verify-financial-invariants.sql` (gates 1-5 and 8 kept as live invariants; the migration-specific 6, 6b, 7, 9 and the reconciliation query removed). The runbook moved to `docs/runbooks/archive/`.
+
+Only item 2 remains: the e2e cases that call `approve_application >/dev/null` without asserting status.
+
+GOTCHA worth knowing for any future SQL script: `services/main/.gitignore:4` ignores `scripts/*.sql`. The existing scripts are tracked only because they predate that rule. `verify-financial-invariants.sql` needed `git add -f` — without it the file would have existed on one machine and silently never been committed.
+<!-- SECTION:NOTES:END -->
