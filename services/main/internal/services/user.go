@@ -169,10 +169,11 @@ func (s *userService) GetMe(ctx context.Context, userID string) (*models.User, e
 }
 
 type UpdateUserMeInput struct {
-	UserID      string
-	Name        lib.Optional[string]
-	PhoneNumber lib.Optional[string]
-	Email       lib.Optional[string]
+	UserID          string
+	Name            lib.Optional[string]
+	PhoneNumber     lib.Optional[string]
+	Email           lib.Optional[string]
+	ProfilePhotoUrl lib.Optional[string]
 }
 
 func (s *userService) UpdateMe(ctx context.Context, input UpdateUserMeInput) (*models.User, error) {
@@ -206,6 +207,9 @@ func (s *userService) UpdateMe(ctx context.Context, input UpdateUserMeInput) (*m
 			return nil, errors.New("email already in use")
 		}
 		user.Email = newEmail
+	}
+	if input.ProfilePhotoUrl.IsSet {
+		user.ProfilePhotoUrl = input.ProfilePhotoUrl.Ptr()
 	}
 
 	if err := s.repo.Update(ctx, user); err != nil {

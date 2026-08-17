@@ -132,10 +132,10 @@ function pinEdgeClasses<T>(column: Column<T, unknown>, surface: string) {
 		surface,
 		pinned === 'left' &&
 			column.getIsLastColumn('left') &&
-			'after:pointer-events-none after:absolute after:inset-y-0 after:-right-px after:w-4 after:translate-x-full after:bg-gradient-to-r after:from-black/8 after:to-transparent dark:after:from-black/40',
+			'after:pointer-events-none after:absolute after:inset-y-0 after:-right-px after:w-1 after:translate-x-full after:bg-gradient-to-r after:from-black/3 after:to-transparent dark:after:from-black/15',
 		pinned === 'right' &&
 			column.getIsFirstColumn('right') &&
-			'before:pointer-events-none before:absolute before:inset-y-0 before:-left-px before:w-4 before:-translate-x-full before:bg-gradient-to-l before:from-black/8 before:to-transparent dark:before:from-black/40',
+			'before:pointer-events-none before:absolute before:inset-y-0 before:-left-px before:w-1 before:-translate-x-full before:bg-gradient-to-l before:from-black/3 before:to-transparent dark:before:from-black/15',
 	)
 }
 

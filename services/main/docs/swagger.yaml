@@ -2030,6 +2030,9 @@ definitions:
       phone_number:
         example: "+233281234569"
         type: string
+      profile_photo_url:
+        example: https://example.com/photo.jpg
+        type: string
     type: object
   handlers.UpdatePasswordRequest:
     properties:
@@ -2372,6 +2375,9 @@ definitions:
         - BIANNUALLY
         - ANNUALLY
         example: WEEKLY
+        type: string
+      property_block_id:
+        example: a8098c1a-f86e-11da-bd1a-00112444be1e
         type: string
       rent_fee:
         example: 1500
@@ -5248,6 +5254,9 @@ definitions:
         type: string
       phone_number:
         example: "+233281234569"
+        type: string
+      profile_photo_url:
+        example: https://example.com/photo.jpg
         type: string
       updated_at:
         example: "2023-01-01T00:00:00Z"

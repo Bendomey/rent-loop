@@ -239,9 +239,10 @@ func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 }
 
 type UpdateMeRequest struct {
-	Name        lib.Optional[string] `json:"name"         validate:"omitempty,min=2" swaggertype:"string" example:"John Doe"`
-	PhoneNumber lib.Optional[string] `json:"phone_number" validate:"omitempty,e164"  swaggertype:"string" example:"+233281234569"`
-	Email       lib.Optional[string] `json:"email"        validate:"omitempty,email" swaggertype:"string" example:"john@example.com"`
+	Name            lib.Optional[string] `json:"name"              validate:"omitempty,min=2" swaggertype:"string" example:"John Doe"`
+	PhoneNumber     lib.Optional[string] `json:"phone_number"      validate:"omitempty,e164"  swaggertype:"string" example:"+233281234569"`
+	Email           lib.Optional[string] `json:"email"             validate:"omitempty,email" swaggertype:"string" example:"john@example.com"`
+	ProfilePhotoUrl lib.Optional[string] `json:"profile_photo_url" validate:"omitempty,url"   swaggertype:"string" example:"https://example.com/photo.jpg"`
 }
 
 // UpdateMe godoc
@@ -279,10 +280,11 @@ func (h *UserHandler) UpdateMe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user, err := h.service.UpdateMe(r.Context(), services.UpdateUserMeInput{
-		UserID:      currentUser.ID,
-		Name:        body.Name,
-		PhoneNumber: body.PhoneNumber,
-		Email:       body.Email,
+		UserID:          currentUser.ID,
+		Name:            body.Name,
+		PhoneNumber:     body.PhoneNumber,
+		Email:           body.Email,
+		ProfilePhotoUrl: body.ProfilePhotoUrl,
 	})
 	if err != nil {
 		HandleErrorResponse(w, err)
