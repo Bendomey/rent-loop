@@ -27,11 +27,11 @@ test('the financial account carries from application to lease', async ({
 		`/properties/${s.propertyId}/occupancy/applications/${application.id}/financial`,
 	)
 
-	await expect(page.getByText(/charged/i).first()).toBeVisible({
+	await expect(page.getByText(/over the whole term/i).first()).toBeVisible({
 		timeout: 20_000,
 	})
 	const applicationText = await page.locator('body').innerText()
-	const chargedBefore = amountFor(applicationText, 'CHARGED')
+	const chargedBefore = amountFor(applicationText, 'Over the whole term')
 
 	// The charges derive from the terms, so this is the arithmetic the account
 	// is claiming — assert it rather than trusting whatever the page renders.

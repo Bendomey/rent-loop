@@ -60,7 +60,7 @@ test('changing the term refreshes the ledger without a reload', async ({
 	// and `chargesSummary` throws when the panel has not rendered yet — so
 	// polling straight after navigation fails on the first tick rather than
 	// waiting for the ledger. The assertion below is unchanged.
-	await expect(page.getByText(/\d+ charges? ·/i).first()).toBeVisible({
+	await expect(page.getByText(/\d+ payments? ·/i).first()).toBeVisible({
 		timeout: SAVE_TIMEOUT,
 	})
 

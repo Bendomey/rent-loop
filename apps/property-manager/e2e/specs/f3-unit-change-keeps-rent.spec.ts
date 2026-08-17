@@ -49,9 +49,11 @@ test('changing the unit keeps the agreed rent by default', async ({ page }) => {
 	await page.goto(
 		`/properties/${s.propertyId}/occupancy/applications/${application.id}/financial`,
 	)
-	await expect(page.locator('#agreed-rent')).toHaveValue(String(agreedRent), {
-		timeout: 20_000,
-	})
+	// The agreed figure is edited in place in the "Changing the rent" card.
+	await page
+		.getByRole('button', { name: /change the rent/i })
+		.click({ timeout: 20_000 })
+	await expect(page.locator('#change-rent')).toHaveValue(String(agreedRent))
 
 	// And the rebuilt schedule uses that figure, not the new unit's.
 	await expect

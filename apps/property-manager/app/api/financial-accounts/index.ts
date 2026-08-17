@@ -98,9 +98,19 @@ const createCharge = async ({
 	data: {
 		name: string
 		category: ChargeCategory
+		/**
+		 * Signed. A negative amount is a refund of that category — there are
+		 * deliberately no refund-specific categories.
+		 */
 		amount: number
 		currency: string
 		due_date: string
+		/**
+		 * Marks this as a refund of an existing charge. The refund inherits that
+		 * charge's category and is capped server-side at what was actually
+		 * settled — you cannot refund money never received.
+		 */
+		reverses_charge_instance_id?: string
 	}
 }) => {
 	try {

@@ -32,34 +32,32 @@ test('agreed rent locks once a payment has been collected', async ({
 
 	// Rent is editable to begin with — otherwise the assertion at the end
 	// proves nothing about collecting a payment having changed anything.
-	await expect(page.getByText(/you state it here/i)).toBeVisible({
+	await expect(page.getByText(/you can still change it/i)).toBeVisible({
 		timeout: 20_000,
 	})
 
 	// ── collect a first payment ────────────────────────────────────────────
-	// Picking a charge is what gives the collect section a non-zero total;
-	// without one, and without an account, its submit stays disabled.
-	await page
-		.getByRole('button', { name: /Rent .*Not yet billed/i })
-		.first()
-		.click()
+	// Payments are recorded in a dialog now. Ticking a rent charge is what
+	// gives it a non-zero total; without one its submit stays disabled.
+	await page.getByRole('button', { name: /paid me/i }).click()
 
-	const details = page
-		.locator('div')
-		.filter({ hasText: /payment details/i })
-		.last()
-	await details.getByRole('combobox').first().click()
+	const dialog = page.getByRole('dialog', { name: /what did .* pay for/i })
+	await expect(dialog).toBeVisible({ timeout: 20_000 })
+	await dialog.getByRole('button', { name: /^Rent/ }).first().click()
+
+	// "Where did it go?" — the payment account.
+	await dialog.getByRole('combobox').last().click()
 	await page.getByRole('option').first().click()
 
-	const record = page.getByRole('button', { name: /^Record payment$/i })
+	const record = dialog.locator('#save-payment')
 	await expect(record).toBeEnabled({ timeout: 20_000 })
 	await record.click()
 
 	// ── rent is now fixed ──────────────────────────────────────────────────
-	await expect(
-		page.getByText(/rent charges have already been billed/i),
-	).toBeVisible({ timeout: BILL_TIMEOUT })
+	await expect(page.getByText(/rent is fixed now/i)).toBeVisible({
+		timeout: BILL_TIMEOUT,
+	})
 
-	// And the invitation to state it is gone, not merely accompanied by a note.
-	await expect(page.getByText(/you state it here/i)).toHaveCount(0)
+	// And the invitation to change it is gone, not merely accompanied by a note.
+	await expect(page.getByText(/you can still change it/i)).toHaveCount(0)
 })

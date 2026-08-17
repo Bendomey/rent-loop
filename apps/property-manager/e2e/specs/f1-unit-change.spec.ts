@@ -103,16 +103,20 @@ test('f2 · a billed rent charge blocks changing the unit', async ({ page }) => 
 	await page.goto(
 		`/properties/${s.propertyId}/occupancy/applications/${application.id}/financial`,
 	)
-	await page
-		.getByRole('button', { name: /Rent .*Not yet billed/i })
-		.first()
-		.click()
-	const record = page.getByRole('button', { name: /^Record payment$/i })
+	// Payments are recorded in a dialog now.
+	await page.getByRole('button', { name: /paid me/i }).click()
+	const dialog = page.getByRole('dialog', { name: /what did .* pay for/i })
+	await expect(dialog).toBeVisible({ timeout: 20_000 })
+	await dialog.getByRole('button', { name: /^Rent/ }).first().click()
+	await dialog.getByRole('combobox').last().click()
+	await page.getByRole('option').first().click()
+
+	const record = dialog.locator('#save-payment')
 	await expect(record).toBeEnabled({ timeout: 20_000 })
 	await record.click()
-	await expect(
-		page.getByText(/rent charges have already been billed/i),
-	).toBeVisible({ timeout: 45_000 })
+	await expect(page.getByText(/rent is fixed now/i)).toBeVisible({
+		timeout: 45_000,
+	})
 
 	await expect(
 		setApplicationUnit(
