@@ -226,11 +226,11 @@ function InviteTenantModal({ opened, setOpened, data, admin_id }: Props) {
 								</div>
 
 								<div className="space-y-2 pt-2">
-									<p className="text-sm text-gray-600">
+									<p className="text-muted-foreground text-sm">
 										Anyone with the link can access this application.
 									</p>
-									<div className="rounded-lg border border-gray-300 bg-gray-50 p-4">
-										<p className="mb-3 text-sm font-medium text-gray-700">
+									<div className="bg-muted/50 rounded-lg border p-4">
+										<p className="text-foreground mb-3 text-sm font-medium">
 											Application Link
 										</p>
 										<div className="flex items-center gap-2">
@@ -238,7 +238,7 @@ function InviteTenantModal({ opened, setOpened, data, admin_id }: Props) {
 												type="text"
 												value={generatedLink}
 												readOnly
-												className="flex-1 rounded border border-gray-300 bg-white px-3 py-2 text-sm text-gray-600"
+												className="bg-background text-muted-foreground flex-1 rounded px-3 py-2 text-sm"
 											/>
 											<Button
 												type="button"

@@ -10,8 +10,8 @@ import { cn } from '~/lib/utils'
  * "How long are they staying?"
  *
  * Presets come from `DURATION_PRESETS`, which is keyed by frequency — a weekly
- * unit is offered weeks, not the design fixture's months. The middle preset is
- * the norm and is labelled as such.
+ * unit is offered weeks, not the design fixture's months. The first (shortest)
+ * preset is the norm and is labelled as such.
  */
 export function AskDuration({
 	value,
@@ -68,7 +68,7 @@ export function AskDuration({
 									<span className="text-base font-bold">
 										{durationLabel(preset, frequency)}
 									</span>
-									{index === 1 ? (
+									{index === 0 ? (
 										// On a selected preset the button is already the primary
 										// colour, so the success tint disappears into it — the
 										// badge has to borrow the button's own foreground.

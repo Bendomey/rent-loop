@@ -23,8 +23,8 @@ export const PERIOD_NOUN: Record<PaymentFrequency, string> = {
 /**
  * The durations worth one tap, per frequency.
  *
- * A twelve-month term is the overwhelming default, so it sits in the middle
- * where it reads as the norm rather than the maximum.
+ * A six-month term is the overwhelming default, so it sits first where it
+ * reads as the norm rather than a minimum.
  */
 export const DURATION_PRESETS: Record<PaymentFrequency, number[]> = {
 	DAILY: [7, 14, 30],
