@@ -490,6 +490,14 @@ export async function getApplicationAccountId(
 	return id
 }
 
+export interface AccountRow {
+	id: string
+	code: string
+	property_id: string | null
+	/** Null until the application is approved — approval is what sets it. */
+	lease_id: string | null
+}
+
 /**
  * Account detail including the denormalised `property_id` the Cube resolves an
  * invoice's property through, and the charge ledger.
@@ -500,12 +508,12 @@ export async function getAccount(
 	propertyId: string,
 	accountId: string,
 ): Promise<{
-	account: { id: string; code: string; property_id: string | null }
+	account: AccountRow
 	charges: ChargeRow[]
 }> {
 	const res = await call<{
 		data: {
-			account: { id: string; code: string; property_id: string | null }
+			account: AccountRow
 			charges: ChargeRow[] | null
 		}
 	}>(

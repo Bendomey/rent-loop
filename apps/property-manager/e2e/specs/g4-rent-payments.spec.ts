@@ -6,8 +6,8 @@
  * decoding a table. In the running view the page becomes one figure — what is
  * still owed — and that figure has to agree with the ledger it came from.
  */
-import { makeApprovableApplication } from '../lib/factory'
 import { chargesSummary } from '../lib/expect'
+import { makeApprovableApplication } from '../lib/factory'
 import { readRunState } from '../lib/state'
 import { expect, test } from '../lib/test'
 

@@ -92,8 +92,7 @@ export function RecordPaymentDialog({
 				uninvoiced(charge) > 0,
 		)
 		.sort(
-			(a, b) =>
-				new Date(a.due_date).getTime() - new Date(b.due_date).getTime(),
+			(a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime(),
 		)
 
 	const total = Object.values(picked).reduce((sum, value) => sum + value, 0)
@@ -327,7 +326,6 @@ export function RecordPaymentDialog({
 								</SelectContent>
 							</Select>
 						</div>
-
 					</div>
 				</div>
 

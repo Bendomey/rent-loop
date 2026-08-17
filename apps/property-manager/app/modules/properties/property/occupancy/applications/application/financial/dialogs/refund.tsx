@@ -59,8 +59,7 @@ export function RefundDialog({
 				!charge.voided_at && charge.amount > 0 && charge.settled_amount > 0,
 		)
 		.sort(
-			(a, b) =>
-				new Date(a.due_date).getTime() - new Date(b.due_date).getTime(),
+			(a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime(),
 		)
 
 	const total = Object.values(picked).reduce((sum, value) => sum + value, 0)

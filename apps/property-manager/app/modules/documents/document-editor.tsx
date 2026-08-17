@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { type SerializedEditorState } from 'lexical'
 import { CheckCircle2, Lock, PenLine } from 'lucide-react'
 import { useState } from 'react'
@@ -9,8 +10,6 @@ import {
 	useRevertLeaseAgreementDocumentToDraft,
 } from '~/api/lease-agreement-document'
 import { useAdminUpdateTenantApplication } from '~/api/tenant-applications'
-import { useQueryClient } from '@tanstack/react-query'
-import { QUERY_KEYS } from '~/lib/constants'
 import { DocumentMenuBar } from '~/components/blocks/template-editor/document-menu-bar'
 import { Editor } from '~/components/blocks/template-editor/editor'
 import { Button } from '~/components/ui/button'
@@ -22,6 +21,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from '~/components/ui/dialog'
+import { QUERY_KEYS } from '~/lib/constants'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
 import type { loader } from '~/routes/_auth.properties.$propertyId_.documents.$documentId.editor'

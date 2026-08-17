@@ -70,9 +70,9 @@ test('the collection plan previews each cadence and the choice reaches the lease
 	)
 
 	await page.goto(`/properties/${s.propertyId}/occupancy/leases/${lease.id}`)
-	await page.getByRole('tab', { name: 'Financials' }).click()
+	await page.getByRole('tab', { name: 'Money' }).click()
 
-	await expect(page.getByText(/every 3 months/i).first()).toBeVisible({
+	await expect(page.getByText(/every three months/i).first()).toBeVisible({
 		timeout: 20_000,
 	})
 })

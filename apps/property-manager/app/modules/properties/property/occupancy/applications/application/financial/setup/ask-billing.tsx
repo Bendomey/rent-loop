@@ -1,8 +1,8 @@
+import { PERIOD_NOUN } from '../../move-in/term'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import type { CollectionChoice } from '~/lib/cadence'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
-import { PERIOD_NOUN } from '../../move-in/term'
 import type { PaymentFrequency } from '~/lib/schedule'
 import { cn } from '~/lib/utils'
 
@@ -49,7 +49,9 @@ export function AskBilling({
 		{
 			choice: 'monthly',
 			label: `Every ${noun}`,
-			sub: rentMinor ? `${periods} bills of ${money(rentMinor)}` : `${periods} bills`,
+			sub: rentMinor
+				? `${periods} bills of ${money(rentMinor)}`
+				: `${periods} bills`,
 			common: true,
 		},
 		{

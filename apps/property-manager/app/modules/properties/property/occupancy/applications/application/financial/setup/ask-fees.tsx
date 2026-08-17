@@ -1,7 +1,11 @@
 import { Check, Plus, X } from 'lucide-react'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
-import { convertCedisToPesewas, convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
+import {
+	convertCedisToPesewas,
+	convertPesewasToCedis,
+	formatAmount,
+} from '~/lib/format-amount'
 import { type Pronouns, verb } from '~/lib/pronouns'
 import { cn } from '~/lib/utils'
 
@@ -130,7 +134,11 @@ export function AskFees({
 							size="sm"
 							onClick={() => toggle(suggestion.category)}
 						>
-							{on ? <Check className="size-3.5" /> : <Plus className="size-3.5" />}
+							{on ? (
+								<Check className="size-3.5" />
+							) : (
+								<Plus className="size-3.5" />
+							)}
 							{suggestion.name}
 						</Button>
 					)
@@ -209,9 +217,7 @@ export function AskFees({
 								variant="outline"
 								size="icon"
 								aria-label={`Remove ${fee.name || 'fee'}`}
-								onClick={() =>
-									onChange(fees.filter((f) => f.key !== fee.key))
-								}
+								onClick={() => onChange(fees.filter((f) => f.key !== fee.key))}
 							>
 								<X className="size-3.5" />
 							</Button>

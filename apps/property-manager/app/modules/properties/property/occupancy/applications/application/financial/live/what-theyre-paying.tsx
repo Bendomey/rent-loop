@@ -38,8 +38,7 @@ export function WhatTheyrePaying({
 	const rent = live
 		.filter((charge) => charge.category === 'RENT')
 		.sort(
-			(a, b) =>
-				new Date(a.due_date).getTime() - new Date(b.due_date).getTime(),
+			(a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime(),
 		)
 	const fees = live.filter((charge) => charge.category !== 'RENT')
 

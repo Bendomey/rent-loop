@@ -1,13 +1,13 @@
 import { ArrowLeft } from 'lucide-react'
+import { useState } from 'react'
 import { Image } from '~/components/Image'
 import { Button } from '~/components/ui/button'
+import { Input } from '~/components/ui/input'
+import { Label } from '~/components/ui/label'
 import { Spinner } from '~/components/ui/spinner'
 import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
-import { useState } from 'react'
-import { Label } from '~/components/ui/label'
-import { Input } from '~/components/ui/input'
-import { cn } from '~/lib/utils'
 import { getIdTypeLabel } from '~/lib/tenant.utils'
+import { cn } from '~/lib/utils'
 
 const renderRedactedField = (label: string, value?: string | null) => (
 	<div className="py-3">

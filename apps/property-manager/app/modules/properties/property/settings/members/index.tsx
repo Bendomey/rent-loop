@@ -3,6 +3,7 @@ import { CircleCheck, CircleX, Pencil, Trash, User } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { MembersController } from './controller'
+import EditPropertyMemberRoleModule from './edit-role'
 import RemoveMemberModule from './remove'
 import { useGetClientUserProperties } from '~/api/client-user-properties'
 import { DataTable, useDataTableSort } from '~/components/datatable'
@@ -14,7 +15,6 @@ import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
-import EditPropertyMemberRoleModule from './edit-role'
 
 /**
  * Fields the API may order by. `order_by` reaches the backend's ORDER BY

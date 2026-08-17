@@ -1,9 +1,9 @@
 import { Repeat } from 'lucide-react'
+import { PERIOD_NOUN } from '../../move-in/term'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
-import { PERIOD_NOUN } from '../../move-in/term'
 import type { PaymentFrequency } from '~/lib/schedule'
 
 /**

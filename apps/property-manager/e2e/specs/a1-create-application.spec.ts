@@ -10,9 +10,9 @@
  * Creating an application through the UI is the ADMIN branch (steps 1–4, ~17
  * required fields) and is a2's job.
  */
-import { expect, test } from '../lib/test'
 import { createUnit } from '../lib/api'
 import { readRunState, tag, uniquePhone } from '../lib/state'
+import { expect, test } from '../lib/test'
 
 test('a PM can invite a tenant to apply for an available unit', async ({
 	page,

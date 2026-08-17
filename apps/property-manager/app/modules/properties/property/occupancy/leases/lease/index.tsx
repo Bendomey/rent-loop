@@ -25,6 +25,7 @@ import {
 } from '~/lib/properties.utils'
 import { getInitials, safeString, toFirstUpperCase } from '~/lib/strings'
 import { LEASE_DETAIL_TOUR_STEPS, TOUR_KEYS } from '~/lib/tours'
+import { cn } from '~/lib/utils'
 import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 import type { loader } from '~/routes/_auth.properties.$propertyId.occupancy.leases.$leaseId'
@@ -34,6 +35,13 @@ export function LeaseDetailModule() {
 		useLoaderData<typeof loader>()
 	const [searchParams] = useSearchParams()
 	const initialTab = searchParams.get('tab') ?? 'details'
+	// Controlled rather than defaultValue, because the layout depends on it.
+	// Money is the one tab that carries its own full-width listing and its own
+	// rail; squeezing it into two thirds of the page to sit beside the summary
+	// card left it cramped and repeating itself. Every other tab keeps the
+	// summary for context.
+	const [tab, setTab] = useState(initialTab)
+	const showSummary = tab !== 'financials'
 	const { clientUserProperty: ctxProp } = useProperty()
 	const { clientUser } = useClient()
 	const { hasPermissions: managerPermission } = useHasPropertyPermissions({
@@ -106,24 +114,31 @@ export function LeaseDetailModule() {
 				</div>
 
 				<div className="m-5 grid grid-cols-12 gap-6">
-					{/* Sidebar */}
-					<div id="lease-sidebar" className="col-span-12 lg:col-span-4">
-						<LeaseSummaryCard
-							lease={lease}
-							propertyId={propertyId}
-							tenant={tenant}
-							unit={unit}
-							application={application}
-						/>
-					</div>
+					{/* Sidebar — everywhere but Money, which needs the full width. */}
+					{showSummary ? (
+						<div id="lease-sidebar" className="col-span-12 lg:col-span-4">
+							<LeaseSummaryCard
+								lease={lease}
+								propertyId={propertyId}
+								tenant={tenant}
+								unit={unit}
+								application={application}
+							/>
+						</div>
+					) : null}
 
 					{/* Main Content */}
 					{/* min-w-0: a grid item defaults to min-width:auto, so without this
 					    the column grows to fit the tab strip and the whole page scrolls
 					    sideways instead of the strip scrolling inside it. */}
-					<div className="col-span-12 min-w-0 lg:col-span-8">
+					<div
+						className={cn(
+							'col-span-12 min-w-0',
+							showSummary ? 'lg:col-span-8' : '',
+						)}
+					>
 						<div>
-							<Tabs defaultValue={initialTab}>
+							<Tabs value={tab} onValueChange={setTab}>
 								<TabsList
 									id="lease-tabs"
 									className="max-w-full justify-start overflow-x-auto"
@@ -132,7 +147,7 @@ export function LeaseDetailModule() {
 									<TabsTrigger value="tenant">Tenant Profile</TabsTrigger>
 									<TabsTrigger value="documents">Documents</TabsTrigger>
 									<TabsTrigger value="financials">
-										Financials
+										Money
 										{overdue > 0 ? (
 											<span
 												aria-label="Overdue"

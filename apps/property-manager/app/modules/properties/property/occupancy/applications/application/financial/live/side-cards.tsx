@@ -96,10 +96,7 @@ export function SideCards({
 	).length
 	const unbilledFees = unclaimed
 		.filter((charge) => charge.category !== 'RENT')
-		.reduce(
-			(sum, charge) => sum + (charge.amount - charge.invoiced_amount),
-			0,
-		)
+		.reduce((sum, charge) => sum + (charge.amount - charge.invoiced_amount), 0)
 
 	const refresh = () => {
 		void queryClient.invalidateQueries({
@@ -267,8 +264,8 @@ export function SideCards({
 						) : (
 							<>
 								You can still change it — <b>{money(rentMinor)}</b> a {noun} —
-								until {applicantName}&rsquo;s first payment comes in. After
-								that it&rsquo;s fixed, and you&rsquo;d add a fee instead.
+								until {applicantName}&rsquo;s first payment comes in. After that
+								it&rsquo;s fixed, and you&rsquo;d add a fee instead.
 							</>
 						)}
 					</p>
@@ -289,8 +286,8 @@ export function SideCards({
 								<div className="bg-muted/50 mt-3 rounded-lg p-3">
 									<p className="text-sm leading-relaxed">
 										To change it, undo what has been billed first: refund
-										anything {applicantName} has paid, and void the bill it
-										was on.
+										anything {applicantName} has paid, and void the bill it was
+										on.
 									</p>
 									{/*
 									 * Hidden until refunds are finished: the dialog exists and

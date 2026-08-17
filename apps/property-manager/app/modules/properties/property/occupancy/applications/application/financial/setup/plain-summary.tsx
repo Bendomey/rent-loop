@@ -80,10 +80,9 @@ export function PlainSummary({
 								{feeTotal > 0 ? (
 									<>
 										{' '}
-										On top of that {pronouns.subject}{' '}
-										{verb(pronouns, 'pay')} <b>{money(feeTotal)}</b> in
-										one-time fees when {pronouns.subject}{' '}
-										{verb(pronouns, 'move')} in.
+										On top of that {pronouns.subject} {verb(pronouns, 'pay')}{' '}
+										<b>{money(feeTotal)}</b> in one-time fees when{' '}
+										{pronouns.subject} {verb(pronouns, 'move')} in.
 									</>
 								) : null}{' '}
 								{planLine[choice]}
@@ -102,12 +101,15 @@ export function PlainSummary({
 								money(rentMinor + feeTotal),
 								`Sent ${formatDay(
 									new Date(
-										new Date(first.dueDate).getTime() -
-											leadDays * 86_400_000,
+										new Date(first.dueDate).getTime() - leadDays * 86_400_000,
 									),
 								)}`,
 							],
-							[`Every ${noun} after`, money(rentMinor), `${periods.length} in total`],
+							[
+								`Every ${noun} after`,
+								money(rentMinor),
+								`${periods.length} in total`,
+							],
 							[
 								'Over the whole term',
 								money(total),
