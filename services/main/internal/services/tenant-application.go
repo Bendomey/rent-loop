@@ -938,7 +938,6 @@ func rentTermsChanged(input UpdateTenantApplicationInput) bool {
 		input.DesiredUnitId != nil
 }
 
-
 // relocateFinancialAccount keeps the account's denormalised property and client
 // in step with the application's unit. Silent when the application has no
 // account yet — charges have not been prepared, so there is nothing to move.
