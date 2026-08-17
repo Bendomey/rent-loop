@@ -94,6 +94,15 @@ func NewTenantAccountRouter(appCtx pkg.AppContext, handlers handlers.Handlers) f
 			)
 
 			// tenant invoices
+			// Read-only. The landlord controls issuance, so a tenant can see
+			// what they owe and have paid but cannot create charges or issue
+			// invoices for themselves.
+			r.Get("/v1/leases/{lease_id}/financial-account", handlers.FinancialAccountHandler.TenantGetAccount)
+			r.Get(
+				"/v1/leases/{lease_id}/financial-account/charges",
+				handlers.FinancialAccountHandler.TenantListCharges,
+			)
+
 			r.Get("/v1/leases/{lease_id}/invoices", handlers.InvoiceHandler.TenantListInvoices)
 			r.Get("/v1/leases/{lease_id}/invoices/stats", handlers.InvoiceHandler.TenantInvoiceStats)
 			r.Get("/v1/leases/{lease_id}/invoices/{invoice_id}", handlers.InvoiceHandler.TenantGetInvoice)

@@ -14,6 +14,7 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/lib/emailtemplates"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
+	"github.com/Bendomey/rent-loop/services/main/internal/services/financials"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
@@ -22,14 +23,6 @@ import (
 type PaymentService interface {
 	CreateOfflinePayment(context context.Context, input CreateOfflinePaymentInput) (*models.Payment, error)
 	VerifyOfflinePayment(context context.Context, input VerifyOfflinePaymentInput) (*models.Payment, error)
-	// GetPayment(context context.Context, query repository.GetPaymentQuery) (*models.Payment, error)
-	// ListPayments(
-	// 	context context.Context,
-	// 	filterQuery repository.ListPaymentsFilter,
-	// ) ([]models.Payment, error)
-	// CountPayments(context context.Context, filterQuery repository.ListPaymentsFilter) (int64, error)
-	// UpdatePayment(context context.Context, input UpdatePaymentInput) (*models.Payment, error)
-	// DeletePayment(context context.Context, input repository.DeletePaymentInput) error
 }
 
 type paymentService struct {
@@ -41,6 +34,7 @@ type paymentService struct {
 	notificationService      NotificationService
 	leaseService             LeaseService
 	tenantApplicationService TenantApplicationService
+	financials               *financials.Financials
 }
 
 type PaymentServiceDeps struct {
@@ -52,6 +46,7 @@ type PaymentServiceDeps struct {
 	NotificationService      NotificationService
 	LeaseService             LeaseService
 	TenantApplicationService TenantApplicationService
+	Financials               *financials.Financials
 }
 
 func NewPaymentService(deps PaymentServiceDeps) PaymentService {
@@ -64,6 +59,7 @@ func NewPaymentService(deps PaymentServiceDeps) PaymentService {
 		notificationService:      deps.NotificationService,
 		leaseService:             deps.LeaseService,
 		tenantApplicationService: deps.TenantApplicationService,
+		financials:               deps.Financials,
 	}
 }
 
@@ -183,11 +179,7 @@ func (s *paymentService) CreateOfflinePayment(
 		}
 	}
 
-	remainingBalance, remainingBalanceErr := getRemainingInvoiceBalance(ctx, GetRemainingInvoiceBalanceInput{
-		repo:     s.repo,
-		invoice:  *invoice,
-		statuses: []string{"SUCCESSFUL"},
-	})
+	remainingBalance, remainingBalanceErr := getRemainingInvoiceBalance(ctx, s.repo, *invoice)
 	if remainingBalanceErr != nil {
 		return nil, pkg.InternalServerError(remainingBalanceErr.Error(), &pkg.RentLoopErrorParams{
 			Metadata: map[string]string{
@@ -199,7 +191,7 @@ func (s *paymentService) CreateOfflinePayment(
 	}
 
 	if input.Amount > remainingBalance {
-		return nil, pkg.BadRequestError("payment amount exceeds invoice balance", &pkg.RentLoopErrorParams{
+		return nil, pkg.BadRequestError("PaymentExceedsInvoiceBalance", &pkg.RentLoopErrorParams{
 			Metadata: map[string]string{
 				"invoice_id":        input.InvoiceID,
 				"invoice_total":     fmt.Sprintf("%d", invoice.TotalAmount),
@@ -271,11 +263,22 @@ func (s *paymentService) CreateOfflinePayment(
 		return &payment, nil
 	}
 
+	// Lease and application context now come from the financial account; the
+	// invoice's own context columns duplicated it and have been dropped.
+	var notifyLeaseID, notifyApplicationID *string
+	if invoice.FinancialAccountID != nil && s.financials != nil {
+		if account, accErr := s.financials.Accounts.GetByID(ctx, *invoice.FinancialAccountID); accErr == nil {
+			notifyLeaseID = account.LeaseID
+			applicationID := account.TenantApplicationID
+			notifyApplicationID = &applicationID
+		}
+	}
+
 	go func() {
 		bgCtx := context.Background()
-		if invoice.ContextLeaseID != nil && s.leaseService != nil {
+		if notifyLeaseID != nil && s.leaseService != nil {
 			lease, leaseErr := s.leaseService.GetByIDWithPopulate(bgCtx, repository.GetLeaseQuery{
-				ID:       *invoice.ContextLeaseID,
+				ID:       *notifyLeaseID,
 				Populate: &[]string{"ActivatedBy", "ActivatedBy.User", "Unit", "Tenant"},
 			})
 			if leaseErr != nil || lease.ActivatedById == nil || lease.ActivatedBy == nil ||
@@ -302,9 +305,9 @@ func (s *paymentService) CreateOfflinePayment(
 				HtmlBody:  htmlBody,
 				TextBody:  textBody,
 			})
-		} else if invoice.ContextTenantApplicationID != nil && s.tenantApplicationService != nil {
+		} else if notifyApplicationID != nil && s.tenantApplicationService != nil {
 			ta, taErr := s.tenantApplicationService.GetOneTenantApplication(bgCtx, repository.GetTenantApplicationQuery{
-				TenantApplicationID: *invoice.ContextTenantApplicationID,
+				TenantApplicationID: *notifyApplicationID,
 				Populate:            &[]string{"CreatedBy", "CreatedBy.User"},
 			})
 			if taErr != nil || ta.CreatedBy.User.Email == "" {
@@ -339,6 +342,10 @@ type VerifyOfflinePaymentInput struct {
 	PaymentID    string
 	IsSuccessful bool
 	Metadata     *map[string]any
+	// Allocations is the landlord's explicit split across the invoice's
+	// charges. Nil means allocate oldest-due-date first, which is the default
+	// the UI pre-fills.
+	Allocations []financials.Claim
 }
 
 func (s *paymentService) VerifyOfflinePayment(
@@ -350,7 +357,7 @@ func (s *paymentService) VerifyOfflinePayment(
 		"Invoice",
 		"Invoice.LineItems",
 		"Invoice.PayerLease.Tenant.TenantAccount",
-		"Invoice.ContextLease.Unit",
+		"Invoice.PayerLease.Unit",
 	}
 	payment, paymentErr := s.repo.GetByIDWithQuery(ctx, repository.GetPaymentQuery{
 		PaymentID: input.PaymentID,
@@ -476,12 +483,42 @@ func (s *paymentService) VerifyOfflinePayment(
 			})
 		}
 
+		// Allocate the money onto the obligations it satisfies, inside the same
+		// transaction — a payment can never be SUCCESSFUL without its
+		// allocations existing. Any residue beyond the invoice total stays
+		// unallocated and becomes account credit at the next composition.
+		if payment.Invoice.FinancialAccountID != nil {
+			lines := make([]financials.ComposedLine, 0, len(payment.Invoice.LineItems))
+			for _, lineItem := range payment.Invoice.LineItems {
+				if lineItem.ChargeInstanceID == nil {
+					continue
+				}
+				lines = append(lines, financials.ComposedLine{
+					ChargeInstanceID: *lineItem.ChargeInstanceID,
+					Label:            lineItem.Label,
+					Category:         lineItem.Category,
+					Amount:           lineItem.TotalAmount,
+					Currency:         lineItem.Currency,
+				})
+			}
+
+			allocateErr := s.financials.Allocation.AllocatePayment(transCtx, financials.AllocatePaymentInput{
+				PaymentID:   payment.ID.String(),
+				Lines:       lines,
+				Amount:      payment.Amount,
+				Currency:    payment.Currency,
+				Allocations: input.Allocations,
+			})
+			if allocateErr != nil {
+				if !hasOuterTx {
+					transaction.Rollback()
+				}
+				return nil, allocateErr
+			}
+		}
+
 		// Calculate remaining balance after this payment
-		remainingBalance, remainingBalanceErr := getRemainingInvoiceBalance(transCtx, GetRemainingInvoiceBalanceInput{
-			repo:     s.repo,
-			invoice:  payment.Invoice,
-			statuses: []string{"SUCCESSFUL"},
-		})
+		remainingBalance, remainingBalanceErr := getRemainingInvoiceBalance(transCtx, s.repo, payment.Invoice)
 		if remainingBalanceErr != nil {
 			if !hasOuterTx {
 				transaction.Rollback()
@@ -600,10 +637,8 @@ func (s *paymentService) VerifyOfflinePayment(
 	// Fire-and-forget payment confirmation notifications when invoice is fully paid
 	if invoiceFullyPaid && payment.Invoice.PayerLease != nil && payment.Invoice.PayerLease.TenantId != "" {
 		tenant := payment.Invoice.PayerLease.Tenant
-		unitName := ""
-		if payment.Invoice.ContextLease != nil {
-			unitName = payment.Invoice.ContextLease.Unit.Name
-		}
+		// Unit comes from PayerLease now that Invoice.ContextLease is gone.
+		unitName := payment.Invoice.PayerLease.Unit.Name
 		smsR := strings.NewReplacer(
 			"{{tenant_name}}", tenant.FirstName,
 			"{{invoice_code}}", payment.Invoice.Code,
@@ -678,12 +713,6 @@ func (s *paymentService) VerifyOfflinePayment(
 	return payment, nil
 }
 
-type GetRemainingInvoiceBalanceInput struct {
-	repo     repository.PaymentRepository
-	invoice  models.Invoice
-	statuses []string
-}
-
 func failOfflinePayment(
 	ctx context.Context,
 	repo repository.PaymentRepository,
@@ -706,14 +735,22 @@ func failOfflinePayment(
 	return repo.Update(ctx, payment)
 }
 
+// getRemainingInvoiceBalance is what the invoice still expects to receive.
+//
+// Only SUCCESSFUL payments count, deliberately: a PENDING payment is a claim
+// nobody has verified, and treating it as money received would let an
+// unverified claim block or shrink a real one. Both callers depend on that
+// meaning — the guard in CreateOfflinePayment and the PAID/PARTIALLY_PAID
+// decision in VerifyOfflinePayment — so it is fixed here rather than passed in.
 func getRemainingInvoiceBalance(
 	ctx context.Context,
-	input GetRemainingInvoiceBalanceInput,
+	repo repository.PaymentRepository,
+	invoice models.Invoice,
 ) (int64, error) {
-	totalPaid, err := input.repo.SumAmountByInvoice(ctx, input.invoice.ID.String(), input.statuses)
+	totalPaid, err := repo.SumAmountByInvoice(ctx, invoice.ID.String(), []string{"SUCCESSFUL"})
 	if err != nil {
 		return 0, err
 	}
 
-	return input.invoice.TotalAmount - totalPaid, nil
+	return invoice.TotalAmount - totalPaid, nil
 }

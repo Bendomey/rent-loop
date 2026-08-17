@@ -41,7 +41,7 @@ type OutputAdminTenantApplication struct {
 	SecurityDepositFee         *int64  `json:"security_deposit_fee,omitempty"          example:"1000"`
 	SecurityDepositFeeCurrency *string `json:"security_deposit_fee_currency,omitempty" example:"USD"`
 
-	ApplicationPaymentInvoice *OutputInvoice `json:"application_payment_invoice,omitempty"`
+	FinancialAccount *OutputTenantApplicationFinancials `json:"financial_account,omitempty"`
 
 	LeaseAgreementDocumentMode       *string                        `json:"lease_agreement_document_mode,omitempty"       example:"MANUAL"`
 	LeaseAgreementDocumentUrl        *string                        `json:"lease_agreement_document_url,omitempty"        example:"https://example.com/lease.pdf"`
@@ -114,7 +114,7 @@ func DBAdminTenantApplicationToRest(i *models.TenantApplication) any {
 		"initial_deposit_fee_currency":        i.InitialDepositFeeCurrency,
 		"security_deposit_fee":                i.SecurityDepositFee,
 		"security_deposit_fee_currency":       i.SecurityDepositFeeCurrency,
-		"application_payment_invoice":         DBInvoiceToRest(i.ApplicationPaymentInvoice),
+		"financial_account":                   DBTenantApplicationFinancialsToRest(i.Financials),
 		"lease_agreement_document_mode":       i.LeaseAgreementDocumentMode,
 		"lease_agreement_document_url":        i.LeaseAgreementDocumentUrl,
 		"lease_agreement_document_id":         i.LeaseAgreementDocumentID,
@@ -189,7 +189,7 @@ type OutputTenantApplication struct {
 	SecurityDepositFee         *int64  `json:"security_deposit_fee,omitempty"          example:"1000"`
 	SecurityDepositFeeCurrency *string `json:"security_deposit_fee_currency,omitempty" example:"USD"`
 
-	ApplicationPaymentInvoice *OutputInvoice `json:"application_payment_invoice,omitempty"`
+	FinancialAccount *OutputTenantApplicationFinancials `json:"financial_account,omitempty"`
 
 	LeaseAgreementDocumentUrl        *string                   `json:"lease_agreement_document_url,omitempty"        example:"https://example.com/lease.pdf"`
 	LeaseAgreementDocumentStatus     *string                   `json:"lease_agreement_document_status,omitempty"     example:"DRAFT"`
@@ -279,7 +279,7 @@ func DBTenantApplicationToRest(i *models.TenantApplication) any {
 		"employer":                            i.Employer,
 		"occupation_address":                  i.OccupationAddress,
 		"proof_of_income_url":                 i.ProofOfIncomeUrl,
-		"application_payment_invoice":         DBInvoiceToRest(i.ApplicationPaymentInvoice),
+		"financial_account":                   DBTenantApplicationFinancialsToRest(i.Financials),
 		"created_at":                          i.CreatedAt,
 		"updated_at":                          i.UpdatedAt,
 	}

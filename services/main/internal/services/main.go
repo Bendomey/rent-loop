@@ -2,6 +2,7 @@ package services
 
 import (
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
+	"github.com/Bendomey/rent-loop/services/main/internal/services/financials"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 )
 
@@ -41,6 +42,7 @@ type Services struct {
 	ExchangeRateService           ExchangeRateService
 	LeaseTerminationService       LeaseTerminationService
 	LeaseAgreementDocumentService LeaseAgreementDocumentService
+	Financials                    *financials.Financials
 }
 
 type INewServicesParams struct {
@@ -56,6 +58,17 @@ func NewServices(params INewServicesParams) Services {
 		params.Repository.NotificationRepository,
 	)
 	accountingService := NewAccountingService(params.AppCtx)
+
+	// Built before InvoiceService because InvoiceService depends on it.
+	// Issuance is attached afterwards (see SetIssuance below) — issuance
+	// composes invoices while InvoiceService allocates charges, so neither can
+	// be fully constructed first.
+	financialsFacade := financials.New(
+		params.Repository.FinancialAccountRepository,
+		params.Repository.ChargeRepository,
+		params.Repository.PaymentAllocationRepository,
+	)
+
 	invoiceService := NewInvoiceService(
 		params.AppCtx,
 		params.Repository.InvoiceRepository,
@@ -64,7 +77,17 @@ func NewServices(params INewServicesParams) Services {
 		notificationService,
 		params.Repository.TenantAccountRepository,
 		params.Repository.TenantRepository,
+		financialsFacade,
 	)
+
+	// Attach issuance now that InvoiceService exists. Issuance composes
+	// invoices while InvoiceService allocates charges, so neither can be
+	// constructed with the other already complete.
+	financialsFacade.SetIssuance(financials.NewIssuanceService(
+		params.Repository.FinancialAccountRepository,
+		financialsFacade.Charges,
+		invoiceService,
+	))
 
 	authService := NewAuthService(params.AppCtx, params.Repository.TenantAccountRepository)
 	adminService := NewAdminService(params.AppCtx, params.Repository.AdminRepository)
@@ -152,6 +175,7 @@ func NewServices(params INewServicesParams) Services {
 		unitService,
 		params.Repository.ClientUserRepository,
 		params.Repository.UserRepository,
+		financialsFacade,
 	)
 
 	tenantAccountService := NewTenantAccountService(params.AppCtx, params.Repository.TenantAccountRepository)
@@ -166,6 +190,7 @@ func NewServices(params INewServicesParams) Services {
 		LeaseService:         leaseService,
 		TenantAccountService: tenantAccountService,
 		InvoiceService:       invoiceService,
+		Financials:           financialsFacade,
 	})
 	signingService := NewSigningService(
 		params.AppCtx,
@@ -185,6 +210,7 @@ func NewServices(params INewServicesParams) Services {
 		NotificationService:      notificationService,
 		LeaseService:             leaseService,
 		TenantApplicationService: tenantApplicationService,
+		Financials:               financialsFacade,
 	})
 
 	leaseChecklistItemService := NewLeaseChecklistItemService(
@@ -245,17 +271,18 @@ func NewServices(params INewServicesParams) Services {
 	})
 
 	expenseService := NewExpenseService(ExpenseServiceDeps{
-		AppCtx:         params.AppCtx,
-		Repo:           params.Repository.ExpenseRepository,
-		LeaseRepo:      params.Repository.LeaseRepository,
-		MRRepo:         params.Repository.MaintenanceRequestRepository,
-		InvoiceService: invoiceService,
+		AppCtx:            params.AppCtx,
+		Repo:              params.Repository.ExpenseRepository,
+		LeaseRepo:         params.Repository.LeaseRepository,
+		MRRepo:            params.Repository.MaintenanceRequestRepository,
+		AccountingService: accountingService,
 	})
 
 	return Services{
 		NotificationService: notificationService,
 		AccountingService:   accountingService,
 		InvoiceService:      invoiceService,
+		Financials:          financialsFacade,
 
 		AuthService:                   authService,
 		AdminService:                  adminService,

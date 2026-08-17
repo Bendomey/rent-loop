@@ -2,9 +2,7 @@ package services
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"fmt"
 	"strings"
 	"time"
 
@@ -13,6 +11,7 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/lib/emailtemplates"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
+	"github.com/Bendomey/rent-loop/services/main/internal/services/financials"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 	"github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
@@ -28,7 +27,6 @@ type LeaseService interface {
 	ActivateLease(context context.Context, input ActivateLeaseInput) error
 	CancelLease(context context.Context, input CancelLeaseInput) error
 	CountOccupyingByUnitID(context context.Context, unitID string) (int64, error)
-	GenerateLeaseRentInvoice(ctx context.Context, leaseID string) error
 	CompleteLease(ctx context.Context, leaseID string) (*models.Lease, error)
 	ResolveManagerRecipient(ctx context.Context, lease *models.Lease) (*models.ClientUser, error)
 }
@@ -42,6 +40,7 @@ type leaseService struct {
 	unitService          UnitService
 	clientUserRepo       repository.ClientUserRepository
 	userRepo             repository.UserRepository
+	financials           *financials.Financials
 }
 
 func NewLeaseService(
@@ -53,6 +52,7 @@ func NewLeaseService(
 	unitService UnitService,
 	clientUserRepo repository.ClientUserRepository,
 	userRepo repository.UserRepository,
+	financialsFacade *financials.Financials,
 ) LeaseService {
 	return &leaseService{
 		appCtx:               appCtx,
@@ -63,32 +63,8 @@ func NewLeaseService(
 		clientUserRepo:       clientUserRepo,
 		userRepo:             userRepo,
 		unitService:          unitService,
+		financials:           financialsFacade,
 	}
-}
-
-func calculateNextBillingDate(from time.Time, frequency string) *time.Time {
-	var next time.Time
-	switch frequency {
-	case "Hourly", "HOURLY":
-		next = from.Add(time.Hour)
-	case "Daily", "DAILY":
-		next = from.AddDate(0, 0, 1)
-	case "Weekly", "WEEKLY":
-		next = from.AddDate(0, 0, 7)
-	case "Monthly", "MONTHLY":
-		next = from.AddDate(0, 1, 0)
-	case "Quarterly", "QUARTERLY":
-		next = from.AddDate(0, 3, 0)
-	case "BiAnnually", "BIANNUALLY":
-		next = from.AddDate(0, 6, 0)
-	case "Annually", "ANNUALLY":
-		next = from.AddDate(1, 0, 0)
-	case "OneTime", "ONE_TIME", "ONETIME":
-		return nil
-	default:
-		return nil
-	}
-	return &next
 }
 
 type CreateLeaseInput struct {
@@ -298,6 +274,33 @@ func (s *leaseService) UpdateLease(ctx context.Context, input UpdateLeaseInput) 
 		lease.ParentLeaseId = input.ParentLeaseId.Ptr()
 	}
 
+	// Rent terms changed on a pending lease — regenerate the schedule so the
+	// ledger matches what was just agreed.
+	//
+	// RederiveRent rejects with ChargesAlreadyBilled if any rent charge has
+	// been invoiced or settled. That is deliberate: once a tenant has seen a
+	// figure, the schedule stops being rewritable behind their back and the
+	// landlord must adjust with explicit charges instead.
+	if input.MoveInDate != nil || input.RentFee != nil || input.StayDuration != nil ||
+		input.StayDurationFrequency != nil {
+		leaseID := lease.ID.String()
+		if account, accErr := s.financials.Accounts.GetByLease(ctx, leaseID); accErr == nil && account != nil &&
+			lease.PaymentFrequency != nil {
+			rederiveErr := s.financials.Charges.RederiveRent(ctx, financials.RederiveRentInput{
+				FinancialAccountID:    account.ID.String(),
+				RentFee:               lease.RentFee,
+				Currency:              lease.RentFeeCurrency,
+				PaymentFrequency:      *lease.PaymentFrequency,
+				MoveInDate:            lease.MoveInDate,
+				StayDuration:          lease.StayDuration,
+				StayDurationFrequency: lease.StayDurationFrequency,
+			})
+			if rederiveErr != nil {
+				return nil, rederiveErr
+			}
+		}
+	}
+
 	err := s.repo.Update(ctx, lease)
 	if err != nil {
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
@@ -401,42 +404,9 @@ func (s *leaseService) ActivateLease(ctx context.Context, input ActivateLeaseInp
 	lease.ActivatedAt = &now
 	lease.ActivatedById = &input.ClientUserId
 
-	// Set NextBillingDate based on initial deposit coverage
-	if lease.PaymentFrequency != nil && *lease.PaymentFrequency != "OneTime" {
-
-		var meta struct {
-			InitialDepositFee int64 `json:"initial_deposit_fee"`
-		}
-
-		marshalErr := json.Unmarshal(lease.Meta, &meta)
-		if marshalErr != nil {
-			return pkg.InternalServerError(marshalErr.Error(), &pkg.RentLoopErrorParams{
-				Err: marshalErr,
-				Metadata: map[string]string{
-					"function": "ActivateLease",
-					"action":   "parsing lease meta",
-				},
-			})
-		}
-
-		base := lease.MoveInDate
-
-		cyclesCovered := 0
-		if lease.RentFee > 0 && meta.InitialDepositFee > 0 {
-			cyclesCovered = int(meta.InitialDepositFee / lease.RentFee)
-		}
-
-		for i := 0; i < cyclesCovered; i++ {
-			next := calculateNextBillingDate(base, *lease.PaymentFrequency)
-
-			if next == nil {
-				break
-			}
-			base = *next
-		}
-
-		lease.NextBillingDate = &base
-	}
+	// Activation does no financial work. The initial deposit is a billing
+	// cadence on the FinancialAccount, set when charges were prepared, and what
+	// is due is decided by charge-instance state rather than a per-lease cursor.
 
 	err := s.repo.Update(ctx, lease)
 	if err != nil {
@@ -502,172 +472,6 @@ func (s *leaseService) ActivateLease(ctx context.Context, input ActivateLeaseInp
 			Message:   smsMessage,
 		},
 	)
-
-	return nil
-}
-
-func (s *leaseService) GenerateLeaseRentInvoice(ctx context.Context, leaseID string) error {
-	lease, getLeaseErr := s.repo.GetOneWithPopulate(
-		ctx,
-		repository.GetLeaseQuery{ID: leaseID, Populate: &[]string{"Unit.Property", "Tenant.TenantAccount"}},
-	)
-	if getLeaseErr != nil {
-		if errors.Is(getLeaseErr, gorm.ErrRecordNotFound) {
-			return pkg.NotFoundError("LeaseNotFound", &pkg.RentLoopErrorParams{
-				Err: getLeaseErr,
-			})
-		}
-		return pkg.InternalServerError(getLeaseErr.Error(), &pkg.RentLoopErrorParams{
-			Err: getLeaseErr,
-			Metadata: map[string]string{
-				"function": "GenerateLeaseRentInvoice",
-				"action":   "getting lease",
-			},
-		})
-	}
-
-	if lease.Status != "Lease.Status.Active" {
-		return pkg.BadRequestError("LeaseIsNotActive", nil)
-	}
-
-	if lease.PaymentFrequency == nil || *lease.PaymentFrequency == "OneTime" {
-		return pkg.BadRequestError("LeaseNotRecurring", nil)
-	}
-
-	if lease.NextBillingDate == nil {
-		return pkg.BadRequestError("LeaseHasNoNextBillingDate", nil)
-	}
-
-	transaction := s.appCtx.DB.Begin()
-	transCtx := lib.WithTransaction(ctx, transaction)
-
-	label := lib.RentInvoiceLabel(*lease.PaymentFrequency, *lease.NextBillingDate)
-	grace := lib.RentInvoiceGracePeriod(*lease.PaymentFrequency)
-	nextBillingDate := *lease.NextBillingDate
-	dueDate := nextBillingDate.Add(grace)
-
-	leaseIDStr := lease.ID.String()
-	clientID := lease.Unit.Property.ClientID
-	propertyID := lease.Unit.PropertyID
-	invoice, invoiceErr := s.invoiceService.CreateInvoice(transCtx, CreateInvoiceInput{
-		ClientID:             &clientID,
-		PropertyID:           &propertyID,
-		PayerType:            "TENANT",
-		PayerLeaseID:         &leaseIDStr,
-		NotificationTenantID: &lease.TenantId,
-		PayeeType:            "PROPERTY_OWNER",
-		PayeeClientID:        &clientID,
-		ContextType:          "LEASE_RENT",
-		ContextLeaseID:       &leaseIDStr,
-		TotalAmount:          lease.RentFee,
-		SubTotal:             lease.RentFee,
-		Currency:             lease.RentFeeCurrency,
-		Status:               "ISSUED",
-		DueDate:              &dueDate,
-		LineItems: []LineItemInput{
-			{
-				Label:       label,
-				Category:    "RENT",
-				Quantity:    1,
-				UnitAmount:  lease.RentFee,
-				TotalAmount: lease.RentFee,
-				Currency:    lease.RentFeeCurrency,
-			},
-		},
-	})
-	if invoiceErr != nil {
-		return invoiceErr
-	}
-
-	// Advance NextBillingDate
-	lease.NextBillingDate = calculateNextBillingDate(*lease.NextBillingDate, *lease.PaymentFrequency)
-	updateErr := s.repo.Update(transCtx, lease)
-	if updateErr != nil {
-		transaction.Rollback()
-		return pkg.InternalServerError(updateErr.Error(), &pkg.RentLoopErrorParams{
-			Err: updateErr,
-			Metadata: map[string]string{
-				"function": "GenerateLeaseRentInvoice",
-				"action":   "updating lease with next billing date",
-			},
-		})
-	}
-
-	if commitErr := transaction.Commit().Error; commitErr != nil {
-		return pkg.InternalServerError(commitErr.Error(), &pkg.RentLoopErrorParams{
-			Err: commitErr,
-			Metadata: map[string]string{
-				"function": "GenerateLeaseRentInvoice",
-				"action":   "committing transaction",
-			},
-		})
-	}
-
-	// Fire-and-forget notifications
-	invoiceCode := invoice.Code
-	unitName := lease.Unit.Name
-	tenantName := lease.Tenant.FirstName
-	currency := lease.RentFeeCurrency
-	amount := lib.FormatAmount(lib.PesewasToCedis(int64(lease.RentFee)))
-
-	smsMessage := strings.NewReplacer(
-		"{{tenant_name}}", tenantName,
-		"{{unit_name}}", unitName,
-		"{{invoice_code}}", invoiceCode,
-		"{{currency}}", currency,
-		"{{amount}}", amount,
-	).Replace(lib.RENT_INVOICE_GENERATED_SMS_BODY)
-
-	if lease.Tenant.Email != nil {
-		if htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render(
-			"invoice/rent-generated",
-			emailtemplates.RentInvoiceGeneratedData{
-				TenantName:  tenantName,
-				InvoiceCode: invoiceCode,
-				UnitName:    unitName,
-				Currency:    currency,
-				Amount:      amount,
-			},
-		); renderErr != nil {
-			log.WithError(renderErr).Error("failed to render invoice/rent-generated email template")
-		} else {
-			go pkg.SendEmail(
-				s.appCtx.Config,
-				pkg.SendEmailInput{
-					Recipient: *lease.Tenant.Email,
-					Subject:   lib.RENT_INVOICE_GENERATED_SUBJECT,
-					HtmlBody:  htmlBody,
-					TextBody:  textBody,
-				},
-			)
-		}
-	}
-
-	go s.appCtx.Clients.GatekeeperAPI.SendSMS(
-		context.Background(),
-		gatekeeper.SendSMSInput{
-			Recipient: lease.Tenant.Phone,
-			Message:   smsMessage,
-		},
-	)
-
-	if lease.Tenant.TenantAccount != nil {
-		tenantAccountID := lease.Tenant.TenantAccount.ID.String()
-		invoiceID := invoice.ID.String()
-		go func() {
-			_ = s.notificationService.SendToTenantAccount(
-				context.Background(),
-				tenantAccountID,
-				"Rent Invoice Ready",
-				fmt.Sprintf("Your rent invoice %s for %s is ready for payment.", invoiceCode, unitName),
-				map[string]string{
-					"type":         "INVOICE",
-					"invoice_id":   invoiceID,
-					"invoice_code": invoiceCode,
-				},
-			)
-		}()
-	}
 
 	return nil
 }
@@ -789,7 +593,6 @@ func (s *leaseService) CompleteLease(ctx context.Context, leaseID string) (*mode
 	now := time.Now()
 	lease.Status = "Lease.Status.Completed"
 	lease.CompletedAt = &now
-	lease.NextBillingDate = nil
 
 	if updateErr := s.repo.Update(transCtx, lease); updateErr != nil {
 		transaction.Rollback()

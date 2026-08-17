@@ -22,6 +22,9 @@ type Repository struct {
 	PaymentAccountRepository               PaymentAccountRepository
 	InvoiceRepository                      InvoiceRepository
 	PaymentRepository                      PaymentRepository
+	FinancialAccountRepository             FinancialAccountRepository
+	ChargeRepository                       ChargeRepository
+	PaymentAllocationRepository            PaymentAllocationRepository
 	SigningRepository                      SigningRepository
 	LeaseChecklistRepository               LeaseChecklistRepository
 	LeaseChecklistItemRepository           LeaseChecklistItemRepository
@@ -60,6 +63,9 @@ func NewRepository(db *gorm.DB) Repository {
 	paymentAccountRepository := NewPaymentAccountRepository(db)
 	invoiceRepository := NewInvoiceRepository(db)
 	paymentRepository := NewPaymentRepository(db)
+	financialAccountRepository := NewFinancialAccountRepository(db)
+	chargeRepository := NewChargeRepository(db)
+	paymentAllocationRepository := NewPaymentAllocationRepository(db)
 	signingRepository := NewSigningRepository(db)
 	leaseChecklistRepository := NewLeaseChecklistRepository(db)
 	leaseChecklistItemRepository := NewLeaseChecklistItemRepository(db)
@@ -97,6 +103,9 @@ func NewRepository(db *gorm.DB) Repository {
 		PaymentAccountRepository:               paymentAccountRepository,
 		InvoiceRepository:                      invoiceRepository,
 		PaymentRepository:                      paymentRepository,
+		FinancialAccountRepository:             financialAccountRepository,
+		ChargeRepository:                       chargeRepository,
+		PaymentAllocationRepository:            paymentAllocationRepository,
 		SigningRepository:                      signingRepository,
 		LeaseChecklistRepository:               leaseChecklistRepository,
 		LeaseChecklistItemRepository:           leaseChecklistItemRepository,

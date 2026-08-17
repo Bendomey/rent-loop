@@ -49,8 +49,14 @@ type TenantApplication struct {
 	SecurityDepositFee         *int64 // if it's null or 0 then it's not opted in!
 	SecurityDepositFeeCurrency string `gorm:"not null;default:'GHS'"`
 
-	// initial deposit + security deposit (if opted in)
-	ApplicationPaymentInvoice *Invoice `gorm:"foreignKey:ContextTenantApplicationID"`
+	// Financials is a computed view attached in memory by the service — not a
+	// column, and not an association.
+	//
+	// It replaces the old ApplicationPaymentInvoice has-one, which assumed an
+	// application had exactly one invoice. It now has a financial account with
+	// many charges and any number of invoices composed against them, so "the"
+	// payment invoice no longer exists as a concept.
+	Financials *TenantApplicationFinancials `gorm:"-"`
 
 	// docs setup
 	LeaseAgreementDocumentMode *string // MANUAL | ONLINE

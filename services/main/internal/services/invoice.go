@@ -14,6 +14,7 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/lib/emailtemplates"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
+	"github.com/Bendomey/rent-loop/services/main/internal/services/financials"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 	"github.com/lib/pq"
 	gonanoid "github.com/matoous/go-nanoid"
@@ -43,6 +44,16 @@ type InvoiceService interface {
 	RemoveLineItem(context context.Context, input RemoveLineItemInput) error
 	GetLineItems(context context.Context, invoiceID string) ([]models.InvoiceLineItem, error)
 	UpdateInvoicePaymentStatus(ctx context.Context, input UpdateInvoicePaymentStatusInput) (*models.Invoice, error)
+	// ComposeFromAccount is the only way an account-backed invoice is created.
+	ComposeFromAccount(ctx context.Context, input ComposeFromAccountInput) (*models.Invoice, error)
+	// ComposeAccountInvoice satisfies financials.InvoiceComposer for the
+	// issuance queue.
+	ComposeAccountInvoice(
+		ctx context.Context,
+		accountID string,
+		claims []financials.Claim,
+		dueDate time.Time,
+	) error
 }
 
 type invoiceService struct {
@@ -53,6 +64,9 @@ type invoiceService struct {
 	notificationService NotificationService
 	tenantAccountRepo   repository.TenantAccountRepository
 	tenantRepo          repository.TenantRepository
+	// financials is the ONLY route to charge tables. This service never
+	// touches them directly.
+	financials *financials.Financials
 }
 
 func NewInvoiceService(
@@ -63,6 +77,7 @@ func NewInvoiceService(
 	notificationService NotificationService,
 	tenantAccountRepo repository.TenantAccountRepository,
 	tenantRepo repository.TenantRepository,
+	financialsFacade *financials.Financials,
 ) InvoiceService {
 	return &invoiceService{
 		appCtx:              appCtx,
@@ -72,6 +87,7 @@ func NewInvoiceService(
 		notificationService: notificationService,
 		tenantAccountRepo:   tenantAccountRepo,
 		tenantRepo:          tenantRepo,
+		financials:          financialsFacade,
 	}
 }
 
@@ -83,6 +99,9 @@ type LineItemInput struct {
 	TotalAmount int64
 	Currency    string
 	Metadata    *map[string]any
+	// ChargeInstanceID is required when the invoice is account-backed. The
+	// line claims TotalAmount of that charge — full or partial.
+	ChargeInstanceID *string
 }
 
 type CreateInvoiceInput struct {
@@ -96,21 +115,26 @@ type CreateInvoiceInput struct {
 	PayeeClientID               *string
 	PayeeTenantID               *string
 	ContextType                 string
-	ContextTenantApplicationID  *string
-	ContextLeaseID              *string
 	ContextBookingID            *string
 	ContextMaintenanceRequestID *string
-	ContextExpenseID            *string
 	ContextLeaseTerminationID   *string
-	TotalAmount                 int64
-	Taxes                       int64
-	SubTotal                    int64
-	Currency                    string
-	Status                      string
-	DueDate                     *time.Time
-	AllowedPaymentRails         []string
-	LineItems                   []LineItemInput
-	SendNotifications           bool
+	// FinancialAccountID makes this invoice account-backed. It may only be set
+	// by ComposeFromAccount — see the composed flag below.
+	FinancialAccountID *string
+	// composed is set only by ComposeFromAccount. Direct CreateInvoice callers
+	// cannot fabricate an account-backed invoice, because its lines would
+	// claim nothing and charge.invoiced_amount would silently disagree with
+	// what the tenant is looking at.
+	composed            bool
+	TotalAmount         int64
+	Taxes               int64
+	SubTotal            int64
+	Currency            string
+	Status              string
+	DueDate             *time.Time
+	AllowedPaymentRails []string
+	LineItems           []LineItemInput
+	SendNotifications   bool
 	// NotificationTenantID is used to send invoice notifications to the payer
 	// tenant. Callers that set PayerLeaseID should also set this to the lease's
 	// TenantId so the notification goroutine can look up the tenant account
@@ -119,6 +143,13 @@ type CreateInvoiceInput struct {
 }
 
 func (s *invoiceService) CreateInvoice(ctx context.Context, input CreateInvoiceInput) (*models.Invoice, error) {
+	// Composition is the only way in for account-backed invoices. A
+	// hand-built one would have lines claiming no charge, so the ledger and
+	// the invoice would immediately disagree.
+	if input.FinancialAccountID != nil && !input.composed {
+		return nil, pkg.BadRequestError("UseComposeEndpoint", nil)
+	}
+
 	// Generate invoice code
 	nanoID, err := gonanoid.Generate("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890", 6)
 	if err != nil {
@@ -153,13 +184,14 @@ func (s *invoiceService) CreateInvoice(ctx context.Context, input CreateInvoiceI
 		}
 
 		lineItems = append(lineItems, models.InvoiceLineItem{
-			Label:       item.Label,
-			Category:    item.Category,
-			Quantity:    item.Quantity,
-			UnitAmount:  item.UnitAmount,
-			TotalAmount: item.TotalAmount,
-			Currency:    item.Currency,
-			Metadata:    metaJson,
+			Label:            item.Label,
+			Category:         item.Category,
+			Quantity:         item.Quantity,
+			UnitAmount:       item.UnitAmount,
+			TotalAmount:      item.TotalAmount,
+			Currency:         item.Currency,
+			Metadata:         metaJson,
+			ChargeInstanceID: item.ChargeInstanceID,
 		})
 	}
 
@@ -176,12 +208,10 @@ func (s *invoiceService) CreateInvoice(ctx context.Context, input CreateInvoiceI
 		PayeeClientID:               input.PayeeClientID,
 		PayeeTenantID:               input.PayeeTenantID,
 		ContextType:                 input.ContextType,
-		ContextTenantApplicationID:  input.ContextTenantApplicationID,
-		ContextLeaseID:              input.ContextLeaseID,
 		ContextBookingID:            input.ContextBookingID,
 		ContextMaintenanceRequestID: input.ContextMaintenanceRequestID,
-		ContextExpenseID:            input.ContextExpenseID,
 		ContextLeaseTerminationID:   input.ContextLeaseTerminationID,
+		FinancialAccountID:          input.FinancialAccountID,
 		TotalAmount:                 input.TotalAmount,
 		Taxes:                       input.Taxes,
 		SubTotal:                    input.SubTotal,
@@ -272,11 +302,28 @@ func (s *invoiceService) CreateInvoice(ctx context.Context, input CreateInvoiceI
 			if err != nil {
 				return
 			}
+			// Rent keeps its own copy and template. GenerateLeaseRentInvoice
+			// used to own this; the wording is what tenants already recognise,
+			// so the queue rewrite must not quietly downgrade it to the
+			// generic "New Invoice" notice.
+			pushTitle := "New Invoice"
+			pushBody := fmt.Sprintf("Invoice %s is ready for payment.", invoiceCode)
+			if contextType == "LEASE_RENT" {
+				pushTitle = "Rent Invoice Ready"
+				pushBody = fmt.Sprintf("Your rent invoice %s is ready for payment.", invoiceCode)
+			}
+			// Email and SMS stay on the generic invoice/created template.
+			// invoice/rent-generated needs a UnitName that InvoiceCreatedData
+			// does not carry, and this service has no lease repository to look
+			// it up — rendering it here would fail at runtime and drop the
+			// email silently. Restoring the richer rent template means giving
+			// InvoiceService a lease lookup; deliberately not done here.
+
 			_ = s.notificationService.SendToTenantAccount(
 				ctx,
 				account.ID.String(),
-				"New Invoice",
-				fmt.Sprintf("Invoice %s is ready for payment.", invoiceCode),
+				pushTitle,
+				pushBody,
 				map[string]string{
 					"type":         "INVOICE",
 					"invoice_id":   invoiceID,
@@ -358,18 +405,31 @@ func (s *invoiceService) UpdateInvoice(ctx context.Context, input UpdateInvoiceI
 		})
 	}
 
-	// if the invoice is already issued, we can't continue
+	// An issued invoice is a document the tenant has already been shown, so
+	// what it asks for is fixed. The due date is the exception: moving a
+	// deadline — granting an extension, dating a bill that was composed without
+	// one — changes no amount and no allocation, and the landlord owns that
+	// decision.
 	if invoice.Status == "ISSUED" {
-		return nil, pkg.BadRequestError(
-			"Cannot update an invoice that has already been issued",
-			&pkg.RentLoopErrorParams{
-				Metadata: map[string]string{
-					"function": "UpdateInvoice",
-					"action":   "checking invoice status",
-					"status":   invoice.Status,
+		onlyDueDate := input.DueDate != nil &&
+			input.Status == nil &&
+			input.Currency == nil &&
+			input.Taxes == nil &&
+			input.IssuedAt == nil &&
+			input.AllowedPaymentRails == nil
+
+		if !onlyDueDate {
+			return nil, pkg.BadRequestError(
+				"Cannot update an invoice that has already been issued",
+				&pkg.RentLoopErrorParams{
+					Metadata: map[string]string{
+						"function": "UpdateInvoice",
+						"action":   "checking invoice status",
+						"status":   invoice.Status,
+					},
 				},
-			},
-		)
+			)
+		}
 	}
 
 	issuingNow := input.Status != nil && *input.Status == "ISSUED" && invoice.Status == "DRAFT"
@@ -604,6 +664,27 @@ func (s *invoiceService) VoidInvoice(ctx context.Context, input VoidInvoiceInput
 
 	transaction := s.appCtx.DB.Begin()
 	transCtx := lib.WithTransaction(ctx, transaction)
+
+	// Give the charges back. Without this a voided invoice locks its charges
+	// as "already billed" forever, and the issuance sweep silently stops
+	// invoicing that tenant — a failure that surfaces as missing revenue
+	// months later rather than as an error.
+	if invoice.FinancialAccountID != nil {
+		releases := make([]financials.ReleaseLine, 0, len(invoice.LineItems))
+		for _, lineItem := range invoice.LineItems {
+			if lineItem.ChargeInstanceID == nil {
+				continue
+			}
+			releases = append(releases, financials.ReleaseLine{
+				ChargeInstanceID: *lineItem.ChargeInstanceID,
+				Amount:           lineItem.TotalAmount,
+			})
+		}
+		if releaseErr := s.financials.Allocation.ReleaseClaims(transCtx, releases); releaseErr != nil {
+			transaction.Rollback()
+			return nil, releaseErr
+		}
+	}
 
 	updateErr := s.repo.Update(transCtx, invoice)
 	if updateErr != nil {
@@ -866,6 +947,13 @@ func (s *invoiceService) AddLineItem(ctx context.Context, input AddLineItemInput
 		})
 	}
 
+	// Account-backed invoices must go through composition. A free-form line
+	// here would claim no charge, so charge.invoiced_amount would silently
+	// disagree with the invoice the tenant is looking at.
+	if invoice.FinancialAccountID != nil {
+		return nil, pkg.BadRequestError("UseComposeEndpoint", nil)
+	}
+
 	// Only allow adding line items to DRAFT invoices
 	if invoice.Status != "DRAFT" {
 		return nil, pkg.BadRequestError("Can only add line items to draft invoices", &pkg.RentLoopErrorParams{
@@ -988,6 +1076,12 @@ func (s *invoiceService) RemoveLineItem(ctx context.Context, input RemoveLineIte
 		})
 	}
 
+	// Account-backed invoices must go through composition — removing a line
+	// here would leave its charge reserved forever.
+	if invoice.FinancialAccountID != nil {
+		return pkg.BadRequestError("UseComposeEndpoint", nil)
+	}
+
 	// Only allow removing line items from DRAFT invoices
 	if invoice.Status != "DRAFT" {
 		return pkg.BadRequestError("Can only remove line items from draft invoices", &pkg.RentLoopErrorParams{
@@ -1108,6 +1202,12 @@ func (s *invoiceService) UpdateLineItem(
 				"action":   "getting invoice",
 			},
 		})
+	}
+
+	// Account-backed invoices must go through composition — changing an
+	// amount here would not adjust the charge's reserved amount.
+	if invoice.FinancialAccountID != nil {
+		return nil, pkg.BadRequestError("UseComposeEndpoint", nil)
 	}
 
 	// Only allow updating line items on DRAFT invoices
@@ -1246,6 +1346,127 @@ func (s *invoiceService) UpdateLineItem(
 	}
 
 	return lineItem, nil
+}
+
+type ComposeFromAccountInput struct {
+	FinancialAccountID string
+	// Exactly one of Claims or Amount is set. Claims is the landlord's
+	// explicit pick; Amount is the shortcut that derives claims oldest-due
+	// first.
+	Claims []financials.Claim
+	Amount *int64
+
+	PayerType     string
+	PayerLeaseID  *string
+	PayeeType     string
+	PayeeClientID *string
+	ContextType   string
+	DueDate       *time.Time
+	Status        string
+
+	NotificationTenantID *string
+}
+
+// ComposeFromAccount builds an invoice from charges on a financial account.
+//
+// Every line claims part or all of one charge, which is what makes "pay some
+// rent and all of the deposit" a single ordinary document rather than a
+// special case. Available account credit is consumed first: applying credit is
+// just writing the allocation row that was missing on an earlier payment.
+func (s *invoiceService) ComposeFromAccount(
+	ctx context.Context,
+	input ComposeFromAccountInput,
+) (*models.Invoice, error) {
+	summary, summaryErr := s.financials.Accounts.Summary(ctx, input.FinancialAccountID)
+	if summaryErr != nil {
+		return nil, summaryErr
+	}
+
+	claims := input.Claims
+	if input.Amount != nil {
+		derived, deriveErr := s.financials.Allocation.ComposeByAmount(
+			ctx, input.FinancialAccountID, *input.Amount,
+		)
+		if deriveErr != nil {
+			return nil, deriveErr
+		}
+		claims = derived
+	}
+
+	composed, composeErr := s.financials.Allocation.ComposeByClaims(ctx, financials.ComposeInput{
+		FinancialAccountID: input.FinancialAccountID,
+		AccountCurrency:    summary.Account.Currency,
+		Claims:             claims,
+	})
+	if composeErr != nil {
+		return nil, composeErr
+	}
+
+	lineItems := make([]LineItemInput, 0, len(composed))
+	var total int64
+	for _, line := range composed {
+		chargeID := line.ChargeInstanceID
+		lineItems = append(lineItems, LineItemInput{
+			Label:            line.Label,
+			Category:         line.Category,
+			Quantity:         1,
+			UnitAmount:       line.Amount,
+			TotalAmount:      line.Amount,
+			Currency:         line.Currency,
+			ChargeInstanceID: &chargeID,
+		})
+		total += line.Amount
+	}
+
+	accountID := input.FinancialAccountID
+
+	return s.CreateInvoice(ctx, CreateInvoiceInput{
+		FinancialAccountID:   &accountID,
+		composed:             true,
+		ClientID:             summary.Account.ClientID,
+		PropertyID:           summary.Account.PropertyID,
+		PayerType:            input.PayerType,
+		PayerLeaseID:         input.PayerLeaseID,
+		PayeeType:            input.PayeeType,
+		PayeeClientID:        input.PayeeClientID,
+		ContextType:          input.ContextType,
+		TotalAmount:          total,
+		SubTotal:             total,
+		Currency:             summary.Account.Currency,
+		Status:               input.Status,
+		DueDate:              input.DueDate,
+		LineItems:            lineItems,
+		SendNotifications:    input.Status == "ISSUED",
+		NotificationTenantID: input.NotificationTenantID,
+	})
+}
+
+// ComposeAccountInvoice satisfies financials.InvoiceComposer. It is what the
+// issuance sweep calls once SelectIssuableCharges has decided what is due.
+func (s *invoiceService) ComposeAccountInvoice(
+	ctx context.Context,
+	accountID string,
+	claims []financials.Claim,
+	dueDate time.Time,
+) error {
+	summary, summaryErr := s.financials.Accounts.Summary(ctx, accountID)
+	if summaryErr != nil {
+		return summaryErr
+	}
+
+	_, err := s.ComposeFromAccount(ctx, ComposeFromAccountInput{
+		FinancialAccountID:   accountID,
+		Claims:               claims,
+		PayerType:            "TENANT",
+		PayerLeaseID:         summary.Account.LeaseID,
+		PayeeType:            "PROPERTY_OWNER",
+		PayeeClientID:        summary.Account.ClientID,
+		ContextType:          "LEASE_RENT",
+		DueDate:              &dueDate,
+		Status:               "ISSUED",
+		NotificationTenantID: summary.Account.TenantID,
+	})
+	return err
 }
 
 func (s *invoiceService) GetLineItems(ctx context.Context, invoiceID string) ([]models.InvoiceLineItem, error) {
@@ -1411,63 +1632,18 @@ func buildSaasJournalEntry(
 	}
 }
 
-// buildExpenseJournalEntry builds journal entry lines for general and maintenance expense invoices.
-//
-// When PayerType = EXTERNAL: no journal entry (external payer obligations are not tracked on our ledger).
-//
-// When PayeeType = EXTERNAL: platform will disburse to a vendor on the payer's behalf.
-//   - Debit: Property Management Expense (cost incurred)
-//   - Credit: Accounts Payable (liability owed to vendor)
-//
-// All other payees (RENTLOOP, PROPERTY_OWNER, TENANT): platform collects on behalf.
-//   - Debit: Accounts Receivable (payer owes)
-//   - Credit: Expense Income (income from facilitating the expense billing)
-func buildExpenseJournalEntry(
-	invoice *models.Invoice,
-	accounts config.IChartOfAccounts,
-) []accounting.CreateJournalEntryLineRequest {
-	if invoice.PayerType == "EXTERNAL" {
-		return []accounting.CreateJournalEntryLineRequest{}
-	}
-
-	if invoice.PayeeType == "EXTERNAL" {
-		return []accounting.CreateJournalEntryLineRequest{
-			{
-				AccountID: accounts.PropertyManagementExpenseID,
-				Debit:     invoice.SubTotal,
-				Credit:    0,
-				Notes:     lib.StringPointer(fmt.Sprintf("Expense incurred for invoice %s", invoice.Code)),
-			},
-			{
-				AccountID: accounts.AccountsPayableID,
-				Debit:     0,
-				Credit:    invoice.SubTotal,
-				Notes:     lib.StringPointer(fmt.Sprintf("Vendor payable for invoice %s", invoice.Code)),
-			},
-		}
-	}
-
-	return []accounting.CreateJournalEntryLineRequest{
-		{
-			AccountID: accounts.AccountsReceivableID,
-			Debit:     invoice.SubTotal,
-			Credit:    0,
-			Notes:     lib.StringPointer(fmt.Sprintf("Accounts receivable for expense invoice %s", invoice.Code)),
-		},
-		{
-			AccountID: accounts.ExpenseIncomeID,
-			Credit:    invoice.SubTotal,
-			Debit:     0,
-			Notes:     lib.StringPointer(fmt.Sprintf("Expense income for invoice %s", invoice.Code)),
-		},
-	}
-}
-
 // buildJournalEntryForInvoice routes to the appropriate journal entry builder based on context type.
 func buildJournalEntryForInvoice(
 	invoice *models.Invoice,
 	accounts config.IChartOfAccounts,
 ) []accounting.CreateJournalEntryLineRequest {
+	// Account-backed invoices route by (category, sign) rather than by context
+	// type — the charge's category already says what kind of money this is,
+	// and its sign says which way the money moves.
+	if invoice.FinancialAccountID != nil {
+		return buildAccountBackedJournalEntry(invoice, accounts)
+	}
+
 	switch invoice.ContextType {
 	case "TENANT_APPLICATION":
 		return buildTenantApplicationJournalEntry(invoice, accounts)
@@ -1475,15 +1651,110 @@ func buildJournalEntryForInvoice(
 		return buildLeaseRentJournalEntry(invoice, accounts)
 	case "SAAS_FEE":
 		return buildSaasJournalEntry(invoice, accounts)
-	case "GENERAL_EXPENSE", "MAINTENANCE_EXPENSE":
-		return buildExpenseJournalEntry(
-			invoice,
-			accounts,
-		)
 	case "LEASE_TERMINATION":
 		return buildLeaseTerminationJournalEntry(invoice, accounts)
 	default:
 		return []accounting.CreateJournalEntryLineRequest{}
+	}
+}
+
+// buildAccountBackedJournalEntry routes an account-backed invoice's lines to
+// journal entries by (category, sign).
+//
+// Sign carries direction: a positive SECURITY_DEPOSIT line is a deposit being
+// collected, a negative one is that deposit being refunded. This is why there
+// are no DEPOSIT_REFUND / RENT_REFUND categories — refunds work for every
+// category, including ones added later, with no new cases here.
+//
+// A negative line whose charge reverses nothing is a goodwill credit: there is
+// no category to reverse, so it debits Tenant Concessions.
+func buildAccountBackedJournalEntry(
+	invoice *models.Invoice,
+	accounts config.IChartOfAccounts,
+) []accounting.CreateJournalEntryLineRequest {
+	lines := []accounting.CreateJournalEntryLineRequest{}
+
+	for _, lineItem := range invoice.LineItems {
+		amount := lineItem.TotalAmount
+		if amount == 0 {
+			continue
+		}
+
+		inbound := amount > 0
+		magnitude := amount
+		if magnitude < 0 {
+			magnitude = -magnitude
+		}
+
+		counterpart := counterpartAccountFor(lineItem, accounts, inbound)
+		if counterpart == "" {
+			continue
+		}
+
+		if inbound {
+			// Tenant owes us: Dr Accounts Receivable / Cr <category account>
+			lines = append(lines,
+				accounting.CreateJournalEntryLineRequest{
+					AccountID: accounts.AccountsReceivableID,
+					Debit:     magnitude,
+					Credit:    0,
+					Notes:     lib.StringPointer(lineItem.Label),
+				},
+				accounting.CreateJournalEntryLineRequest{
+					AccountID: counterpart,
+					Debit:     0,
+					Credit:    magnitude,
+					Notes:     lib.StringPointer(lineItem.Label),
+				},
+			)
+			continue
+		}
+
+		// We owe the tenant: Dr <category account> / Cr Accounts Payable
+		lines = append(lines,
+			accounting.CreateJournalEntryLineRequest{
+				AccountID: counterpart,
+				Debit:     magnitude,
+				Credit:    0,
+				Notes:     lib.StringPointer(lineItem.Label),
+			},
+			accounting.CreateJournalEntryLineRequest{
+				AccountID: accounts.AccountsPayableID,
+				Debit:     0,
+				Credit:    magnitude,
+				Notes:     lib.StringPointer(lineItem.Label),
+			},
+		)
+	}
+
+	return lines
+}
+
+// counterpartAccountFor is the non-AR/AP side of the entry for a line's
+// category. It is the same account in both directions — that symmetry is what
+// makes a refund a genuine reversal rather than a second, unrelated posting.
+func counterpartAccountFor(
+	lineItem models.InvoiceLineItem,
+	accounts config.IChartOfAccounts,
+	inbound bool,
+) string {
+	switch lineItem.Category {
+	case "RENT":
+		return accounts.RentalIncomeID
+	case "SECURITY_DEPOSIT":
+		return accounts.SecurityDepositsHeldID
+	case "DAMAGE_CHARGE", "UTILITY":
+		return accounts.MaintenanceReimbursementID
+	case "EARLY_TERMINATION_FEE", "AGENCY_FEE", "VAT":
+		return accounts.RentalIncomeID
+	case "OTHER":
+		if inbound {
+			return accounts.RentalIncomeID
+		}
+		// A goodwill credit with nothing to reverse.
+		return accounts.TenantConcessionsID
+	default:
+		return ""
 	}
 }
 
@@ -1604,9 +1875,13 @@ func buildPaymentJournalLines(
 		return []accounting.CreateJournalEntryLineRequest{}
 	}
 
+	// Account-backed invoices settle by sign: positive clears AR with cash
+	// received, negative clears AP with cash disbursed.
+	if invoice.FinancialAccountID != nil {
+		return buildAccountBackedPaymentJournalLines(invoice, paymentAmount, accounts)
+	}
+
 	switch invoice.ContextType {
-	case "GENERAL_EXPENSE", "MAINTENANCE_EXPENSE":
-		return buildExpensePaymentJournalLines(invoice, paymentAmount, accounts)
 	case "LEASE_TERMINATION":
 		return buildLeaseTerminationPaymentJournalLines(invoice, accounts)
 	default:
@@ -1629,43 +1904,44 @@ func buildPaymentJournalLines(
 	}
 }
 
-// buildExpensePaymentJournalLines settles an expense invoice.
-// Expense invoices with an EXTERNAL payee debited PropertyManagementExpense and
-// credited AccountsPayable at issuance. Settlement clears the payable with cash.
-func buildExpensePaymentJournalLines(
+// buildAccountBackedPaymentJournalLines records cash movement for an
+// account-backed invoice. Positive amounts clear AR with cash received;
+// negative amounts clear AP with cash disbursed.
+func buildAccountBackedPaymentJournalLines(
 	invoice *models.Invoice,
 	paymentAmount int64,
 	accounts config.IChartOfAccounts,
 ) []accounting.CreateJournalEntryLineRequest {
-	if invoice.PayeeType == "EXTERNAL" {
+	if paymentAmount >= 0 {
 		return []accounting.CreateJournalEntryLineRequest{
 			{
-				AccountID: accounts.AccountsPayableID,
+				AccountID: accounts.CashBankAccountID,
 				Debit:     paymentAmount,
 				Credit:    0,
-				Notes:     lib.StringPointer(fmt.Sprintf("Vendor payable settled for invoice %s", invoice.Code)),
+				Notes:     lib.StringPointer(fmt.Sprintf("Cash receipt for invoice %s", invoice.Code)),
 			},
 			{
-				AccountID: accounts.CashBankAccountID,
+				AccountID: accounts.AccountsReceivableID,
 				Debit:     0,
 				Credit:    paymentAmount,
-				Notes:     lib.StringPointer(fmt.Sprintf("Cash disbursed to vendor for invoice %s", invoice.Code)),
+				Notes:     lib.StringPointer(fmt.Sprintf("AR cleared on payment for invoice %s", invoice.Code)),
 			},
 		}
 	}
-	// Internal expense — standard cash-in / AR-clear
+
+	magnitude := -paymentAmount
 	return []accounting.CreateJournalEntryLineRequest{
 		{
-			AccountID: accounts.CashBankAccountID,
-			Debit:     paymentAmount,
+			AccountID: accounts.AccountsPayableID,
+			Debit:     magnitude,
 			Credit:    0,
-			Notes:     lib.StringPointer(fmt.Sprintf("Cash receipt for expense invoice %s", invoice.Code)),
+			Notes:     lib.StringPointer(fmt.Sprintf("Payable cleared for invoice %s", invoice.Code)),
 		},
 		{
-			AccountID: accounts.AccountsReceivableID,
+			AccountID: accounts.CashBankAccountID,
 			Debit:     0,
-			Credit:    paymentAmount,
-			Notes:     lib.StringPointer(fmt.Sprintf("AR cleared on payment for invoice %s", invoice.Code)),
+			Credit:    magnitude,
+			Notes:     lib.StringPointer(fmt.Sprintf("Refund disbursed for invoice %s", invoice.Code)),
 		},
 	}
 }

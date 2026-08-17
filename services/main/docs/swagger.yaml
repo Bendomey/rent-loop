@@ -3,13 +3,10 @@ definitions:
     properties:
       amount:
         type: integer
-      context_lease_id:
-        type: string
       context_maintenance_request_id:
         type: string
       context_type:
         enum:
-        - LEASE
         - MAINTENANCE
         type: string
       currency:
@@ -468,6 +465,35 @@ definitions:
     required:
     - reason
     type: object
+  handlers.ClaimBody:
+    properties:
+      amount:
+        example: 100000
+        type: integer
+      charge_instance_id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+    required:
+    - amount
+    - charge_instance_id
+    type: object
+  handlers.ComposeInvoiceBody:
+    properties:
+      amount:
+        example: 250000
+        minimum: 1
+        type: integer
+      claims:
+        items:
+          $ref: '#/definitions/handlers.ClaimBody'
+        type: array
+      due_date:
+        example: "2027-03-01T00:00:00Z"
+        type: string
+      issue:
+        example: true
+        type: boolean
+    type: object
   handlers.CreateAdminRequest:
     properties:
       email:
@@ -561,6 +587,48 @@ definitions:
     - guest_phone
     - rate
     - unit_id
+    type: object
+  handlers.CreateChargeBody:
+    properties:
+      amount:
+        example: 10000
+        type: integer
+      category:
+        description: |-
+          Sign carries direction: a negative amount is a refund of this category.
+          There are deliberately no refund-specific categories.
+        enum:
+        - RENT
+        - SECURITY_DEPOSIT
+        - AGENCY_FEE
+        - VAT
+        - UTILITY
+        - DAMAGE_CHARGE
+        - EARLY_TERMINATION_FEE
+        - OTHER
+        example: UTILITY
+        type: string
+      currency:
+        example: GHS
+        type: string
+      due_date:
+        example: "2027-03-01T00:00:00Z"
+        type: string
+      name:
+        example: Water bill — March
+        type: string
+      reverses_charge_instance_id:
+        description: |-
+          ReversesChargeInstanceID marks this as a refund of an existing charge.
+          The refund inherits that charge's category and is capped at what was
+          actually settled — you cannot refund money never received.
+        type: string
+    required:
+    - amount
+    - category
+    - currency
+    - due_date
+    - name
     type: object
   handlers.CreateClientApplicationRequest:
     properties:
@@ -1306,43 +1374,6 @@ definitions:
     required:
     - email
     type: object
-  handlers.GenerateExpenseInvoiceBody:
-    properties:
-      payers:
-        items:
-          $ref: '#/definitions/handlers.GenerateExpenseInvoicePayerBody'
-        minItems: 1
-        type: array
-    required:
-    - payers
-    type: object
-  handlers.GenerateExpenseInvoicePayerBody:
-    properties:
-      amount:
-        type: integer
-      payee_type:
-        enum:
-        - TENANT
-        - PROPERTY_OWNER
-        - EXTERNAL
-        type: string
-      payer_type:
-        enum:
-        - TENANT
-        - PROPERTY_OWNER
-        - EXTERNAL
-        type: string
-    required:
-    - amount
-    - payee_type
-    - payer_type
-    type: object
-  handlers.GenerateInvoiceRequest:
-    properties:
-      due_date:
-        example: "2024-07-01T00:00:00Z"
-        type: string
-    type: object
   handlers.GenerateTokenRequest:
     properties:
       document_id:
@@ -1713,6 +1744,25 @@ definitions:
         - EMERGENCY
         example: COMMUNITY
         type: string
+    type: object
+  handlers.UpdateBillingPolicyBody:
+    properties:
+      auto_issue_days_before:
+        example: 5
+        minimum: 0
+        type: integer
+      cadence:
+        enum:
+        - EVERY_PERIOD
+        - EVERY_N_PERIODS
+        - UPFRONT
+        - MANUAL
+        example: EVERY_N_PERIODS
+        type: string
+      interval:
+        example: 12
+        minimum: 1
+        type: integer
     type: object
   handlers.UpdateBookingRequest:
     properties:
@@ -2383,10 +2433,35 @@ definitions:
     required:
     - otp_code
     type: object
+  handlers.VoidChargeBody:
+    properties:
+      reason:
+        example: Entered in error
+        type: string
+    required:
+    - reason
+    type: object
   handlers.VoidInvoiceBody:
     properties:
       voided_reason:
         type: string
+    type: object
+  handlers.accountSummaryResponse:
+    properties:
+      account:
+        $ref: '#/definitions/transformations.OutputFinancialAccount'
+      available_credit:
+        type: integer
+      charges:
+        items:
+          $ref: '#/definitions/transformations.OutputChargeInstance'
+        type: array
+      outstanding_amount:
+        type: integer
+      total_charged:
+        type: integer
+      total_settled:
+        type: integer
     type: object
   handlers.analyticsTokenResponse:
     properties:
@@ -3511,6 +3586,52 @@ definitions:
         example: MAINTENANCE
         type: string
     type: object
+  transformations.OutputChargeInstance:
+    properties:
+      amount:
+        example: 100000
+        type: integer
+      category:
+        example: RENT
+        type: string
+      created_at:
+        type: string
+      currency:
+        example: GHS
+        type: string
+      due_date:
+        type: string
+      financial_account_id:
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      invoiced_amount:
+        example: 0
+        type: integer
+      name:
+        example: Rent – February 2027
+        type: string
+      outstanding_amount:
+        example: 100000
+        type: integer
+      period_end:
+        type: string
+      period_start:
+        type: string
+      settled_amount:
+        example: 0
+        type: integer
+      status:
+        example: OUTSTANDING
+        type: string
+      updated_at:
+        type: string
+      voided_at:
+        type: string
+      voided_reason:
+        type: string
+    type: object
   transformations.OutputChecklistTemplate:
     properties:
       created_at:
@@ -3845,8 +3966,6 @@ definitions:
         type: number
       code:
         type: string
-      context_lease_id:
-        type: string
       context_maintenance_request_id:
         type: string
       context_type:
@@ -3862,6 +3981,46 @@ definitions:
       id:
         type: string
       property_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  transformations.OutputFinancialAccount:
+    properties:
+      auto_issue_days_before:
+        example: 5
+        type: integer
+      client_id:
+        type: string
+      closed_at:
+        type: string
+      code:
+        example: FA-2608-A1B2C3
+        type: string
+      created_at:
+        type: string
+      currency:
+        example: GHS
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      lease_id:
+        type: string
+      property_id:
+        type: string
+      rent_billing_cadence:
+        example: EVERY_N_PERIODS
+        type: string
+      rent_billing_interval:
+        example: 12
+        type: integer
+      status:
+        example: ACTIVE
+        type: string
+      tenant_application_id:
+        type: string
+      tenant_id:
         type: string
       updated_at:
         type: string
@@ -3883,28 +4042,12 @@ definitions:
       code:
         example: INV-2024-0001
         type: string
-      context_expense:
-        $ref: '#/definitions/transformations.OutputExpense'
-      context_expense_id:
-        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
-        type: string
-      context_lease:
-        additionalProperties: {}
-        type: object
-      context_lease_id:
-        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
-        type: string
       context_lease_termination:
         $ref: '#/definitions/transformations.OutputLeaseTermination'
       context_lease_termination_id:
         example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
         type: string
       context_maintenance_request_id:
-        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
-        type: string
-      context_tenant_application:
-        $ref: '#/definitions/transformations.OutputAdminTenantApplication'
-      context_tenant_application_id:
         example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
         type: string
       context_type:
@@ -9599,42 +9742,83 @@ paths:
       summary: Get a single expense
       tags:
       - Expenses
-  /api/v1/admin/clients/{client_id}/properties/{property_id}/expenses/{expense_id}/generate:invoice:
-    post:
-      consumes:
-      - application/json
-      description: Create one invoice per payer from a specific expense (Admin)
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/financial-accounts/{account_id}:
+    get:
+      description: Returns the account, every charge with its derived status, and
+        the balance figures. Outstanding amount is the sum of unsettled charges —
+        including charges that have never been invoiced, which is what invoice-derived
+        balances cannot see.
       parameters:
       - description: Property ID
         in: path
         name: property_id
         required: true
         type: string
-      - description: Expense ID
+      - description: Financial account ID
         in: path
-        name: expense_id
+        name: account_id
         required: true
         type: string
-      - description: Payers for this expense
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Financial account summary
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/handlers.accountSummaryResponse'
+            type: object
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Financial account not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+      security:
+      - BearerAuth: []
+      summary: Get a financial account with its balance
+      tags:
+      - FinancialAccounts
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/financial-accounts/{account_id}/billing-policy:
+    patch:
+      consumes:
+      - application/json
+      description: 'Controls how the issuance sweep bills rent: one period at a time,
+        N periods at a time, the whole remaining term upfront, or never (MANUAL).
+        Auto-issue days is the lead time before a charge''s due date, not the payment
+        grace after it.'
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Financial account ID
+        in: path
+        name: account_id
+        required: true
+        type: string
+      - description: Billing policy
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/handlers.GenerateExpenseInvoiceBody'
+          $ref: '#/definitions/handlers.UpdateBillingPolicyBody'
       produces:
       - application/json
       responses:
-        "201":
-          description: Generated invoices
+        "200":
+          description: Policy updated
           schema:
             properties:
               data:
-                items:
-                  $ref: '#/definitions/transformations.OutputInvoice'
-                type: array
+                type: boolean
             type: object
         "400":
-          description: Validation error or no payers provided
+          description: Invalid cadence or interval
           schema:
             $ref: '#/definitions/lib.HTTPError'
         "401":
@@ -9642,22 +9826,215 @@ paths:
           schema:
             type: string
         "404":
-          description: Expense not found
+          description: Financial account not found
           schema:
             $ref: '#/definitions/lib.HTTPError'
+      security:
+      - BearerAuth: []
+      summary: Update the rent billing policy on a financial account
+      tags:
+      - FinancialAccounts
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/financial-accounts/{account_id}/charges:
+    get:
+      description: Every obligation on the account, oldest due date first, each with
+        a status derived from its invoiced and settled amounts.
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Financial account ID
+        in: path
+        name: account_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Charges
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/transformations.OutputChargeInstance'
+                type: array
+            type: object
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Financial account not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+      security:
+      - BearerAuth: []
+      summary: List the charges on a financial account
+      tags:
+      - FinancialAccounts
+    post:
+      consumes:
+      - application/json
+      description: Adds a one-off obligation with no definition behind it — a damage
+        charge, a utility bill, or a refund. A negative amount is a refund of that
+        category; when it names the charge it reverses, it inherits that category
+        and is capped at what was settled.
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Financial account ID
+        in: path
+        name: account_id
+        required: true
+        type: string
+      - description: Charge to add
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateChargeBody'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Charge created
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputChargeInstance'
+            type: object
+        "400":
+          description: Zero amount, non-negative reversal, or a reversal exceeding
+            what was settled
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
         "422":
           description: Validation error
           schema:
             $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
       security:
       - BearerAuth: []
-      summary: Generate invoices from an expense
+      summary: Add an ad-hoc charge to a financial account
       tags:
-      - Expenses
+      - FinancialAccounts
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/financial-accounts/{account_id}/charges/{charge_id}/void:
+    patch:
+      consumes:
+      - application/json
+      description: Removes a charge from the ledger. A charge that has already been
+        invoiced or settled cannot be voided — void the invoice first, which releases
+        its claim.
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Financial account ID
+        in: path
+        name: account_id
+        required: true
+        type: string
+      - description: Charge instance ID
+        in: path
+        name: charge_id
+        required: true
+        type: string
+      - description: Void reason
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.VoidChargeBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Charge voided
+          schema:
+            properties:
+              data:
+                type: boolean
+            type: object
+        "400":
+          description: Charge already voided, or already invoiced/settled
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Charge not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+      security:
+      - BearerAuth: []
+      summary: Void a charge
+      tags:
+      - FinancialAccounts
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/financial-accounts/{account_id}/invoices:compose:
+    post:
+      consumes:
+      - application/json
+      description: The only way an account-backed invoice is created. Each line claims
+        part or all of one charge, so "pay some rent and all of the deposit" is one
+        ordinary document. Give explicit claims, or just an amount to fill oldest-due-date
+        first. Available account credit is consumed before anything is asked for.
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Financial account ID
+        in: path
+        name: account_id
+        required: true
+        type: string
+      - description: Charges to bill
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.ComposeInvoiceBody'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Invoice composed
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputInvoice'
+            type: object
+        "400":
+          description: No charges selected, a claim exceeding the charge balance,
+            a sign or currency mismatch, or both claims and amount given
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Financial account or charge not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+      security:
+      - BearerAuth: []
+      summary: Compose an invoice from charges on a financial account
+      tags:
+      - FinancialAccounts
   /api/v1/admin/clients/{client_id}/properties/{property_id}/invoices:
     get:
       consumes:
@@ -11525,105 +11902,6 @@ paths:
       summary: Submit lease checklist
       tags:
       - LeaseChecklist
-  /api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/expenses:
-    get:
-      consumes:
-      - application/json
-      description: List expenses with pagination scoped to a lease (Admin)
-      parameters:
-      - description: Property ID
-        in: path
-        name: property_id
-        required: true
-        type: string
-      - description: Lease ID
-        in: path
-        name: lease_id
-        required: true
-        type: string
-      - enum:
-        - LEASE
-        - MAINTENANCE
-        in: query
-        name: context_type
-        type: string
-      - in: query
-        name: end_date
-        type: string
-      - collectionFormat: multi
-        example:
-        - a8098c1a-f86e-11da-bd1a-00112444be1e
-        in: query
-        items:
-          type: string
-        name: ids
-        type: array
-      - enum:
-        - asc
-        - desc
-        in: query
-        name: order
-        type: string
-      - in: query
-        name: order_by
-        type: string
-      - in: query
-        minimum: 0
-        name: page
-        type: integer
-      - in: query
-        minimum: 0
-        name: page_size
-        type: integer
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        name: populate
-        type: array
-      - in: query
-        name: query
-        type: string
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        minItems: 1
-        name: search_fields
-        type: array
-      - in: query
-        name: start_date
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Expenses
-          schema:
-            properties:
-              data:
-                properties:
-                  meta:
-                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
-                  rows:
-                    items:
-                      $ref: '#/definitions/transformations.OutputExpense'
-                    type: array
-                type: object
-            type: object
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: List expenses for a lease
-      tags:
-      - Expenses
   /api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/status:active:
     patch:
       consumes:
@@ -13903,63 +14181,6 @@ paths:
       security:
       - BearerAuth: []
       summary: Cancel a lease application (Admin)
-      tags:
-      - TenantApplication
-  /api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id}/invoice:generate:
-    post:
-      consumes:
-      - application/json
-      description: Generate an invoice for a lease application (security deposit and/or
-        initial deposit) (Admin)
-      parameters:
-      - description: Property ID
-        in: path
-        name: property_id
-        required: true
-        type: string
-      - description: lease application ID
-        in: path
-        name: tenant_application_id
-        required: true
-        type: string
-      - description: Generate Invoice Request Body
-        in: body
-        name: body
-        schema:
-          $ref: '#/definitions/handlers.GenerateInvoiceRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Invoice generated successfully
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputInvoice'
-            type: object
-        "400":
-          description: Error occurred when generating invoice
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: lease application not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Generate an invoice for a lease application (Admin)
       tags:
       - TenantApplication
   /api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/bulk:
@@ -16980,6 +17201,83 @@ paths:
       summary: 'Tenant: acknowledge or dispute checklist'
       tags:
       - LeaseChecklist
+  /api/v1/leases/{lease_id}/financial-account:
+    get:
+      description: Read-only. Lets a tenant see what they owe, what they have paid
+        and what is coming. Tenants cannot create charges or issue invoices — the
+        landlord controls issuance, so a tenant pays only what has been issued to
+        them.
+      parameters:
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Financial account summary
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/handlers.accountSummaryResponse'
+            type: object
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "403":
+          description: Lease does not belong to this tenant
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "404":
+          description: Financial account not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+      security:
+      - BearerAuth: []
+      summary: Get the financial account for a lease (tenant)
+      tags:
+      - FinancialAccounts
+  /api/v1/leases/{lease_id}/financial-account/charges:
+    get:
+      description: Read-only breakdown of every obligation with its status.
+      parameters:
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Charges
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/transformations.OutputChargeInstance'
+                type: array
+            type: object
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "403":
+          description: Lease does not belong to this tenant
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "404":
+          description: Financial account not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+      security:
+      - BearerAuth: []
+      summary: List charges on a lease's financial account (tenant)
+      tags:
+      - FinancialAccounts
   /api/v1/leases/{lease_id}/invoices:
     get:
       consumes:
@@ -17637,6 +17935,58 @@ paths:
       summary: Create an offline payment
       tags:
       - Payments
+  /api/v1/properties/{property_id}/tenant-applications/{tenant_application_id}/charges:prepare:
+    post:
+      consumes:
+      - application/json
+      description: Turns the application's agreed terms into a financial account with
+        charge definitions and instances. Replaces invoice:generate — invoices are
+        afterwards composed against these charges, in any combination, before or after
+        approval. The initial deposit becomes the account's rent billing cadence rather
+        than a charge of its own.
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Tenant application ID
+        in: path
+        name: tenant_application_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Charges prepared successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputFinancialAccount'
+            type: object
+        "400":
+          description: Charges already prepared, or the application is missing rent
+            terms, a unit, a move-in date or a stay duration
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Tenant application not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Prepare charges for a tenant application
+      tags:
+      - TenantApplication
   /api/v1/properties/{property_slug}/units/{unit_slug}:
     get:
       consumes:

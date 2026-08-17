@@ -103,7 +103,9 @@ func New(appCtx pkg.AppContext, handlers handlers.Handlers) *chi.Mux {
 		}))
 
 		// Rate limit: max 100 requests per minute per IP.
-		r.Use(httprate.LimitByIP(100, 1*time.Minute))
+		if appCtx.Config.Env != "development" {
+			r.Use(httprate.LimitByIP(100, 1*time.Minute))
+		}
 
 		r.Use(middleware.AllowContentEncoding("deflate", "gzip"))
 		r.Use(middleware.AllowContentType("application/json"))

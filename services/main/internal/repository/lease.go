@@ -22,7 +22,6 @@ type LeaseRepository interface {
 	CountByPropertyIDAndStatus(context context.Context, propertyID string, status string) (int64, error)
 	CountNonBlockingByPropertyID(context context.Context, propertyID string) (int64, error)
 	DeleteNonBlockingByPropertyID(context context.Context, propertyID string) error
-	ListDueForBilling(ctx context.Context) (*[]models.Lease, error)
 	ListForMoveOutReminders(ctx context.Context) (*[]models.Lease, error)
 	ListDueForCompletion(ctx context.Context) (*[]models.Lease, error)
 }
@@ -315,30 +314,6 @@ func (r *leaseRepository) DeleteNonBlockingByPropertyID(ctx context.Context, pro
 			[]string{"Lease.Status.Pending", "Lease.Status.Active"},
 		).
 		Delete(&models.Lease{}).Error
-}
-
-// ListDueForBilling returns active leases with a billing date that has come due.
-//
-// The move_out_date guard is what keeps billing inside the tenancy. A lease
-// whose deposit covers its full term lands next_billing_date exactly on
-// move_out_date, and ListDueForCompletion only picks the lease up the following
-// day (move_out_date < startOfToday) — so without this clause every expiring
-// lease was billed once for a period beginning after the tenant had left.
-func (r *leaseRepository) ListDueForBilling(ctx context.Context) (*[]models.Lease, error) {
-	var leases []models.Lease
-	result := r.DB.WithContext(ctx).
-		Where(
-			"status = ? AND next_billing_date IS NOT NULL AND next_billing_date <= ? "+
-				"AND (move_out_date IS NULL OR next_billing_date < move_out_date)",
-			"Lease.Status.Active", time.Now(),
-		).
-		Preload("Unit.Property").
-		Preload("Tenant.TenantAccount").
-		Find(&leases)
-	if result.Error != nil {
-		return nil, result.Error
-	}
-	return &leases, nil
 }
 
 // ListForMoveOutReminders returns pending or active leases whose MoveOutDate
