@@ -5,8 +5,8 @@
  * a reachable property before the real cases build on top of it, so a broken
  * login shows up here rather than as eleven confusing failures.
  */
-import { expect, test } from '../lib/test'
 import { readRunState } from '../lib/state'
+import { expect, test } from '../lib/test'
 
 test('the saved session lands on the E2E property, already authenticated', async ({
 	page,

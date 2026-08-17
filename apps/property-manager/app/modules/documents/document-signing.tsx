@@ -7,9 +7,9 @@ import { toast } from 'sonner'
 import { useAdminUpdateDocument } from '~/api/documents'
 import { useSignDocumentDirect } from '~/api/signing'
 import { useAdminUpdateTenantApplication } from '~/api/tenant-applications'
-import { QUERY_KEYS } from '~/lib/constants'
 import { SigningView } from '~/components/blocks/signing-view/signing-view'
 import type { SignatureRole } from '~/components/editor/nodes/signature-node'
+import { QUERY_KEYS } from '~/lib/constants'
 import {
 	getSignatureStatuses,
 	injectSignatureIntoState,

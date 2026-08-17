@@ -4175,6 +4175,9 @@ definitions:
       category:
         example: RENT
         type: string
+      charge_instance_id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
       created_at:
         example: "2024-06-01T09:00:00Z"
         type: string
@@ -5146,6 +5149,13 @@ definitions:
       outstanding_amount:
         example: 0
         type: integer
+      rent_terms_locked:
+        description: |-
+          RentTermsLocked is true once a rent charge has been invoiced or settled.
+          The move-in date and the unit can no longer be changed — RederiveRent
+          returns 400 ChargesAlreadyBilled — so the UI should stop offering them.
+        example: false
+        type: boolean
       total_charged:
         example: 1300000
         type: integer

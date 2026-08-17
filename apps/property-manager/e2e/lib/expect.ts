@@ -32,9 +32,16 @@ export interface ChargesSummary {
 /**
  * Reads the charges panel header, e.g.
  * "14 charges · GH₵ 2,600.00 over the term" -> { count: 14, total: 2600 }.
+ *
+ * Both phrasings are accepted on purpose. The lease financials page still
+ * speaks the ledger's vocabulary ("charges"); the redesigned application step
+ * says "payments", because a landlord does not have charges. One helper, two
+ * surfaces — so the cases that read it need no change.
  */
 export function chargesSummary(pageText: string): ChargesSummary {
-	const match = pageText.match(/(\d+)\s+charges?\s*·\s*GH₵\s*([\d,]+\.\d{2})/i)
+	const match = pageText.match(
+		/(\d+)\s+(?:charges?|payments?)\s*·\s*GH₵\s*([\d,]+\.\d{2})/i,
+	)
 	const count = match?.[1]
 	const total = match?.[2]
 	if (!count || !total) {

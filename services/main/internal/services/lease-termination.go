@@ -278,7 +278,6 @@ func (s *leaseTerminationService) Complete(ctx context.Context, input CompleteLe
 	lease.Status = "Lease.Status.Terminated"
 	lease.TerminatedAt = &now
 	lease.TerminatedById = &input.ClientUserID
-	lease.NextBillingDate = nil
 
 	// Copy termination document URL to the lease if set
 	if termination.DocumentUrl != nil {

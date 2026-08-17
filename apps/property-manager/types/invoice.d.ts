@@ -1,6 +1,7 @@
 interface InvoiceLineItem {
 	id: string
 	invoice_id: Nullable<string>
+	charge_instance_id: Nullable<string>
 	label: string
 	category: string
 	quantity: number

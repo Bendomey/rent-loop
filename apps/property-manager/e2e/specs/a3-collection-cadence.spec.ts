@@ -34,26 +34,32 @@ test('the collection plan previews each cadence and the choice reaches the lease
 		`/properties/${s.propertyId}/occupancy/applications/${application.id}/financial`,
 	)
 
+	// The plan is edited in place from the running view now, so the options
+	// are behind "Change how often".
+	await page
+		.getByRole('button', { name: /change how often/i })
+		.click({ timeout: 20_000 })
+
 	// ── each option previews its own schedule ──────────────────────────────
 	await expect(
-		page.getByRole('button', { name: /whole term up front/i }),
+		page.getByRole('button', { name: /the whole term at once/i }),
 	).toContainText(
-		`1 invoice · ${stayDuration} charges · GH₵ ${money(wholeTerm)}`,
+		`1 bill · ${stayDuration} payments · GH₵ ${money(wholeTerm)}`,
 		{
 			timeout: 20_000,
 		},
 	)
 
 	await expect(
-		page.getByRole('button', { name: /every 3 months/i }),
-	).toContainText(`${quarters} invoices · first GH₵ ${money(rent * 3)}`)
+		page.getByRole('button', { name: /every three months/i }),
+	).toContainText(`${quarters} bills · first GH₵ ${money(rent * 3)}`)
 
 	await expect(
-		page.getByRole('button', { name: /every month/i }),
-	).toContainText(`${stayDuration} invoices · first GH₵ ${money(rent)}`)
+		page.getByRole('button', { name: /^every month/i }),
+	).toContainText(`${stayDuration} bills · first GH₵ ${money(rent)}`)
 
 	// ── choosing one sticks to the account, through approval ───────────────
-	await page.getByRole('button', { name: /every 3 months/i }).click()
+	await page.getByRole('button', { name: /every three months/i }).click()
 	await page.waitForLoadState('networkidle')
 
 	const lease = await approveApplication(
@@ -64,9 +70,9 @@ test('the collection plan previews each cadence and the choice reaches the lease
 	)
 
 	await page.goto(`/properties/${s.propertyId}/occupancy/leases/${lease.id}`)
-	await page.getByRole('tab', { name: 'Financials' }).click()
+	await page.getByRole('tab', { name: 'Money' }).click()
 
-	await expect(page.getByText(/every 3 months/i).first()).toBeVisible({
+	await expect(page.getByText(/every three months/i).first()).toBeVisible({
 		timeout: 20_000,
 	})
 })

@@ -251,13 +251,13 @@ func (h *ClientUserHandler) GetClientUserWithPopulate(w http.ResponseWriter, r *
 }
 
 type UpdateClientUserPropertyAssignmentRequest struct {
-	PropertyID string `json:"property_id" validate:"required,uuid4"             example:"a8098c1a-f86e-11da-bd1a-00112444be1e"`
+	PropertyID string `json:"property_id" validate:"required,uuid4"               example:"a8098c1a-f86e-11da-bd1a-00112444be1e"`
 	Role       string `json:"role"        validate:"required,oneof=MANAGER STAFF" example:"MANAGER"`
 }
 
 type UpdateClientUserRequest struct {
-	Role                *string                                     `json:"role"                  validate:"omitempty,oneof=ADMIN STAFF" example:"ADMIN"`
-	PropertyAssignments []UpdateClientUserPropertyAssignmentRequest `json:"property_assignments"  validate:"omitempty,dive"`
+	Role                *string                                     `json:"role"                 validate:"omitempty,oneof=ADMIN STAFF" example:"ADMIN"`
+	PropertyAssignments []UpdateClientUserPropertyAssignmentRequest `json:"property_assignments" validate:"omitempty,dive"`
 }
 
 // UpdateClientUser godoc
@@ -270,7 +270,7 @@ type UpdateClientUserRequest struct {
 //	@Produce		json
 //	@Param			client_id		path		string											true	"Client ID"
 //	@Param			client_user_id	path		string											true	"Client user ID"
-//	@Param			body			body		UpdateClientUserRequest						true	"Update Client User Request Body"
+//	@Param			body			body		UpdateClientUserRequest							true	"Update Client User Request Body"
 //	@Success		200				{object}	object{data=transformations.OutputClientUser}	"Client user updated successfully"
 //	@Failure		400				{object}	lib.HTTPError									"Error occurred when updating client user"
 //	@Failure		401				{object}	string											"Invalid or absent authentication token"

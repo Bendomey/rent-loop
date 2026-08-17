@@ -39,8 +39,13 @@ test('rebuilding the term refreshes the ledger without a reload', async ({
 
 	const financialUrl = `/properties/${s.propertyId}/occupancy/applications/${application.id}/financial`
 
-	// What the ledger says before.
+	// What the ledger says before. Wait for the panel to exist first:
+	// `chargesSummary` throws when it has not rendered, and reading straight
+	// after navigation races the query rather than waiting for it.
 	await page.goto(financialUrl)
+	await expect(page.getByText(/\d+ payments? ·/i).first()).toBeVisible({
+		timeout: 20_000,
+	})
 	const before = chargesSummary(await page.locator('body').innerText())
 	expect(before.count).toBe(stayDuration)
 
@@ -48,9 +53,11 @@ test('rebuilding the term refreshes the ledger without a reload', async ({
 	// The rebuild is triggered beside the ledger it invalidates, so there is no
 	// navigation to mask a stale cache — which is why the move-in step did not
 	// reproduce this: leaving and returning refetches on mount.
+	// The rent is edited in place in the "Changing the rent" card now.
 	const newRent = 750
-	await page.locator('#agreed-rent').fill(String(newRent))
-	await page.getByRole('button', { name: /save and rebuild/i }).click()
+	await page.getByRole('button', { name: /change the rent/i }).click()
+	await page.locator('#change-rent').fill(String(newRent))
+	await page.getByRole('button', { name: /save the new rent/i }).click()
 
 	// The ledger sits on the same screen and must follow, untouched by a reload.
 	await expect

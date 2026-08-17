@@ -111,6 +111,17 @@ export function PropertyTenantApplicationChecklist({
 				<CardFooter className="flex justify-end gap-2 border-t pt-4">
 					{footer}
 				</CardFooter>
+			) : !approved && progress === 100 ? (
+				// The rail is navigation only — approving belongs to the overview, so
+				// a finished rail points there rather than dead-ending.
+				<CardFooter className="border-t pt-4">
+					<Link
+						to={baseUrl}
+						className="text-primary text-sm font-semibold hover:underline"
+					>
+						Ready to approve — go to the overview →
+					</Link>
+				</CardFooter>
 			) : null}
 		</Card>
 	)

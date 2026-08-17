@@ -6,9 +6,10 @@
  * application is built through the API (a2 already covers building one through
  * the UI) so this case tests only the approval.
  */
-import { expect, test } from '../lib/test'
+import { getAccount, getApplicationAccountId } from '../lib/api'
 import { makeApprovableApplication } from '../lib/factory'
 import { readRunState } from '../lib/state'
+import { expect, test } from '../lib/test'
 
 test('approving an application creates a lease and occupies the unit', async ({
 	page,
@@ -24,7 +25,11 @@ test('approving an application creates a lease and occupies the unit', async ({
 		`/properties/${s.propertyId}/occupancy/applications/${application.id}`,
 	)
 
-	const approve = page.getByRole('button', { name: /^approve$/i })
+	// The application's own URL is now the overview, and its lead card carries
+	// the only approve button in the product.
+	const approve = page.getByRole('button', {
+		name: /approve & make the lease/i,
+	})
 	await expect(approve).toBeEnabled({ timeout: 20_000 })
 
 	await approve.click()
@@ -41,8 +46,42 @@ test('approving an application creates a lease and occupies the unit', async ({
 	await expect(confirm).toBeVisible({ timeout: 15_000 })
 	await confirm.getByRole('button', { name: 'Yes, Approve' }).click()
 
+	// The badge flipping is the page's own signal that approval landed. Waiting
+	// on it before reading the API: the read below is immediate, so without
+	// this it races the request the click fired and finds an account that has
+	// not been linked yet.
+	await expect(
+		page.locator('#application-header').getByText('Approved', { exact: true }),
+	).toBeVisible({ timeout: 30_000 })
+
 	// ── the lease now exists ───────────────────────────────────────────────
-	await page.goto(`/properties/${s.propertyId}/occupancy/leases`)
+	// Read from the account rather than scanned for on the leases index: that
+	// list is paginated and searchable only by lease code, so under a full-suite
+	// run the shared E2E property accumulates enough leases to push this one off
+	// page one — the same accumulation the units assertion below already guards
+	// against with search. The account's lease_id is also the more direct claim:
+	// gaining it is what approval is for.
+	const accountId = await getApplicationAccountId(
+		s.token,
+		s.clientId,
+		s.propertyId,
+		application.id,
+	)
+	const { account } = await getAccount(
+		s.token,
+		s.clientId,
+		s.propertyId,
+		accountId,
+	)
+	expect(
+		account.lease_id,
+		'approval should have hung the account off a lease',
+	).toBeTruthy()
+
+	// And the lease it points at is the one for this unit, viewable in the UI.
+	await page.goto(
+		`/properties/${s.propertyId}/occupancy/leases/${account.lease_id}`,
+	)
 	await expect(page.getByText(unit.name).first()).toBeVisible({
 		timeout: 30_000,
 	})

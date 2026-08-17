@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { useComposeInvoice, useCreateCharge } from '~/api/financial-accounts'
 import { Alert, AlertDescription } from '~/components/ui/alert'
 import { Button } from '~/components/ui/button'
+import { Checkbox } from '~/components/ui/checkbox'
 import {
 	Dialog,
 	DialogContent,
@@ -13,7 +14,6 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from '~/components/ui/dialog'
-import { Checkbox } from '~/components/ui/checkbox'
 import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
 import { Spinner } from '~/components/ui/spinner'
@@ -38,6 +38,13 @@ interface AddChargeDialogProps {
 	 */
 	nextIssueOn?: Nullable<Date>
 	onClose: () => void
+	/**
+	 * Fires once the fee exists, with the invoice if one was raised for it.
+	 * Optional because most callers are done at that point — the lease page
+	 * uses it to ask whether the money is already in hand, which is a separate
+	 * question from whether the fee was recorded.
+	 */
+	onAdded?: (charge: ChargeInstance, invoice: Nullable<Invoice>) => void
 }
 
 /** RENT is excluded: rent comes from the term, never added by hand. */
@@ -65,6 +72,7 @@ export function AddChargeDialog({
 	defaultDueDate,
 	nextIssueOn,
 	onClose,
+	onAdded,
 }: AddChargeDialogProps) {
 	const queryClient = useQueryClient()
 	const createCharge = useCreateCharge()
@@ -83,13 +91,17 @@ export function AddChargeDialog({
 		Number.parseFloat(amount.replace(/,/g, '')) || 0,
 	)
 
-	const done = () => {
+	const done = (
+		charge: Nullable<ChargeInstance> = null,
+		invoice: Nullable<Invoice> = null,
+	) => {
 		void queryClient.invalidateQueries({
 			queryKey: [QUERY_KEYS.FINANCIAL_ACCOUNT],
 		})
 		void queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.INVOICES] })
 		setBillNow(false)
 		onClose()
+		if (charge) onAdded?.(charge, invoice)
 	}
 
 	const add = () => {
@@ -110,7 +122,7 @@ export function AddChargeDialog({
 				onSuccess: (charge) => {
 					if (!billNow) {
 						toast.success(`${name.trim()} added.`)
-						done()
+						done(charge)
 						return
 					}
 
@@ -136,13 +148,15 @@ export function AddChargeDialog({
 								toast.success(
 									`${name.trim()} added and billed on ${invoice.code}.`,
 								)
-								done()
+								done(charge, invoice)
 							},
 							onError: () => {
 								toast.warning(
 									`${name.trim()} was added, but the invoice could not be created. Bill it from Pay charges.`,
 								)
-								done()
+								// The fee exists either way, so it is still handed on —
+								// with no invoice, which is the true state.
+								done(charge)
 							},
 						},
 					)

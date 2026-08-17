@@ -1,16 +1,21 @@
 /**
- * C2 — billing a charge issues an invoice and marks the charge Billed.
+ * C2 — a billed charge moves onto its bill and stops being "still to come".
  *
- * Uses the Add-charge dialog's "bill now" branch rather than the charges
- * panel's "Pay charges": that one submits as "Bill and pay", which invoices and
- * settles in a single step and would make this case assert c3's behaviour as
- * well. Here the invoice must come out *unpaid* — billing and paying are
- * separate events in this model, and the charge's invoiced_amount moving while
- * settled_amount stays at zero is the whole point.
+ * Billing and paying are separate events in this model: the charge's
+ * invoiced_amount moves while its settled_amount stays at zero, and the page
+ * has to show that as a bill waiting on the tenant rather than as money
+ * collected.
+ *
+ * The billing itself now happens through the API. The fee dialog lost its
+ * bill-now tick when the flow changed to ask whether the money is already in
+ * hand — answering yes settles as well as bills — so there is no longer a UI
+ * route to a billed-and-unpaid fee. That state is this case's precondition;
+ * what it asserts is still entirely what the page shows.
  */
-import { approveApplication } from '../lib/api'
+import { approveApplication, getApplicationAccountId } from '../lib/api'
 import { chargesSummary } from '../lib/expect'
 import { makeApprovableApplication } from '../lib/factory'
+import { billedFee } from '../lib/money'
 import { readRunState } from '../lib/state'
 import { expect, test } from '../lib/test'
 
@@ -24,9 +29,7 @@ const BILL_TIMEOUT = 45_000
 
 const CHARGE_AMOUNT = 250.0
 
-test('billing a charge issues an unpaid invoice and marks it Billed', async ({
-	page,
-}) => {
+test('a billed charge reads as billed and unpaid', async ({ page }) => {
 	const s = readRunState()
 	const { application } = await makeApprovableApplication(s, 'c2', { seq: 40 })
 	const lease = await approveApplication(
@@ -37,51 +40,54 @@ test('billing a charge issues an unpaid invoice and marks it Billed', async ({
 	)
 
 	await page.goto(`/properties/${s.propertyId}/occupancy/leases/${lease.id}`)
-	await page.getByRole('tab', { name: 'Financials' }).click()
+	await page.getByRole('tab', { name: 'Money' }).click()
 
-	await expect(page.getByRole('button', { name: 'Add charge' })).toBeVisible({
+	await expect(
+		page.getByRole('button', { name: 'Add a fee' }).first(),
+	).toBeVisible({
 		timeout: 20_000,
 	})
 	const before = chargesSummary(await page.locator('body').innerText())
 
-	// ── add the charge, billing it immediately ─────────────────────────────
+	// ── bill a charge ──────────────────────────────────────────────────────
+	// Through the API: the fee dialog lost its bill-now tick, so the page no
+	// longer has a route to a billed-and-unpaid fee. That state is this case's
+	// precondition, not its subject — what it asserts is how the page reads it.
 	const chargeName = `E2E Billed ${s.runId}`
-	await page.getByRole('button', { name: 'Add charge' }).click()
+	const accountId = await getApplicationAccountId(
+		s.token,
+		s.clientId,
+		s.propertyId,
+		application.id,
+	)
+	await billedFee(s, accountId, chargeName, CHARGE_AMOUNT * 100)
 
-	const dialog = page.getByRole('dialog', { name: 'Add a charge' })
-	await expect(dialog).toBeVisible()
-	await dialog.getByRole('button', { name: 'Other', exact: true }).click()
-	await dialog.locator('#charge-name').fill(chargeName)
-	await dialog.locator('#charge-amount').fill(String(CHARGE_AMOUNT))
-	await dialog.locator('#charge-bill-now').click()
-
-	// Ticking bill-now relabels the submit, which is the app's own signal that
-	// the branch changed.
-	await dialog.getByRole('button', { name: 'Add and bill' }).click()
-	await expect(dialog).toBeHidden({ timeout: BILL_TIMEOUT })
+	await page.reload()
+	await page.getByRole('tab', { name: 'Money' }).click()
 
 	// ── the charge is billed, not merely added ─────────────────────────────
-	const row = page
-		.locator('div')
-		.filter({ hasText: chargeName })
-		.filter({ hasText: /billed/i })
-		.last()
-	await expect(row).toBeVisible({ timeout: 20_000 })
-	// "Billed" and "Not yet billed" differ only by that prefix, so assert the
-	// absence explicitly — toContainText('Billed') alone would be satisfied by
-	// neither, but a future badge reword could make it ambiguous.
-	await expect(row).not.toContainText('Not yet billed')
+	// The page shows every item exactly once, inside the bill that claimed it,
+	// so "billed" is now a placement rather than a badge. Waiting on them is
+	// the section for bills that have gone out and are not settled.
+	const bill = page.locator('[data-bill]').filter({ hasText: chargeName })
+	await expect(bill).toBeVisible({ timeout: 20_000 })
+	await expect(page.locator('#waiting-on-them')).toContainText(chargeName)
+
+	// The other half of "exactly once": having been claimed by a bill, it must
+	// have left the unbilled section. Without this the merge could regress to
+	// the old double-counting and the case above would still pass.
+	await expect(page.locator('#still-to-come')).toBeVisible()
+	await expect(
+		page.locator('#still-to-come').getByText(chargeName),
+	).toHaveCount(0)
 
 	// ── an invoice now exists for it, and is unsettled ─────────────────────
-	// Asserted via "outstanding" rather than an Unpaid badge: the dialog's
-	// default due date is today, so the invoice is issued already Overdue. The
-	// badge wording therefore depends on the date, but money still owed does
-	// not.
-	const invoice = page.getByRole('link', { name: new RegExp(chargeName) })
-	await expect(invoice).toContainText(/outstanding/i, { timeout: 20_000 })
-	await expect(invoice).toContainText('250.00')
+	// Asserted via the money still owed rather than a status badge: the
+	// dialog's default due date is today, so the invoice is issued already
+	// overdue and the badge wording depends on the date. What is owed does not.
+	await expect(bill).toContainText('250.00')
 	await expect(
-		page.getByRole('button', { name: 'Record payment' }).first(),
+		bill.getByRole('button', { name: 'Record a payment' }),
 	).toBeVisible()
 
 	// ── and the account total is unchanged: billing moves no money ─────────

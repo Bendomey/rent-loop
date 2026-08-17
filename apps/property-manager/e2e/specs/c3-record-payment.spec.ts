@@ -7,9 +7,14 @@
  * moves. The account total does *not* change — paying settles what was already
  * owed rather than adding to it.
  */
-import { approveApplication, ensurePaymentAccount } from '../lib/api'
+import {
+	approveApplication,
+	ensurePaymentAccount,
+	getApplicationAccountId,
+} from '../lib/api'
 import { amountFor, chargesSummary } from '../lib/expect'
 import { makeApprovableApplication } from '../lib/factory'
+import { billedFee } from '../lib/money'
 import { readRunState } from '../lib/state'
 import { expect, test } from '../lib/test'
 
@@ -38,39 +43,48 @@ test('recording a payment raises collected and lowers outstanding', async ({
 	)
 
 	await page.goto(`/properties/${s.propertyId}/occupancy/leases/${lease.id}`)
-	await page.getByRole('tab', { name: 'Financials' }).click()
-	await expect(page.getByRole('button', { name: 'Add charge' })).toBeVisible({
+	await page.getByRole('tab', { name: 'Money' }).click()
+	await expect(
+		page.getByRole('button', { name: 'Add a fee' }).first(),
+	).toBeVisible({
 		timeout: 20_000,
 	})
 
-	// ── bill a charge so there is an invoice to pay ────────────────────────
+	// ── bill a charge, so there is a bill to pay ───────────────────────────
+	// Through the API: the fee dialog lost its bill-now tick, so the page has
+	// no route to a billed-and-unpaid fee. That is this case's precondition,
+	// not its subject.
 	const chargeName = `E2E Payable ${s.runId}`
-	await page.getByRole('button', { name: 'Add charge' }).click()
-	const addDialog = page.getByRole('dialog', { name: 'Add a charge' })
-	await expect(addDialog).toBeVisible()
-	await addDialog.getByRole('button', { name: 'Other', exact: true }).click()
-	await addDialog.locator('#charge-name').fill(chargeName)
-	await addDialog.locator('#charge-amount').fill(String(CHARGE_AMOUNT))
-	await addDialog.locator('#charge-bill-now').click()
-	await addDialog.getByRole('button', { name: 'Add and bill' }).click()
-	await expect(addDialog).toBeHidden({ timeout: BILL_TIMEOUT })
+	const accountId = await getApplicationAccountId(
+		s.token,
+		s.clientId,
+		s.propertyId,
+		application.id,
+	)
+	await billedFee(s, accountId, chargeName, CHARGE_AMOUNT * 100)
 
+	await page.reload()
+	await page.getByRole('tab', { name: 'Money' }).click()
+	await expect(page.getByText(chargeName).first()).toBeVisible({
+		timeout: 20_000,
+	})
+
+	// Read after billing, so the deltas below isolate the payment: billing
+	// moves no money, but taking the baseline before it would fold the new
+	// charge's arrival into the same comparison.
 	const before = {
 		charges: chargesSummary(await page.locator('body').innerText()),
-		collected: amountFor(
-			await page.locator('body').innerText(),
-			'COLLECTED TO DATE',
-		),
+		collected: amountFor(await page.locator('body').innerText(), 'paid you'),
 		outstanding: amountFor(
 			await page.locator('body').innerText(),
-			'OUTSTANDING',
+			'still owes you',
 		),
 	}
 
 	// ── record the payment ─────────────────────────────────────────────────
-	await page.getByRole('button', { name: 'Record payment' }).first().click()
+	await page.getByRole('button', { name: 'Record a payment' }).first().click()
 
-	const payDialog = page.getByRole('dialog', { name: 'Record a payment' })
+	const payDialog = page.getByRole('dialog', { name: /pay for\?$/i })
 	await expect(payDialog).toBeVisible()
 	await payDialog.locator('#pay-amount').fill(String(CHARGE_AMOUNT))
 
@@ -79,21 +93,19 @@ test('recording a payment raises collected and lowers outstanding', async ({
 	await payDialog.getByRole('combobox').first().click()
 	await page.getByRole('option').first().click()
 
-	// The submit carries the amount, e.g. "Record GH₵ 300.00".
-	await payDialog.getByRole('button', { name: /^Record\s/ }).click()
+	await payDialog.getByRole('button', { name: 'Save this payment' }).click()
 	await expect(payDialog).toBeHidden({ timeout: 20_000 })
 
 	// ── collected up, outstanding down, total unmoved ──────────────────────
 	await expect
 		.poll(
-			async () =>
-				amountFor(await page.locator('body').innerText(), 'COLLECTED TO DATE'),
+			async () => amountFor(await page.locator('body').innerText(), 'paid you'),
 			{ timeout: 20_000 },
 		)
 		.toBeCloseTo(before.collected + CHARGE_AMOUNT, 2)
 
 	const afterText = await page.locator('body').innerText()
-	expect(amountFor(afterText, 'OUTSTANDING')).toBeCloseTo(
+	expect(amountFor(afterText, 'still owes you')).toBeCloseTo(
 		before.outstanding - CHARGE_AMOUNT,
 		2,
 	)

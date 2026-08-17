@@ -6,11 +6,12 @@
  * total. It must *not* create an invoice by itself — billing is a separate
  * decision, which is what "Add charge" means as distinct from "Add and bill".
  */
-import { expect, test } from '../lib/test'
 import { approveApplication } from '../lib/api'
 import { chargesSummary } from '../lib/expect'
 import { makeApprovableApplication } from '../lib/factory'
+import { addFee } from '../lib/money'
 import { readRunState } from '../lib/state'
+import { expect, test } from '../lib/test'
 
 const CHARGE_AMOUNT = 123.45
 
@@ -27,41 +28,28 @@ test('an ad-hoc charge is added unbilled and raises the total', async ({
 	)
 
 	await page.goto(`/properties/${s.propertyId}/occupancy/leases/${lease.id}`)
-	await page.getByRole('tab', { name: 'Financials' }).click()
+	await page.getByRole('tab', { name: 'Money' }).click()
 
-	await expect(page.getByRole('button', { name: 'Add charge' })).toBeVisible({
+	await expect(
+		page.getByRole('button', { name: 'Add a fee' }).first(),
+	).toBeVisible({
 		timeout: 20_000,
 	})
 	const before = chargesSummary(await page.locator('body').innerText())
 
 	// ── add the charge ─────────────────────────────────────────────────────
 	const chargeName = `E2E Utility ${s.runId}`
-	await page.getByRole('button', { name: 'Add charge' }).click()
-
-	const dialog = page.getByRole('dialog', { name: 'Add a charge' })
-	await expect(dialog).toBeVisible()
-
-	// Type must be chosen explicitly: the dialog defaults to "Security deposit"
-	// (both the category and the pre-filled name), so a one-off utility left at
-	// the default is recorded as a refundable deposit. Selecting Other keeps
-	// this case about the charge it claims to add.
-	await dialog.getByRole('button', { name: 'Other', exact: true }).click()
-
-	await dialog.locator('#charge-name').fill(chargeName)
-	await dialog.locator('#charge-amount').fill(String(CHARGE_AMOUNT))
-
-	// "Add charge" adds without billing; "Add and bill" is the other branch and
-	// would make this case assert the opposite of what it is named for.
-	await dialog.getByRole('button', { name: 'Add charge' }).click()
-	await expect(dialog).toBeHidden({ timeout: 20_000 })
+	await addFee(page, chargeName, CHARGE_AMOUNT)
 
 	// ── it is on the ledger, unbilled ──────────────────────────────────────
-	const row = page
-		.locator('div')
-		.filter({ hasText: chargeName })
-		.filter({ hasText: /not yet billed/i })
-		.last()
-	await expect(row).toBeVisible({ timeout: 20_000 })
+	// "Unbilled" is now a place rather than a badge: the page lists every item
+	// exactly once, under the section describing what you would do about it.
+	// Still to come is the section for money no bill has claimed, so landing
+	// there *is* the assertion — and it is a stronger one than a status pill,
+	// which could be right while the item sat in the wrong list.
+	await expect(
+		page.locator('#still-to-come').getByText(chargeName),
+	).toBeVisible({ timeout: 20_000 })
 
 	// ── and the account total moved by exactly the charge ──────────────────
 	const after = chargesSummary(await page.locator('body').innerText())

@@ -18,7 +18,7 @@ import {
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
-import type { loader } from '~/routes/_auth.properties.$propertyId.occupancy.applications.$applicationId.docs'
+import type { loader } from '~/routes/_auth.properties.$propertyId.occupancy.applications.$applicationId._step.docs'
 
 export function PropertyTenantApplicationDocs() {
 	const { documentTemplates } = useLoaderData<typeof loader>()

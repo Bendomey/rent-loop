@@ -1,19 +1,30 @@
 import { useState } from 'react'
-import { useTenantApplicationContext } from '../context'
-import { AgreedRent } from './agreed-rent'
-import { Collect } from './collect'
-import { CollectionPlan } from './collection-plan'
-import { LockedStep } from './locked-step'
+import { useRouteLoaderData } from 'react-router'
+import { StepPageHeader, type StepPill } from '../components/step-page-header'
+import { AddFeeDialog } from './dialogs/add-fee'
+import { RecordPaymentDialog } from './dialogs/record-payment'
+import { RefundDialog } from './dialogs/refund'
+import { OwedHeader } from './live/owed-header'
+import { SideCards } from './live/side-cards'
+import { WhatTheyrePaying } from './live/what-theyre-paying'
 import { MoveInGate } from './move-in-gate'
-import { Ledger } from './schedule/ledger'
-import { SchedulePreview } from './schedule/preview'
-import { SummaryBar } from './summary-bar'
+import { AskBilling } from './setup/ask-billing'
+import { AskFees, type MoveInFee } from './setup/ask-fees'
+import { AskRent } from './setup/ask-rent'
+import { PlainSummary } from './setup/plain-summary'
+import { useStartBilling } from './setup/use-start-billing'
 import { useGetFinancialAccount } from '~/api/financial-accounts'
-import { AddChargeDialog } from '~/components/blocks/financials/add-charge-dialog'
 import { RemoveChargeDialog } from '~/components/blocks/financials/remove-charge-dialog'
+import { Card, CardContent } from '~/components/ui/card'
+import { deriveAccountView } from '~/lib/account-view'
+import { type CollectionChoice, choiceForPolicy } from '~/lib/cadence'
+import { convertCedisToPesewas } from '~/lib/format-amount'
+import { pronounsFor } from '~/lib/pronouns'
+import type { PaymentFrequency } from '~/lib/schedule'
+import { buildSchedule } from '~/lib/schedule'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
-import { useProperty } from '~/providers/property-provider'
+import type { loader } from '~/routes/_auth.properties.$propertyId.occupancy.applications.$applicationId'
 
 export type FinancialMode = 'blocked' | 'setup' | 'live' | 'locked' | 'readonly'
 
@@ -39,11 +50,10 @@ export const resolveMode = (
 	if (!moveInComplete(application)) return 'blocked'
 	if (!application.financial_account || !summary) return 'setup'
 
-	// A billed *rent* charge freezes the terms — RederiveRent returns 400
-	// ChargesAlreadyBilled from that point on. Scoped to rent because only rent
-	// derives from the move-in date and unit; this previously looked at every
-	// charge, which locked rent as soon as a deposit was billed even though the
-	// service would still have allowed the change.
+	// F1 — a billed *rent* charge freezes the terms. Scoped to rent because only
+	// rent derives from the move-in date and unit; this previously looked at
+	// every charge, which locked rent as soon as a deposit was billed even
+	// though the service would still have allowed the change.
 	const billed = summary.charges.some(
 		(charge) =>
 			charge.category === 'RENT' &&
@@ -53,21 +63,26 @@ export const resolveMode = (
 }
 
 export function PropertyTenantApplicationFinancial() {
-	const { tenantApplication } = useTenantApplicationContext()
-	const { clientUserProperty } = useProperty()
+	// This page sits outside the `_step` layout — own header, own rail.
+	const loaderData = useRouteLoaderData<Awaited<ReturnType<typeof loader>>>(
+		'routes/_auth.properties.$propertyId.occupancy.applications.$applicationId',
+	)
+	const application = loaderData?.tenantApplication
+	const clientUserProperty = loaderData?.clientUserProperty
 	const { clientUser } = useClient()
 
 	const clientId = safeString(clientUser?.client_id)
 	const propertyId = safeString(clientUserProperty?.property_id)
-	const accountId = tenantApplication.financial_account?.id ?? null
+	const accountId = application?.financial_account?.id ?? null
+	const baseUrl = `/properties/${propertyId}/occupancy/applications/${application?.id}`
 
-	// Owned here because the ledger toggles it and the query key depends on it.
-	const [showVoided, setShowVoided] = useState(false)
-	const [addOpen, setAddOpen] = useState(false)
+	// Removed fees stay on the record, so they are always fetched — the page
+	// lists them separately rather than hiding them behind a toggle.
+	const showVoided = true
+	const [payOpen, setPayOpen] = useState(false)
+	const [feeOpen, setFeeOpen] = useState(false)
+	const [refundOpen, setRefundOpen] = useState(false)
 	const [removing, setRemoving] = useState<Nullable<ChargeInstance>>(null)
-	// Bumped when "whole term up front" is chosen — section 4 watches it and
-	// selects every outstanding charge.
-	const [collectAll, setCollectAll] = useState(0)
 
 	const { data: summary } = useGetFinancialAccount(
 		clientId,
@@ -76,91 +91,241 @@ export function PropertyTenantApplicationFinancial() {
 		showVoided,
 	)
 
-	const mode = resolveMode(tenantApplication, summary ?? null)
+	// Setup answers.
+	const [rent, setRent] = useState('')
+	const [fees, setFees] = useState<MoveInFee[]>([])
+	const [choice, setChoice] = useState<CollectionChoice>('monthly')
+	const { start, busy } = useStartBilling()
 
-	// The rent the existing RENT charges were derived from. Reading it off the
-	// ledger rather than the application means the rebuild warning compares what
-	// is actually there against what is being typed.
-	const rentCharges = (summary?.charges ?? []).filter(
-		(charge) => charge.category === 'RENT' && !charge.voided_at,
+	const pronouns = pronounsFor(application?.gender)
+	const applicantName = application?.first_name ?? 'the applicant'
+	const unit = application?.desired_unit
+	const currency = safeString(application?.rent_fee_currency || 'GHS')
+	const frequency = (application?.stay_duration_frequency ??
+		unit?.payment_frequency ??
+		'MONTHLY') as PaymentFrequency
+
+	if (!application) {
+		return (
+			<div className="m-5 flex items-center justify-center">
+				<p className="text-muted-foreground text-sm">
+					Lease application not found.
+				</p>
+			</div>
+		)
+	}
+
+	const mode = resolveMode(application, summary ?? null)
+	const readonly = mode === 'readonly'
+	const rentLocked = mode === 'locked' || mode === 'readonly'
+
+	const rentMinor = convertCedisToPesewas(
+		Number.parseFloat(rent.replace(/,/g, '')) || 0,
 	)
-	const accountRent = rentCharges[0]?.amount ?? null
-	const periods = rentCharges.length || (tenantApplication.stay_duration ?? 0)
+	const feeTotal = fees.reduce((sum, fee) => sum + fee.amount, 0)
+	const periods =
+		mode === 'setup' && application.desired_move_in_date
+			? buildSchedule({
+					rent: rentMinor,
+					moveIn: application.desired_move_in_date,
+					stayDuration: application.stay_duration ?? 12,
+					stayFrequency: frequency,
+					paymentFrequency: frequency,
+				})
+			: []
 
-	// Charges have to exist before there is a cadence to choose or money to take
-	// against, so steps 3 and 4 open together with the ledger.
-	const chargesExist =
-		Boolean(summary) && mode !== 'setup' && mode !== 'blocked'
+	const leadDays = summary?.account.auto_issue_days_before ?? 5
+	const view = summary
+		? deriveAccountView(summary, { asAt: new Date(), leadDays })
+		: null
+	const savedChoice = summary
+		? choiceForPolicy(
+				summary.account.rent_billing_cadence,
+				summary.account.rent_billing_interval,
+			)
+		: 'monthly'
+	const ledgerRent =
+		summary?.charges.find(
+			(charge) => charge.category === 'RENT' && !charge.voided_at,
+		)?.amount ?? 0
+
+	const { pill, pillTone } = ((): { pill: string; pillTone: StepPill } => {
+		if (mode === 'blocked')
+			return { pill: 'Waiting on the move-in date', pillTone: 'attention' }
+		if (mode === 'setup') return { pill: 'Step 4 of 5', pillTone: 'step' }
+		if (mode === 'live') return { pill: 'Done', pillTone: 'done' }
+		return { pill: 'Fixed', pillTone: 'fixed' }
+	})()
+
+	const settled = mode === 'live' || rentLocked
 
 	return (
-		<div className="space-y-4">
+		<div className="m-5">
+			<StepPageHeader
+				title="Rent &amp; payments"
+				subtitle={
+					mode === 'blocked'
+						? `We can’t work out the rent dates yet.`
+						: mode === 'setup'
+							? `Decide what ${applicantName} pays and how often they’re billed. Nothing is sent to them yet.`
+							: `${applicantName}’s bills go out on their own from here.`
+				}
+				pill={pill}
+				pillTone={pillTone}
+				backHref={baseUrl}
+				nextHref={settled ? `${baseUrl}/docs` : undefined}
+				nextLabel={settled ? 'Next: lease papers' : undefined}
+			/>
+
 			{mode === 'blocked' ? (
 				<MoveInGate
 					propertyId={propertyId}
-					applicationId={tenantApplication.id}
-				/>
-			) : null}
-
-			{summary ? (
-				<SummaryBar summary={summary} readonly={mode === 'readonly'} />
-			) : null}
-
-			{mode === 'blocked' ? (
-				<LockedStep
-					step={1}
-					title="Agreed rent"
-					hint="Needs the move-in date and stay duration. Those decide how many rent charges exist."
-				/>
-			) : (
-				<AgreedRent
-					mode={mode}
-					application={tenantApplication}
-					clientId={clientId}
-					propertyId={propertyId}
-					accountRent={accountRent}
-					periods={periods}
-				/>
-			)}
-
-			{mode === 'blocked' ? (
-				<LockedStep
-					step={2}
-					title="Charges"
-					hint="Set the move-in details and the agreed rent, and the charges appear here."
+					applicationId={application.id}
+					applicantName={applicantName}
+					pronouns={pronouns}
 				/>
 			) : null}
 
 			{mode === 'setup' ? (
-				<SchedulePreview
-					application={tenantApplication}
-					clientId={clientId}
-					propertyId={propertyId}
-				/>
+				<div className="grid grid-cols-12 gap-6">
+					<div className="col-span-12 lg:col-span-8">
+						<Card className="shadow-none">
+							<CardContent>
+								<AskRent
+									value={rent}
+									onChange={setRent}
+									unitRent={unit?.rent_fee ?? 0}
+									unitName={unit?.name ?? 'The unit'}
+									currency={currency}
+									applicantName={applicantName}
+									frequency={frequency}
+								/>
+								<AskFees
+									fees={fees}
+									onChange={setFees}
+									rentMinor={rentMinor}
+									currency={currency}
+									applicantName={applicantName}
+									pronouns={pronouns}
+									dim={!rentMinor}
+								/>
+								<AskBilling
+									value={choice}
+									onChange={setChoice}
+									rentMinor={rentMinor}
+									feeTotal={feeTotal}
+									periods={application.stay_duration ?? 12}
+									currency={currency}
+									frequency={frequency}
+									applicantName={applicantName}
+									dim={!rentMinor}
+								/>
+							</CardContent>
+						</Card>
+					</div>
+
+					<div className="col-span-12 lg:col-span-4">
+						<PlainSummary
+							rentMinor={rentMinor}
+							feeTotal={feeTotal}
+							periods={periods}
+							choice={choice}
+							currency={currency}
+							frequency={frequency}
+							applicantName={applicantName}
+							pronouns={pronouns}
+							leadDays={leadDays}
+							busy={busy}
+							onStart={() =>
+								void start({
+									clientId,
+									propertyId,
+									applicationId: application.id,
+									rentMinor,
+									fees,
+									choice,
+									leadDays,
+									currency,
+									dueDate: new Date(
+										application.desired_move_in_date as unknown as string,
+									).toISOString(),
+								})
+							}
+						/>
+					</div>
+				</div>
 			) : null}
 
-			{chargesExist && summary ? (
-				<Ledger
-					summary={summary}
-					readonly={mode === 'readonly'}
-					showVoided={showVoided}
-					onToggleVoided={() => setShowVoided(!showVoided)}
-					onAdd={() => setAddOpen(true)}
-					onRemove={setRemoving}
-				/>
+			{summary && view && mode !== 'setup' && mode !== 'blocked' ? (
+				<div className="grid grid-cols-12 gap-6">
+					<div className="col-span-12 flex flex-col gap-4 lg:col-span-8">
+						<OwedHeader
+							view={view}
+							currency={summary.account.currency}
+							applicantName={applicantName}
+							pronouns={pronouns}
+							readonly={readonly}
+							autoIssues={savedChoice !== 'manual'}
+							onRecordPayment={() => setPayOpen(true)}
+							onAddFee={() => setFeeOpen(true)}
+						/>
+						<WhatTheyrePaying
+							charges={summary.charges}
+							currency={summary.account.currency}
+							readonly={readonly}
+							onRemove={setRemoving}
+						/>
+					</div>
+
+					<div className="col-span-12 lg:col-span-4">
+						<SideCards
+							choice={savedChoice}
+							leadDays={leadDays}
+							rentMinor={ledgerRent}
+							currency={summary.account.currency}
+							frequency={frequency}
+							applicantName={applicantName}
+							rentLocked={rentLocked}
+							readonly={readonly}
+							clientId={clientId}
+							propertyId={propertyId}
+							accountId={summary.account.id}
+							applicationId={application.id}
+							charges={summary.charges}
+						/>
+					</div>
+				</div>
 			) : null}
 
 			{summary ? (
 				<>
-					<AddChargeDialog
-						open={addOpen}
+					<RecordPaymentDialog
+						open={payOpen}
+						onOpenChange={setPayOpen}
+						summary={summary}
+						clientId={clientId}
+						propertyId={propertyId}
+						applicantName={applicantName}
+					/>
+					<AddFeeDialog
+						open={feeOpen}
+						onOpenChange={setFeeOpen}
 						accountId={summary.account.id}
 						clientId={clientId}
 						propertyId={propertyId}
 						currency={summary.account.currency}
 						defaultDueDate={
-							tenantApplication.desired_move_in_date as unknown as string
+							application.desired_move_in_date as unknown as string
 						}
-						onClose={() => setAddOpen(false)}
+						applicantName={applicantName}
+					/>
+					<RefundDialog
+						open={refundOpen}
+						onOpenChange={setRefundOpen}
+						summary={summary}
+						clientId={clientId}
+						propertyId={propertyId}
+						applicantName={applicantName}
 					/>
 					<RemoveChargeDialog
 						charge={removing}
@@ -171,38 +336,6 @@ export function PropertyTenantApplicationFinancial() {
 					/>
 				</>
 			) : null}
-
-			{chargesExist && summary ? (
-				<CollectionPlan
-					summary={summary}
-					clientId={clientId}
-					propertyId={propertyId}
-					readonly={mode === 'readonly'}
-					onCollectEverything={() => setCollectAll(Date.now())}
-				/>
-			) : (
-				<LockedStep
-					step={3}
-					title="Rent collection"
-					hint="Choose how often rent is invoiced once the charges exist."
-				/>
-			)}
-
-			{chargesExist && summary ? (
-				<Collect
-					summary={summary}
-					clientId={clientId}
-					propertyId={propertyId}
-					readonly={mode === 'readonly'}
-					collectAllSignal={collectAll}
-				/>
-			) : (
-				<LockedStep
-					step={4}
-					title="Collect a payment"
-					hint="Record the move-in money here once the charges exist — deposit, first rent, agency fee."
-				/>
-			)}
 		</div>
 	)
 }

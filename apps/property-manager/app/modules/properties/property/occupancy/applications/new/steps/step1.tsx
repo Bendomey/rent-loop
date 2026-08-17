@@ -2,9 +2,11 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
+import { isValidPhoneNumber } from 'react-phone-number-input'
 import { z } from 'zod'
 import { useCreatePropertyTenantApplicationContext } from '../context'
 import { DatePickerInput } from '~/components/date-picker-input'
+import { InternationalPhoneInput } from '~/components/international-phone'
 import { Button } from '~/components/ui/button'
 import { FieldGroup } from '~/components/ui/field'
 import {
@@ -29,8 +31,6 @@ import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
 import { useUploadObject } from '~/hooks/use-upload-object'
 import { localizedDayjs } from '~/lib/date'
 import { safeString } from '~/lib/strings'
-import { isValidPhoneNumber } from 'react-phone-number-input'
-import { InternationalPhoneInput } from '~/components/international-phone'
 
 const ValidationSchema = z.object({
 	on_boarding_method: z.enum(['SELF', 'ADMIN'], {

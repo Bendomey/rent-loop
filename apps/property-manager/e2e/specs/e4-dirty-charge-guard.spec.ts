@@ -77,12 +77,10 @@ test('e4 · a billed deposit does not freeze the move-in date', async ({
 	await page.goto(
 		`/properties/${s.propertyId}/occupancy/applications/${application.id}/financial`,
 	)
-	await expect(page.getByText(/you state it here/i)).toBeVisible({
+	await expect(page.getByText(/you can still change it/i)).toBeVisible({
 		timeout: 20_000,
 	})
-	await expect(
-		page.getByText(/rent charges have already been billed/i),
-	).toHaveCount(0)
+	await expect(page.getByText(/rent is fixed now/i)).toHaveCount(0)
 })
 
 test('e5 · a billed rent charge does freeze the move-in date', async ({
@@ -125,7 +123,7 @@ test('e5 · a billed rent charge does freeze the move-in date', async ({
 	await page.goto(
 		`/properties/${s.propertyId}/occupancy/applications/${application.id}/financial`,
 	)
-	await expect(
-		page.getByText(/rent charges have already been billed/i),
-	).toBeVisible({ timeout: BILL_TIMEOUT })
+	await expect(page.getByText(/rent is fixed now/i)).toBeVisible({
+		timeout: BILL_TIMEOUT,
+	})
 })

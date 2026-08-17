@@ -59,10 +59,9 @@ type Lease struct {
 
 	TerminationAgreementDocumentUrl *string
 
-	ActivatedAt     *time.Time
-	ActivatedById   *string
-	ActivatedBy     *ClientUser
-	NextBillingDate *time.Time
+	ActivatedAt   *time.Time
+	ActivatedById *string
+	ActivatedBy   *ClientUser
 
 	CancelledAt   *time.Time
 	CancelledById *string

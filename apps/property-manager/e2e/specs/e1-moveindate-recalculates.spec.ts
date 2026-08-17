@@ -70,7 +70,7 @@ test('e1 · moving the move-in date shifts the rent schedule', async ({
 	await page.goto(
 		`/properties/${s.propertyId}/occupancy/applications/${application.id}/financial`,
 	)
-	await expect(page.getByText(`${stayDuration} charges`).first()).toBeVisible({
+	await expect(page.getByText(`${stayDuration} payments`).first()).toBeVisible({
 		timeout: 20_000,
 	})
 })

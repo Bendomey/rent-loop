@@ -2,28 +2,16 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowRight, Check, Home, Link as LinkIcon, Shield } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { isValidPhoneNumber } from 'react-phone-number-input'
 import { Link, useLoaderData } from 'react-router'
 import { z } from 'zod'
 import { useCreatePropertyTenantApplicationContext } from '../context'
 import InviteTenantModal from '../invite'
+import { useGetTenantByPhone } from '~/api/tenants'
+import { InternationalPhoneInput } from '~/components/international-phone'
 import { UnitSelect } from '~/components/SingleSelect/unit-select'
 import { Alert, AlertDescription } from '~/components/ui/alert'
 import { Button } from '~/components/ui/button'
-import {
-	Item,
-	ItemContent,
-	ItemDescription,
-	ItemGroup,
-} from '~/components/ui/item'
-import { Label } from '~/components/ui/label'
-import {
-	TypographyH2,
-	TypographyMuted,
-	TypographySmall,
-} from '~/components/ui/typography'
-import { safeString } from '~/lib/strings'
-import { cn } from '~/lib/utils'
-import type { loader } from '~/routes/_auth.properties.$propertyId.settings.billing'
 import {
 	Form,
 	FormControl,
@@ -33,10 +21,22 @@ import {
 	FormLabel,
 	FormMessage,
 } from '~/components/ui/form'
-import { InternationalPhoneInput } from '~/components/international-phone'
-import { isValidPhoneNumber } from 'react-phone-number-input'
-import { useGetTenantByPhone } from '~/api/tenants'
+import {
+	Item,
+	ItemContent,
+	ItemDescription,
+	ItemGroup,
+} from '~/components/ui/item'
+import { Label } from '~/components/ui/label'
 import { Spinner } from '~/components/ui/spinner'
+import {
+	TypographyH2,
+	TypographyMuted,
+	TypographySmall,
+} from '~/components/ui/typography'
+import { safeString } from '~/lib/strings'
+import { cn } from '~/lib/utils'
+import type { loader } from '~/routes/_auth.properties.$propertyId.settings.billing'
 
 const ValidationSchema = z
 	.object({

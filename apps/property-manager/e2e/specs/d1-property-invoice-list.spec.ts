@@ -9,8 +9,14 @@
  * Both invoices are created by this run and looked up by their own codes, so
  * the assertions never depend on what else the property holds.
  */
-import { approveApplication, listLeaseInvoices, voidInvoice } from '../lib/api'
+import {
+	approveApplication,
+	listLeaseInvoices,
+	voidInvoice,
+	getApplicationAccountId,
+} from '../lib/api'
 import { makeApprovableApplication } from '../lib/factory'
+import { billedFee } from '../lib/money'
 import { readRunState } from '../lib/state'
 import { expect, test } from '../lib/test'
 
@@ -29,25 +35,28 @@ test('the property invoice list shows issued invoices and hides voided ones', as
 	)
 
 	await page.goto(`/properties/${s.propertyId}/occupancy/leases/${lease.id}`)
-	await page.getByRole('tab', { name: 'Financials' }).click()
-	await expect(page.getByRole('button', { name: 'Add charge' })).toBeVisible({
+	await page.getByRole('tab', { name: 'Money' }).click()
+	await expect(
+		page.getByRole('button', { name: 'Add a fee' }).first(),
+	).toBeVisible({
 		timeout: 20_000,
 	})
 
 	// ── bill two charges ───────────────────────────────────────────────────
+	// Through the API: the fee dialog lost its bill-now tick, so the page has
+	// no route to a billed-and-unpaid fee. These two bills are the fixture this
+	// case needs; what it asserts is the property invoice list built from them.
+	const accountId = await getApplicationAccountId(
+		s.token,
+		s.clientId,
+		s.propertyId,
+		application.id,
+	)
 	for (const [label, amount] of [
 		['Keeper', 90],
 		['Doomed', 60],
 	] as const) {
-		await page.getByRole('button', { name: 'Add charge' }).click()
-		const dialog = page.getByRole('dialog', { name: 'Add a charge' })
-		await expect(dialog).toBeVisible()
-		await dialog.getByRole('button', { name: 'Other', exact: true }).click()
-		await dialog.locator('#charge-name').fill(`E2E ${label} ${s.runId}`)
-		await dialog.locator('#charge-amount').fill(String(amount))
-		await dialog.locator('#charge-bill-now').click()
-		await dialog.getByRole('button', { name: 'Add and bill' }).click()
-		await expect(dialog).toBeHidden({ timeout: BILL_TIMEOUT })
+		await billedFee(s, accountId, `E2E ${label} ${s.runId}`, amount * 100)
 	}
 
 	// Two invoices, one of which is about to be voided. Ordering from the API is

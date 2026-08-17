@@ -33,24 +33,27 @@ test('changing the unit keeps the agreed rent by default', async ({ page }) => {
 	)
 
 	// ── change the unit, accepting whatever rent the modal defaults to ─────
+	// The picker is on the page now — there is no Change Unit modal.
 	await page.goto(
-		`/properties/${s.propertyId}/occupancy/applications/${application.id}`,
+		`/properties/${s.propertyId}/occupancy/applications/${application.id}/unit`,
 	)
-	await page.getByRole('button', { name: 'Change', exact: true }).click()
+	await page.getByRole('button', { name: /pick a different unit/i }).click()
 
-	const modal = page.getByRole('alertdialog', { name: 'Change Unit' })
-	await expect(modal).toBeVisible({ timeout: 20_000 })
-	await modal.getByText(dearer.name).click()
-	await modal.getByRole('button', { name: 'Save', exact: true }).click()
-	await expect(modal).toBeHidden({ timeout: SAVE_TIMEOUT })
+	await page.locator(`[data-unit-id="${dearer.id}"]`).click()
+	await page.locator('#confirm-unit').click()
+	await expect(page.locator('#confirm-unit')).toBeHidden({
+		timeout: SAVE_TIMEOUT,
+	})
 
 	// ── the lease is still priced at what was agreed ───────────────────────
 	await page.goto(
 		`/properties/${s.propertyId}/occupancy/applications/${application.id}/financial`,
 	)
-	await expect(page.locator('#agreed-rent')).toHaveValue(String(agreedRent), {
-		timeout: 20_000,
-	})
+	// The agreed figure is edited in place in the "Changing the rent" card.
+	await page
+		.getByRole('button', { name: /change the rent/i })
+		.click({ timeout: 20_000 })
+	await expect(page.locator('#change-rent')).toHaveValue(String(agreedRent))
 
 	// And the rebuilt schedule uses that figure, not the new unit's.
 	await expect

@@ -54,10 +54,11 @@ test('a shared unit with a free bed shows no availability warning', async ({
 	)
 
 	// Wait for the step to render before asserting an absence — otherwise the
-	// assertion passes on an empty page. Anchored on the label text rather than
-	// getByLabel: the date control is a popover button, not a labelled input.
+	// assertion passes on an empty page. Anchored on the first question's
+	// heading: the duration stepper now lives behind "Something else", and the
+	// date control is a popover button rather than a labelled input.
 	await expect(
-		page.getByRole('button', { name: 'Shorten the term' }),
+		page.getByRole('heading', { name: /get the keys/i }),
 	).toBeVisible({ timeout: 20_000 })
 
 	// The warning is driven by a leases query, so waiting only for the step to
@@ -65,8 +66,13 @@ test('a shared unit with a free bed shows no availability warning', async ({
 	// arrived — which passes for the wrong reason.
 	await page.waitForLoadState('networkidle')
 
+	// The phrasing moved with the redesign: the constraint is now part of the
+	// question ("Ama is in this unit until …") rather than an error after it.
+	// This string must match `ask-date.tsx` — a negative assertion against copy
+	// that no longer exists passes for the wrong reason and stops testing
+	// anything.
 	await expect(
-		page.getByText(/isn't free until/i),
+		page.getByText(/is in this unit until/i),
 		'a unit with a spare bed should not be reported as occupied',
 	).toHaveCount(0)
 })
