@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { useClientMutation } from './use-client-mutation'
@@ -21,13 +22,12 @@ import {
 	FormLabel,
 	FormMessage,
 } from '~/components/ui/form'
+import { ImageUpload } from '~/components/ui/image-upload'
 import { Input } from '~/components/ui/input'
 import { Spinner } from '~/components/ui/spinner'
 import { Textarea } from '~/components/ui/textarea'
-import { safeString } from '~/lib/strings'
 import { useUploadObject } from '~/hooks/use-upload-object'
-import { ImageUpload } from '~/components/ui/image-upload'
-import { useEffect } from 'react'
+import { safeString } from '~/lib/strings'
 
 const ValidationSchema = z.object({
 	description: z.string().max(500, 'Max 500 characters').optional(),
@@ -90,7 +90,6 @@ export function EditCompanyDetailsDialog({
 				shouldValidate: true,
 			})
 		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [objectUrl, setValue])
 
 	const onSubmit = (data: FormSchema) => {

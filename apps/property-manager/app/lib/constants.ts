@@ -32,6 +32,7 @@ export const QUERY_KEYS = {
 	ANNOUNCEMENTS: 'announcements',
 	LEASE_CHECKLISTS: 'lease-checklists',
 	EXPENSES: 'expenses',
+	FINANCIAL_ACCOUNT: 'financial-account',
 	AGREEMENTS: 'agreements',
 	BOOKINGS: 'bookings',
 	DATE_BLOCKS: 'date-blocks',

@@ -20,7 +20,7 @@ type FinancialAccount struct {
 	BaseModelSoftDelete
 	Code string `gorm:"not null;uniqueIndex;"` // FA-YYMM-XXXXXX
 
-	TenantApplicationID string `gorm:"not null;uniqueIndex;"`
+	TenantApplicationID string `gorm:"not null;index;"`
 	TenantApplication   TenantApplication
 
 	LeaseID *string `gorm:"uniqueIndex;"`
@@ -75,4 +75,8 @@ type TenantApplicationFinancials struct {
 	AvailableCredit   int64
 	ChargeCount       int64
 	InvoiceCount      int64
+	// RentTermsLocked mirrors the service guard: true once a rent charge has
+	// been invoiced or settled, at which point move-in date and unit changes
+	// are refused.
+	RentTermsLocked bool
 }

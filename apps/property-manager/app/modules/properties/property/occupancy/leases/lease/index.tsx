@@ -9,7 +9,9 @@ import { LeaseAgreementDocumentSetup } from './components/lease-agreement-docume
 import { LeaseHeader } from './components/lease-header'
 import { LeaseSummaryCard } from './components/lease-summary-card'
 import { StartLeaseDialog } from './components/start-lease-dialog'
-import { LeaseExpensesTab } from './expenses-tab'
+import { LeaseFinancialsTab } from './financials'
+import { overdueTotal } from './financials/account'
+import { useGetInvoices } from '~/api/invoices'
 import { useHasPropertyPermissions } from '~/components/permissions/use-has-role'
 import { Avatar, AvatarFallback } from '~/components/ui/avatar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
@@ -21,8 +23,10 @@ import {
 	getPaymentFrequencyLabel,
 	getPaymentFrequencyPeriodLabel,
 } from '~/lib/properties.utils'
-import { getInitials, toFirstUpperCase } from '~/lib/strings'
+import { getInitials, safeString, toFirstUpperCase } from '~/lib/strings'
 import { LEASE_DETAIL_TOUR_STEPS, TOUR_KEYS } from '~/lib/tours'
+import { cn } from '~/lib/utils'
+import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 import type { loader } from '~/routes/_auth.properties.$propertyId.occupancy.leases.$leaseId'
 
@@ -31,7 +35,15 @@ export function LeaseDetailModule() {
 		useLoaderData<typeof loader>()
 	const [searchParams] = useSearchParams()
 	const initialTab = searchParams.get('tab') ?? 'details'
+	// Controlled rather than defaultValue, because the layout depends on it.
+	// Money is the one tab that carries its own full-width listing and its own
+	// rail; squeezing it into two thirds of the page to sit beside the summary
+	// card left it cramped and repeating itself. Every other tab keeps the
+	// summary for context.
+	const [tab, setTab] = useState(initialTab)
+	const showSummary = tab !== 'financials'
 	const { clientUserProperty: ctxProp } = useProperty()
+	const { clientUser } = useClient()
 	const { hasPermissions: managerPermission } = useHasPropertyPermissions({
 		roles: ['MANAGER'],
 	})
@@ -47,6 +59,22 @@ export function LeaseDetailModule() {
 
 	const propertyId =
 		clientUserProperty?.property_id ?? ctxProp?.property_id ?? ''
+	const clientId = safeString(clientUser?.client_id)
+
+	// The tab carries a dot while anything is overdue, so the badge is read off
+	// the same invoice list the tab renders rather than a second source.
+	const accountId = lease?.financial_account?.id ?? null
+	const { data: invoicePage } = useGetInvoices(clientId, propertyId, {
+		pagination: { page: 1, per: 200 },
+		filters: { financial_account_id: accountId ?? undefined },
+		// Payments is not optional: the balance on every row is total_amount less
+		// the SUCCESSFUL payments, so without it a part-paid invoice reads as
+		// wholly unpaid and the overdue figure is overstated.
+		populate: ['LineItems', 'Payments'],
+	})
+	const overdue = overdueTotal(
+		(invoicePage?.rows ?? []).filter((invoice) => invoice.status !== 'VOID'),
+	)
 
 	if (!lease) {
 		return (
@@ -86,26 +114,47 @@ export function LeaseDetailModule() {
 				</div>
 
 				<div className="m-5 grid grid-cols-12 gap-6">
-					{/* Sidebar */}
-					<div id="lease-sidebar" className="col-span-12 lg:col-span-4">
-						<LeaseSummaryCard
-							lease={lease}
-							propertyId={propertyId}
-							tenant={tenant}
-							unit={unit}
-							application={application}
-						/>
-					</div>
+					{/* Sidebar — everywhere but Money, which needs the full width. */}
+					{showSummary ? (
+						<div id="lease-sidebar" className="col-span-12 lg:col-span-4">
+							<LeaseSummaryCard
+								lease={lease}
+								propertyId={propertyId}
+								tenant={tenant}
+								unit={unit}
+								application={application}
+							/>
+						</div>
+					) : null}
 
 					{/* Main Content */}
-					<div className="col-span-12 lg:col-span-8">
-						<div className="overflow-x-auto pb-1">
-							<Tabs defaultValue={initialTab}>
-								<TabsList id="lease-tabs">
+					{/* min-w-0: a grid item defaults to min-width:auto, so without this
+					    the column grows to fit the tab strip and the whole page scrolls
+					    sideways instead of the strip scrolling inside it. */}
+					<div
+						className={cn(
+							'col-span-12 min-w-0',
+							showSummary ? 'lg:col-span-8' : '',
+						)}
+					>
+						<div>
+							<Tabs value={tab} onValueChange={setTab}>
+								<TabsList
+									id="lease-tabs"
+									className="max-w-full justify-start overflow-x-auto"
+								>
 									<TabsTrigger value="details">Lease Details</TabsTrigger>
 									<TabsTrigger value="tenant">Tenant Profile</TabsTrigger>
 									<TabsTrigger value="documents">Documents</TabsTrigger>
-									<TabsTrigger value="expenses">Expenses</TabsTrigger>
+									<TabsTrigger value="financials">
+										Money
+										{overdue > 0 ? (
+											<span
+												aria-label="Overdue"
+												className="bg-primary size-1.5 rounded-full"
+											/>
+										) : null}
+									</TabsTrigger>
 								</TabsList>
 
 								{/* Details Tab */}
@@ -192,10 +241,14 @@ export function LeaseDetailModule() {
 											<div className="grid grid-cols-2 gap-4">
 												<DetailField
 													label="Rent Fee"
-													value={formatAmount(
-														convertPesewasToCedis(application.rent_fee),
-														application.rent_fee_currency,
-													)}
+													value={
+														application.rent_fee == null
+															? '-'
+															: formatAmount(
+																	convertPesewasToCedis(application.rent_fee),
+																	application.rent_fee_currency,
+																)
+													}
 												/>
 												{application.initial_deposit_fee != null && (
 													<DetailField
@@ -230,15 +283,13 @@ export function LeaseDetailModule() {
 													}
 												/>
 											</div>
-											{application.application_payment_invoice && (
+											{application.financial_account && (
 												<DocumentRow
 													icon={<FileText className="size-[18px]" />}
 													tone="blue"
-													title="Invoice"
-													subtitle={
-														application.application_payment_invoice.code
-													}
-													to={`/properties/${propertyId}/financials/invoices/${application.application_payment_invoice.id}`}
+													title="Financial account"
+													subtitle={`${application.financial_account.code} · ${application.financial_account.invoice_count} ${application.financial_account.invoice_count === 1 ? 'invoice' : 'invoices'}`}
+													to={`/properties/${propertyId}/financials/invoices`}
 													actionLabel="Open"
 												/>
 											)}
@@ -477,14 +528,13 @@ export function LeaseDetailModule() {
 									)}
 								</TabsContent>
 
-								{/* Expenses Tab */}
-								<TabsContent value="expenses" className="mt-4">
-									<DetailPanel>
-										<LeaseExpensesTab
-											leaseId={lease.id}
-											propertyId={propertyId}
-										/>
-									</DetailPanel>
+								{/* Financials Tab */}
+								<TabsContent value="financials" className="mt-4">
+									<LeaseFinancialsTab
+										lease={lease}
+										clientId={clientId}
+										propertyId={propertyId}
+									/>
 								</TabsContent>
 							</Tabs>
 						</div>

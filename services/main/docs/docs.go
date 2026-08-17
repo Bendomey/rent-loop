@@ -3571,6 +3571,11 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "type": "string",
+                        "name": "financial_account_id",
+                        "in": "query"
+                    },
+                    {
                         "type": "array",
                         "items": {
                             "type": "string"
@@ -7053,6 +7058,12 @@ const docTemplate = `{
                         "name": "account_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Include voided charges in the list. Totals are unaffected.",
+                        "name": "include_voided",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -7187,6 +7198,12 @@ const docTemplate = `{
                         "name": "account_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Include voided charges in the list. Totals are unaffected.",
+                        "name": "include_voided",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -7503,6 +7520,11 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "financial_account_id",
                         "in": "query"
                     },
                     {
@@ -17237,6 +17259,67 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/dev/jobs/invoice-issuance": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Runs the same sweep the ` + "`" + `0 6 * * *` + "`" + ` cron runs, optionally at a supplied instant. Registered only when the server's environment is not production. Exists so end-to-end scenarios can bill a full lease term without waiting twelve months or rewriting due dates.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dev"
+                ],
+                "summary": "Run the invoice issuance sweep (non-production only)",
+                "parameters": [
+                    {
+                        "description": "Optional instant to run the sweep at",
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.RunInvoiceIssuanceBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Sweep completed",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/handlers.RunInvoiceIssuanceResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "as_of is not a valid RFC3339 timestamp",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/documents/{document_id}": {
             "patch": {
                 "security": [
@@ -18120,6 +18203,12 @@ const docTemplate = `{
                         "name": "lease_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Include voided charges in the list. Totals are unaffected.",
+                        "name": "include_voided",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -18177,6 +18266,12 @@ const docTemplate = `{
                         "name": "lease_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Include voided charges in the list. Totals are unaffected.",
+                        "name": "include_voided",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -20852,15 +20947,15 @@ const docTemplate = `{
                     "enum": [
                         "RENT",
                         "SECURITY_DEPOSIT",
-                        "INITIAL_DEPOSIT",
+                        "AGENCY_FEE",
+                        "VAT",
+                        "UTILITY",
+                        "DAMAGE_CHARGE",
+                        "EARLY_TERMINATION_FEE",
+                        "OTHER",
                         "MAINTENANCE_FEE",
                         "SAAS_FEE",
-                        "BOOKING_FEE",
-                        "EXPENSE",
-                        "DEPOSIT_REFUND",
-                        "EARLY_TERMINATION_FEE",
-                        "DAMAGE_CHARGE",
-                        "RENT_REFUND"
+                        "BOOKING_FEE"
                     ],
                     "example": "OTHER"
                 },
@@ -22964,6 +23059,37 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.RunInvoiceIssuanceBody": {
+            "type": "object",
+            "properties": {
+                "as_of": {
+                    "description": "AsOf is the instant the sweep should believe it is running at. Omit it\nfor the wall clock. Twelve months of billing can therefore be exercised\nin twelve calls without touching any due date.",
+                    "type": "string",
+                    "example": "2027-03-03T00:00:00Z"
+                },
+                "financial_account_id": {
+                    "description": "FinancialAccountID restricts the sweep to a single account. Omit it and\nevery billable account is swept, exactly as the cron does. Scenarios set\nit so that exercising issuance does not advance unrelated ledgers.",
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.RunInvoiceIssuanceResponse": {
+            "type": "object",
+            "properties": {
+                "as_of": {
+                    "type": "string",
+                    "example": "2027-03-03T00:00:00Z"
+                },
+                "failed": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "issued": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
         "handlers.ScheduleAnnouncementRequest": {
             "type": "object",
             "required": [
@@ -23453,15 +23579,15 @@ const docTemplate = `{
                     "enum": [
                         "RENT",
                         "SECURITY_DEPOSIT",
-                        "INITIAL_DEPOSIT",
+                        "AGENCY_FEE",
+                        "VAT",
+                        "UTILITY",
+                        "DAMAGE_CHARGE",
+                        "EARLY_TERMINATION_FEE",
+                        "OTHER",
                         "MAINTENANCE_FEE",
                         "SAAS_FEE",
-                        "BOOKING_FEE",
-                        "EXPENSE",
-                        "DEPOSIT_REFUND",
-                        "EARLY_TERMINATION_FEE",
-                        "DAMAGE_CHARGE",
-                        "RENT_REFUND"
+                        "BOOKING_FEE"
                     ],
                     "example": "OTHER"
                 },
@@ -25422,9 +25548,6 @@ const docTemplate = `{
         "transformations.OutputAdminTenantApplication": {
             "type": "object",
             "properties": {
-                "application_payment_invoice": {
-                    "$ref": "#/definitions/transformations.OutputInvoice"
-                },
                 "cancelled_at": {
                     "type": "string",
                     "example": "2024-06-02T12:00:00Z"
@@ -25500,6 +25623,9 @@ const docTemplate = `{
                 "employer_type": {
                     "type": "string",
                     "example": "WORKER"
+                },
+                "financial_account": {
+                    "$ref": "#/definitions/transformations.OutputTenantApplicationFinancials"
                 },
                 "first_name": {
                     "type": "string",
@@ -26407,6 +26533,11 @@ const docTemplate = `{
                     "type": "string",
                     "example": "2024-07-01T00:00:00Z"
                 },
+                "financial_account_id": {
+                    "description": "Present on account-backed invoices — the tenant ledger this bills against.",
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
                 "id": {
                     "type": "string",
                     "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
@@ -26526,6 +26657,10 @@ const docTemplate = `{
                     "type": "string",
                     "example": "RENT"
                 },
+                "charge_instance_id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
                 "created_at": {
                     "type": "string",
                     "example": "2024-06-01T09:00:00Z"
@@ -26587,6 +26722,9 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string",
                     "example": "2024-06-01T09:00:00Z"
+                },
+                "financial_account": {
+                    "$ref": "#/definitions/transformations.OutputTenantApplicationFinancials"
                 },
                 "id": {
                     "type": "string",
@@ -27623,9 +27761,6 @@ const docTemplate = `{
         "transformations.OutputTenantApplication": {
             "type": "object",
             "properties": {
-                "application_payment_invoice": {
-                    "$ref": "#/definitions/transformations.OutputInvoice"
-                },
                 "cancelled_at": {
                     "type": "string",
                     "example": "2024-06-02T12:00:00Z"
@@ -27676,6 +27811,9 @@ const docTemplate = `{
                 "employer": {
                     "type": "string",
                     "example": "Tech Ltd."
+                },
+                "financial_account": {
+                    "$ref": "#/definitions/transformations.OutputTenantApplicationFinancials"
                 },
                 "first_name": {
                     "type": "string",
@@ -27818,6 +27956,52 @@ const docTemplate = `{
                 "updated_at": {
                     "type": "string",
                     "example": "2024-06-10T09:00:00Z"
+                }
+            }
+        },
+        "transformations.OutputTenantApplicationFinancials": {
+            "type": "object",
+            "properties": {
+                "available_credit": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "charge_count": {
+                    "type": "integer",
+                    "example": 13
+                },
+                "code": {
+                    "type": "string",
+                    "example": "FA-2608-A1B2C3"
+                },
+                "currency": {
+                    "type": "string",
+                    "example": "GHS"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "invoice_count": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "outstanding_amount": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "rent_terms_locked": {
+                    "description": "RentTermsLocked is true once a rent charge has been invoiced or settled.\nThe move-in date and the unit can no longer be changed — RederiveRent\nreturns 400 ChargesAlreadyBilled — so the UI should stop offering them.",
+                    "type": "boolean",
+                    "example": false
+                },
+                "total_charged": {
+                    "type": "integer",
+                    "example": 1300000
+                },
+                "total_settled": {
+                    "type": "integer",
+                    "example": 1300000
                 }
             }
         },

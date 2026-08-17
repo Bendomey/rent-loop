@@ -1,4 +1,5 @@
 import { ArrowLeft, FileText, Pencil } from 'lucide-react'
+import { ExistingTenantPreview } from '../components/existingTenantPreview'
 import { useCreatePropertyTenantApplicationContext } from '../context'
 import { Image } from '~/components/Image'
 import { Button } from '~/components/ui/button'
@@ -8,7 +9,6 @@ import {
 	TypographyMuted,
 	TypographyP,
 } from '~/components/ui/typography'
-import { ExistingTenantPreview } from '../components/existingTenantPreview'
 import { getIdTypeLabel } from '~/lib/tenant.utils'
 
 const renderPreviewField = (label: string, value?: string | null) => (

@@ -1,7 +1,7 @@
-import { PropertyTenantApplicationUnitSetup } from '~/modules'
+import { PropertyTenantApplicationOverview } from '~/modules'
 
 export const handle = {
-	breadcrumb: 'Unit Setup',
+	breadcrumb: 'Overview',
 }
 
-export default PropertyTenantApplicationUnitSetup
+export default PropertyTenantApplicationOverview

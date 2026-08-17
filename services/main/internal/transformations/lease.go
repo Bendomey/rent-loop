@@ -104,6 +104,7 @@ func DBAdminLeaseToRest(i *models.Lease) any {
 		"terminated_by_id":                   i.TerminatedById,
 		"terminated_by":                      DBClientUserToRest(i.TerminatedBy),
 		"parent_lease_id":                    i.ParentLeaseId,
+		"financial_account":                  DBTenantApplicationFinancialsToRest(i.Financials),
 		"created_at":                         i.CreatedAt,
 		"updated_at":                         i.UpdatedAt,
 	}
@@ -147,6 +148,8 @@ type OutputLease struct {
 	TerminatedAt  *time.Time `json:"terminated_at,omitempty"   example:"2024-06-01T09:00:00Z"`
 	ParentLeaseId *string    `json:"parent_lease_id,omitempty" example:"b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"`
 
+	FinancialAccount *OutputTenantApplicationFinancials `json:"financial_account,omitempty"`
+
 	CreatedAt time.Time `json:"created_at" example:"2024-06-01T09:00:00Z"`
 	UpdatedAt time.Time `json:"updated_at" example:"2024-06-10T09:00:00Z"`
 }
@@ -184,6 +187,7 @@ func DBLeaseToRest(i *models.Lease) any {
 		"completed_at":                       i.CompletedAt,
 		"terminated_at":                      i.TerminatedAt,
 		"parent_lease_id":                    i.ParentLeaseId,
+		"financial_account":                  DBTenantApplicationFinancialsToRest(i.Financials),
 		"created_at":                         i.CreatedAt,
 		"updated_at":                         i.UpdatedAt,
 	}

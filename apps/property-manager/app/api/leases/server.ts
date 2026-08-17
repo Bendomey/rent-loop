@@ -7,7 +7,7 @@ export const getLeaseForServer = async (
 ) => {
 	try {
 		const response = await fetchServer<ApiResponse<Lease>>(
-			`${apiConfig.baseUrl}/v1/admin/clients/${clientId}/properties/${props.property_id}/leases/${props.lease_id}?populate=Tenant,Unit,TenantApplication,TenantApplication.LeaseAgreementDocumentSignatures,TenantApplication.ApplicationPaymentInvoice`,
+			`${apiConfig.baseUrl}/v1/admin/clients/${clientId}/properties/${props.property_id}/leases/${props.lease_id}?populate=Tenant,Unit,TenantApplication,TenantApplication.LeaseAgreementDocumentSignatures`,
 			{ ...apiConfig },
 		)
 		return response.parsedBody.data

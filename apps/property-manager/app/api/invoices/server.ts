@@ -9,8 +9,12 @@ export const getInvoiceForServer = async (
 	apiConfig: ApiConfigForServerConfig,
 ) => {
 	try {
+		// ContextTenantApplication is NOT a relation on Invoice — GORM rejects the
+		// whole preload with "unsupported relations for schema Invoice" and the
+		// request 500s. An invoice reaches its application through the financial
+		// account now, which is where TenantApplicationID lives.
 		const response = await fetchServer<ApiResponse<Invoice>>(
-			`${apiConfig.baseUrl}/v1/admin/clients/${clientId}/properties/${props.property_id}/invoices/${props.invoice_id}?populate=ContextTenantApplication,Payments,LineItems`,
+			`${apiConfig.baseUrl}/v1/admin/clients/${clientId}/properties/${props.property_id}/invoices/${props.invoice_id}?populate=Payments,LineItems,FinancialAccount`,
 			{
 				...apiConfig,
 			},

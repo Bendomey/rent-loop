@@ -1,3 +1,4 @@
 supabase/*
 
 scripts/e2e/*
+scripts/*.sql

@@ -49,6 +49,7 @@ type FinancialAccountService interface {
 	GetByLease(ctx context.Context, leaseID string) (*models.FinancialAccount, error)
 	GetByID(ctx context.Context, accountID string) (*models.FinancialAccount, error)
 	LinkLease(ctx context.Context, accountID, leaseID, tenantID string) error
+	Relocate(ctx context.Context, accountID, propertyID string) error
 	UpdateBillingPolicy(ctx context.Context, input UpdateBillingPolicyInput) error
 	Summary(ctx context.Context, accountID string) (*AccountSummary, error)
 }
@@ -159,6 +160,38 @@ func (s *financialAccountService) LinkLease(
 		return pkg.InternalServerError(updateErr.Error(), &pkg.RentLoopErrorParams{
 			Err:      updateErr,
 			Metadata: map[string]string{"function": "LinkLease", "action": "linking lease"},
+		})
+	}
+
+	return nil
+}
+
+// Relocate moves an account's denormalised property.
+//
+// That column is not decoration. The Cube resolves an invoice's property
+// through `financial_accounts.property_id`, and the Insights security scope
+// uses the same derivation — so an account left pointing at its old property
+// after its application moves reports that tenant's invoices under the wrong
+// property, and hides them from anyone scoped to the new one. Nothing errors;
+// the money simply appears in the wrong place.
+//
+// ClientID is deliberately untouched: a caller can only address properties
+// within their own client, so the owning client never changes here.
+func (s *financialAccountService) Relocate(
+	ctx context.Context,
+	accountID, propertyID string,
+) error {
+	account, err := s.repo.GetOne(ctx, repository.GetFinancialAccountQuery{ID: &accountID})
+	if err != nil {
+		return pkg.NotFoundError("FinancialAccountNotFound", &pkg.RentLoopErrorParams{Err: err})
+	}
+
+	account.PropertyID = &propertyID
+
+	if updateErr := s.repo.Update(ctx, account); updateErr != nil {
+		return pkg.InternalServerError(updateErr.Error(), &pkg.RentLoopErrorParams{
+			Err:      updateErr,
+			Metadata: map[string]string{"function": "Relocate", "action": "moving account"},
 		})
 	}
 

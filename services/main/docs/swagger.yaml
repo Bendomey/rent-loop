@@ -24,15 +24,15 @@ definitions:
         enum:
         - RENT
         - SECURITY_DEPOSIT
-        - INITIAL_DEPOSIT
+        - AGENCY_FEE
+        - VAT
+        - UTILITY
+        - DAMAGE_CHARGE
+        - EARLY_TERMINATION_FEE
+        - OTHER
         - MAINTENANCE_FEE
         - SAAS_FEE
         - BOOKING_FEE
-        - EXPENSE
-        - DEPOSIT_REFUND
-        - EARLY_TERMINATION_FEE
-        - DAMAGE_CHARGE
-        - RENT_REFUND
         example: OTHER
         type: string
       currency:
@@ -1592,6 +1592,34 @@ definitions:
     required:
     - reason
     type: object
+  handlers.RunInvoiceIssuanceBody:
+    properties:
+      as_of:
+        description: |-
+          AsOf is the instant the sweep should believe it is running at. Omit it
+          for the wall clock. Twelve months of billing can therefore be exercised
+          in twelve calls without touching any due date.
+        example: "2027-03-03T00:00:00Z"
+        type: string
+      financial_account_id:
+        description: |-
+          FinancialAccountID restricts the sweep to a single account. Omit it and
+          every billable account is swept, exactly as the cron does. Scenarios set
+          it so that exercising issuance does not advance unrelated ledgers.
+        type: string
+    type: object
+  handlers.RunInvoiceIssuanceResponse:
+    properties:
+      as_of:
+        example: "2027-03-03T00:00:00Z"
+        type: string
+      failed:
+        example: 0
+        type: integer
+      issued:
+        example: 1
+        type: integer
+    type: object
   handlers.ScheduleAnnouncementRequest:
     properties:
       scheduled_at:
@@ -1932,15 +1960,15 @@ definitions:
         enum:
         - RENT
         - SECURITY_DEPOSIT
-        - INITIAL_DEPOSIT
+        - AGENCY_FEE
+        - VAT
+        - UTILITY
+        - DAMAGE_CHARGE
+        - EARLY_TERMINATION_FEE
+        - OTHER
         - MAINTENANCE_FEE
         - SAAS_FEE
         - BOOKING_FEE
-        - EXPENSE
-        - DEPOSIT_REFUND
-        - EARLY_TERMINATION_FEE
-        - DAMAGE_CHARGE
-        - RENT_REFUND
         example: OTHER
         type: string
       currency:
@@ -3348,8 +3376,6 @@ definitions:
     type: object
   transformations.OutputAdminTenantApplication:
     properties:
-      application_payment_invoice:
-        $ref: '#/definitions/transformations.OutputInvoice'
       cancelled_at:
         example: "2024-06-02T12:00:00Z"
         type: string
@@ -3406,6 +3432,8 @@ definitions:
       employer_type:
         example: WORKER
         type: string
+      financial_account:
+        $ref: '#/definitions/transformations.OutputTenantApplicationFinancials'
       first_name:
         example: John
         type: string
@@ -4062,6 +4090,11 @@ definitions:
       due_date:
         example: "2024-07-01T00:00:00Z"
         type: string
+      financial_account_id:
+        description: Present on account-backed invoices — the tenant ledger this bills
+          against.
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
       id:
         example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
         type: string
@@ -4148,6 +4181,9 @@ definitions:
       category:
         example: RENT
         type: string
+      charge_instance_id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
       created_at:
         example: "2024-06-01T09:00:00Z"
         type: string
@@ -4194,6 +4230,8 @@ definitions:
       created_at:
         example: "2024-06-01T09:00:00Z"
         type: string
+      financial_account:
+        $ref: '#/definitions/transformations.OutputTenantApplicationFinancials'
       id:
         example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
         type: string
@@ -4947,8 +4985,6 @@ definitions:
     type: object
   transformations.OutputTenantApplication:
     properties:
-      application_payment_invoice:
-        $ref: '#/definitions/transformations.OutputInvoice'
       cancelled_at:
         example: "2024-06-02T12:00:00Z"
         type: string
@@ -4987,6 +5023,8 @@ definitions:
       employer:
         example: Tech Ltd.
         type: string
+      financial_account:
+        $ref: '#/definitions/transformations.OutputTenantApplicationFinancials'
       first_name:
         example: John
         type: string
@@ -5093,6 +5131,43 @@ definitions:
       updated_at:
         example: "2024-06-10T09:00:00Z"
         type: string
+    type: object
+  transformations.OutputTenantApplicationFinancials:
+    properties:
+      available_credit:
+        example: 0
+        type: integer
+      charge_count:
+        example: 13
+        type: integer
+      code:
+        example: FA-2608-A1B2C3
+        type: string
+      currency:
+        example: GHS
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      invoice_count:
+        example: 1
+        type: integer
+      outstanding_amount:
+        example: 0
+        type: integer
+      rent_terms_locked:
+        description: |-
+          RentTermsLocked is true once a rent charge has been invoiced or settled.
+          The move-in date and the unit can no longer be changed — RederiveRent
+          returns 400 ChargesAlreadyBilled — so the UI should stop offering them.
+        example: false
+        type: boolean
+      total_charged:
+        example: 1300000
+        type: integer
+      total_settled:
+        example: 1300000
+        type: integer
     type: object
   transformations.OutputTokenPair:
     properties:
@@ -7634,6 +7709,9 @@ paths:
       - in: query
         name: end_date
         type: string
+      - in: query
+        name: financial_account_id
+        type: string
       - collectionFormat: multi
         example:
         - a8098c1a-f86e-11da-bd1a-00112444be1e
@@ -9759,6 +9837,10 @@ paths:
         name: account_id
         required: true
         type: string
+      - description: Include voided charges in the list. Totals are unaffected.
+        in: query
+        name: include_voided
+        type: boolean
       produces:
       - application/json
       responses:
@@ -9849,6 +9931,10 @@ paths:
         name: account_id
         required: true
         type: string
+      - description: Include voided charges in the list. Totals are unaffected.
+        in: query
+        name: include_voided
+        type: boolean
       produces:
       - application/json
       responses:
@@ -10062,6 +10148,9 @@ paths:
         type: string
       - in: query
         name: end_date
+        type: string
+      - in: query
+        name: financial_account_id
         type: string
       - collectionFormat: multi
         example:
@@ -16634,6 +16723,47 @@ paths:
       summary: Get booking status by tracking code (phone-verified)
       tags:
       - Public
+  /api/v1/dev/jobs/invoice-issuance:
+    post:
+      consumes:
+      - application/json
+      description: Runs the same sweep the `0 6 * * *` cron runs, optionally at a
+        supplied instant. Registered only when the server's environment is not production.
+        Exists so end-to-end scenarios can bill a full lease term without waiting
+        twelve months or rewriting due dates.
+      parameters:
+      - description: Optional instant to run the sweep at
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/handlers.RunInvoiceIssuanceBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Sweep completed
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/handlers.RunInvoiceIssuanceResponse'
+            type: object
+        "400":
+          description: as_of is not a valid RFC3339 timestamp
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Run the invoice issuance sweep (non-production only)
+      tags:
+      - Dev
   /api/v1/documents/{document_id}:
     patch:
       consumes:
@@ -17213,6 +17343,10 @@ paths:
         name: lease_id
         required: true
         type: string
+      - description: Include voided charges in the list. Totals are unaffected.
+        in: query
+        name: include_voided
+        type: boolean
       produces:
       - application/json
       responses:
@@ -17249,6 +17383,10 @@ paths:
         name: lease_id
         required: true
         type: string
+      - description: Include voided charges in the list. Totals are unaffected.
+        in: query
+        name: include_voided
+        type: boolean
       produces:
       - application/json
       responses:

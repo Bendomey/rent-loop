@@ -59,10 +59,9 @@ type Lease struct {
 
 	TerminationAgreementDocumentUrl *string
 
-	ActivatedAt     *time.Time
-	ActivatedById   *string
-	ActivatedBy     *ClientUser
-	NextBillingDate *time.Time
+	ActivatedAt   *time.Time
+	ActivatedById *string
+	ActivatedBy   *ClientUser
 
 	CancelledAt   *time.Time
 	CancelledById *string
@@ -79,6 +78,11 @@ type Lease struct {
 	// for lease renewals and extensions
 	ParentLeaseId *string `gorm:"index;"`
 	ParentLease   *Lease
+
+	// Financials is a computed view attached in memory by the service — not a
+	// relation. The account is created against the application and linked to
+	// the lease at approval, so a lease can only reach it by lease_id.
+	Financials *TenantApplicationFinancials `gorm:"-"`
 }
 
 func (t *Lease) BeforeCreate(tx *gorm.DB) error {

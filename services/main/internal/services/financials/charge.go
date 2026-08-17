@@ -22,6 +22,24 @@ func ToChargeView(m models.ChargeInstance) ChargeView {
 	}
 }
 
+// RentTermsLocked reports whether the rent schedule can still be rebuilt.
+//
+// This is the same question RederiveRent answers internally, exposed so the UI
+// can stop offering an edit the service is going to refuse. Rent-scoped
+// deliberately: only rent derives from the move-in date and unit, so a billed
+// deposit must not freeze them. Keep this in step with RederiveRent — the two
+// disagreeing is worse than either rule alone, because the screen would then
+// promise something the API rejects.
+func RentTermsLocked(views []ChargeView) bool {
+	rentOnly := make([]ChargeView, 0, len(views))
+	for _, v := range views {
+		if v.Category == CategoryRent {
+			rentOnly = append(rentOnly, v)
+		}
+	}
+	return HasDirtyInstances(rentOnly)
+}
+
 // HasDirtyInstances reports whether any charge has been invoiced or settled.
 // A dirty ledger cannot be regenerated from changed terms — an existing
 // invoice line would be orphaned and the tenant would have seen a figure the

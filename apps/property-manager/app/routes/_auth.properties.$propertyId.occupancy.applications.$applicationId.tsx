@@ -1,3 +1,4 @@
+import { Outlet } from 'react-router'
 import type { Route } from './+types/_auth.properties.$propertyId.occupancy.applications.$applicationId'
 import { getAdminPropertyTenantApplicationForServer } from '~/api/tenant-applications'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
@@ -7,7 +8,6 @@ import { propertyContext } from '~/lib/actions/property.context.server'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
 import { safeString } from '~/lib/strings'
-import { PropertyTenantApplicationContainer } from '~/modules'
 
 export async function loader({ request, context, params }: Route.LoaderArgs) {
 	const baseUrl = environmentVariables().API_ADDRESS
@@ -32,8 +32,6 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 					'LeaseAgreementDocumentSignatures',
 					'LeaseAgreementDocumentSignatures.SignedBy',
 					'LeaseAgreementDocumentSignatures.SignedBy.User',
-					'ApplicationPaymentInvoice',
-					'ApplicationPaymentInvoice.LineItems',
 				],
 			},
 			{
@@ -72,4 +70,11 @@ export function meta({ loaderData, location, params }: Route.MetaArgs) {
 	return meta
 }
 
-export default PropertyTenantApplicationContainer
+/**
+ * Data only. The chrome that used to live here is split in two: the step
+ * pages' header, grid and checklist rail moved to the `_step` layout, and the
+ * banner plus every approve/decline control moved to the overview at `_index`.
+ */
+export default function PropertyTenantApplicationRoute() {
+	return <Outlet />
+}

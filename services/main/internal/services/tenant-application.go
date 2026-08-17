@@ -142,7 +142,6 @@ func (s *tenantApplicationService) CreateTenantApplication(
 	tenantApplication := models.TenantApplication{
 		PropertyId:                     &unit.PropertyID,
 		DesiredUnitId:                  &input.DesiredUnitId,
-		RentFee:                        &unit.RentFee,
 		RentFeeCurrency:                &unit.RentFeeCurrency,
 		StayDurationFrequency:          &unit.PaymentFrequency,
 		PaymentFrequency:               &unit.PaymentFrequency,
@@ -404,7 +403,6 @@ func (s *tenantApplicationService) BulkCreateTenantApplications(
 				return nil, pkg.BadRequestError("UnitNoLongerAvailable", nil)
 			}
 
-			rentFee = &unit.RentFee
 			rentFeeCurrency = &unit.RentFeeCurrency
 			stayDurationFrequency = &unit.PaymentFrequency
 			paymentFrequency = &unit.PaymentFrequency
@@ -610,6 +608,7 @@ func (s *tenantApplicationService) attachFinancials(
 		AvailableCredit:   summary.AvailableCredit,
 		ChargeCount:       int64(len(summary.Charges)),
 		InvoiceCount:      invoiceCount,
+		RentTermsLocked:   financials.RentTermsLocked(summary.Charges),
 	}
 }
 
@@ -897,6 +896,17 @@ func (s *tenantApplicationService) UpdateTenantApplication(
 		}
 	}
 
+	// The account carries a denormalised property and client for reporting, so
+	// it has to follow the application when its unit moves. Ordered after the
+	// rederive deliberately: if billed rent charges refuse the change, the
+	// account must not have been relocated for a move that did not happen.
+	if input.DesiredUnitId != nil {
+		if relocateErr := s.relocateFinancialAccount(transCtx, tenantApplication); relocateErr != nil {
+			rollback()
+			return nil, relocateErr
+		}
+	}
+
 	if !hasOuterTx {
 		if commitErr := transaction.Commit().Error; commitErr != nil {
 			return nil, pkg.InternalServerError("failed to commit transaction", &pkg.RentLoopErrorParams{
@@ -920,7 +930,36 @@ func rentTermsChanged(input UpdateTenantApplicationInput) bool {
 		input.DesiredMoveInDate.IsSet ||
 		input.StayDuration.IsSet ||
 		input.StayDurationFrequency.IsSet ||
-		input.PaymentFrequency.IsSet
+		input.PaymentFrequency.IsSet ||
+		// The unit belongs here even though rent is stated explicitly rather
+		// than inherited from it: the existing rent charges were derived
+		// against the unit being replaced, so they must be rebuilt — and the
+		// rebuild is what refuses the change once any rent charge is billed.
+		input.DesiredUnitId != nil
+}
+
+// relocateFinancialAccount keeps the account's denormalised property and client
+// in step with the application's unit. Silent when the application has no
+// account yet — charges have not been prepared, so there is nothing to move.
+func (s *tenantApplicationService) relocateFinancialAccount(
+	ctx context.Context,
+	application *models.TenantApplication,
+) error {
+	account, accountErr := s.financials.Accounts.GetByApplication(ctx, application.ID.String())
+	if accountErr != nil || account == nil {
+		return nil
+	}
+
+	if application.DesiredUnitId == nil {
+		return nil
+	}
+
+	unit, unitErr := s.unitService.GetUnitByID(ctx, *application.DesiredUnitId)
+	if unitErr != nil {
+		return unitErr
+	}
+
+	return s.financials.Accounts.Relocate(ctx, account.ID.String(), unit.PropertyID)
 }
 
 // rederiveRentCharges regenerates the rent schedule for an application whose

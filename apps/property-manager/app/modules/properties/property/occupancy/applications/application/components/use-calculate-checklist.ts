@@ -1,42 +1,31 @@
-import { getDocsItems } from './checklist-docs'
-import { getFinancialItems } from './checklist-financial'
-import { getMoveInItems } from './checklist-move-in'
-import { getTenantDetailItems } from './checklist-tenant-details'
-import { getUnitItems } from './checklist-unit'
+import { buildChecklistSteps } from './checklist-steps'
+import { isStepSatisfied, requiredItems } from './checklist-types'
 
-export function useCalculateChecklist(application: TenantApplication) {
-	const unitItems = getUnitItems(application)
-	const tenantDetailItems = getTenantDetailItems(application)
-	const moveInItems = getMoveInItems(application)
-	const financialItems = getFinancialItems(application)
-	const docsItems = getDocsItems(application)
+/**
+ * The rail's numbers.
+ *
+ * Progress counts steps, not fields: done ÷ 5. A half-finished step
+ * contributes nothing, so the bar can never read 100% while anything is short,
+ * and blocked or needs-attention steps count as not done.
+ */
+export function useCalculateChecklist(
+	application: TenantApplication,
+	baseUrl = '',
+) {
+	const steps = buildChecklistSteps(application, baseUrl)
 
-	const checklistSections = [
-		unitItems,
-		tenantDetailItems,
-		moveInItems,
-		financialItems,
-		docsItems,
-	]
-	// Display progress: all 5 sections, empty sections count as incomplete.
-	const sectionsComplete = checklistSections.filter(
-		(items) => items.length > 0 && items.every((i) => i.done),
-	).length
-	const progress = (sectionsComplete / checklistSections.length) * 100
+	const doneCount = steps.filter((step) => isStepSatisfied(step.state)).length
+	const progress = (doneCount / steps.length) * 100
+	const needsAttention = steps.some((step) => step.state === 'attention')
 
-	// Approval gate: only sections that have items (docs is optional when unset).
-	const requiredSections = checklistSections.filter((items) => items.length > 0)
-	const canApprove =
-		requiredSections.length === 0 ||
-		requiredSections.every((items) => items.every((i) => i.done))
+	// Approval gate. A step with no items is vacuously fine — lease documents are
+	// optional until an agreement is attached — but one that has items must have
+	// all of its required ones saved.
+	const canApprove = steps.every(
+		(step) =>
+			step.items.length === 0 ||
+			requiredItems(step.items).every((item) => item.done),
+	)
 
-	return {
-		progress,
-		canApprove,
-		unitItems,
-		tenantDetailItems,
-		moveInItems,
-		financialItems,
-		docsItems,
-	}
+	return { steps, progress, doneCount, needsAttention, canApprove }
 }
