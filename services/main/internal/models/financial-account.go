@@ -20,7 +20,7 @@ type FinancialAccount struct {
 	BaseModelSoftDelete
 	Code string `gorm:"not null;uniqueIndex;"` // FA-YYMM-XXXXXX
 
-	TenantApplicationID string `gorm:"not null;uniqueIndex;"`
+	TenantApplicationID string `gorm:"not null;index;"`
 	TenantApplication   TenantApplication
 
 	LeaseID *string `gorm:"uniqueIndex;"`
