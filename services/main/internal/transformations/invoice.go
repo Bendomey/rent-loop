@@ -131,8 +131,8 @@ func DBInvoiceLineItemsToRest(items []models.InvoiceLineItem) []any {
 }
 
 type OutputInvoiceLineItem struct {
-	ID        string `json:"id"                 example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
-	InvoiceID string `json:"invoice_id"         example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
+	ID               string  `json:"id"                 example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
+	InvoiceID        string  `json:"invoice_id"         example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
 	ChargeInstanceID *string `json:"charge_instance_id" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
 	Label            string  `json:"label"              example:"January Rent"`
 	Category         string  `json:"category"           example:"RENT"`
