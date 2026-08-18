@@ -39,15 +39,13 @@ import type { loader } from '~/routes/_auth._dashboard.settings.members.$memberI
 
 const ValidationSchema = z.object({
 	role: z.enum(['ADMIN', 'STAFF']),
-	property_assignments: z
-		.array(
-			z.object({
-				property_id: z.string(),
-				name: z.string(),
-				role: z.enum(['MANAGER', 'STAFF']),
-			}),
-		)
-		.min(1, 'Please assign at least one property'),
+	property_assignments: z.array(
+		z.object({
+			property_id: z.string(),
+			name: z.string(),
+			role: z.enum(['MANAGER', 'STAFF']),
+		}),
+	),
 })
 
 type FormSchema = z.infer<typeof ValidationSchema>
