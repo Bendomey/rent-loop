@@ -104,7 +104,9 @@ export function PropertyTenantApplicationOverview() {
 		.join(' ')
 
 	// Money has moved once anything on the account is settled. Declining after
-	// that is refused — the rule the checklist rail used to carry.
+	// that is refused — the rule the checklist rail used to carry. This gate
+	// lifts once refunds ship: a decline will be able to trigger one instead of
+	// just being blocked.
 	const paymentsMade =
 		(tenantApplication.financial_account?.total_settled ?? 0) > 0
 

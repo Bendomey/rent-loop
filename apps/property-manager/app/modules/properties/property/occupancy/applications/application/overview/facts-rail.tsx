@@ -162,6 +162,11 @@ export function OverviewFactsRail({
 								<X className="size-3.5" />
 								Decline this application
 							</Button>
+							{declineDisabled ? (
+								<p className="text-muted-foreground mt-2 text-xs">
+									Can&apos;t decline once a payment has been made.
+								</p>
+							) : null}
 						</CardContent>
 					</Card>
 				</PropertyPermissionGuard>

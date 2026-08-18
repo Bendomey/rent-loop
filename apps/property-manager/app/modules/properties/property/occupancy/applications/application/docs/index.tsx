@@ -137,6 +137,9 @@ export function PropertyTenantApplicationDocs() {
 	// — mirrors the gate the overview page's lead card uses.
 	const canDecide =
 		tenantApplication.status === 'TenantApplication.Status.InProgress'
+	// Money has moved once anything on the account is settled. This gate lifts
+	// once refunds ship: a decline will be able to trigger one instead of just
+	// being blocked.
 	const paymentsMade =
 		(tenantApplication.financial_account?.total_settled ?? 0) > 0
 
@@ -265,6 +268,12 @@ export function PropertyTenantApplicationDocs() {
 											Decline this application
 										</Button>
 									</div>
+
+									{paymentsMade ? (
+										<p className="text-muted-foreground mt-2 text-xs">
+											Can&apos;t decline once a payment has been made.
+										</p>
+									) : null}
 
 									{!canApprove && outstandingSteps.length > 0 ? (
 										<div className="mt-3.5 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950">
