@@ -313,7 +313,7 @@ export function RecordPaymentDialog({
 						</div>
 
 						<div>
-							<Label htmlFor="pay-account">Where did it go?</Label>
+							<Label htmlFor="pay-account">Mode of payment?</Label>
 							<Select value={chosenAccount} onValueChange={setAccountId}>
 								<SelectTrigger id="pay-account" className="mt-2 w-full">
 									<SelectValue placeholder="Pick an account" />

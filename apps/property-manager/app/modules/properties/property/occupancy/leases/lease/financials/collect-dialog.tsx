@@ -391,7 +391,7 @@ export function CollectDialog({
 						</div>
 
 						<div>
-							<Label>Where did it go?</Label>
+							<Label>Mode of payment?</Label>
 							<Select
 								value={paymentAccountId}
 								onValueChange={setPaymentAccountId}
