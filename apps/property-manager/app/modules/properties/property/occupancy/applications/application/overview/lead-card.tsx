@@ -85,17 +85,26 @@ export function OverviewLeadCard({
 			<div className="flex shrink-0 flex-wrap gap-2.5 sm:pt-1">
 				{situation === 'ready' ? (
 					<PropertyPermissionGuard roles={['MANAGER']}>
-						<Button
-							variant="outline"
-							disabled={declineDisabled}
-							onClick={onDecline}
-						>
-							Decline
-						</Button>
-						<Button disabled={!canApprove} onClick={onApprove}>
-							<Check className="size-4" />
-							Approve &amp; make the lease
-						</Button>
+						<div className="flex flex-col gap-1.5">
+							<div className="flex flex-wrap gap-2.5">
+								<Button
+									variant="outline"
+									disabled={declineDisabled}
+									onClick={onDecline}
+								>
+									Decline
+								</Button>
+								<Button disabled={!canApprove} onClick={onApprove}>
+									<Check className="size-4" />
+									Approve &amp; make the lease
+								</Button>
+							</div>
+							{declineDisabled ? (
+								<p className="text-muted-foreground text-xs">
+									Can&apos;t decline once a payment has been made.
+								</p>
+							) : null}
+						</div>
 					</PropertyPermissionGuard>
 				) : null}
 

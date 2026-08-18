@@ -72,7 +72,7 @@ export function PropertyTenantApplicationTenant() {
 	})()
 
 	return (
-		<div className="m-5">
+		<div className="m-5 mx-auto w-full max-w-7xl">
 			<StepPageHeader
 				title={title}
 				subtitle={subtitle}
