@@ -19,7 +19,7 @@ export function getPaymentAccountTypeLabel(
 ): string {
 	const labelMap: Record<PaymentAccount['rail'], string> = {
 		MOMO: 'Momo',
-		OFFLINE: 'Cash',
+		OFFLINE: 'Offline (Not via Rentloop)',
 		BANK_TRANSFER: 'Bank Transfer',
 		CARD: 'Credit Card',
 	}
