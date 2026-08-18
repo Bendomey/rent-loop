@@ -1,4 +1,4 @@
-import type { Route } from './+types/_auth.properties.$propertyId.occupancy.applications.$applicationId._step.docs'
+import type { Route } from './+types/_auth.properties.$propertyId.occupancy.applications.$applicationId.docs'
 import { getDocumentTemplates } from '~/lib/actions/document-templates.server'
 import { PropertyTenantApplicationDocs } from '~/modules'
 

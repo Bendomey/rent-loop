@@ -5,7 +5,6 @@ import { useForm } from 'react-hook-form'
 import { useRevalidator } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
-import { useTenantApplicationContext } from '../context'
 import { useAdminUpdateTenantApplication } from '~/api/tenant-applications'
 import { Button } from '~/components/ui/button'
 import {
@@ -80,12 +79,13 @@ function FieldDisplay({ label, value }: FieldDisplayProps) {
 
 interface PropertyTenantApplicationIdentityProps {
 	property_id: string
+	application: TenantApplication
 }
 
 export function PropertyTenantApplicationIdentity({
 	property_id,
+	application,
 }: PropertyTenantApplicationIdentityProps) {
-	const { tenantApplication: application } = useTenantApplicationContext()
 	const { clientUser } = useClient()
 
 	const isDocLocked = ['SIGNED', 'SIGNING'].includes(

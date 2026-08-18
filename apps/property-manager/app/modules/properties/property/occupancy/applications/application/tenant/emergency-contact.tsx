@@ -6,7 +6,6 @@ import { isValidPhoneNumber } from 'react-phone-number-input'
 import { useRevalidator } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
-import { useTenantApplicationContext } from '../context'
 import { useAdminUpdateTenantApplication } from '~/api/tenant-applications'
 import { InternationalPhoneInput } from '~/components/international-phone'
 import { Button } from '~/components/ui/button'
@@ -87,12 +86,13 @@ function FieldDisplay({ label, value }: FieldDisplayProps) {
 
 interface Props {
 	property_id: string
+	application: TenantApplication
 }
 
 export function PropertyTenantApplicationEmergencyContact({
 	property_id,
+	application,
 }: Props) {
-	const { tenantApplication: application } = useTenantApplicationContext()
 	const { clientUser } = useClient()
 
 	const isDocLocked = ['SIGNED', 'SIGNING'].includes(

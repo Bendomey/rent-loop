@@ -1620,6 +1620,15 @@ definitions:
         example: 1
         type: integer
     type: object
+  handlers.RunLeaseLifecycleBody:
+    properties:
+      lease_id:
+        description: |-
+          LeaseID restricts both sweeps to a single lease. Omit it and every due
+          lease transitions, exactly as the crons do. Scenarios set it so that
+          exercising the lifecycle does not advance unrelated leases.
+        type: string
+    type: object
   handlers.RunLeaseLifecycleResponse:
     properties:
       activated:
@@ -16784,6 +16793,12 @@ paths:
         run, in that order. Registered only when the server's environment is not production.
         Exists so end-to-end scenarios can drive a lease from Pending through Active
         to Completed without waiting for a term to elapse.
+      parameters:
+      - description: Optional lease to restrict the sweeps to
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/handlers.RunLeaseLifecycleBody'
       produces:
       - application/json
       responses:

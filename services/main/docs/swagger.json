@@ -17330,6 +17330,16 @@
                     "Dev"
                 ],
                 "summary": "Run the lease lifecycle sweeps (non-production only)",
+                "parameters": [
+                    {
+                        "description": "Optional lease to restrict the sweeps to",
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.RunLeaseLifecycleBody"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Sweeps completed",
@@ -23124,6 +23134,15 @@
                 "issued": {
                     "type": "integer",
                     "example": 1
+                }
+            }
+        },
+        "handlers.RunLeaseLifecycleBody": {
+            "type": "object",
+            "properties": {
+                "lease_id": {
+                    "description": "LeaseID restricts both sweeps to a single lease. Omit it and every due\nlease transitions, exactly as the crons do. Scenarios set it so that\nexercising the lifecycle does not advance unrelated leases.",
+                    "type": "string"
                 }
             }
         },

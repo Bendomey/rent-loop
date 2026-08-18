@@ -16,9 +16,8 @@ import { useClient } from '~/providers/client-provider'
 import type { loader } from '~/routes/_auth.properties.$propertyId.occupancy.applications.$applicationId'
 
 export function PropertyTenantApplicationUnitSetup() {
-	// This page sits outside the `_step` layout — it carries its own header and
-	// its own rail — so it reads the parent route's loader directly rather than
-	// taking the application from an outlet context.
+	// Every step carries its own header and rail, so this page reads the parent
+	// route's loader directly rather than taking the application from a layout.
 	const loaderData = useRouteLoaderData<Awaited<ReturnType<typeof loader>>>(
 		'routes/_auth.properties.$propertyId.occupancy.applications.$applicationId',
 	)

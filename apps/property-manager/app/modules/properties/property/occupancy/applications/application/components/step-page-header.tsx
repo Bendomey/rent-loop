@@ -7,13 +7,13 @@ import { cn } from '~/lib/utils'
 export type StepPill = 'step' | 'done' | 'attention' | 'fixed'
 
 /**
- * The header each redesigned step page carries for itself.
+ * The header every step page carries for itself.
  *
  * The steps used to share one header and a checklist rail supplied by a parent
- * layout. The designs give every step its own instead: what this page is, how
- * far through it sits, and the two moves out of it — back to the hub, or on to
- * the next step. The hub is where the five steps are held together, so
- * repeating the rail here would say it twice.
+ * layout. Each has its own now: what this page is, how far through it sits, and
+ * the two moves out of it — back to the hub, or on to the next step. The hub is
+ * where the five steps are held together, so repeating the rail here would say
+ * it twice.
  */
 export function StepPageHeader({
 	title,

@@ -63,7 +63,7 @@ export const resolveMode = (
 }
 
 export function PropertyTenantApplicationFinancial() {
-	// This page sits outside the `_step` layout — own header, own rail.
+	// Own header, own rail — read the parent route's loader directly.
 	const loaderData = useRouteLoaderData<Awaited<ReturnType<typeof loader>>>(
 		'routes/_auth.properties.$propertyId.occupancy.applications.$applicationId',
 	)

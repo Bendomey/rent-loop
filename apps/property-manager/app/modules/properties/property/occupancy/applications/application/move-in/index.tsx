@@ -34,7 +34,7 @@ const sameDay = (a: Nullable<Date>, b: Nullable<Date>) =>
 	(a?.toDateString() ?? null) === (b?.toDateString() ?? null)
 
 export function PropertyTenantApplicationMoveIn() {
-	// This page sits outside the `_step` layout — own header, own rail.
+	// Own header, own rail — read the parent route's loader directly.
 	const loaderData = useRouteLoaderData<Awaited<ReturnType<typeof loader>>>(
 		'routes/_auth.properties.$propertyId.occupancy.applications.$applicationId',
 	)

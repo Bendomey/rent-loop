@@ -71,9 +71,9 @@ export function meta({ loaderData, location, params }: Route.MetaArgs) {
 }
 
 /**
- * Data only. The chrome that used to live here is split in two: the step
- * pages' header, grid and checklist rail moved to the `_step` layout, and the
- * banner plus every approve/decline control moved to the overview at `_index`.
+ * Data only. The chrome that used to live here is gone: each step page carries
+ * its own header, and the banner plus every approve/decline control moved to
+ * the overview at `_index`.
  */
 export default function PropertyTenantApplicationRoute() {
 	return <Outlet />
