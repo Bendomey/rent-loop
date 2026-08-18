@@ -19,7 +19,9 @@ export async function action({ request, context }: Route.ActionArgs) {
 	}
 
 	const form = await request.formData()
-	const property_id = form.get('property_id') as string | undefined
+	// An empty string still validates as "present" server-side (a non-nil
+	// pointer), which fails the backend's uuid4 check — so treat "" as absent.
+	const property_id = (form.get('property_id') as string | null) || undefined
 
 	const pdfFile = form.get('file')
 
