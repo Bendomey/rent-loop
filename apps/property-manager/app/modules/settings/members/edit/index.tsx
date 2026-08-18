@@ -85,7 +85,7 @@ export function EditMemberModule() {
 
 	const { handleSubmit, control } = rhfMethods
 
-	const { fields, append, remove } = useFieldArray({
+	const { fields, append, remove, update } = useFieldArray({
 		control,
 		name: 'property_assignments',
 	})
@@ -104,8 +104,13 @@ export function EditMemberModule() {
 		role: FormSchema['property_assignments'][number]['role'],
 	) => {
 		const index = fields.findIndex((f) => f.property_id === propertyId)
-		if (index !== -1) {
-			rhfMethods.setValue(`property_assignments.${index}.role`, role)
+		const field = fields[index]
+		if (index !== -1 && field) {
+			update(index, {
+				property_id: field.property_id,
+				name: field.name,
+				role,
+			})
 		}
 	}
 
