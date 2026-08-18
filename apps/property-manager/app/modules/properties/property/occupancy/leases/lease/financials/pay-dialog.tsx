@@ -30,6 +30,7 @@ import {
 	convertPesewasToCedis,
 	formatAmount,
 } from '~/lib/format-amount'
+import { getPaymentAccountTypeLabel } from '~/lib/payment-account.utils'
 import { cn } from '~/lib/utils'
 
 interface PayDialogProps {
@@ -80,7 +81,11 @@ export function PayDialog({
 
 	const { data: accountPage } = useGetPaymentAccounts(clientId, {
 		pagination: { page: 1, per: 100 },
-		filters: { rail: 'OFFLINE', status: 'ACTIVE' },
+		filters: {
+			rail: 'OFFLINE',
+			status: 'ACTIVE',
+			owner_types: ['PROPERTY_OWNER', 'SYSTEM'],
+		},
 	})
 	const offlineAccounts = (accountPage?.rows ?? []).filter(
 		(account) => account.rail === 'OFFLINE' && account.status === 'ACTIVE',
@@ -252,7 +257,8 @@ export function PayDialog({
 									<SelectContent>
 										{offlineAccounts.map((account) => (
 											<SelectItem key={account.id} value={account.id}>
-												{account.identifier || account.provider}
+												{getPaymentAccountTypeLabel(account.rail)}
+												{account.identifier ? ` · ${account.identifier}` : null}
 											</SelectItem>
 										))}
 									</SelectContent>

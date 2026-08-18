@@ -30,6 +30,7 @@ import {
 	convertPesewasToCedis,
 	formatAmount,
 } from '~/lib/format-amount'
+import { getPaymentAccountTypeLabel } from '~/lib/payment-account.utils'
 import { cn } from '~/lib/utils'
 
 /** What no invoice has claimed yet. A charge can only be invoiced once. */
@@ -76,7 +77,7 @@ export function RecordPaymentDialog({
 		pagination: { page: 1, per: 50 },
 		sorter: {},
 		search: {},
-		filters: {},
+		filters: { owner_types: ['PROPERTY_OWNER', 'SYSTEM'] },
 	})
 
 	const currency = summary.account.currency
@@ -320,7 +321,8 @@ export function RecordPaymentDialog({
 								<SelectContent>
 									{(accounts?.rows ?? []).map((account) => (
 										<SelectItem key={account.id} value={account.id}>
-											{account.identifier || account.provider}
+											{getPaymentAccountTypeLabel(account.rail)}
+											{account.identifier ? ` · ${account.identifier}` : null}
 										</SelectItem>
 									))}
 								</SelectContent>

@@ -31,6 +31,7 @@ import {
 	convertPesewasToCedis,
 	formatAmount,
 } from '~/lib/format-amount'
+import { getPaymentAccountTypeLabel } from '~/lib/payment-account.utils'
 import { allocateOldestFirst, owedOn } from '~/lib/payment-allocation'
 import { cn } from '~/lib/utils'
 
@@ -106,7 +107,11 @@ export function CollectDialog({
 
 	const { data: accountPage } = useGetPaymentAccounts(clientId, {
 		pagination: { page: 1, per: 100 },
-		filters: { rail: 'OFFLINE', status: 'ACTIVE' },
+		filters: {
+			rail: 'OFFLINE',
+			status: 'ACTIVE',
+			owner_types: ['PROPERTY_OWNER', 'SYSTEM'],
+		},
 	})
 	const offlineAccounts = (accountPage?.rows ?? []).filter(
 		(account) => account.rail === 'OFFLINE' && account.status === 'ACTIVE',
@@ -397,7 +402,8 @@ export function CollectDialog({
 								<SelectContent>
 									{offlineAccounts.map((account) => (
 										<SelectItem key={account.id} value={account.id}>
-											{account.identifier || account.provider}
+											{getPaymentAccountTypeLabel(account.rail)}
+											{account.identifier ? ` · ${account.identifier}` : null}
 										</SelectItem>
 									))}
 								</SelectContent>
