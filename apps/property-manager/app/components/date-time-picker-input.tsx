@@ -24,6 +24,12 @@ export function DateTimePickerInput({
 }: Props) {
 	const { isOpened, setIsOpened } = useDisclosure()
 
+	// A calendar day's own date object sits at midnight, which is always
+	// "before" minDate once any time has passed today — clamp to minDate itself
+	// rather than let a picked day + carried-over time land in the past.
+	const clamp = (date: Date) =>
+		minDate && date < minDate ? new Date(minDate) : date
+
 	const handleDateChange = (date: Date | undefined) => {
 		if (!date) {
 			onChange(undefined)
@@ -33,7 +39,7 @@ export function DateTimePickerInput({
 		const base = value ?? new Date()
 		const updated = new Date(date)
 		updated.setHours(base.getHours(), base.getMinutes(), 0, 0)
-		onChange(updated)
+		onChange(clamp(updated))
 		setIsOpened(false)
 	}
 
@@ -44,12 +50,17 @@ export function DateTimePickerInput({
 		if (hours) {
 			updated.setHours(hours, minutes, 0, 0)
 		}
-		onChange(updated)
+		onChange(clamp(updated))
 	}
 
 	const timeValue = value
 		? `${String(value.getHours()).padStart(2, '0')}:${String(value.getMinutes()).padStart(2, '0')}`
 		: ''
+
+	const minTime =
+		minDate && value && dayjs(value).isSame(minDate, 'day')
+			? `${String(minDate.getHours()).padStart(2, '0')}:${String(minDate.getMinutes()).padStart(2, '0')}`
+			: undefined
 
 	return (
 		<div className="flex gap-2">
@@ -76,7 +87,11 @@ export function DateTimePickerInput({
 						selected={value}
 						captionLayout="dropdown"
 						startMonth={minDate ?? new Date()}
-						disabled={minDate ? (date) => date < minDate : undefined}
+						disabled={
+							minDate
+								? (date) => dayjs(date).isBefore(minDate, 'day')
+								: undefined
+						}
 						onSelect={handleDateChange}
 					/>
 				</PopoverContent>
@@ -84,6 +99,7 @@ export function DateTimePickerInput({
 			<Input
 				type="time"
 				value={timeValue}
+				min={minTime}
 				onChange={handleTimeChange}
 				disabled={disabled || !value}
 				className="w-32"

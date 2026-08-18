@@ -39,15 +39,13 @@ import type { loader } from '~/routes/_auth._dashboard.settings.members.$memberI
 
 const ValidationSchema = z.object({
 	role: z.enum(['ADMIN', 'STAFF']),
-	property_assignments: z
-		.array(
-			z.object({
-				property_id: z.string(),
-				name: z.string(),
-				role: z.enum(['MANAGER', 'STAFF']),
-			}),
-		)
-		.min(1, 'Please assign at least one property'),
+	property_assignments: z.array(
+		z.object({
+			property_id: z.string(),
+			name: z.string(),
+			role: z.enum(['MANAGER', 'STAFF']),
+		}),
+	),
 })
 
 type FormSchema = z.infer<typeof ValidationSchema>
@@ -85,7 +83,7 @@ export function EditMemberModule() {
 
 	const { handleSubmit, control } = rhfMethods
 
-	const { fields, append, remove } = useFieldArray({
+	const { fields, append, remove, update } = useFieldArray({
 		control,
 		name: 'property_assignments',
 	})
@@ -104,8 +102,13 @@ export function EditMemberModule() {
 		role: FormSchema['property_assignments'][number]['role'],
 	) => {
 		const index = fields.findIndex((f) => f.property_id === propertyId)
-		if (index !== -1) {
-			rhfMethods.setValue(`property_assignments.${index}.role`, role)
+		const field = fields[index]
+		if (index !== -1 && field) {
+			update(index, {
+				property_id: field.property_id,
+				name: field.name,
+				role,
+			})
 		}
 	}
 
