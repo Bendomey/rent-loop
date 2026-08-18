@@ -493,7 +493,7 @@ func (h *LeaseHandler) ActivateLease(w http.ResponseWriter, r *http.Request) {
 
 	input := services.ActivateLeaseInput{
 		LeaseID:      leaseID,
-		ClientUserId: clientUser.ID,
+		ClientUserId: &clientUser.ID,
 	}
 	err := h.service.ActivateLease(r.Context(), input)
 	if err != nil {

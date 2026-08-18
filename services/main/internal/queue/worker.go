@@ -124,6 +124,20 @@ func RegisterScheduler(redisURL string) {
 		log.Fatal("failed to register lease move-out reminder schedule:", err)
 	}
 
+	// Daily at midnight — auto-activates Pending leases whose move-in date has
+	// arrived. Registered alongside the completion job rather than ordered
+	// before it: asynq gives no ordering guarantee between two schedules at
+	// the same instant, so dueForActivationScope excludes leases already past
+	// move-out instead, leaving the two jobs independent whichever runs first.
+	if _, err = scheduler.Register(
+		"0 0 * * *",
+		asynq.NewTask(TypeLeaseActivation, nil),
+		asynq.MaxRetry(1),
+	); err != nil {
+		raven.CaptureError(err, nil)
+		log.Fatal("failed to register lease activation schedule:", err)
+	}
+
 	// Daily at midnight — auto-completes leases whose move-out date has passed.
 	if _, err = scheduler.Register(
 		"0 0 * * *",

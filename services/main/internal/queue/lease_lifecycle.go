@@ -25,6 +25,7 @@ import (
 const (
 	TypeLeaseMoveOutReminder = "lease:moveout-reminder"
 	TypeLeaseCompletion      = "lease:complete"
+	TypeLeaseActivation      = "lease:activate"
 )
 
 // ─── Reminder thresholds ────────────────────────────────────────────────────
@@ -81,11 +82,12 @@ type leaseLifecycleDeps struct {
 // round-trip to re-resolve the same manager.
 type managerCache map[string]*models.ClientUser
 
-// LeaseLifecycleHandlers registers the move-out reminder and auto-completion
-// task handlers onto the serve mux. Both belong to the same "lease lifecycle"
-// domain, but are kept as two independently-scheduled, independently-
-// retryable task types — a failure in reminder sending must never be able to
-// block a lease from completing and releasing its unit, and vice versa.
+// LeaseLifecycleHandlers registers the activation, move-out reminder and
+// auto-completion task handlers onto the serve mux. All three belong to the
+// same "lease lifecycle" domain, but are kept as independently-scheduled,
+// independently-retryable task types — a failure in reminder sending must
+// never be able to block a lease from completing and releasing its unit, and
+// vice versa.
 func LeaseLifecycleHandlers(
 	leaseRepo repository.LeaseRepository,
 	leaseChecklistRepo repository.LeaseChecklistRepository,
@@ -103,6 +105,7 @@ func LeaseLifecycleHandlers(
 	return func(mux *asynq.ServeMux) {
 		mux.HandleFunc(TypeLeaseMoveOutReminder, handleLeaseMoveOutReminder(deps))
 		mux.HandleFunc(TypeLeaseCompletion, handleLeaseCompletion(deps))
+		mux.HandleFunc(TypeLeaseActivation, handleLeaseActivation(deps))
 	}
 }
 
@@ -328,33 +331,46 @@ func sendMoveOutReminder(
 
 // ─── Job 2: auto-completion ─────────────────────────────────────────────────
 
-// handleLeaseCompletion just resolves which leases are due, then delegates
-// the transition and its notifications entirely to
-// LeaseService.CompleteLease — the transactional atomicity and the
-// tenant/manager notifications live together there.
+// handleLeaseCompletion is scheduling glue only. Resolving which leases are
+// due, the transition itself and its notifications all live in
+// LeaseService.CompleteDueLeases, so the transactional atomicity and the
+// tenant/manager notifications stay together — and so the same sweep is
+// reachable from the dev trigger without a handler touching a repository.
 func handleLeaseCompletion(deps leaseLifecycleDeps) asynq.HandlerFunc {
 	return func(ctx context.Context, t *asynq.Task) error {
-		leases, err := deps.leaseRepo.ListDueForCompletion(ctx)
+		completed, failed, err := deps.leaseService.CompleteDueLeases(ctx, "")
 		if err != nil {
 			log.WithError(err).Error("[Cron] failed to list leases due for completion")
 			return err
 		}
 
-		var successCount, failCount int
-		for i := range *leases {
-			leaseID := (*leases)[i].ID.String()
+		log.Infof("[Cron] lease completion complete: %d completed, %d failed", completed, failed)
+		return nil
+	}
+}
 
-			if _, completeErr := deps.leaseService.CompleteLease(ctx, leaseID); completeErr != nil {
-				log.WithError(completeErr).WithField("lease_id", leaseID).
-					Error("[Cron] failed to complete lease")
-				failCount++
-				continue
-			}
+// ─── Job 3: auto-activation ─────────────────────────────────────────────────
 
-			successCount++
+// handleLeaseActivation moves Pending leases to Active once their move-in date
+// has arrived, so a lease does not depend on a manager remembering to flip it.
+//
+// Left un-activated, such a lease is not merely mislabelled: it holds its
+// unit's occupancy (releaseUnitIfNoActiveLease counts Pending and Active
+// alike) yet never satisfies the completion sweep, so the unit is blocked
+// indefinitely once move-out passes.
+//
+// Activation deliberately does no financial work — see the note in
+// LeaseService.ActivateLease. Charge state, not lease status, decides what is
+// billed, so nothing here changes what the issuance sweep will do.
+func handleLeaseActivation(deps leaseLifecycleDeps) asynq.HandlerFunc {
+	return func(ctx context.Context, t *asynq.Task) error {
+		activated, failed, err := deps.leaseService.ActivateDueLeases(ctx, "")
+		if err != nil {
+			log.WithError(err).Error("[Cron] failed to list leases due for activation")
+			return err
 		}
 
-		log.Infof("[Cron] lease completion complete: %d completed, %d failed", successCount, failCount)
+		log.Infof("[Cron] lease activation complete: %d activated, %d failed", activated, failed)
 		return nil
 	}
 }

@@ -87,7 +87,7 @@ func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
 		services.InvoiceService,
 		services.LeaseService,
 	)
-	devHandler := NewDevHandler(appCtx, services.Financials)
+	devHandler := NewDevHandler(appCtx, services.Financials, services.LeaseService)
 	agreementHandler := NewAgreementHandler(appCtx, services.AgreementService)
 	bookingHandler := NewBookingHandler(appCtx, services)
 	leaseTerminationHandler := NewLeaseTerminationHandler(

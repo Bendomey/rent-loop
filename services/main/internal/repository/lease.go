@@ -24,6 +24,7 @@ type LeaseRepository interface {
 	DeleteNonBlockingByPropertyID(context context.Context, propertyID string) error
 	ListForMoveOutReminders(ctx context.Context) (*[]models.Lease, error)
 	ListDueForCompletion(ctx context.Context) (*[]models.Lease, error)
+	ListDueForActivation(ctx context.Context) (*[]models.Lease, error)
 }
 
 type leaseRepository struct {
@@ -337,6 +338,40 @@ func (r *leaseRepository) ListForMoveOutReminders(ctx context.Context) (*[]model
 		return nil, result.Error
 	}
 
+	return &leases, nil
+}
+
+// dueForActivationScope selects Pending leases whose move-in date has arrived.
+//
+// The move-out guard is not redundant with it: a lease whose whole term has
+// already elapsed — created late, or missed while the job was down — must fall
+// through to ListDueForCompletion instead of being activated first, or the
+// tenant receives an "activated" notice minutes before a "completed" one. It
+// also keeps the two midnight jobs order-independent, which asynq does not
+// otherwise guarantee.
+func dueForActivationScope(now time.Time) func(db *gorm.DB) *gorm.DB {
+	startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+	return func(db *gorm.DB) *gorm.DB {
+		return db.
+			Where("status = ?", "Lease.Status.Pending").
+			Where("move_in_date <= ?", now).
+			Where("move_out_date IS NULL OR move_out_date >= ?", startOfToday)
+	}
+}
+
+// ListDueForActivation returns Pending leases that have reached their move-in
+// date and are still inside their term, i.e. ready to become Active without a
+// manager having to say so.
+func (r *leaseRepository) ListDueForActivation(ctx context.Context) (*[]models.Lease, error) {
+	var leases []models.Lease
+	result := r.DB.WithContext(ctx).
+		Scopes(dueForActivationScope(time.Now().UTC())).
+		Preload("Unit.Property").
+		Preload("Tenant.TenantAccount").
+		Find(&leases)
+	if result.Error != nil {
+		return nil, result.Error
+	}
 	return &leases, nil
 }
 

@@ -1620,6 +1620,18 @@ definitions:
         example: 1
         type: integer
     type: object
+  handlers.RunLeaseLifecycleResponse:
+    properties:
+      activated:
+        example: 1
+        type: integer
+      completed:
+        example: 1
+        type: integer
+      failed:
+        example: 0
+        type: integer
+    type: object
   handlers.ScheduleAnnouncementRequest:
     properties:
       scheduled_at:
@@ -16762,6 +16774,37 @@ paths:
       security:
       - BearerAuth: []
       summary: Run the invoice issuance sweep (non-production only)
+      tags:
+      - Dev
+  /api/v1/dev/jobs/lease-lifecycle:
+    post:
+      consumes:
+      - application/json
+      description: Runs the activation and completion sweeps the `0 0 * * *` crons
+        run, in that order. Registered only when the server's environment is not production.
+        Exists so end-to-end scenarios can drive a lease from Pending through Active
+        to Completed without waiting for a term to elapse.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Sweeps completed
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/handlers.RunLeaseLifecycleResponse'
+            type: object
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Run the lease lifecycle sweeps (non-production only)
       tags:
       - Dev
   /api/v1/documents/{document_id}:

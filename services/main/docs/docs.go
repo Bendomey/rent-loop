@@ -17320,6 +17320,51 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/dev/jobs/lease-lifecycle": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Runs the activation and completion sweeps the ` + "`" + `0 0 * * *` + "`" + ` crons run, in that order. Registered only when the server's environment is not production. Exists so end-to-end scenarios can drive a lease from Pending through Active to Completed without waiting for a term to elapse.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dev"
+                ],
+                "summary": "Run the lease lifecycle sweeps (non-production only)",
+                "responses": {
+                    "200": {
+                        "description": "Sweeps completed",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/handlers.RunLeaseLifecycleResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/documents/{document_id}": {
             "patch": {
                 "security": [
@@ -23087,6 +23132,23 @@ const docTemplate = `{
                 "issued": {
                     "type": "integer",
                     "example": 1
+                }
+            }
+        },
+        "handlers.RunLeaseLifecycleResponse": {
+            "type": "object",
+            "properties": {
+                "activated": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "completed": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "failed": {
+                    "type": "integer",
+                    "example": 0
                 }
             }
         },

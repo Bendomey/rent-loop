@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
+	"github.com/Bendomey/rent-loop/services/main/internal/services"
 	"github.com/Bendomey/rent-loop/services/main/internal/services/financials"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 )
@@ -15,12 +16,17 @@ import (
 // Config.Env != "production" (see internal/router/client-user.go), so nothing
 // here is reachable in production regardless of authentication.
 type DevHandler struct {
-	financials *financials.Financials
-	appCtx     pkg.AppContext
+	financials   *financials.Financials
+	leaseService services.LeaseService
+	appCtx       pkg.AppContext
 }
 
-func NewDevHandler(appCtx pkg.AppContext, financialsFacade *financials.Financials) DevHandler {
-	return DevHandler{appCtx: appCtx, financials: financialsFacade}
+func NewDevHandler(
+	appCtx pkg.AppContext,
+	financialsFacade *financials.Financials,
+	leaseService services.LeaseService,
+) DevHandler {
+	return DevHandler{appCtx: appCtx, financials: financialsFacade, leaseService: leaseService}
 }
 
 type RunInvoiceIssuanceBody struct {
@@ -100,6 +106,79 @@ func (h *DevHandler) RunInvoiceIssuance(w http.ResponseWriter, r *http.Request) 
 			Issued: issued,
 			Failed: failed,
 			AsOf:   asOf.Format(time.RFC3339),
+		},
+	})
+}
+
+type RunLeaseLifecycleBody struct {
+	// LeaseID restricts both sweeps to a single lease. Omit it and every due
+	// lease transitions, exactly as the crons do. Scenarios set it so that
+	// exercising the lifecycle does not advance unrelated leases.
+	LeaseID *string `json:"lease_id,omitempty"`
+}
+
+type RunLeaseLifecycleResponse struct {
+	Activated int `json:"activated" example:"1"`
+	Completed int `json:"completed" example:"1"`
+	Failed    int `json:"failed"    example:"0"`
+}
+
+// RunLeaseLifecycle godoc
+//
+//	@Summary		Run the lease lifecycle sweeps (non-production only)
+//	@Description	Runs the activation and completion sweeps the `0 0 * * *` crons run, in that order. Registered only when the server's environment is not production. Exists so end-to-end scenarios can drive a lease from Pending through Active to Completed without waiting for a term to elapse.
+//	@Tags			Dev
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body		RunLeaseLifecycleBody					false	"Optional lease to restrict the sweeps to"
+//	@Success		200		{object}	object{data=RunLeaseLifecycleResponse}	"Sweeps completed"
+//	@Failure		401		{object}	string									"Invalid or absent authentication token"
+//	@Failure		500		{object}	string									"An unexpected error occurred"
+//	@Router			/api/v1/dev/jobs/lease-lifecycle [post]
+func (h *DevHandler) RunLeaseLifecycle(w http.ResponseWriter, r *http.Request) {
+	// Both sweeps are global — they iterate every lease, so there is no client
+	// or property to scope to. This route sits in the top-level protected
+	// group, where UserFromContext is what the auth middleware populates.
+	if _, ok := lib.UserFromContext(r.Context()); !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// An absent body means "every due lease" — the endpoint stays usable as a
+	// plain manual trigger, not only as a scoped one.
+	var body RunLeaseLifecycleBody
+	if r.Body != nil {
+		_ = json.NewDecoder(r.Body).Decode(&body)
+	}
+
+	onlyLeaseID := ""
+	if body.LeaseID != nil {
+		onlyLeaseID = *body.LeaseID
+	}
+
+	activated, activationFailures, err := h.leaseService.ActivateDueLeases(r.Context(), onlyLeaseID)
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	// Activation first, so a lease that reaches move-in and move-out inside a
+	// single scenario passes through Active rather than skipping it. The cron
+	// pair cannot rely on this ordering — see the note in RegisterScheduler —
+	// which is why dueForActivationScope excludes leases already past move-out
+	// rather than depending on who runs first.
+	completed, completionFailures, err := h.leaseService.CompleteDueLeases(r.Context(), onlyLeaseID)
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": RunLeaseLifecycleResponse{
+			Activated: activated,
+			Completed: completed,
+			Failed:    activationFailures + completionFailures,
 		},
 	})
 }

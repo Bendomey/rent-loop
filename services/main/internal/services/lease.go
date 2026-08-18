@@ -28,6 +28,12 @@ type LeaseService interface {
 	CancelLease(context context.Context, input CancelLeaseInput) error
 	CountOccupyingByUnitID(context context.Context, unitID string) (int64, error)
 	CompleteLease(ctx context.Context, leaseID string) (*models.Lease, error)
+	// onlyLeaseID empty means every due lease, which is what the cron passes.
+	// A non-empty value restricts the sweep to one lease so a caller can
+	// exercise it without transitioning every other lease in the database as
+	// a side effect — the same reason IssueDueInvoicesForAccount exists.
+	ActivateDueLeases(ctx context.Context, onlyLeaseID string) (activated int, failed int, err error)
+	CompleteDueLeases(ctx context.Context, onlyLeaseID string) (completed int, failed int, err error)
 	ResolveManagerRecipient(ctx context.Context, lease *models.Lease) (*models.ClientUser, error)
 }
 
@@ -410,8 +416,13 @@ func (s *leaseService) CountLeases(ctx context.Context, filters repository.ListL
 }
 
 type ActivateLeaseInput struct {
-	LeaseID      string
-	ClientUserId string
+	LeaseID string
+	// ClientUserId is nil when the activation cron acts rather than a person.
+	// Lease.ActivatedById is already nullable and the one consumer of the
+	// association — resolveCachedManagerRecipient in internal/queue — already
+	// falls back to ResolveManagerRecipient when it is absent, so a
+	// system-activated lease needs no other special handling.
+	ClientUserId *string
 }
 
 func (s *leaseService) ActivateLease(ctx context.Context, input ActivateLeaseInput) error {
@@ -445,7 +456,7 @@ func (s *leaseService) ActivateLease(ctx context.Context, input ActivateLeaseInp
 	lease.Status = "Lease.Status.Active"
 	now := time.Now()
 	lease.ActivatedAt = &now
-	lease.ActivatedById = &input.ClientUserId
+	lease.ActivatedById = input.ClientUserId
 
 	// Activation does no financial work. The initial deposit is a billing
 	// cadence on the FinancialAccount, set when charges were prepared, and what
@@ -606,6 +617,94 @@ func (s *leaseService) CancelLease(ctx context.Context, input CancelLeaseInput) 
 	return nil
 }
 
+// ActivateDueLeases moves every Pending lease whose move-in date has arrived to
+// Active. One lease failing must not abort the sweep, so failures are counted
+// and logged rather than returned; the error return is reserved for failing to
+// read the candidate set at all.
+func (s *leaseService) ActivateDueLeases(ctx context.Context, onlyLeaseID string) (int, int, error) {
+	leases, err := s.repo.ListDueForActivation(ctx)
+	if err != nil {
+		return 0, 0, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "ActivateDueLeases",
+				"action":   "listing leases due for activation",
+			},
+		})
+	}
+
+	var activated, failed int
+	for i := range *leases {
+		leaseID := (*leases)[i].ID.String()
+
+		if onlyLeaseID != "" && leaseID != onlyLeaseID {
+			continue
+		}
+
+		// ClientUserId stays nil: no person is acting.
+		if activateErr := s.ActivateLease(ctx, ActivateLeaseInput{LeaseID: leaseID}); activateErr != nil {
+			log.WithError(activateErr).WithField("lease_id", leaseID).
+				Error("failed to activate lease")
+			failed++
+			continue
+		}
+
+		activated++
+	}
+
+	return activated, failed, nil
+}
+
+// CompleteDueLeases completes every lease whose move-out date has fully passed.
+// Same failure policy as ActivateDueLeases.
+func (s *leaseService) CompleteDueLeases(ctx context.Context, onlyLeaseID string) (int, int, error) {
+	leases, err := s.repo.ListDueForCompletion(ctx)
+	if err != nil {
+		return 0, 0, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "CompleteDueLeases",
+				"action":   "listing leases due for completion",
+			},
+		})
+	}
+
+	var completed, failed int
+	for i := range *leases {
+		leaseID := (*leases)[i].ID.String()
+
+		if onlyLeaseID != "" && leaseID != onlyLeaseID {
+			continue
+		}
+
+		if _, completeErr := s.CompleteLease(ctx, leaseID); completeErr != nil {
+			log.WithError(completeErr).WithField("lease_id", leaseID).
+				Error("failed to complete lease")
+			failed++
+			continue
+		}
+
+		completed++
+	}
+
+	return completed, failed, nil
+}
+
+// isCompletableStatus reports whether a lease in this status may transition to
+// Completed.
+//
+// Pending is admitted deliberately, and ListDueForCompletion selects it for the
+// same reason: some managers never explicitly activate a lease before move-out.
+// Auto-activation now covers the common case, but a lease created after its own
+// move-out date can still never have been Active, and it must not be stranded —
+// while Pending it holds its unit's occupancy, so it would block the unit
+// forever. Completed rather than Cancelled because the ledger is real: these
+// leases carry charges and invoices, and Cancelled would assert the tenancy
+// never happened while arrears sit against it.
+func isCompletableStatus(status string) bool {
+	return status == "Lease.Status.Active" || status == "Lease.Status.Pending"
+}
+
 func (s *leaseService) CompleteLease(ctx context.Context, leaseID string) (*models.Lease, error) {
 	lease, getLeaseErr := s.repo.GetOneWithPopulate(ctx, repository.GetLeaseQuery{
 		ID:       leaseID,
@@ -626,8 +725,8 @@ func (s *leaseService) CompleteLease(ctx context.Context, leaseID string) (*mode
 		})
 	}
 
-	if lease.Status != "Lease.Status.Active" {
-		return nil, pkg.BadRequestError("LeaseIsNotActive", nil)
+	if !isCompletableStatus(lease.Status) {
+		return nil, pkg.BadRequestError("LeaseIsNotCompletable", nil)
 	}
 
 	transaction := s.appCtx.DB.Begin()
