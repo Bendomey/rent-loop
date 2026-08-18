@@ -64,6 +64,7 @@ type invoiceService struct {
 	notificationService NotificationService
 	tenantAccountRepo   repository.TenantAccountRepository
 	tenantRepo          repository.TenantRepository
+	leaseRepo           repository.LeaseRepository
 	// financials is the ONLY route to charge tables. This service never
 	// touches them directly.
 	financials *financials.Financials
@@ -77,6 +78,7 @@ func NewInvoiceService(
 	notificationService NotificationService,
 	tenantAccountRepo repository.TenantAccountRepository,
 	tenantRepo repository.TenantRepository,
+	leaseRepo repository.LeaseRepository,
 	financialsFacade *financials.Financials,
 ) InvoiceService {
 	return &invoiceService{
@@ -87,6 +89,7 @@ func NewInvoiceService(
 		notificationService: notificationService,
 		tenantAccountRepo:   tenantAccountRepo,
 		tenantRepo:          tenantRepo,
+		leaseRepo:           leaseRepo,
 		financials:          financialsFacade,
 	}
 }
@@ -1441,6 +1444,32 @@ func (s *invoiceService) ComposeFromAccount(
 	})
 }
 
+// payerLeaseFor attributes an invoice to a lease term.
+//
+// The charges being invoiced answer this themselves whenever they agree — an
+// invoice for March rent belongs to whichever term contains March. They cannot
+// answer when they are all account-level (a deposit, a credit) or when they
+// disagree, which is arrears from an ended term billed alongside the new
+// term's rent; those fall back to the account's current lease.
+func (s *invoiceService) payerLeaseFor(
+	ctx context.Context,
+	accountID string,
+	views []financials.ChargeView,
+) *string {
+	if derived := financials.DerivePayerLease(views); derived != nil {
+		return derived
+	}
+
+	current, err := s.leaseRepo.GetCurrentForAccount(ctx, accountID)
+	if err != nil || current == nil {
+		return nil
+	}
+
+	id := current.ID.String()
+
+	return &id
+}
+
 // ComposeAccountInvoice satisfies financials.InvoiceComposer. It is what the
 // issuance sweep calls once SelectIssuableCharges has decided what is due.
 func (s *invoiceService) ComposeAccountInvoice(
@@ -1458,7 +1487,7 @@ func (s *invoiceService) ComposeAccountInvoice(
 		FinancialAccountID:   accountID,
 		Claims:               claims,
 		PayerType:            "TENANT",
-		PayerLeaseID:         summary.Account.LeaseID,
+		PayerLeaseID:         s.payerLeaseFor(ctx, accountID, summary.Charges),
 		PayeeType:            "PROPERTY_OWNER",
 		PayeeClientID:        summary.Account.ClientID,
 		ContextType:          "LEASE_RENT",

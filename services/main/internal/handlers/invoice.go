@@ -917,7 +917,7 @@ func (h *InvoiceHandler) TenantGetInvoice(w http.ResponseWriter, r *http.Request
 	if !ownedByTenant && invoice.FinancialAccountID != nil {
 		account, accErr := h.services.Financials.Accounts.GetByID(r.Context(), *invoice.FinancialAccountID)
 		if accErr == nil && account != nil {
-			ownedByTenant = account.TenantApplicationID == lease.TenantApplicationId
+			ownedByTenant = account.OriginTenantApplicationID == lease.TenantApplicationId
 		}
 	}
 

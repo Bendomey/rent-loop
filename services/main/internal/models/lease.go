@@ -79,10 +79,14 @@ type Lease struct {
 	ParentLeaseId *string `gorm:"index;"`
 	ParentLease   *Lease
 
+	// The continuing financial relationship this term belongs to. Many leases
+	// share one account; a renewal inherits its parent's.
+	FinancialAccountID *string `gorm:"index;"`
+	FinancialAccount   *FinancialAccount
+
 	// Financials is a computed view attached in memory by the service — not a
-	// relation. The account is created against the application and linked to
-	// the lease at approval, so a lease can only reach it by lease_id.
-	Financials *TenantApplicationFinancials `gorm:"-"`
+	// relation.
+	Financials *AccountFinancials `gorm:"-"`
 }
 
 func (t *Lease) BeforeCreate(tx *gorm.DB) error {

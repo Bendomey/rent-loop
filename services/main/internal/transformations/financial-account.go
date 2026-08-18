@@ -43,6 +43,7 @@ func absInt64(v int64) int64 {
 type OutputChargeInstance struct {
 	ID                 string     `json:"id"                      example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
 	FinancialAccountID string     `json:"financial_account_id"`
+	LeaseID            *string    `json:"lease_id,omitempty"`
 	Name               string     `json:"name"                    example:"Rent – February 2027"`
 	Category           string     `json:"category"                example:"RENT"`
 	Amount             int64      `json:"amount"                  example:"100000"`
@@ -68,6 +69,7 @@ func DBChargeInstanceToRest(m *models.ChargeInstance) *OutputChargeInstance {
 	return &OutputChargeInstance{
 		ID:                 m.ID.String(),
 		FinancialAccountID: m.FinancialAccountID,
+		LeaseID:            m.LeaseID,
 		Name:               m.Name,
 		Category:           m.Category,
 		Amount:             m.Amount,
@@ -87,18 +89,18 @@ func DBChargeInstanceToRest(m *models.ChargeInstance) *OutputChargeInstance {
 }
 
 type OutputFinancialAccount struct {
-	ID                  string     `json:"id"                     example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
-	Code                string     `json:"code"                   example:"FA-2608-A1B2C3"`
+	ID                  string     `json:"id"                            example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
+	Code                string     `json:"code"                          example:"FA-2608-A1B2C3"`
 	TenantApplicationID string     `json:"tenant_application_id"`
-	LeaseID             *string    `json:"lease_id,omitempty"`
 	ClientID            *string    `json:"client_id,omitempty"`
 	PropertyID          *string    `json:"property_id,omitempty"`
 	TenantID            *string    `json:"tenant_id,omitempty"`
-	Currency            string     `json:"currency"               example:"GHS"`
-	RentBillingCadence  string     `json:"rent_billing_cadence"   example:"EVERY_N_PERIODS"`
-	RentBillingInterval int64      `json:"rent_billing_interval"  example:"12"`
-	AutoIssueDaysBefore int64      `json:"auto_issue_days_before" example:"5"`
-	Status              string     `json:"status"                 example:"ACTIVE"`
+	Currency            string     `json:"currency"                      example:"GHS"`
+	RentBillingCadence  string     `json:"rent_billing_cadence"          example:"EVERY_N_PERIODS"`
+	RentBillingInterval int64      `json:"rent_billing_interval"         example:"12"`
+	AutoIssueDaysBefore int64      `json:"auto_issue_days_before"        example:"5"`
+	Status              string     `json:"status"                        example:"ACTIVE"`
+	ClosureEligibleAt   *time.Time `json:"closure_eligible_at,omitempty"`
 	ClosedAt            *time.Time `json:"closed_at,omitempty"`
 	CreatedAt           time.Time  `json:"created_at"`
 	UpdatedAt           time.Time  `json:"updated_at"`
@@ -112,8 +114,7 @@ func DBFinancialAccountToRest(m *models.FinancialAccount) *OutputFinancialAccoun
 	return &OutputFinancialAccount{
 		ID:                  m.ID.String(),
 		Code:                m.Code,
-		TenantApplicationID: m.TenantApplicationID,
-		LeaseID:             m.LeaseID,
+		TenantApplicationID: m.OriginTenantApplicationID,
 		ClientID:            m.ClientID,
 		PropertyID:          m.PropertyID,
 		TenantID:            m.TenantID,
@@ -122,6 +123,7 @@ func DBFinancialAccountToRest(m *models.FinancialAccount) *OutputFinancialAccoun
 		RentBillingInterval: m.RentBillingInterval,
 		AutoIssueDaysBefore: m.AutoIssueDaysBefore,
 		Status:              m.Status,
+		ClosureEligibleAt:   m.ClosureEligibleAt,
 		ClosedAt:            m.ClosedAt,
 		CreatedAt:           m.CreatedAt,
 		UpdatedAt:           m.UpdatedAt,
@@ -154,7 +156,7 @@ type OutputTenantApplicationFinancials struct {
 }
 
 func DBTenantApplicationFinancialsToRest(
-	m *models.TenantApplicationFinancials,
+	m *models.AccountFinancials,
 ) *OutputTenantApplicationFinancials {
 	if m == nil || m.Account == nil {
 		return nil

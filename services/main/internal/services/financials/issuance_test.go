@@ -44,10 +44,14 @@ func (f *fakeChargeService) CreateAdHoc(
 ) (*models.ChargeInstance, error) {
 	return nil, nil
 }
+func (f *fakeChargeService) ReassignAccount(context.Context, string, string) error { return nil }
+func (f *fakeChargeService) ScopeUnassignedToLease(context.Context, string, string) error {
+	return nil
+}
 func (f *fakeChargeService) VoidInstance(context.Context, VoidChargeInput) error   { return nil }
 func (f *fakeChargeService) RederiveRent(context.Context, RederiveRentInput) error { return nil }
 func (f *fakeChargeService) ListInstances(
-	context.Context, string, bool,
+	context.Context, string, *string, bool,
 ) ([]models.ChargeInstance, error) {
 	return nil, nil
 }

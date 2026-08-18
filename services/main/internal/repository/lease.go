@@ -14,6 +14,23 @@ type LeaseRepository interface {
 	Create(context context.Context, lease *models.Lease) error
 	GetOneWithPopulate(context context.Context, query GetLeaseQuery) (*models.Lease, error)
 	GetActiveLeaseByUnitID(context context.Context, unitID string) (*models.Lease, error)
+	// GetCurrentForAccount returns the account's Active lease, or its most
+	// recent by move-in date when none is active. The fallback for invoice
+	// attribution when the charges themselves cannot say which term they
+	// belong to.
+	GetCurrentForAccount(context context.Context, financialAccountID string) (*models.Lease, error)
+	// SetFinancialAccount writes the lease half of the lease <-> account link.
+	//
+	// A targeted UPDATE through lib.ResolveDB rather than a read-modify-save:
+	// approval calls this inside its transaction, immediately after creating
+	// the lease, and GetOneWithPopulate reads the base connection rather than
+	// the transaction — so a re-read would not find the row yet.
+	SetFinancialAccount(context context.Context, leaseID, financialAccountID string) error
+	// HasMoveOutEvidenceForAccount reports whether any lease on the account has
+	// a completed termination or a check-out checklist. Advisory only — it
+	// warns at closure, it never blocks, because a lease that simply runs to
+	// Completed produces neither.
+	HasMoveOutEvidenceForAccount(context context.Context, financialAccountID string) (bool, error)
 	Update(context context.Context, lease *models.Lease) error
 	List(context context.Context, filterQuery ListLeasesFilter) (*[]models.Lease, error)
 	Count(context context.Context, filterQuery ListLeasesFilter) (int64, error)
@@ -64,6 +81,62 @@ func (r *leaseRepository) GetOneWithPopulate(ctx context.Context, query GetLease
 	return &lease, nil
 }
 
+func (r *leaseRepository) SetFinancialAccount(ctx context.Context, leaseID, financialAccountID string) error {
+	return lib.ResolveDB(ctx, r.DB).
+		Model(&models.Lease{}).
+		Where("id = ?", leaseID).
+		Update("financial_account_id", financialAccountID).Error
+}
+
+func (r *leaseRepository) GetCurrentForAccount(
+	ctx context.Context,
+	financialAccountID string,
+) (*models.Lease, error) {
+	var lease models.Lease
+	result := r.DB.WithContext(ctx).
+		Where("financial_account_id = ?", financialAccountID).
+		Order("CASE WHEN status = 'Lease.Status.Active' THEN 0 ELSE 1 END, move_in_date DESC").
+		First(&lease)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return &lease, nil
+}
+
+func (r *leaseRepository) HasMoveOutEvidenceForAccount(
+	ctx context.Context,
+	financialAccountID string,
+) (bool, error) {
+	var count int64
+
+	err := r.DB.WithContext(ctx).
+		Model(&models.Lease{}).
+		Where("leases.financial_account_id = ?", financialAccountID).
+		Where("leases.deleted_at IS NULL").
+		Where(`(
+			EXISTS (
+				SELECT 1 FROM lease_terminations lt
+				WHERE lt.lease_id = leases.id
+				  AND lt.deleted_at IS NULL
+				  AND lt.completed_at IS NOT NULL
+			)
+			OR EXISTS (
+				SELECT 1 FROM lease_checklists lc
+				WHERE lc.lease_id = leases.id
+				  AND lc.deleted_at IS NULL
+				  AND lc.type = 'CHECK_OUT'
+			)
+		)`).
+		Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}
+
 func (r *leaseRepository) GetActiveLeaseByUnitID(ctx context.Context, unitID string) (*models.Lease, error) {
 	var lease models.Lease
 	result := r.DB.WithContext(ctx).
@@ -95,6 +168,7 @@ type ListLeasesFilter struct {
 	ClientUserID               *string
 	Status                     *string
 	ParentLeaseID              *string
+	FinancialAccountID         *string
 	PaymentFrequency           *string
 	StayDurationFrequency      *string
 	LeaseAgreementDocumentMode *string
@@ -112,6 +186,7 @@ func (r *leaseRepository) List(ctx context.Context, filterQuery ListLeasesFilter
 		propertyLeasesScope(filterQuery.PropertyIDs, filterQuery.ClientUserID),
 		leaseFilterScope("status", filterQuery.Status),
 		leaseFilterScope("parent_lease_id", filterQuery.ParentLeaseID),
+		leaseFilterScope("financial_account_id", filterQuery.FinancialAccountID),
 		leaseFilterScope("payment_frequency", filterQuery.PaymentFrequency),
 		leaseFilterScope("stay_duration_frequency", filterQuery.StayDurationFrequency),
 		leaseFilterScope("lease_agreement_document_mode", filterQuery.LeaseAgreementDocumentMode),
@@ -147,6 +222,7 @@ func (r *leaseRepository) Count(ctx context.Context, filterQuery ListLeasesFilte
 		propertyLeasesScope(filterQuery.PropertyIDs, filterQuery.ClientUserID),
 		leaseFilterScope("status", filterQuery.Status),
 		leaseFilterScope("parent_lease_id", filterQuery.ParentLeaseID),
+		leaseFilterScope("financial_account_id", filterQuery.FinancialAccountID),
 		leaseFilterScope("payment_frequency", filterQuery.PaymentFrequency),
 		leaseFilterScope("stay_duration_frequency", filterQuery.StayDurationFrequency),
 		leaseFilterScope("lease_agreement_document_mode", filterQuery.LeaseAgreementDocumentMode),

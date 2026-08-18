@@ -268,9 +268,18 @@ func (s *paymentService) CreateOfflinePayment(
 	var notifyLeaseID, notifyApplicationID *string
 	if invoice.FinancialAccountID != nil && s.financials != nil {
 		if account, accErr := s.financials.Accounts.GetByID(ctx, *invoice.FinancialAccountID); accErr == nil {
-			notifyLeaseID = account.LeaseID
-			applicationID := account.TenantApplicationID
+			applicationID := account.OriginTenantApplicationID
 			notifyApplicationID = &applicationID
+
+			// An account spans every term of a tenancy, so it cannot name a
+			// lease on its own. The notification is about money that just
+			// landed, so the current term is the right one to show.
+			if current, curErr := s.leaseService.GetCurrentForAccount(
+				ctx, *invoice.FinancialAccountID,
+			); curErr == nil && current != nil {
+				id := current.ID.String()
+				notifyLeaseID = &id
+			}
 		}
 	}
 

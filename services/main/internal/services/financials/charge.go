@@ -14,6 +14,7 @@ import (
 func ToChargeView(m models.ChargeInstance) ChargeView {
 	return ChargeView{
 		ID:             m.ID.String(),
+		LeaseID:        m.LeaseID,
 		Category:       m.Category,
 		Amount:         m.Amount,
 		DueDate:        m.DueDate,
@@ -95,6 +96,9 @@ type ChargeService interface {
 	CreateAdHoc(ctx context.Context, input CreateAdHocChargeInput) (*models.ChargeInstance, error)
 	VoidInstance(ctx context.Context, input VoidChargeInput) error
 	RederiveRent(ctx context.Context, input RederiveRentInput) error
+	// ScopeUnassignedToLease gives an application's charges the contractual
+	// context of the lease that application became.
+	ScopeUnassignedToLease(ctx context.Context, financialAccountID, leaseID string) error
 	ListViews(ctx context.Context, financialAccountID string) ([]ChargeView, error)
 	// ListInstances returns the persisted models. The transformation layer
 	// needs Name, Currency and VoidedAt, which ChargeView deliberately does
@@ -102,9 +106,13 @@ type ChargeService interface {
 	// includeVoided brings back charges that have been voided. They are
 	// excluded by default because they are not obligations; a caller asks for
 	// them to review what was cancelled and why.
+	// leaseID scopes the list to one contractual term — the UI's "This Lease"
+	// view. Nil returns the whole tenancy, which is what balance and
+	// allocation always operate on.
 	ListInstances(
 		ctx context.Context,
 		financialAccountID string,
+		leaseID *string,
 		includeVoided bool,
 	) ([]models.ChargeInstance, error)
 }
@@ -120,10 +128,12 @@ func NewChargeService(repo repository.ChargeRepository) ChargeService {
 func (s *chargeService) ListInstances(
 	ctx context.Context,
 	financialAccountID string,
+	leaseID *string,
 	includeVoided bool,
 ) ([]models.ChargeInstance, error) {
 	instances, err := s.repo.ListInstances(ctx, repository.ListChargeInstancesFilter{
 		FinancialAccountID: &financialAccountID,
+		LeaseID:            leaseID,
 		IncludeVoided:      includeVoided,
 	})
 	if err != nil {
@@ -133,6 +143,17 @@ func (s *chargeService) ListInstances(
 		})
 	}
 	return *instances, nil
+}
+
+func (s *chargeService) ScopeUnassignedToLease(ctx context.Context, financialAccountID, leaseID string) error {
+	if err := s.repo.ScopeUnassignedToLease(ctx, financialAccountID, leaseID); err != nil {
+		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err:      err,
+			Metadata: map[string]string{"function": "ScopeUnassignedToLease", "action": "scoping charges"},
+		})
+	}
+
+	return nil
 }
 
 func (s *chargeService) ListViews(ctx context.Context, financialAccountID string) ([]ChargeView, error) {

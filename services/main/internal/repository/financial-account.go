@@ -11,8 +11,12 @@ import (
 type GetFinancialAccountQuery struct {
 	ID                  *string
 	TenantApplicationID *string
-	LeaseID             *string
-	Populate            *[]string
+	TenantID            *string
+	PropertyID          *string
+	// Statuses restricts the lookup to a set — resolution passes
+	// {ACTIVE, CLOSURE_ELIGIBLE}, since an eligible account is still reusable.
+	Statuses *[]string
+	Populate *[]string
 }
 
 type FinancialAccountRepository interface {
@@ -54,8 +58,18 @@ func (r *financialAccountRepository) GetOne(
 ) (*models.FinancialAccount, error) {
 	var account models.FinancialAccount
 
-	db := lib.ResolveDB(ctx, r.DB).Model(&models.FinancialAccount{})
+	db := applyFinancialAccountQuery(lib.ResolveDB(ctx, r.DB).Model(&models.FinancialAccount{}), query)
 
+	if err := db.First(&account).Error; err != nil {
+		return nil, err
+	}
+
+	return &account, nil
+}
+
+// applyFinancialAccountQuery is extracted so GetOne and its tests render the
+// same predicates.
+func applyFinancialAccountQuery(db *gorm.DB, query GetFinancialAccountQuery) *gorm.DB {
 	if query.Populate != nil {
 		for _, populate := range *query.Populate {
 			db = db.Preload(populate)
@@ -68,15 +82,17 @@ func (r *financialAccountRepository) GetOne(
 	if query.TenantApplicationID != nil {
 		db = db.Where("financial_accounts.tenant_application_id = ?", *query.TenantApplicationID)
 	}
-	if query.LeaseID != nil {
-		db = db.Where("financial_accounts.lease_id = ?", *query.LeaseID)
+	if query.TenantID != nil {
+		db = db.Where("financial_accounts.tenant_id = ?", *query.TenantID)
+	}
+	if query.PropertyID != nil {
+		db = db.Where("financial_accounts.property_id = ?", *query.PropertyID)
+	}
+	if query.Statuses != nil {
+		db = db.Where("financial_accounts.status IN ?", *query.Statuses)
 	}
 
-	if err := db.First(&account).Error; err != nil {
-		return nil, err
-	}
-
-	return &account, nil
+	return db
 }
 
 func (r *financialAccountRepository) SumSuccessfulPayments(
@@ -108,7 +124,7 @@ func (r *financialAccountRepository) ListActiveForBilling(
 
 	err := lib.ResolveDB(ctx, r.DB).
 		Model(&models.FinancialAccount{}).
-		Where("financial_accounts.status = ?", "ACTIVE").
+		Where("financial_accounts.status IN ?", []string{"ACTIVE", "CLOSURE_ELIGIBLE"}).
 		Where("financial_accounts.rent_billing_cadence != ?", "MANUAL").
 		Find(&accounts).Error
 	if err != nil {

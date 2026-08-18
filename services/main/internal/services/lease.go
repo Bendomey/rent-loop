@@ -22,6 +22,17 @@ type LeaseService interface {
 	CreateLease(context context.Context, input CreateLeaseInput) (*models.Lease, error)
 	UpdateLease(context context.Context, input UpdateLeaseInput) (*models.Lease, error)
 	GetByIDWithPopulate(context context.Context, query repository.GetLeaseQuery) (*models.Lease, error)
+	// GetCurrentForAccount returns the account's Active lease, or its most
+	// recent by move-in date. The fallback for attributing money to a term
+	// when the charges themselves cannot say which one they belong to.
+	GetCurrentForAccount(context context.Context, financialAccountID string) (*models.Lease, error)
+	// SetFinancialAccount writes the lease half of the lease <-> account link.
+	SetFinancialAccount(context context.Context, leaseID, financialAccountID string) error
+	// ListTermsForAccount and HasMoveOutEvidence together satisfy
+	// financials.LeaseTermReader, which is how the closure service reads lease
+	// state without the financials package importing this one.
+	ListTermsForAccount(context context.Context, financialAccountID string) ([]financials.LeaseTerm, error)
+	HasMoveOutEvidence(context context.Context, financialAccountID string) (bool, error)
 	ListLeases(context context.Context, filters repository.ListLeasesFilter) ([]models.Lease, error)
 	CountLeases(context context.Context, filters repository.ListLeasesFilter) (int64, error)
 	ActivateLease(context context.Context, input ActivateLeaseInput) error
@@ -289,8 +300,7 @@ func (s *leaseService) UpdateLease(ctx context.Context, input UpdateLeaseInput) 
 	// landlord must adjust with explicit charges instead.
 	if input.MoveInDate != nil || input.RentFee != nil || input.StayDuration != nil ||
 		input.StayDurationFrequency != nil {
-		leaseID := lease.ID.String()
-		if account, accErr := s.financials.Accounts.GetByLease(ctx, leaseID); accErr == nil && account != nil &&
+		if account, accErr := s.accountForLease(ctx, lease); accErr == nil && account != nil &&
 			lease.PaymentFrequency != nil {
 			rederiveErr := s.financials.Charges.RederiveRent(ctx, financials.RederiveRentInput{
 				FinancialAccountID:    account.ID.String(),
@@ -319,6 +329,49 @@ func (s *leaseService) UpdateLease(ctx context.Context, input UpdateLeaseInput) 
 	}
 
 	return lease, nil
+}
+
+// recomputeAccountEligibility re-evaluates whether the lease's account looks
+// finished, after any status transition.
+//
+// Activation matters as much as termination: activating a renewal on an
+// account that had gone CLOSURE_ELIGIBLE must pull it back to ACTIVE.
+//
+// Failures are logged, never returned. Eligibility is advisory — it decides
+// what a PM is shown, not what is true — so it must not fail the status change
+// the user actually asked for. The daily sweep corrects any drift.
+func (s *leaseService) recomputeAccountEligibility(ctx context.Context, lease *models.Lease) {
+	if lease == nil || lease.FinancialAccountID == nil || s.financials.Closure == nil {
+		return
+	}
+
+	if err := s.financials.Closure.RecomputeEligibility(ctx, *lease.FinancialAccountID); err != nil {
+		log.WithError(err).Error("[LeaseService] recomputing closure eligibility")
+	}
+}
+
+// SetFinancialAccount points a lease at the financial relationship it belongs
+// to. Many leases share one account, so this FK lives on the lease.
+//
+// Delegates a targeted UPDATE rather than reading the lease back first:
+// approval calls this inside its transaction, right after creating the lease,
+// and the repository's getter reads outside the transaction.
+func (s *leaseService) SetFinancialAccount(ctx context.Context, leaseID, financialAccountID string) error {
+	if err := s.repo.SetFinancialAccount(ctx, leaseID, financialAccountID); err != nil {
+		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err:      err,
+			Metadata: map[string]string{"function": "SetFinancialAccount", "action": "linking account"},
+		})
+	}
+
+	return nil
+}
+
+func (s *leaseService) GetCurrentForAccount(
+	ctx context.Context,
+	financialAccountID string,
+) (*models.Lease, error) {
+	return s.repo.GetCurrentForAccount(ctx, financialAccountID)
 }
 
 func (s *leaseService) GetByIDWithPopulate(ctx context.Context, query repository.GetLeaseQuery) (*models.Lease, error) {
@@ -351,6 +404,55 @@ func (s *leaseService) GetByIDWithPopulate(ctx context.Context, query repository
 // TenantApplication cannot carry it, because its own Financials field is a
 // computed view rather than a relation and GORM leaves it nil.
 //
+// ListTermsForAccount satisfies financials.LeaseTermReader. It hands the
+// closure service the account's terms as plain values, so the closure rules
+// stay testable without a database.
+func (s *leaseService) ListTermsForAccount(
+	ctx context.Context,
+	financialAccountID string,
+) ([]financials.LeaseTerm, error) {
+	leases, err := s.repo.List(ctx, repository.ListLeasesFilter{
+		FinancialAccountID: &financialAccountID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	terms := make([]financials.LeaseTerm, 0, len(*leases))
+	for _, lease := range *leases {
+		terms = append(terms, financials.LeaseTerm{
+			ID:     lease.ID.String(),
+			Status: lease.Status,
+		})
+	}
+
+	return terms, nil
+}
+
+// HasMoveOutEvidence satisfies financials.LeaseTermReader.
+func (s *leaseService) HasMoveOutEvidence(ctx context.Context, financialAccountID string) (bool, error) {
+	return s.repo.HasMoveOutEvidenceForAccount(ctx, financialAccountID)
+}
+
+// accountForLease resolves the financial relationship a lease belongs to.
+//
+// The lookup now runs lease -> account. It used to run account -> lease, on a
+// unique financial_accounts.lease_id, which stopped being possible once one
+// account began spanning every term of a tenancy.
+//
+// A nil account is not an error: a lease whose charges were never prepared
+// simply has no relationship yet.
+func (s *leaseService) accountForLease(
+	ctx context.Context,
+	lease *models.Lease,
+) (*models.FinancialAccount, error) {
+	if lease == nil || lease.FinancialAccountID == nil {
+		return nil, nil
+	}
+
+	return s.financials.Accounts.GetByID(ctx, *lease.FinancialAccountID)
+}
+
 // Failures are non-fatal: a lease whose charges were never prepared simply has
 // no financials, which the UI renders as "no account".
 func (s *leaseService) attachFinancials(ctx context.Context, lease *models.Lease) {
@@ -358,7 +460,7 @@ func (s *leaseService) attachFinancials(ctx context.Context, lease *models.Lease
 		return
 	}
 
-	account, accErr := s.financials.Accounts.GetByLease(ctx, lease.ID.String())
+	account, accErr := s.accountForLease(ctx, lease)
 	if accErr != nil || account == nil {
 		return
 	}
@@ -373,7 +475,7 @@ func (s *leaseService) attachFinancials(ctx context.Context, lease *models.Lease
 		FinancialAccountID: &accountID,
 	})
 
-	lease.Financials = &models.TenantApplicationFinancials{
+	lease.Financials = &models.AccountFinancials{
 		Account:           account,
 		TotalCharged:      summary.TotalCharged,
 		TotalSettled:      summary.TotalSettled,
@@ -527,6 +629,8 @@ func (s *leaseService) ActivateLease(ctx context.Context, input ActivateLeaseInp
 		},
 	)
 
+	s.recomputeAccountEligibility(ctx, lease)
+
 	return nil
 }
 
@@ -613,6 +717,8 @@ func (s *leaseService) CancelLease(ctx context.Context, input CancelLeaseInput) 
 			Message:   smsMessage,
 		},
 	)
+
+	s.recomputeAccountEligibility(ctx, lease)
 
 	return nil
 }
@@ -848,6 +954,8 @@ func (s *leaseService) CompleteLease(ctx context.Context, leaseID string) (*mode
 			)
 		}
 	}
+
+	s.recomputeAccountEligibility(ctx, lease)
 
 	return lease, nil
 }

@@ -7393,6 +7393,88 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/financial-accounts/{account_id}/close": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Ends a tenancy's financial relationship and releases the deposit. Every blocking gate must pass: all leases ended, nothing outstanding, and the held deposit resolved. Missing move-out evidence warns but does not block. Releasing or offsetting posts a reversing SECURITY_DEPOSIT charge; forfeiting requires a reason. Writes an audit row rather than flipping a status.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "FinancialAccounts"
+                ],
+                "summary": "Close a financial account",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Financial account ID",
+                        "name": "account_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Closure decision",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CloseAccountBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Account closed",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "A blocking gate has not passed, the account is already closed, or a forfeit was given without a reason",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Financial account not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/clients/{client_id}/properties/{property_id}/financial-accounts/{account_id}/invoices:compose": {
             "post": {
                 "security": [
@@ -7462,6 +7544,88 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Financial account or charge not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/financial-accounts/{account_id}/reopen": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns a closed account to ACTIVE. Recorded on the original closure row with the reason, so an accidental closure leaves a trail rather than silently rewriting history. Any deposit refund already posted is NOT reversed — that is a separate charge.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "FinancialAccounts"
+                ],
+                "summary": "Reopen a closed financial account",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Financial account ID",
+                        "name": "account_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Reason for reopening",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ReopenAccountBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Account reopened",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "The account is not closed, or no reason was given",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Financial account or its closure record not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -20958,6 +21122,43 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "financials.ClosureEligibility": {
+            "type": "object",
+            "properties": {
+                "can_close": {
+                    "type": "boolean"
+                },
+                "deposit_held_amount": {
+                    "type": "integer"
+                },
+                "gates": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/financials.ClosureGate"
+                    }
+                },
+                "outstanding_amount": {
+                    "type": "integer"
+                }
+            }
+        },
+        "financials.ClosureGate": {
+            "type": "object",
+            "properties": {
+                "blocking": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "passed": {
+                    "type": "boolean"
+                },
+                "reason": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.AddExpenseBody": {
             "type": "object",
             "required": [
@@ -21610,6 +21811,29 @@ const docTemplate = `{
                 "charge_instance_id": {
                     "type": "string",
                     "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                }
+            }
+        },
+        "handlers.CloseAccountBody": {
+            "type": "object",
+            "required": [
+                "reason"
+            ],
+            "properties": {
+                "deposit_forfeit_reason": {
+                    "type": "string"
+                },
+                "deposit_resolution": {
+                    "description": "RELEASE refunds the held deposit, OFFSET applies it against what is\nowed, FORFEIT keeps it and requires a reason. Ignored when no deposit\nis held.",
+                    "type": "string",
+                    "enum": [
+                        "RELEASE",
+                        "OFFSET",
+                        "FORFEIT"
+                    ]
+                },
+                "reason": {
+                    "type": "string"
                 }
             }
         },
@@ -23114,6 +23338,17 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.ReopenAccountBody": {
+            "type": "object",
+            "required": [
+                "reason"
+            ],
+            "properties": {
+                "reason": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.RunInvoiceIssuanceBody": {
             "type": "object",
             "properties": {
@@ -24374,6 +24609,14 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/transformations.OutputChargeInstance"
                     }
+                },
+                "closure_eligibility": {
+                    "description": "ClosureEligibility is the PM's closure checklist: every gate with its\nblocking reason, so the UI can render the panel without a second call.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/financials.ClosureEligibility"
+                        }
+                    ]
                 },
                 "outstanding_amount": {
                     "type": "integer"
@@ -25986,6 +26229,9 @@ const docTemplate = `{
                     "type": "integer",
                     "example": 0
                 },
+                "lease_id": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string",
                     "example": "Rent – February 2027"
@@ -26519,6 +26765,9 @@ const docTemplate = `{
                 "closed_at": {
                     "type": "string"
                 },
+                "closure_eligible_at": {
+                    "type": "string"
+                },
                 "code": {
                     "type": "string",
                     "example": "FA-2608-A1B2C3"
@@ -26533,9 +26782,6 @@ const docTemplate = `{
                 "id": {
                     "type": "string",
                     "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
-                },
-                "lease_id": {
-                    "type": "string"
                 },
                 "property_id": {
                     "type": "string"

@@ -78,6 +78,19 @@ type ComposeInvoiceBody struct {
 
 // ─── Response payloads ────────────────────────────────────────────────────────
 
+type CloseAccountBody struct {
+	Reason string `json:"reason"                 validate:"required"`
+	// RELEASE refunds the held deposit, OFFSET applies it against what is
+	// owed, FORFEIT keeps it and requires a reason. Ignored when no deposit
+	// is held.
+	DepositResolution    string  `json:"deposit_resolution"     validate:"omitempty,oneof=RELEASE OFFSET FORFEIT"`
+	DepositForfeitReason *string `json:"deposit_forfeit_reason"`
+}
+
+type ReopenAccountBody struct {
+	Reason string `json:"reason" validate:"required"`
+}
+
 type accountSummaryResponse struct {
 	Account           *transformations.OutputFinancialAccount `json:"account"`
 	Charges           []*transformations.OutputChargeInstance `json:"charges"`
@@ -85,6 +98,9 @@ type accountSummaryResponse struct {
 	TotalSettled      int64                                   `json:"total_settled"`
 	OutstandingAmount int64                                   `json:"outstanding_amount"`
 	AvailableCredit   int64                                   `json:"available_credit"`
+	// ClosureEligibility is the PM's closure checklist: every gate with its
+	// blocking reason, so the UI can render the panel without a second call.
+	ClosureEligibility *financials.ClosureEligibility `json:"closure_eligibility,omitempty"`
 }
 
 // ─── Handlers ─────────────────────────────────────────────────────────────────
@@ -373,18 +389,33 @@ func (h *FinancialAccountHandler) ComposeInvoice(w http.ResponseWriter, r *http.
 	// An account that has not yet been approved into a lease bills the
 	// application; afterwards it bills the tenant. The charges are identical
 	// either way — only the payer label differs.
+	//
+	// Application-stage is TenantID IS NULL. It used to be LeaseID IS NULL,
+	// which stopped being a question the account could answer once one account
+	// began spanning several leases.
 	payerType := "TENANT_APPLICATION"
 	contextType := "TENANT_APPLICATION"
-	if summary.Account.LeaseID != nil {
+	if summary.Account.TenantID != nil {
 		payerType = "TENANT"
 		contextType = "LEASE_RENT"
+	}
+
+	// The charges being invoiced say which term they belong to; when they are
+	// all account-level or disagree, fall back to the account's current lease.
+	payerLeaseID := financials.DerivePayerLease(summary.Charges)
+	if payerLeaseID == nil {
+		if current, curErr := h.leaseService.GetCurrentForAccount(r.Context(), accountID); curErr == nil &&
+			current != nil {
+			id := current.ID.String()
+			payerLeaseID = &id
+		}
 	}
 
 	input := services.ComposeFromAccountInput{
 		FinancialAccountID:   accountID,
 		Amount:               body.Amount,
 		PayerType:            payerType,
-		PayerLeaseID:         summary.Account.LeaseID,
+		PayerLeaseID:         payerLeaseID,
 		PayeeType:            "PROPERTY_OWNER",
 		PayeeClientID:        summary.Account.ClientID,
 		ContextType:          contextType,
@@ -493,12 +524,11 @@ func (h *FinancialAccountHandler) tenantAccountSummary(
 		return nil, pkg.ForbiddenError("LeaseDoesNotBelongToTenant", nil)
 	}
 
-	account, accErr := h.financials.Accounts.GetByLease(r.Context(), leaseID)
-	if accErr != nil {
-		return nil, pkg.NotFoundError("FinancialAccountNotFound", &pkg.RentLoopErrorParams{Err: accErr})
+	if lease.FinancialAccountID == nil {
+		return nil, pkg.NotFoundError("FinancialAccountNotFound", nil)
 	}
 
-	return h.financials.Accounts.Summary(r.Context(), account.ID.String())
+	return h.financials.Accounts.Summary(r.Context(), *lease.FinancialAccountID)
 }
 
 // summaryToRest builds the response from the persisted instances rather than
@@ -515,8 +545,16 @@ func (h *FinancialAccountHandler) summaryToRest(
 ) (accountSummaryResponse, error) {
 	includeVoided := r.URL.Query().Get("include_voided") == "true"
 
+	// ?lease_id= scopes the charge list to one term. Omitted, the caller sees
+	// the whole tenancy. The account totals below are deliberately NOT scoped:
+	// a balance split by lease would not equal the account's real balance.
+	var leaseID *string
+	if raw := r.URL.Query().Get("lease_id"); raw != "" {
+		leaseID = &raw
+	}
+
 	instances, err := h.financials.Charges.ListInstances(
-		r.Context(), summary.Account.ID.String(), includeVoided,
+		r.Context(), summary.Account.ID.String(), leaseID, includeVoided,
 	)
 	if err != nil {
 		return accountSummaryResponse{}, err
@@ -527,12 +565,122 @@ func (h *FinancialAccountHandler) summaryToRest(
 		charges = append(charges, transformations.DBChargeInstanceToRest(&instances[i]))
 	}
 
-	return accountSummaryResponse{
+	response := accountSummaryResponse{
 		Account:           transformations.DBFinancialAccountToRest(summary.Account),
 		Charges:           charges,
 		TotalCharged:      summary.TotalCharged,
 		TotalSettled:      summary.TotalSettled,
 		OutstandingAmount: summary.OutstandingAmount,
 		AvailableCredit:   summary.AvailableCredit,
-	}, nil
+	}
+
+	// Advisory: a failure here must not fail the read the caller asked for.
+	if h.financials.Closure != nil {
+		if eligibility, eligErr := h.financials.Closure.Eligibility(
+			r.Context(), summary.Account.ID.String(),
+		); eligErr == nil {
+			response.ClosureEligibility = eligibility
+		}
+	}
+
+	return response, nil
+}
+
+// CloseAccount godoc
+//
+//	@Summary		Close a financial account
+//	@Description	Ends a tenancy's financial relationship and releases the deposit. Every blocking gate must pass: all leases ended, nothing outstanding, and the held deposit resolved. Missing move-out evidence warns but does not block. Releasing or offsetting posts a reversing SECURITY_DEPOSIT charge; forfeiting requires a reason. Writes an audit row rather than flipping a status.
+//	@Tags			FinancialAccounts
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			property_id	path		string				true	"Property ID"
+//	@Param			account_id	path		string				true	"Financial account ID"
+//	@Param			body		body		CloseAccountBody	true	"Closure decision"
+//	@Success		200			{object}	object{data=bool}	"Account closed"
+//	@Failure		400			{object}	lib.HTTPError		"A blocking gate has not passed, the account is already closed, or a forfeit was given without a reason"
+//	@Failure		401			{object}	string				"Invalid or absent authentication token"
+//	@Failure		404			{object}	lib.HTTPError		"Financial account not found"
+//	@Failure		422			{object}	lib.HTTPError		"Validation error"
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/financial-accounts/{account_id}/close [post]
+func (h *FinancialAccountHandler) CloseAccount(w http.ResponseWriter, r *http.Request) {
+	clientUser, ok := lib.ClientUserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var body CloseAccountBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+	if !lib.ValidateRequest(h.appCtx.Validator, body, w) {
+		return
+	}
+
+	resolution := financials.DepositResolution(body.DepositResolution)
+	if body.DepositResolution == "" {
+		resolution = financials.DepositRelease
+	}
+
+	err := h.financials.Closure.Close(r.Context(), financials.CloseAccountInput{
+		FinancialAccountID:   chi.URLParam(r, "account_id"),
+		ClosedByID:           clientUser.ID,
+		Reason:               body.Reason,
+		DepositResolution:    resolution,
+		DepositForfeitReason: body.DepositForfeitReason,
+	})
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{"data": true})
+}
+
+// ReopenAccount godoc
+//
+//	@Summary		Reopen a closed financial account
+//	@Description	Returns a closed account to ACTIVE. Recorded on the original closure row with the reason, so an accidental closure leaves a trail rather than silently rewriting history. Any deposit refund already posted is NOT reversed — that is a separate charge.
+//	@Tags			FinancialAccounts
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			property_id	path		string				true	"Property ID"
+//	@Param			account_id	path		string				true	"Financial account ID"
+//	@Param			body		body		ReopenAccountBody	true	"Reason for reopening"
+//	@Success		200			{object}	object{data=bool}	"Account reopened"
+//	@Failure		400			{object}	lib.HTTPError		"The account is not closed, or no reason was given"
+//	@Failure		401			{object}	string				"Invalid or absent authentication token"
+//	@Failure		404			{object}	lib.HTTPError		"Financial account or its closure record not found"
+//	@Failure		422			{object}	lib.HTTPError		"Validation error"
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/financial-accounts/{account_id}/reopen [post]
+func (h *FinancialAccountHandler) ReopenAccount(w http.ResponseWriter, r *http.Request) {
+	clientUser, ok := lib.ClientUserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var body ReopenAccountBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+	if !lib.ValidateRequest(h.appCtx.Validator, body, w) {
+		return
+	}
+
+	err := h.financials.Closure.Reopen(r.Context(), financials.ReopenAccountInput{
+		FinancialAccountID: chi.URLParam(r, "account_id"),
+		ReopenedByID:       clientUser.ID,
+		Reason:             body.Reason,
+	})
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{"data": true})
 }

@@ -393,6 +393,10 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 								Patch("/billing-policy", handlers.FinancialAccountHandler.UpdateBillingPolicy)
 							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
 								Post("/invoices:compose", handlers.FinancialAccountHandler.ComposeInvoice)
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+								Post("/close", handlers.FinancialAccountHandler.CloseAccount)
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+								Post("/reopen", handlers.FinancialAccountHandler.ReopenAccount)
 						})
 
 						r.Route("/invoices", func(r chi.Router) {

@@ -11,12 +11,16 @@ import (
 
 type ListChargeInstancesFilter struct {
 	FinancialAccountID *string
-	Category           *string
-	IncludeVoided      bool
+	// LeaseID scopes to one contractual term. Omit it for the whole tenancy —
+	// balance and allocation always run unscoped.
+	LeaseID       *string
+	Category      *string
+	IncludeVoided bool
 }
 
 type ListChargeDefinitionsFilter struct {
 	FinancialAccountID *string
+	LeaseID            *string
 	Status             *string
 }
 
@@ -35,6 +39,13 @@ type ChargeRepository interface {
 		ctx context.Context,
 		filters ListChargeInstancesFilter,
 	) (*[]models.ChargeInstance, error)
+
+	// ScopeUnassignedToLease stamps an account's charges with the lease term
+	// they belong to. Charges are prepared against an APPLICATION, before any
+	// lease exists, so at approval they have no contractual context yet — this
+	// is what gives it to them. Only unscoped rows are touched, so it can
+	// never move a charge from one term to another.
+	ScopeUnassignedToLease(ctx context.Context, financialAccountID, leaseID string) error
 
 	// LockInstances re-reads the given instances with SELECT ... FOR UPDATE.
 	// Composition and allocation both mutate InvoicedAmount/SettledAmount
@@ -70,6 +81,9 @@ func (r *chargeRepository) ListDefinitions(
 	if filters.FinancialAccountID != nil {
 		db = db.Where("charge_definitions.financial_account_id = ?", *filters.FinancialAccountID)
 	}
+	if filters.LeaseID != nil {
+		db = db.Where("charge_definitions.lease_id = ?", *filters.LeaseID)
+	}
 	if filters.Status != nil {
 		db = db.Where("charge_definitions.status = ?", *filters.Status)
 	}
@@ -85,6 +99,7 @@ func (r *chargeRepository) CreateInstances(ctx context.Context, instances []mode
 	if len(instances) == 0 {
 		return nil
 	}
+
 	return lib.ResolveDB(ctx, r.DB).Create(&instances).Error
 }
 
@@ -99,18 +114,18 @@ func (r *chargeRepository) GetInstance(ctx context.Context, id string) (*models.
 		First(&instance).Error; err != nil {
 		return nil, err
 	}
+
 	return &instance, nil
 }
 
-func (r *chargeRepository) ListInstances(
-	ctx context.Context,
-	filters ListChargeInstancesFilter,
-) (*[]models.ChargeInstance, error) {
-	var instances []models.ChargeInstance
-
-	db := lib.ResolveDB(ctx, r.DB).Model(&models.ChargeInstance{})
+// applyChargeInstanceFilters is extracted so ListInstances and its tests render
+// the same predicates.
+func applyChargeInstanceFilters(db *gorm.DB, filters ListChargeInstancesFilter) *gorm.DB {
 	if filters.FinancialAccountID != nil {
 		db = db.Where("charge_instances.financial_account_id = ?", *filters.FinancialAccountID)
+	}
+	if filters.LeaseID != nil {
+		db = db.Where("charge_instances.lease_id = ?", *filters.LeaseID)
 	}
 	if filters.Category != nil {
 		db = db.Where("charge_instances.category = ?", *filters.Category)
@@ -119,11 +134,36 @@ func (r *chargeRepository) ListInstances(
 		db = db.Where("charge_instances.voided_at IS NULL")
 	}
 
+	return db
+}
+
+func (r *chargeRepository) ListInstances(
+	ctx context.Context,
+	filters ListChargeInstancesFilter,
+) (*[]models.ChargeInstance, error) {
+	var instances []models.ChargeInstance
+
+	db := applyChargeInstanceFilters(lib.ResolveDB(ctx, r.DB).Model(&models.ChargeInstance{}), filters)
+
 	if err := db.Order("charge_instances.due_date ASC").Find(&instances).Error; err != nil {
 		return nil, err
 	}
 
 	return &instances, nil
+}
+
+func (r *chargeRepository) ScopeUnassignedToLease(ctx context.Context, financialAccountID, leaseID string) error {
+	db := lib.ResolveDB(ctx, r.DB)
+
+	if err := db.Model(&models.ChargeDefinition{}).
+		Where("financial_account_id = ? AND lease_id IS NULL", financialAccountID).
+		Update("lease_id", leaseID).Error; err != nil {
+		return err
+	}
+
+	return db.Model(&models.ChargeInstance{}).
+		Where("financial_account_id = ? AND lease_id IS NULL", financialAccountID).
+		Update("lease_id", leaseID).Error
 }
 
 func (r *chargeRepository) LockInstances(

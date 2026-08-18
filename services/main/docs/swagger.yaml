@@ -1,4 +1,28 @@
 definitions:
+  financials.ClosureEligibility:
+    properties:
+      can_close:
+        type: boolean
+      deposit_held_amount:
+        type: integer
+      gates:
+        items:
+          $ref: '#/definitions/financials.ClosureGate'
+        type: array
+      outstanding_amount:
+        type: integer
+    type: object
+  financials.ClosureGate:
+    properties:
+      blocking:
+        type: boolean
+      name:
+        type: string
+      passed:
+        type: boolean
+      reason:
+        type: string
+    type: object
   handlers.AddExpenseBody:
     properties:
       amount:
@@ -476,6 +500,25 @@ definitions:
     required:
     - amount
     - charge_instance_id
+    type: object
+  handlers.CloseAccountBody:
+    properties:
+      deposit_forfeit_reason:
+        type: string
+      deposit_resolution:
+        description: |-
+          RELEASE refunds the held deposit, OFFSET applies it against what is
+          owed, FORFEIT keeps it and requires a reason. Ignored when no deposit
+          is held.
+        enum:
+        - RELEASE
+        - OFFSET
+        - FORFEIT
+        type: string
+      reason:
+        type: string
+    required:
+    - reason
     type: object
   handlers.ComposeInvoiceBody:
     properties:
@@ -1592,6 +1635,13 @@ definitions:
     required:
     - reason
     type: object
+  handlers.ReopenAccountBody:
+    properties:
+      reason:
+        type: string
+    required:
+    - reason
+    type: object
   handlers.RunInvoiceIssuanceBody:
     properties:
       as_of:
@@ -2505,6 +2555,12 @@ definitions:
         items:
           $ref: '#/definitions/transformations.OutputChargeInstance'
         type: array
+      closure_eligibility:
+        allOf:
+        - $ref: '#/definitions/financials.ClosureEligibility'
+        description: |-
+          ClosureEligibility is the PM's closure checklist: every gate with its
+          blocking reason, so the UI can render the panel without a second call.
       outstanding_amount:
         type: integer
       total_charged:
@@ -3658,6 +3714,8 @@ definitions:
       invoiced_amount:
         example: 0
         type: integer
+      lease_id:
+        type: string
       name:
         example: Rent – February 2027
         type: string
@@ -4043,6 +4101,8 @@ definitions:
         type: string
       closed_at:
         type: string
+      closure_eligible_at:
+        type: string
       code:
         example: FA-2608-A1B2C3
         type: string
@@ -4053,8 +4113,6 @@ definitions:
         type: string
       id:
         example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
-        type: string
-      lease_id:
         type: string
       property_id:
         type: string
@@ -10089,6 +10147,64 @@ paths:
       summary: Void a charge
       tags:
       - FinancialAccounts
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/financial-accounts/{account_id}/close:
+    post:
+      consumes:
+      - application/json
+      description: 'Ends a tenancy''s financial relationship and releases the deposit.
+        Every blocking gate must pass: all leases ended, nothing outstanding, and
+        the held deposit resolved. Missing move-out evidence warns but does not block.
+        Releasing or offsetting posts a reversing SECURITY_DEPOSIT charge; forfeiting
+        requires a reason. Writes an audit row rather than flipping a status.'
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Financial account ID
+        in: path
+        name: account_id
+        required: true
+        type: string
+      - description: Closure decision
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CloseAccountBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Account closed
+          schema:
+            properties:
+              data:
+                type: boolean
+            type: object
+        "400":
+          description: A blocking gate has not passed, the account is already closed,
+            or a forfeit was given without a reason
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Financial account not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+      security:
+      - BearerAuth: []
+      summary: Close a financial account
+      tags:
+      - FinancialAccounts
   /api/v1/admin/clients/{client_id}/properties/{property_id}/financial-accounts/{account_id}/invoices:compose:
     post:
       consumes:
@@ -10140,6 +10256,62 @@ paths:
       security:
       - BearerAuth: []
       summary: Compose an invoice from charges on a financial account
+      tags:
+      - FinancialAccounts
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/financial-accounts/{account_id}/reopen:
+    post:
+      consumes:
+      - application/json
+      description: Returns a closed account to ACTIVE. Recorded on the original closure
+        row with the reason, so an accidental closure leaves a trail rather than silently
+        rewriting history. Any deposit refund already posted is NOT reversed — that
+        is a separate charge.
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Financial account ID
+        in: path
+        name: account_id
+        required: true
+        type: string
+      - description: Reason for reopening
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.ReopenAccountBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Account reopened
+          schema:
+            properties:
+              data:
+                type: boolean
+            type: object
+        "400":
+          description: The account is not closed, or no reason was given
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Financial account or its closure record not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+      security:
+      - BearerAuth: []
+      summary: Reopen a closed financial account
       tags:
       - FinancialAccounts
   /api/v1/admin/clients/{client_id}/properties/{property_id}/invoices:
