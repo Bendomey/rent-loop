@@ -10499,6 +10499,88 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/renew": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Continues a tenancy with a new term. The renewal is created Pending with its own rent and charges, inheriting the parent's tenant, currency and financial account; the daily lifecycle sweeps activate it and complete the parent on the changeover day. A renewal never re-charges the security deposit. It may move the tenant to another unit, in which case carry_financial_account decides whether the money follows.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Leases"
+                ],
+                "summary": "Renew a lease",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Lease to renew",
+                        "name": "lease_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "New term",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.RenewLeaseBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Renewal created",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputLease"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Parent not renewable, already renewed, term overlaps the parent, destination unit at capacity, or the account flag sent on a same-unit renewal",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Lease not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/status:active": {
             "patch": {
                 "security": [
@@ -23334,6 +23416,40 @@ const docTemplate = `{
             ],
             "properties": {
                 "reason": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.RenewLeaseBody": {
+            "type": "object",
+            "required": [
+                "move_in_date",
+                "stay_duration",
+                "stay_duration_frequency"
+            ],
+            "properties": {
+                "carry_financial_account": {
+                    "description": "Only meaningful when unit_id differs from the parent's; sending it on a\nsame-unit renewal is refused rather than ignored.",
+                    "type": "boolean"
+                },
+                "lease_agreement_document_url": {
+                    "type": "string"
+                },
+                "move_in_date": {
+                    "type": "string"
+                },
+                "rent_fee": {
+                    "description": "Optional. Omitted, each defaults to the parent's.",
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "stay_duration": {
+                    "type": "integer"
+                },
+                "stay_duration_frequency": {
+                    "type": "string"
+                },
+                "unit_id": {
                     "type": "string"
                 }
             }

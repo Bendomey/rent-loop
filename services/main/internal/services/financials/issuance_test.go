@@ -45,6 +45,10 @@ func (f *fakeChargeService) CreateAdHoc(
 	return nil, nil
 }
 func (f *fakeChargeService) ReassignAccount(context.Context, string, string) error { return nil }
+func (f *fakeChargeService) CloseDefinitionsForLease(context.Context, string, string) error {
+	return nil
+}
+
 func (f *fakeChargeService) ScopeUnassignedToLease(context.Context, string, string) error {
 	return nil
 }

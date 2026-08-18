@@ -19,6 +19,24 @@ type LeaseRepository interface {
 	// attribution when the charges themselves cannot say which term they
 	// belong to.
 	GetCurrentForAccount(context context.Context, financialAccountID string) (*models.Lease, error)
+	// ListChildren returns every lease naming this one as its parent,
+	// including cancelled ones — the renewal guard needs to see a cancelled
+	// child in order to deliberately ignore it.
+	ListChildren(context context.Context, parentLeaseID string) (*[]models.Lease, error)
+	// CountOccupyingUnitForTerm counts Pending/Active leases holding a unit at
+	// any point in the given window, excluding the given leases.
+	//
+	// Over the term rather than "right now": a unit free today may already be
+	// let for the period being renewed into. The exclusion is what lets a
+	// same-unit renewal overlap its own parent without the parent counting
+	// against it.
+	CountOccupyingUnitForTerm(
+		context context.Context,
+		unitID string,
+		start, end time.Time,
+		excludeLeaseIDs []string,
+	) (int64, error)
+
 	// SetFinancialAccount writes the lease half of the lease <-> account link.
 	//
 	// A targeted UPDATE through lib.ResolveDB rather than a read-modify-save:
@@ -86,6 +104,65 @@ func (r *leaseRepository) SetFinancialAccount(ctx context.Context, leaseID, fina
 		Model(&models.Lease{}).
 		Where("id = ?", leaseID).
 		Update("financial_account_id", financialAccountID).Error
+}
+
+// applyOccupancyForTermScope is extracted so the query and its tests render
+// the same predicates.
+func applyOccupancyForTermScope(
+	db *gorm.DB,
+	unitID string,
+	start, end time.Time,
+	excludeLeaseIDs []string,
+) *gorm.DB {
+	db = db.
+		Where("unit_id = ?", unitID).
+		Where("deleted_at IS NULL").
+		Where("status IN ?", []string{"Lease.Status.Pending", "Lease.Status.Active"}).
+		// Standard half-open overlap: an existing term collides when it starts
+		// before this one ends and ends after this one starts.
+		Where("move_in_date < ?", end).
+		Where("move_out_date IS NULL OR move_out_date > ?", start)
+
+	if len(excludeLeaseIDs) > 0 {
+		db = db.Where("id NOT IN ?", excludeLeaseIDs)
+	}
+
+	return db
+}
+
+func (r *leaseRepository) CountOccupyingUnitForTerm(
+	ctx context.Context,
+	unitID string,
+	start, end time.Time,
+	excludeLeaseIDs []string,
+) (int64, error) {
+	var count int64
+
+	err := applyOccupancyForTermScope(
+		lib.ResolveDB(ctx, r.DB).Model(&models.Lease{}), unitID, start, end, excludeLeaseIDs,
+	).Count(&count).Error
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}
+
+func (r *leaseRepository) ListChildren(
+	ctx context.Context,
+	parentLeaseID string,
+) (*[]models.Lease, error) {
+	var leases []models.Lease
+
+	err := lib.ResolveDB(ctx, r.DB).
+		Where("parent_lease_id = ?", parentLeaseID).
+		Where("deleted_at IS NULL").
+		Find(&leases).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &leases, nil
 }
 
 func (r *leaseRepository) GetCurrentForAccount(

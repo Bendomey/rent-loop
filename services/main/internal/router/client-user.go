@@ -293,6 +293,8 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 								Patch("/status:active", handlers.LeaseHandler.ActivateLease)
 							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
 								Patch("/status:cancelled", handlers.LeaseHandler.CancelLease)
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+								Post("/renew", handlers.LeaseHandler.RenewLease)
 
 							r.Route("/checklists", func(r chi.Router) {
 								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).

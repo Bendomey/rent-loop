@@ -56,6 +56,9 @@ type OutputAdminLease struct {
 	TerminatedById *string    `json:"terminated_by_id,omitempty" example:"b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"`
 	TerminatedBy   *OutputClientUser
 
+	// Type is ORIGINAL or RENEWAL. Read with parent_lease_id, it is what lets a
+	// lease list group a tenancy instead of showing unrelated sibling rows.
+	Type          string  `json:"type"                      example:"ORIGINAL"`
 	ParentLeaseId *string `json:"parent_lease_id,omitempty" example:"b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"`
 
 	CreatedAt time.Time `json:"created_at" example:"2024-06-01T09:00:00Z"`
@@ -103,6 +106,7 @@ func DBAdminLeaseToRest(i *models.Lease) any {
 		"terminated_at":                      i.TerminatedAt,
 		"terminated_by_id":                   i.TerminatedById,
 		"terminated_by":                      DBClientUserToRest(i.TerminatedBy),
+		"type":                               i.Type,
 		"parent_lease_id":                    i.ParentLeaseId,
 		"financial_account":                  DBTenantApplicationFinancialsToRest(i.Financials),
 		"created_at":                         i.CreatedAt,
@@ -142,11 +146,14 @@ type OutputLease struct {
 	TerminationAgreementDocumentPropertyManagerSignedAt *time.Time `json:"termination_agreement_document_property_manager_signed_at,omitempty" example:"2024-12-01T10:00:00Z"`
 	TerminationAgreementDocumentTenantSignedAt          *time.Time `json:"termination_agreement_document_tenant_signed_at,omitempty"           example:"2024-12-02T11:00:00Z"`
 
-	ActivatedAt   *time.Time `json:"activated_at,omitempty"    example:"2024-06-01T09:00:00Z"`
-	CancelledAt   *time.Time `json:"cancelled_at,omitempty"    example:"2024-06-01T09:00:00Z"`
-	CompletedAt   *time.Time `json:"completed_at,omitempty"    example:"2024-06-01T09:00:00Z"`
-	TerminatedAt  *time.Time `json:"terminated_at,omitempty"   example:"2024-06-01T09:00:00Z"`
-	ParentLeaseId *string    `json:"parent_lease_id,omitempty" example:"b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"`
+	ActivatedAt  *time.Time `json:"activated_at,omitempty"    example:"2024-06-01T09:00:00Z"`
+	CancelledAt  *time.Time `json:"cancelled_at,omitempty"    example:"2024-06-01T09:00:00Z"`
+	CompletedAt  *time.Time `json:"completed_at,omitempty"    example:"2024-06-01T09:00:00Z"`
+	TerminatedAt *time.Time `json:"terminated_at,omitempty"   example:"2024-06-01T09:00:00Z"`
+	// Type is ORIGINAL or RENEWAL. Read with parent_lease_id, it is what lets a
+	// lease list group a tenancy instead of showing unrelated sibling rows.
+	Type          string  `json:"type"                      example:"ORIGINAL"`
+	ParentLeaseId *string `json:"parent_lease_id,omitempty" example:"b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"`
 
 	FinancialAccount *OutputTenantApplicationFinancials `json:"financial_account,omitempty"`
 
@@ -186,6 +193,7 @@ func DBLeaseToRest(i *models.Lease) any {
 		"cancelled_at":                       i.CancelledAt,
 		"completed_at":                       i.CompletedAt,
 		"terminated_at":                      i.TerminatedAt,
+		"type":                               i.Type,
 		"parent_lease_id":                    i.ParentLeaseId,
 		"financial_account":                  DBTenantApplicationFinancialsToRest(i.Financials),
 		"created_at":                         i.CreatedAt,
