@@ -1,7 +1,7 @@
 import { localizedDayjs } from './date'
 
 /** Mirrors the Insights risk-summary "leases expiring" window. */
-const EXPIRING_SOON_WINDOW_DAYS = 30
+const EXPIRING_SOON_WINDOW_DAYS = 60
 
 /**
  * When a term is close enough that a manager should be acting on it.
@@ -60,6 +60,10 @@ export function getLeaseStatusClass(status: Lease['status']) {
  *   **Expiring**;
  * - cancelled and terminated leases keep their own label. They ended
  *   deliberately, and the term overlay would hide why.
+ * - a Pending lease whose move-in date hasn't arrived yet keeps **Pending**
+ *   regardless of how close its move-out date is — a renewal's term is
+ *   often short, so its move-out can already sit inside the expiring window
+ *   before the lease has even started.
  *
  * Open-ended leases carry a far-future sentinel move-out date, so they fall
  * outside both windows and keep their stored status.
@@ -74,7 +78,7 @@ export function getLeaseStatusClass(status: Lease['status']) {
  * deliberately and are not running out.
  */
 export function leaseExpiringInDays(
-	lease: Pick<Lease, 'status' | 'move_out_date'>,
+	lease: Pick<Lease, 'status' | 'move_in_date' | 'move_out_date'>,
 ): Nullable<number> {
 	if (
 		lease.status !== 'Lease.Status.Active' &&
@@ -83,6 +87,12 @@ export function leaseExpiringInDays(
 		return null
 	}
 	if (!lease.move_out_date) return null
+	if (
+		lease.status === 'Lease.Status.Pending' &&
+		localizedDayjs(lease.move_in_date).isAfter(localizedDayjs())
+	) {
+		return null
+	}
 
 	const daysLeft = localizedDayjs(lease.move_out_date).diff(
 		localizedDayjs(),
@@ -94,7 +104,7 @@ export function leaseExpiringInDays(
 }
 
 export function getLeaseDisplayStatus(
-	lease: Pick<Lease, 'status' | 'move_out_date'>,
+	lease: Pick<Lease, 'status' | 'move_in_date' | 'move_out_date'>,
 ): { label: string; className: string } {
 	const stored = {
 		label: getLeaseStatusLabel(lease.status),
@@ -104,6 +114,13 @@ export function getLeaseDisplayStatus(
 	if (
 		lease.status === 'Lease.Status.Cancelled' ||
 		lease.status === 'Lease.Status.Terminated'
+	) {
+		return stored
+	}
+
+	if (
+		lease.status === 'Lease.Status.Pending' &&
+		localizedDayjs(lease.move_in_date).isAfter(localizedDayjs())
 	) {
 		return stored
 	}
