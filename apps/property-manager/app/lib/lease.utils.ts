@@ -1,7 +1,7 @@
 import { localizedDayjs } from './date'
 
 /** Mirrors the Insights risk-summary "leases expiring" window. */
-const EXPIRING_SOON_WINDOW_DAYS = 60
+const EXPIRING_SOON_WINDOW_DAYS = 30
 
 /**
  * When a term is close enough that a manager should be acting on it.
