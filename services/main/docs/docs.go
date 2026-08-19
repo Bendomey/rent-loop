@@ -23432,6 +23432,13 @@ const docTemplate = `{
                     "description": "Only meaningful when unit_id differs from the parent's; sending it on a\nsame-unit renewal is refused rather than ignored.",
                     "type": "boolean"
                 },
+                "fees": {
+                    "description": "Fees are one-off amounts due at the start of the new term — a deposit\ntop-up when rent has risen, a renewal fee, a utility. Created with the\nrenewal so a term never exists with half its money on it.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.RenewLeaseFeeBody"
+                    }
+                },
                 "lease_agreement_document_url": {
                     "type": "string"
                 },
@@ -23451,6 +23458,37 @@ const docTemplate = `{
                 },
                 "unit_id": {
                     "type": "string"
+                }
+            }
+        },
+        "handlers.RenewLeaseFeeBody": {
+            "type": "object",
+            "required": [
+                "amount",
+                "category",
+                "name"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "integer",
+                    "example": 15000
+                },
+                "category": {
+                    "type": "string",
+                    "enum": [
+                        "SECURITY_DEPOSIT",
+                        "AGENCY_FEE",
+                        "VAT",
+                        "UTILITY",
+                        "DAMAGE_CHARGE",
+                        "EARLY_TERMINATION_FEE",
+                        "OTHER"
+                    ],
+                    "example": "SECURITY_DEPOSIT"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Deposit top-up"
                 }
             }
         },
@@ -25558,6 +25596,14 @@ const docTemplate = `{
                     "type": "string",
                     "example": "2025-07-01T00:00:00Z"
                 },
+                "parent_lease": {
+                    "description": "ParentLease is present only when asked for with populate=ParentLease.\nDeliberately a reference rather than a whole lease: the caller wants the\ncode to print, and nesting whole leases would recurse up the chain.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/transformations.OutputLeaseRef"
+                        }
+                    ]
+                },
                 "parent_lease_id": {
                     "type": "string",
                     "example": "b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"
@@ -25633,6 +25679,11 @@ const docTemplate = `{
                 "termination_agreement_document_url": {
                     "type": "string",
                     "example": "https://example.com/termination.pdf"
+                },
+                "type": {
+                    "description": "Type is ORIGINAL or RENEWAL. Read with parent_lease_id, it is what lets a\nlease list group a tenancy instead of showing unrelated sibling rows.",
+                    "type": "string",
+                    "example": "ORIGINAL"
                 },
                 "unit": {
                     "$ref": "#/definitions/transformations.AdminOutputUnit"
@@ -27255,6 +27306,11 @@ const docTemplate = `{
                     "type": "string",
                     "example": "https://example.com/termination.pdf"
                 },
+                "type": {
+                    "description": "Type is ORIGINAL or RENEWAL. Read with parent_lease_id, it is what lets a\nlease list group a tenancy instead of showing unrelated sibling rows.",
+                    "type": "string",
+                    "example": "ORIGINAL"
+                },
                 "unit": {
                     "$ref": "#/definitions/transformations.OutputUnit"
                 },
@@ -27421,6 +27477,22 @@ const docTemplate = `{
                 "updated_at": {
                     "type": "string",
                     "example": "2024-06-10T09:00:00Z"
+                }
+            }
+        },
+        "transformations.OutputLeaseRef": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "2606N7AKJK"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "Lease.Status.Completed"
                 }
             }
         },

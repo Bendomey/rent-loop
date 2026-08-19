@@ -28,7 +28,41 @@ type RenewLeaseInput struct {
 	// carries the parent's financial account; false opens a new one.
 	CarryFinancialAccount *bool
 
+	// Fees are one-off amounts the tenant pays at the start of the new term —
+	// a deposit top-up when rent has risen, a renewal fee, a utility. They are
+	// created here rather than through the ad-hoc charge endpoint so a renewal
+	// and its money are one atomic act: a term never exists with half its
+	// charges on it.
+	//
+	// This is also why a renewal still creates no deposit charge on its own.
+	// A top-up is only ever raised because a person asked for it.
+	Fees []RenewalFee
+
 	LeaseAgreementDocumentUrl *string
+}
+
+// RenewalFeeCategoryAllowed reports whether a one-off may carry this category.
+//
+// RENT is refused deliberately: rent comes from the term itself and is
+// materialised as a schedule, so a one-off calling itself rent would be billed
+// twice over and belong to no period. An empty category is refused too — it
+// would route to the wrong journal account.
+func RenewalFeeCategoryAllowed(category string) bool {
+	switch category {
+	case financials.CategorySecurityDeposit, financials.CategoryAgencyFee, financials.CategoryVAT,
+		financials.CategoryUtility, financials.CategoryDamageCharge,
+		financials.CategoryEarlyTerminationFee, financials.CategoryOther:
+		return true
+	default:
+		return false
+	}
+}
+
+// RenewalFee is a one-off charge raised against the new term.
+type RenewalFee struct {
+	Category string
+	Name     string
+	Amount   int64
 }
 
 // CanRenewParent reports whether a lease is in a state that can be continued.
@@ -144,6 +178,15 @@ func (s *leaseService) RenewLease(ctx context.Context, input RenewLeaseInput) (*
 	}
 	if !UnitHasCapacity(occupying, int64(unit.MaxOccupantsAllowed)) {
 		return nil, pkg.BadRequestError("UnitAtCapacityForTerm", nil)
+	}
+
+	for _, fee := range input.Fees {
+		if fee.Amount <= 0 {
+			return nil, pkg.BadRequestError("RenewalFeeMustBePositive", nil)
+		}
+		if !RenewalFeeCategoryAllowed(fee.Category) {
+			return nil, pkg.BadRequestError("RenewalFeeCategoryInvalid", nil)
+		}
 	}
 
 	rentFee := parent.RentFee
@@ -273,13 +316,15 @@ func (s *leaseService) linkRenewalFinancials(
 	}
 
 	if parent.PaymentFrequency == nil {
-		return nil
+		// No rent schedule to build, but the PM may still have asked for a
+		// one-off — a renewal fee does not depend on rent being set up.
+		return s.raiseRenewalFees(ctx, accountID, childID, parent.RentFeeCurrency, input)
 	}
 
 	// SecurityDepositFee is deliberately 0: a renewal never re-charges the
-	// deposit. charge.go treats 0 as "not opted in" and creates no deposit
-	// charge at all.
-	return s.financials.Charges.MaterialiseForAccount(ctx, financials.MaterialiseForAccountInput{
+	// deposit on its own. A top-up arrives as an explicit fee below, because a
+	// person asked for it.
+	if err := s.financials.Charges.MaterialiseForAccount(ctx, financials.MaterialiseForAccountInput{
 		FinancialAccountID:    accountID,
 		LeaseID:               &childID,
 		RentFee:               rentFee,
@@ -289,7 +334,39 @@ func (s *leaseService) linkRenewalFinancials(
 		StayDuration:          input.StayDuration,
 		StayDurationFrequency: input.StayDurationFrequency,
 		SecurityDepositFee:    0,
-	})
+	}); err != nil {
+		return err
+	}
+
+	return s.raiseRenewalFees(ctx, accountID, childID, parent.RentFeeCurrency, input)
+}
+
+// raiseRenewalFees creates the one-off charges the PM asked for, scoped to the
+// new term.
+//
+// They are due on the term's first day rather than spread across it: these are
+// the amounts paid to start the term, which is also what makes them collectable
+// in the same breath as the first month's rent.
+func (s *leaseService) raiseRenewalFees(
+	ctx context.Context,
+	accountID, childID, currency string,
+	input RenewLeaseInput,
+) error {
+	for _, fee := range input.Fees {
+		if _, err := s.financials.Charges.CreateAdHoc(ctx, financials.CreateAdHocChargeInput{
+			FinancialAccountID: accountID,
+			LeaseID:            &childID,
+			Name:               fee.Name,
+			Category:           fee.Category,
+			Amount:             fee.Amount,
+			Currency:           currency,
+			DueDate:            input.MoveInDate,
+		}); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // recomputeUnitOccupancy mirrors ApproveTenantApplication: count what holds the

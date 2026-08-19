@@ -1642,6 +1642,14 @@ definitions:
           Only meaningful when unit_id differs from the parent's; sending it on a
           same-unit renewal is refused rather than ignored.
         type: boolean
+      fees:
+        description: |-
+          Fees are one-off amounts due at the start of the new term — a deposit
+          top-up when rent has risen, a renewal fee, a utility. Created with the
+          renewal so a term never exists with half its money on it.
+        items:
+          $ref: '#/definitions/handlers.RenewLeaseFeeBody'
+        type: array
       lease_agreement_document_url:
         type: string
       move_in_date:
@@ -1660,6 +1668,30 @@ definitions:
     - move_in_date
     - stay_duration
     - stay_duration_frequency
+    type: object
+  handlers.RenewLeaseFeeBody:
+    properties:
+      amount:
+        example: 15000
+        type: integer
+      category:
+        enum:
+        - SECURITY_DEPOSIT
+        - AGENCY_FEE
+        - VAT
+        - UTILITY
+        - DAMAGE_CHARGE
+        - EARLY_TERMINATION_FEE
+        - OTHER
+        example: SECURITY_DEPOSIT
+        type: string
+      name:
+        example: Deposit top-up
+        type: string
+    required:
+    - amount
+    - category
+    - name
     type: object
   handlers.ReopenAccountBody:
     properties:
@@ -3165,6 +3197,13 @@ definitions:
       move_out_date:
         example: "2025-07-01T00:00:00Z"
         type: string
+      parent_lease:
+        allOf:
+        - $ref: '#/definitions/transformations.OutputLeaseRef'
+        description: |-
+          ParentLease is present only when asked for with populate=ParentLease.
+          Deliberately a reference rather than a whole lease: the caller wants the
+          code to print, and nesting whole leases would recurse up the chain.
       parent_lease_id:
         example: b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456
         type: string
@@ -3221,6 +3260,12 @@ definitions:
         type: string
       terminationAgreementDocumentPropertyManagerSignedBy:
         $ref: '#/definitions/transformations.OutputClientUser'
+      type:
+        description: |-
+          Type is ORIGINAL or RENEWAL. Read with parent_lease_id, it is what lets a
+          lease list group a tenancy instead of showing unrelated sibling rows.
+        example: ORIGINAL
+        type: string
       unit:
         $ref: '#/definitions/transformations.AdminOutputUnit'
       unit_id:
@@ -4401,6 +4446,12 @@ definitions:
       termination_agreement_document_url:
         example: https://example.com/termination.pdf
         type: string
+      type:
+        description: |-
+          Type is ORIGINAL or RENEWAL. Read with parent_lease_id, it is what lets a
+          lease list group a tenancy instead of showing unrelated sibling rows.
+        example: ORIGINAL
+        type: string
       unit:
         $ref: '#/definitions/transformations.OutputUnit'
       unit_id:
@@ -4520,6 +4571,17 @@ definitions:
         type: string
       updated_at:
         example: "2024-06-10T09:00:00Z"
+        type: string
+    type: object
+  transformations.OutputLeaseRef:
+    properties:
+      code:
+        example: 2606N7AKJK
+        type: string
+      id:
+        type: string
+      status:
+        example: Lease.Status.Completed
         type: string
     type: object
   transformations.OutputLeaseTermination:

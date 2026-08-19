@@ -32,7 +32,7 @@ export const PropertyTenantLeasesController = ({
 					options: [
 						{ label: 'Pending', value: 'Lease.Status.Pending' },
 						{ label: 'Active', value: 'Lease.Status.Active' },
-						{ label: 'Completed', value: 'Lease.Status.Completed' },
+						{ label: 'Ended', value: 'Lease.Status.Completed' },
 						{ label: 'Cancelled', value: 'Lease.Status.Cancelled' },
 						{ label: 'Terminated', value: 'Lease.Status.Terminated' },
 					],

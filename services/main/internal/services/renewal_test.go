@@ -111,3 +111,29 @@ func TestUnitHasCapacityMultiOccupant(t *testing.T) {
 		t.Error("got no capacity, want capacity — 2 of 4 occupied")
 	}
 }
+
+// Rent is refused as a one-off. Rent comes from the term itself and is
+// materialised as a schedule, so a charge calling itself rent would be billed
+// twice over and belong to no period.
+func TestRenewalFeeRejectsRentCategory(t *testing.T) {
+	if RenewalFeeCategoryAllowed("RENT") {
+		t.Error("got allowed, want refused — rent is not a one-off")
+	}
+}
+
+// An empty category would land as an unclassified charge and route to the
+// wrong journal account.
+func TestRenewalFeeRejectsEmptyCategory(t *testing.T) {
+	if RenewalFeeCategoryAllowed("") {
+		t.Error("got allowed, want refused — a fee must say what it is")
+	}
+}
+
+// The categories the wizard actually offers.
+func TestRenewalFeeAllowsOneOffCategories(t *testing.T) {
+	for _, c := range []string{"SECURITY_DEPOSIT", "AGENCY_FEE", "UTILITY", "OTHER"} {
+		if !RenewalFeeCategoryAllowed(c) {
+			t.Errorf("got refused for %q, want allowed", c)
+		}
+	}
+}

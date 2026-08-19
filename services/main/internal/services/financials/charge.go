@@ -71,7 +71,11 @@ type MaterialiseForAccountInput struct {
 }
 
 type CreateAdHocChargeInput struct {
-	FinancialAccountID       string
+	FinancialAccountID string
+	// LeaseID scopes the charge to a contractual term. Nil is meaningful and
+	// common: an account credit, a write-off or a goodwill discount belongs to
+	// the relationship rather than to any one term.
+	LeaseID                  *string
 	Name                     string
 	Category                 string
 	Amount                   int64 // signed
@@ -353,6 +357,7 @@ func (s *chargeService) CreateAdHoc(
 
 	instance := &models.ChargeInstance{
 		FinancialAccountID:       input.FinancialAccountID,
+		LeaseID:                  input.LeaseID,
 		Name:                     input.Name,
 		Category:                 input.Category,
 		Amount:                   input.Amount,

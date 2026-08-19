@@ -64,7 +64,7 @@ export function PropertyTenantLeasesModule() {
 				unit_ids: unitIds.length > 0 ? unitIds : undefined,
 			},
 			pagination: { page, per },
-			populate: ['Tenant', 'Unit'],
+			populate: ['Tenant', 'Unit', 'ParentLease'],
 			sorter,
 			search: {
 				query,
@@ -92,6 +92,34 @@ export function PropertyTenantLeasesModule() {
 						</Link>
 					</div>
 				),
+			},
+			{
+				id: 'lineage',
+				header: 'Where it came from',
+				cell: ({ row }) => {
+					const parent = row.original.parent_lease
+					// A column rather than grouped rows: grouping only holds while the
+					// table is unsorted and unfiltered, and a tenancy spanning a page
+					// boundary would render as orphans.
+					if (!parent) {
+						return (
+							<span className="text-muted-foreground text-xs">First term</span>
+						)
+					}
+					return (
+						<span className="text-xs">
+							Renewal of{' '}
+							<Link
+								to={`/properties/${propertyId}/occupancy/leases/${parent.id}`}
+								aria-label={`View lease ${parent.code}`}
+							>
+								<span className="font-mono text-blue-600 hover:underline dark:text-blue-400">
+									{parent.code}
+								</span>
+							</Link>
+						</span>
+					)
+				},
 			},
 			{
 				accessorKey: 'tenant',

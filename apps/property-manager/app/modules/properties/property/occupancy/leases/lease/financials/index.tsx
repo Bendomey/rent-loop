@@ -110,11 +110,13 @@ export function LeaseFinancialsTab({
 		)
 	}
 
-	const money = deriveLeaseMoney(summary, invoices, new Date())
+	const money = deriveLeaseMoney(summary, invoices, new Date(), lease.id)
 	// Null on a MANUAL account: the sweep skips it entirely, so there is no
 	// next bill to name. "Whole term up front" stores MANUAL too.
 	const next = nextIssue(
-		summary.charges,
+		// Scoped, not summary.charges: an unbilled charge on the previous term
+		// would otherwise be announced as this term's next bill.
+		money.charges,
 		summary.account.auto_issue_days_before,
 		summary.account.rent_billing_cadence,
 	)
