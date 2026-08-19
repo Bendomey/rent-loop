@@ -2,7 +2,6 @@ package migration
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/Bendomey/rent-loop/services/main/init/migration/jobs"
 	log "github.com/sirupsen/logrus"
@@ -135,23 +134,6 @@ func ServiceAutoMigration(db *gorm.DB) error {
 		jobs.SplitSessionsFromRefreshTokens(),
 		jobs.AddMaintenanceRequestAssets(),
 		jobs.AddUserProfilePhotoUrl(),
-		jobs.AddSharedFinancialAccountLinks(),
-		jobs.BackfillSharedFinancialAccounts(),
-		jobs.RepairRenewalLeaseFinancialAccount(),
-		jobs.AddLeaseType(),
-		jobs.NullableClosureClosedBy(),
-		jobs.DropLegacyFinancialAccountApplicationUnique(),
-	}
-
-	// The drop is destructive and irreversible for data, so it is not even
-	// registered without an explicit opt-in. Leaving it unregistered means it
-	// is not recorded as applied, and still runs later when the variable is
-	// set — the same contract FINANCIAL_MIGRATION_ALLOW_DROP used.
-	if os.Getenv("SHARED_ACCOUNT_MIGRATION_ALLOW_DROP") == "true" {
-		log.Info("[Migration] SHARED_ACCOUNT_MIGRATION_ALLOW_DROP is set — financial_accounts.lease_id will be DROPPED")
-		migrations = append(migrations, jobs.DropFinancialAccountLeaseID())
-	} else {
-		log.Info("[Migration] skipping DropFinancialAccountLeaseID (set SHARED_ACCOUNT_MIGRATION_ALLOW_DROP=true to run it)")
 	}
 
 	m = gormigrate.New(db, gormigrate.DefaultOptions, migrations)
