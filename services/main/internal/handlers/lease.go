@@ -13,7 +13,6 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-<<<<<<< HEAD
 // RenewLeaseFeeBody is one one-off charge raised against the new term. RENT is
 // deliberately absent from the allowed categories: rent comes from the term
 // itself as a schedule, so a one-off calling itself rent would be billed twice.
@@ -23,8 +22,6 @@ type RenewLeaseFeeBody struct {
 	Amount   int64  `json:"amount"   validate:"required,gt=0"                                                                                    example:"15000"`
 }
 
-=======
->>>>>>> 3342a642 (feat: add lease renewal functionality and related services)
 type RenewLeaseBody struct {
 	MoveInDate            time.Time `json:"move_in_date"            validate:"required"`
 	StayDuration          int64     `json:"stay_duration"           validate:"required,gt=0"`
@@ -37,15 +34,12 @@ type RenewLeaseBody struct {
 	// Only meaningful when unit_id differs from the parent's; sending it on a
 	// same-unit renewal is refused rather than ignored.
 	CarryFinancialAccount *bool `json:"carry_financial_account"`
-
-<<<<<<< HEAD
+	
 	// Fees are one-off amounts due at the start of the new term — a deposit
 	// top-up when rent has risen, a renewal fee, a utility. Created with the
 	// renewal so a term never exists with half its money on it.
 	Fees []RenewLeaseFeeBody `json:"fees" validate:"omitempty,dive"`
-
-=======
->>>>>>> 3342a642 (feat: add lease renewal functionality and related services)
+	
 	LeaseAgreementDocumentUrl *string `json:"lease_agreement_document_url" validate:"omitempty,url"`
 }
 
@@ -632,10 +626,7 @@ func (h *LeaseHandler) RenewLease(w http.ResponseWriter, r *http.Request) {
 		RentFee:                   body.RentFee,
 		UnitID:                    body.UnitID,
 		CarryFinancialAccount:     body.CarryFinancialAccount,
-<<<<<<< HEAD
 		Fees:                      renewalFeesFromBody(body.Fees),
-=======
->>>>>>> 3342a642 (feat: add lease renewal functionality and related services)
 		LeaseAgreementDocumentUrl: body.LeaseAgreementDocumentUrl,
 	})
 	if err != nil {
@@ -648,7 +639,6 @@ func (h *LeaseHandler) RenewLease(w http.ResponseWriter, r *http.Request) {
 		"data": transformations.DBAdminLeaseToRest(lease),
 	})
 }
-<<<<<<< HEAD
 
 // renewalFeesFromBody maps the request's fees onto the service input.
 func renewalFeesFromBody(in []RenewLeaseFeeBody) []services.RenewalFee {
@@ -663,5 +653,3 @@ func renewalFeesFromBody(in []RenewLeaseFeeBody) []services.RenewalFee {
 
 	return fees
 }
-=======
->>>>>>> 3342a642 (feat: add lease renewal functionality and related services)
