@@ -134,6 +134,7 @@ func ServiceAutoMigration(db *gorm.DB) error {
 		jobs.SplitSessionsFromRefreshTokens(),
 		jobs.AddMaintenanceRequestAssets(),
 		jobs.AddUserProfilePhotoUrl(),
+		jobs.AddTenantCode(),
 	}
 
 	m = gormigrate.New(db, gormigrate.DefaultOptions, migrations)

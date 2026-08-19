@@ -1,5 +1,6 @@
 interface Tenant {
 	id: string
+	code: string
 	first_name: string
 	other_names: Nullable<string>
 	last_name: string

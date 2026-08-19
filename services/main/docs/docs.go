@@ -26065,6 +26065,10 @@ const docTemplate = `{
         "transformations.OutputAdminTenant": {
             "type": "object",
             "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "TEN-2608-AB12CD"
+                },
                 "created_at": {
                     "type": "string",
                     "example": "2024-06-01T09:00:00Z"
@@ -28295,6 +28299,10 @@ const docTemplate = `{
         "transformations.OutputTenant": {
             "type": "object",
             "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "TEN-2608-AB12CD"
+                },
                 "date_of_birth": {
                     "type": "string",
                     "example": "1990-01-01"

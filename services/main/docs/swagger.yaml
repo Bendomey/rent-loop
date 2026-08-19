@@ -3467,6 +3467,9 @@ definitions:
     type: object
   transformations.OutputAdminTenant:
     properties:
+      code:
+        example: TEN-2608-AB12CD
+        type: string
       created_at:
         example: "2024-06-01T09:00:00Z"
         type: string
@@ -5090,6 +5093,9 @@ definitions:
     type: object
   transformations.OutputTenant:
     properties:
+      code:
+        example: TEN-2608-AB12CD
+        type: string
       date_of_birth:
         example: "1990-01-01"
         type: string
