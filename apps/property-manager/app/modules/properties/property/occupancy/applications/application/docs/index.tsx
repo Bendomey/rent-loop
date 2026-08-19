@@ -21,7 +21,7 @@ import { useAdminUpdateTenantApplication } from '~/api/tenant-applications'
 import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent } from '~/components/ui/card'
-import { pronounsFor } from '~/lib/pronouns'
+import { capitalise, pronounsFor } from '~/lib/pronouns'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
 import type { loader as applicationLoader } from '~/routes/_auth.properties.$propertyId.occupancy.applications.$applicationId'
@@ -53,7 +53,7 @@ export function PropertyTenantApplicationDocs() {
 
 	// Hooks run before the guard below: React requires a stable call order, so
 	// the early return can't come first — see the same note on the overview page.
-	const { steps, canApprove } = useCalculateChecklist(
+	const { steps, canApprove, needsAttention } = useCalculateChecklist(
 		tenantApplication as TenantApplication,
 		baseUrl,
 	)
@@ -246,60 +246,82 @@ export function PropertyTenantApplicationDocs() {
 						<PropertyPermissionGuard roles={['MANAGER']}>
 							<Card className="shadow-none">
 								<CardContent>
-									<p className="font-bold">Ready to decide?</p>
-									<p className="text-muted-foreground mt-1.5 text-sm leading-relaxed">
-										Approve to create {pronouns.possessive} lease, or decline to
-										end this application. Nothing filled in is deleted either
-										way.
-									</p>
-									<div className="mt-3.5 flex flex-col gap-2">
-										<Button
-											disabled={!canApprove}
-											onClick={() => setOpenApprove(true)}
-										>
-											<Check className="size-4" />
-											Approve &amp; make the lease
-										</Button>
-										<Button
-											variant="outline"
-											disabled={paymentsMade}
-											onClick={() => setOpenCancel(true)}
-										>
-											Decline this application
-										</Button>
-									</div>
-
-									{paymentsMade ? (
-										<p className="text-muted-foreground mt-2 text-xs">
-											Can&apos;t decline once a payment has been made.
-										</p>
-									) : null}
-
-									{!canApprove && outstandingSteps.length > 0 ? (
-										<div className="mt-3.5 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950">
-											<div className="flex gap-2">
-												<TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" />
-												<div className="space-y-1">
-													<p className="text-sm font-medium text-amber-800 dark:text-amber-300">
-														Finish these steps to approve
-													</p>
-													<ul className="space-y-0.5 text-xs text-amber-700 dark:text-amber-400">
-														{outstandingSteps.map((step) => (
-															<li key={step.key}>
-																<Link
-																	to={step.href}
-																	className="underline hover:no-underline"
-																>
-																	{step.label}
-																</Link>
-																{step.note ? ` — ${step.note}` : ''}
-															</li>
-														))}
-													</ul>
-												</div>
+									{needsAttention ? (
+										<>
+											<p className="font-bold">
+												{tenantApplication.desired_unit?.name
+													? `${tenantApplication.desired_unit.name} has been let to someone else`
+													: 'The unit has been let to someone else'}
+											</p>
+											<p className="text-muted-foreground mt-1.5 text-sm leading-relaxed">
+												{capitalise(pronouns.subject)} can&apos;t have it. Pick
+												another unit and the rest of the application carries
+												over.
+											</p>
+											<div className="mt-3.5">
+												<Button asChild>
+													<Link to={`${baseUrl}/unit`}>Pick another unit</Link>
+												</Button>
 											</div>
-										</div>
-									) : null}
+										</>
+									) : (
+										<>
+											<p className="font-bold">Ready to decide?</p>
+											<p className="text-muted-foreground mt-1.5 text-sm leading-relaxed">
+												Approve to create {pronouns.possessive} lease, or decline
+												to end this application. Nothing filled in is deleted
+												either way.
+											</p>
+											<div className="mt-3.5 flex flex-col gap-2">
+												<Button
+													disabled={!canApprove}
+													onClick={() => setOpenApprove(true)}
+												>
+													<Check className="size-4" />
+													Approve &amp; make the lease
+												</Button>
+												<Button
+													variant="outline"
+													disabled={paymentsMade}
+													onClick={() => setOpenCancel(true)}
+												>
+													Decline this application
+												</Button>
+											</div>
+
+											{paymentsMade ? (
+												<p className="text-muted-foreground mt-2 text-xs">
+													Can&apos;t decline once a payment has been made.
+												</p>
+											) : null}
+
+											{!canApprove && outstandingSteps.length > 0 ? (
+												<div className="mt-3.5 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950">
+													<div className="flex gap-2">
+														<TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" />
+														<div className="space-y-1">
+															<p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+																Finish these steps to approve
+															</p>
+															<ul className="space-y-0.5 text-xs text-amber-700 dark:text-amber-400">
+																{outstandingSteps.map((step) => (
+																	<li key={step.key}>
+																		<Link
+																			to={step.href}
+																			className="underline hover:no-underline"
+																		>
+																			{step.label}
+																		</Link>
+																		{step.note ? ` — ${step.note}` : ''}
+																	</li>
+																))}
+															</ul>
+														</div>
+													</div>
+												</div>
+											) : null}
+										</>
+									)}
 								</CardContent>
 							</Card>
 						</PropertyPermissionGuard>
