@@ -136,9 +136,7 @@ export function TenantProfileBasicInformationCard({
 						icon={<Hash size={18} />}
 						label="Tenant ID"
 						value={
-							tenant?.id ? (
-								<span className="font-mono tracking-wide">{tenant.code}</span>
-							) : null
+							<span className="font-mono tracking-wide">{tenant.code}</span>
 						}
 					/>
 					<InfoRow
