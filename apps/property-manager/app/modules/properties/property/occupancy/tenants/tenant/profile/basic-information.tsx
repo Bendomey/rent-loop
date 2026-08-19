@@ -137,7 +137,7 @@ export function TenantProfileBasicInformationCard({
 						label="Tenant ID"
 						value={
 							tenant?.id ? (
-								<span className="font-mono tracking-wide">{tenant.id}</span>
+								<span className="font-mono tracking-wide">{tenant.code}</span>
 							) : null
 						}
 					/>
