@@ -125,6 +125,8 @@ export function LeaseDetailModule() {
 					lease={lease}
 					canEdit={canEditChecklist}
 					propertyId={propertyId}
+					renewHref={renewHref}
+					renewBlockedReason={renewBlockedReason(lease, renewalChildren)}
 				/>
 
 				<div className="mx-5 mt-5">

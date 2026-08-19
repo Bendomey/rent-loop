@@ -2,9 +2,11 @@ import {
 	AlertTriangleIcon,
 	CheckCircle2Icon,
 	CircleIcon,
+	RotateCw,
 	XCircleIcon,
 } from 'lucide-react'
 import { useState } from 'react'
+import { Link } from 'react-router'
 import { ChecklistModal } from './checklist-modal'
 import { CreateChecklistDialog } from './create-checklist-dialog'
 import { StartLeaseDialog } from './start-lease-dialog'
@@ -30,9 +32,19 @@ interface Props {
 	lease: Lease
 	canEdit: boolean
 	propertyId: string
+	/** Where the renewal wizard lives for this lease. */
+	renewHref: string
+	/** Why renewing is off, or null when it is available. */
+	renewBlockedReason: Nullable<string>
 }
 
-export function ChecklistAlerts({ lease, canEdit, propertyId }: Props) {
+export function ChecklistAlerts({
+	lease,
+	canEdit,
+	propertyId,
+	renewHref,
+	renewBlockedReason,
+}: Props) {
 	const { clientUser } = useClient()
 	const { data, isSuccess } = useGetLeaseChecklists(
 		safeString(clientUser?.client_id),
@@ -67,9 +79,10 @@ export function ChecklistAlerts({ lease, canEdit, propertyId }: Props) {
 	const draftCheckOut = checkOut?.status === 'DRAFT' ? checkOut : undefined
 
 	const isPendingLease = lease.status === 'Lease.Status.Pending'
-	const showLeaseStarting =
-		shouldShowCheckInAlert(lease, checklists) || isPendingLease
 	const showLeaseEnding = shouldShowLeaseEndingAlert(lease)
+	const showLeaseStarting =
+		!showLeaseEnding &&
+		(shouldShowCheckInAlert(lease, checklists) || isPendingLease)
 
 	if (
 		!showLeaseStarting &&
@@ -219,21 +232,36 @@ export function ChecklistAlerts({ lease, canEdit, propertyId }: Props) {
 										<CircleIcon className="size-4 shrink-0 text-amber-500" />
 										<span className="text-xs font-medium">Renew Lease</span>
 									</div>
-									<Tooltip>
-										<TooltipTrigger asChild>
-											<span tabIndex={0} className="shrink-0">
-												<Button
-													size="sm"
-													variant="outline"
-													disabled
-													className="border-amber-400 bg-transparent text-amber-900 dark:border-amber-700 dark:text-amber-100"
-												>
-													Renew Lease
-												</Button>
-											</span>
-										</TooltipTrigger>
-										<TooltipContent>Coming soon</TooltipContent>
-									</Tooltip>
+									{renewBlockedReason ? (
+										<Tooltip>
+											<TooltipTrigger asChild>
+												<span tabIndex={0} className="shrink-0">
+													<Button
+														size="sm"
+														variant="outline"
+														disabled
+														className="border-amber-400 bg-transparent text-amber-900 dark:border-amber-700 dark:text-amber-100"
+													>
+														<RotateCw className="size-4" />
+														Renew Lease
+													</Button>
+												</span>
+											</TooltipTrigger>
+											<TooltipContent>{renewBlockedReason}</TooltipContent>
+										</Tooltip>
+									) : (
+										<Button
+											size="sm"
+											variant="outline"
+											className="shrink-0 border-amber-400 bg-transparent text-amber-900 hover:bg-amber-100 dark:border-amber-700 dark:text-amber-100 dark:hover:bg-amber-900"
+											asChild
+										>
+											<Link to={renewHref}>
+												<RotateCw className="size-4" />
+												Renew Lease
+											</Link>
+										</Button>
+									)}
 								</div>
 							</div>
 						</AlertDescription>
