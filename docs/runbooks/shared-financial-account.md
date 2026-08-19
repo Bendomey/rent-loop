@@ -10,21 +10,30 @@ a `ACTIVE → CLOSURE_ELIGIBLE → CLOSED` lifecycle with a PM-driven close.
 **Verification:** `services/main/scripts/verify-shared-account-invariants.sql`
 plus the existing `services/main/scripts/verify-financial-invariants.sql`
 
-> **Not ready to merge or deploy.** The tenancy UI (spec 3, `DRAFT-36`) is
-> planned before this branch merges. This runbook is written and rehearsed so it
-> is ready when that work lands — do not start Stage 2 until then.
-
 ---
 
 ## Read this first
 
-**Migrations do not run on deploy.** There is no `release_command` in
-`fly.staging.toml` or `fly.production.toml`. Every job below is run manually by
-you, against whichever database your environment points at.
+**There is one environment.** `main` deploys to the Fly app
+`rentloop-api-staging`, and that app *is* production. `fly.production.toml` does
+not exist and the `prod` branch does not exist, so
+`.github/workflows/api-deploy-production.yml` never fires. Everything the word
+"staging" names in this repository is, for now, the live system.
 
-**`make update-db` is safe by default.** It runs Jobs 1–3 (structure, backfill,
-and the single-row repair) and stops. The destructive Job 4 requires an explicit
-opt-in:
+**CI runs the safe migrations for you.** `api-deploy-staging.yml` has a
+`sync-db` job that runs `make update-db` against the live database, gated on
+`services/main/init/**` having changed, and it runs *before* the deploy job. So
+merging to `main` migrates and then deploys, in that order, unattended.
+
+**But a failed migration does not stop the deploy.** The deploy job is guarded
+`if: ${{ always() && (needs.changes.result == 'success') }}` — `always()` plus a
+condition that never inspects `sync-db`. A red migration still ships new code,
+and per "Why step 2 precedes the deploy" below that is silent, not loud: every
+lease renders as having no financial account. Until that guard is fixed, watch
+the `sync-db` job to completion yourself.
+
+**`make update-db` is safe by default.** It runs every job below except the
+destructive one, which requires an explicit opt-in:
 
 ```bash
 SHARED_ACCOUNT_MIGRATION_ALLOW_DROP=true make update-db
@@ -52,14 +61,29 @@ ALTER DATABASE <dbname> SET search_path TO public, extensions;
 Run this first, on every environment. Reconnect afterwards — the setting
 applies to new sessions.
 
-## The four jobs
+## The jobs
 
 | Job | ID | Destructive |
 |---|---|---|
 | `AddSharedFinancialAccountLinks` | `202608180001` | No — adds 4 columns, creates 1 table |
 | `BackfillSharedFinancialAccounts` | `202608180002` | No — populates links, writes no amounts |
 | `RepairRenewalLeaseFinancialAccount` | `202608180003` | No — repairs lease `2608NHQ8DS` only |
-| `DropFinancialAccountLeaseID` | `202608180004` | **Yes — irreversible** |
+| `AddLeaseType` | `202608190001` | No — adds `leases.type`, backfills from `parent_lease_id` |
+| `NullableClosureClosedBy` | `202608190002` | No — drops a NOT NULL so the sweep can close without an actor |
+| `DropLegacyFinancialAccountApplicationUnique` | `202608190003` | No — drops an index the model no longer declares |
+| `DropFinancialAccountLeaseID` | `202608180004` | **Yes — irreversible**, opt-in only |
+
+Job `202608190003` is the one to understand, because nothing local reveals the
+problem it solves. `financial_accounts.tenant_application_id` still carries a
+UNIQUE index in every deployed database, left over from when one application
+meant one account. The model dropped that claim — a renewal may separate onto
+its own account, which originates from the same application — but AutoMigrate
+never drops an index it did not create, and the Go field was renamed
+(`TenantApplicationID` → `OriginTenantApplicationID`, mapped back with a
+`column:` tag), so GORM added a *second*, non-unique index under the new name
+and left the old UNIQUE standing. A database built fresh from AutoMigrate never
+had it, so the whole test suite passes locally while separating a renewal onto
+its own account fails in production with SQLSTATE 23505.
 
 Job 4 drops `financial_accounts.lease_id` and its unique index. Its `Rollback`
 restores an empty column — **the mapping is gone**. It lives on
@@ -75,10 +99,29 @@ half-finished backfill and a silently lost mapping.
 
 ## Stage 1 — Prod dump rehearsal
 
-**Already performed on 2026-08-18** against a dump of 59 leases, 76 accounts,
-1,084 charge instances and GHS 118,876 outstanding. Recorded here because the
-result is the baseline to compare against, and because a second rehearsal is
-still worth doing if the dump is older than the deploy.
+**This is the only rehearsal that exists.** There is no second environment to
+try the migration on, so the scratch database restored below is the last place
+a mistake is free.
+
+Performed twice:
+
+- **2026-08-18** — 59 leases, 76 accounts, 1,084 charge instances,
+  GHS 118,876 outstanding.
+- **2026-08-19** — 62 leases, 79 accounts, 1,109 charge instances,
+  **12,372,600** outstanding (the figure every step below compares against).
+  All seven shared-account checks PASS and all six ledger invariants return
+  zero rows, both before and after the drop; outstanding unchanged throughout;
+  the `2608NHQ8DS` repair produced exactly 12 rows of 55,000 fully settled; the
+  Job 4 guard was proved to bite before the drop was run for real. The full
+  backend suite then passed 1,210/0 against the migrated data, and the
+  Playwright suite 38/38.
+
+  **This second rehearsal is why `DropLegacyFinancialAccountApplicationUnique`
+  exists.** The first pass failed four assertions in `l4-renew-into-another-unit`
+  with a 500: the legacy UNIQUE index on `tenant_application_id` refused the
+  second account. Nothing local could have caught it — that index only exists in
+  databases that predate the field rename. Re-rehearse on a fresh dump before
+  any future migration for exactly this reason.
 
 ### 1. Restore a dump to a scratch database
 
@@ -225,17 +268,24 @@ Insights.
 ## Stage 2 — Production
 
 **The ordering is load-bearing.** Getting it wrong fails silently rather than
-loudly.
+loudly. CI performs steps 2 and 4 for you, in that order, on the merge to
+`main`; the rest are yours.
 
-| # | Action | Why here |
-|---|---|---|
-| 1 | `ALTER DATABASE ... SET search_path TO public, extensions;` | Job 1 cannot create its table without it |
-| 2 | `make update-db` against prod (Jobs 1–3) | Old code ignores the new columns and table, so it keeps serving normally while leases get linked to accounts |
-| 3 | Both verification scripts against prod | Real data. **Last safe abort point** — nothing has been destroyed |
-| 4 | Deploy `services/main` | New code reads `leases.financial_account_id`; the old column still exists, so the deploy is reversible |
-| 5 | Smoke production | Lease financials, application tab, invoice lists, Insights |
-| 6 | `SHARED_ACCOUNT_MIGRATION_ALLOW_DROP=true make update-db` | **Point of no return.** Only after new code is confirmed healthy |
-| 7 | Re-run both verification scripts | Confirms the drop changed nothing but the column |
+| # | Action | Who | Why here |
+|---|---|---|---|
+| 0 | Back up, and confirm the backup restores | You | After step 6 this is the only way back |
+| 1 | `ALTER DATABASE ... SET search_path TO public, extensions;` | You, **before merging** | Job 1 cannot create its table without it, and CI will not stop for you |
+| 2 | `make update-db` (every job but the drop) | CI (`sync-db`) | Old code ignores the new columns and table, so it keeps serving normally while leases get linked to accounts |
+| 3 | Both verification scripts against prod | You | Real data. **Last safe abort point** — nothing has been destroyed |
+| 4 | Deploy `services/main` | CI (`deploy`) | New code reads `leases.financial_account_id`; the old column still exists, so the deploy is reversible |
+| 5 | Smoke production | You | Lease financials, application tab, invoice lists, Insights, the renewal wizard, a closed tenancy in both themes |
+| 6 | `SHARED_ACCOUNT_MIGRATION_ALLOW_DROP=true make update-db` | You | **Point of no return.** Only after new code is confirmed healthy |
+| 7 | Re-run both verification scripts | You | Confirms the drop changed nothing but the column |
+
+Step 3 sits *between* two things CI does back to back, so in practice it is a
+check you run immediately after the deploy rather than a gate you hold open. If
+it fails, the abort is redeploying the previous image — the drop has not run,
+so nothing is lost.
 
 ### Why step 2 precedes the deploy
 
@@ -260,9 +310,9 @@ Neither blocks this release, but confirm before deploying:
   is required and no coordinated deploy is needed.
 - **Property manager app** — no application code reads `account.lease_id`. Two
   places reference it and should be tidied, neither blocking:
-  - `apps/property-manager/e2e/specs/b1-approve-to-lease.spec.ts` builds a URL
-    from `account.lease_id`. **This spec will fail after the deploy** — the
-    field is gone from the API response. Point it at the lease's own id.
+  - `apps/property-manager/e2e/specs/b1-approve-to-lease.spec.ts` used to build
+    a URL from `account.lease_id`. **Fixed on 2026-08-19** — it now reads the
+    lease off the account's charges, which is where approval records it.
   - `apps/property-manager/types/lease.d.ts` documents `financial_account` as
     coming "from `financial_accounts.lease_id`". Stale wording only; the field
     still populates, resolved the other way round now.

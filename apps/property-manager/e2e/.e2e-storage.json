@@ -5,14 +5,14 @@
       "value": "Africa%2FAccra",
       "domain": "localhost",
       "path": "/",
-      "expires": 1818521746.610044,
+      "expires": 1818690539.138689,
       "httpOnly": false,
       "secure": false,
       "sameSite": "Lax"
     },
     {
       "name": "rentloop-account",
-      "value": "eyJhdXRoVG9rZW4iOiJleUpoYkdjaU9pSklVekkxTmlJc0luUjVjQ0k2SWtwWFZDSjkuZXlKbGVIQWlPakUzT0RZNU9Ea3pORFlzSW1sa0lqb2lPVFF6WkdZM1pqSXROMk01T1MwMFlqZGhMVGhqT0RndE5tVm1NamhtT0dFeU1qZ3lJaXdpYzJsa0lqb2laVE5sWmpnelpqUXRZamRrTXkwME9EaGhMVGc0TWpBdE5tUTVaalpqWWpKaE5UTTBJbjAuLUM2TWl1SmpubE4xRGlXcnc5WllGWV9Ec3M2Ty1uRkVYamZGbnJ2cDBHVSIsInJlZnJlc2hUb2tlbiI6ImYxMWY0OTVmLTdlYzItNDliMC04ZTdlLWRlMDUyMjg3ZmQ4Mzo3UXJtbFpVRXUwWXRTVllEYmszNnh1TXhMMkRUNF81ZGg2dWgzRmtpS0pvIiwic2VsZWN0ZWRDbGllbnRJZCI6ImU2YWU2YTUwLTI5MTItNGI5Ny1hNzQ0LWI4NDE1NDU4MGNjOCJ9.LIYoKOXndQ%2FmqPDMo8bvLqN4utBWzqF8VgX2ZScFDFY",
+      "value": "eyJhdXRoVG9rZW4iOiJleUpoYkdjaU9pSklVekkxTmlJc0luUjVjQ0k2SWtwWFZDSjkuZXlKbGVIQWlPakUzT0RjeE5UZ3hNemtzSW1sa0lqb2lPVFF6WkdZM1pqSXROMk01T1MwMFlqZGhMVGhqT0RndE5tVm1NamhtT0dFeU1qZ3lJaXdpYzJsa0lqb2lNakEzT0RJeU5Ea3RZMlJqT0MwME9USXlMVGt6WmpZdFlUZzRaakU0TURsak9XRmpJbjAueXhabGhwaVlOTVJBNDkwNmdNdUxmSnJpd2M0Z01JYXBFOURJNm9jMWtROCIsInJlZnJlc2hUb2tlbiI6ImU1NGE5YTMxLWQwMzYtNDk2OC05MzI1LTFjZDQwYzdlMmZlYjo1WlpyZmY1c2U5T0FOOS1POGxUNTFsWkYwT3VVM3dhMmVHcHZodWNaeDV3Iiwic2VsZWN0ZWRDbGllbnRJZCI6ImU2YWU2YTUwLTI5MTItNGI5Ny1hNzQ0LWI4NDE1NDU4MGNjOCJ9.N6tTDQcVVFoCVCgkY0atLDCw9l2a2mFFJseuKgCoFNU",
       "domain": "localhost",
       "path": "/",
       "expires": -1,
