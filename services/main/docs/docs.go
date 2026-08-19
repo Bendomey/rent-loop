@@ -10499,6 +10499,88 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/renew": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Continues a tenancy with a new term. The renewal is created Pending with its own rent and charges, inheriting the parent's tenant, currency and financial account; the daily lifecycle sweeps activate it and complete the parent on the changeover day. A renewal never re-charges the security deposit. It may move the tenant to another unit, in which case carry_financial_account decides whether the money follows.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Leases"
+                ],
+                "summary": "Renew a lease",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Lease to renew",
+                        "name": "lease_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "New term",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.RenewLeaseBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Renewal created",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputLease"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Parent not renewable, already renewed, term overlaps the parent, destination unit at capacity, or the account flag sent on a same-unit renewal",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Lease not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/status:active": {
             "patch": {
                 "security": [
@@ -23338,6 +23420,78 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.RenewLeaseBody": {
+            "type": "object",
+            "required": [
+                "move_in_date",
+                "stay_duration",
+                "stay_duration_frequency"
+            ],
+            "properties": {
+                "carry_financial_account": {
+                    "description": "Only meaningful when unit_id differs from the parent's; sending it on a\nsame-unit renewal is refused rather than ignored.",
+                    "type": "boolean"
+                },
+                "fees": {
+                    "description": "Fees are one-off amounts due at the start of the new term — a deposit\ntop-up when rent has risen, a renewal fee, a utility. Created with the\nrenewal so a term never exists with half its money on it.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.RenewLeaseFeeBody"
+                    }
+                },
+                "lease_agreement_document_url": {
+                    "type": "string"
+                },
+                "move_in_date": {
+                    "type": "string"
+                },
+                "rent_fee": {
+                    "description": "Optional. Omitted, each defaults to the parent's.",
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "stay_duration": {
+                    "type": "integer"
+                },
+                "stay_duration_frequency": {
+                    "type": "string"
+                },
+                "unit_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.RenewLeaseFeeBody": {
+            "type": "object",
+            "required": [
+                "amount",
+                "category",
+                "name"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "integer",
+                    "example": 15000
+                },
+                "category": {
+                    "type": "string",
+                    "enum": [
+                        "SECURITY_DEPOSIT",
+                        "AGENCY_FEE",
+                        "VAT",
+                        "UTILITY",
+                        "DAMAGE_CHARGE",
+                        "EARLY_TERMINATION_FEE",
+                        "OTHER"
+                    ],
+                    "example": "SECURITY_DEPOSIT"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Deposit top-up"
+                }
+            }
+        },
         "handlers.ReopenAccountBody": {
             "type": "object",
             "required": [
@@ -25442,6 +25596,14 @@ const docTemplate = `{
                     "type": "string",
                     "example": "2025-07-01T00:00:00Z"
                 },
+                "parent_lease": {
+                    "description": "ParentLease is present only when asked for with populate=ParentLease.\nDeliberately a reference rather than a whole lease: the caller wants the\ncode to print, and nesting whole leases would recurse up the chain.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/transformations.OutputLeaseRef"
+                        }
+                    ]
+                },
                 "parent_lease_id": {
                     "type": "string",
                     "example": "b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"
@@ -25517,6 +25679,11 @@ const docTemplate = `{
                 "termination_agreement_document_url": {
                     "type": "string",
                     "example": "https://example.com/termination.pdf"
+                },
+                "type": {
+                    "description": "Type is ORIGINAL or RENEWAL. Read with parent_lease_id, it is what lets a\nlease list group a tenancy instead of showing unrelated sibling rows.",
+                    "type": "string",
+                    "example": "ORIGINAL"
                 },
                 "unit": {
                     "$ref": "#/definitions/transformations.AdminOutputUnit"
@@ -27139,6 +27306,11 @@ const docTemplate = `{
                     "type": "string",
                     "example": "https://example.com/termination.pdf"
                 },
+                "type": {
+                    "description": "Type is ORIGINAL or RENEWAL. Read with parent_lease_id, it is what lets a\nlease list group a tenancy instead of showing unrelated sibling rows.",
+                    "type": "string",
+                    "example": "ORIGINAL"
+                },
                 "unit": {
                     "$ref": "#/definitions/transformations.OutputUnit"
                 },
@@ -27305,6 +27477,22 @@ const docTemplate = `{
                 "updated_at": {
                     "type": "string",
                     "example": "2024-06-10T09:00:00Z"
+                }
+            }
+        },
+        "transformations.OutputLeaseRef": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "2606N7AKJK"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "Lease.Status.Completed"
                 }
             }
         },

@@ -138,6 +138,7 @@ func ServiceAutoMigration(db *gorm.DB) error {
 		jobs.AddSharedFinancialAccountLinks(),
 		jobs.BackfillSharedFinancialAccounts(),
 		jobs.RepairRenewalLeaseFinancialAccount(),
+		jobs.AddLeaseType(),
 	}
 
 	// The drop is destructive and irreversible for data, so it is not even

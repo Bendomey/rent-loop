@@ -13,6 +13,36 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+// RenewLeaseFeeBody is one one-off charge raised against the new term. RENT is
+// deliberately absent from the allowed categories: rent comes from the term
+// itself as a schedule, so a one-off calling itself rent would be billed twice.
+type RenewLeaseFeeBody struct {
+	Category string `json:"category" validate:"required,oneof=SECURITY_DEPOSIT AGENCY_FEE VAT UTILITY DAMAGE_CHARGE EARLY_TERMINATION_FEE OTHER" example:"SECURITY_DEPOSIT"`
+	Name     string `json:"name"     validate:"required"                                                                                         example:"Deposit top-up"`
+	Amount   int64  `json:"amount"   validate:"required,gt=0"                                                                                    example:"15000"`
+}
+
+type RenewLeaseBody struct {
+	MoveInDate            time.Time `json:"move_in_date"            validate:"required"`
+	StayDuration          int64     `json:"stay_duration"           validate:"required,gt=0"`
+	StayDurationFrequency string    `json:"stay_duration_frequency" validate:"required"`
+
+	// Optional. Omitted, each defaults to the parent's.
+	RentFee *int64  `json:"rent_fee" validate:"omitempty,gte=0"`
+	UnitID  *string `json:"unit_id"  validate:"omitempty,uuid4"`
+
+	// Only meaningful when unit_id differs from the parent's; sending it on a
+	// same-unit renewal is refused rather than ignored.
+	CarryFinancialAccount *bool `json:"carry_financial_account"`
+
+	// Fees are one-off amounts due at the start of the new term — a deposit
+	// top-up when rent has risen, a renewal fee, a utility. Created with the
+	// renewal so a term never exists with half its money on it.
+	Fees []RenewLeaseFeeBody `json:"fees" validate:"omitempty,dive"`
+
+	LeaseAgreementDocumentUrl *string `json:"lease_agreement_document_url" validate:"omitempty,url"`
+}
+
 type LeaseHandler struct {
 	appCtx   pkg.AppContext
 	service  services.LeaseService
@@ -553,4 +583,73 @@ func (h *LeaseHandler) CancelLease(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// RenewLease godoc
+//
+//	@Summary		Renew a lease
+//	@Description	Continues a tenancy with a new term. The renewal is created Pending with its own rent and charges, inheriting the parent's tenant, currency and financial account; the daily lifecycle sweeps activate it and complete the parent on the changeover day. A renewal never re-charges the security deposit. It may move the tenant to another unit, in which case carry_financial_account decides whether the money follows.
+//	@Tags			Leases
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			property_id	path		string										true	"Property ID"
+//	@Param			lease_id	path		string										true	"Lease to renew"
+//	@Param			body		body		RenewLeaseBody								true	"New term"
+//	@Success		201			{object}	object{data=transformations.OutputLease}	"Renewal created"
+//	@Failure		400			{object}	lib.HTTPError								"Parent not renewable, already renewed, term overlaps the parent, destination unit at capacity, or the account flag sent on a same-unit renewal"
+//	@Failure		401			{object}	string										"Invalid or absent authentication token"
+//	@Failure		404			{object}	lib.HTTPError								"Lease not found"
+//	@Failure		422			{object}	lib.HTTPError								"Validation error"
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/renew [post]
+func (h *LeaseHandler) RenewLease(w http.ResponseWriter, r *http.Request) {
+	if _, clientUserOk := lib.ClientUserFromContext(r.Context()); !clientUserOk {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var body RenewLeaseBody
+	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+
+	if isPassedValidation := lib.ValidateRequest(h.appCtx.Validator, body, w); !isPassedValidation {
+		return
+	}
+
+	lease, err := h.service.RenewLease(r.Context(), services.RenewLeaseInput{
+		LeaseID:                   chi.URLParam(r, "lease_id"),
+		MoveInDate:                body.MoveInDate,
+		StayDuration:              body.StayDuration,
+		StayDurationFrequency:     body.StayDurationFrequency,
+		RentFee:                   body.RentFee,
+		UnitID:                    body.UnitID,
+		CarryFinancialAccount:     body.CarryFinancialAccount,
+		Fees:                      renewalFeesFromBody(body.Fees),
+		LeaseAgreementDocumentUrl: body.LeaseAgreementDocumentUrl,
+	})
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBAdminLeaseToRest(lease),
+	})
+}
+
+// renewalFeesFromBody maps the request's fees onto the service input.
+func renewalFeesFromBody(in []RenewLeaseFeeBody) []services.RenewalFee {
+	if len(in) == 0 {
+		return nil
+	}
+
+	fees := make([]services.RenewalFee, 0, len(in))
+	for _, f := range in {
+		fees = append(fees, services.RenewalFee{Category: f.Category, Name: f.Name, Amount: f.Amount})
+	}
+
+	return fees
 }

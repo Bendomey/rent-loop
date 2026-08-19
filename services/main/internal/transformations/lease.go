@@ -56,10 +56,33 @@ type OutputAdminLease struct {
 	TerminatedById *string    `json:"terminated_by_id,omitempty" example:"b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"`
 	TerminatedBy   *OutputClientUser
 
+	// Type is ORIGINAL or RENEWAL. Read with parent_lease_id, it is what lets a
+	// lease list group a tenancy instead of showing unrelated sibling rows.
+	Type          string  `json:"type"                      example:"ORIGINAL"`
 	ParentLeaseId *string `json:"parent_lease_id,omitempty" example:"b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"`
+	// ParentLease is present only when asked for with populate=ParentLease.
+	// Deliberately a reference rather than a whole lease: the caller wants the
+	// code to print, and nesting whole leases would recurse up the chain.
+	ParentLease *OutputLeaseRef `json:"parent_lease,omitempty"`
 
 	CreatedAt time.Time `json:"created_at" example:"2024-06-01T09:00:00Z"`
 	UpdatedAt time.Time `json:"updated_at" example:"2024-06-10T09:00:00Z"`
+}
+
+// OutputLeaseRef names another lease without dragging its whole shape along —
+// enough to print "Renewal of 2606N7AKJK" and link to it.
+type OutputLeaseRef struct {
+	ID     string `json:"id"`
+	Code   string `json:"code"   example:"2606N7AKJK"`
+	Status string `json:"status" example:"Lease.Status.Completed"`
+}
+
+func DBLeaseRefToRest(m *models.Lease) *OutputLeaseRef {
+	if m == nil {
+		return nil
+	}
+
+	return &OutputLeaseRef{ID: m.ID.String(), Code: m.Code, Status: m.Status}
 }
 
 func DBAdminLeaseToRest(i *models.Lease) any {
@@ -103,7 +126,9 @@ func DBAdminLeaseToRest(i *models.Lease) any {
 		"terminated_at":                      i.TerminatedAt,
 		"terminated_by_id":                   i.TerminatedById,
 		"terminated_by":                      DBClientUserToRest(i.TerminatedBy),
+		"type":                               i.Type,
 		"parent_lease_id":                    i.ParentLeaseId,
+		"parent_lease":                       DBLeaseRefToRest(i.ParentLease),
 		"financial_account":                  DBTenantApplicationFinancialsToRest(i.Financials),
 		"created_at":                         i.CreatedAt,
 		"updated_at":                         i.UpdatedAt,
@@ -142,11 +167,14 @@ type OutputLease struct {
 	TerminationAgreementDocumentPropertyManagerSignedAt *time.Time `json:"termination_agreement_document_property_manager_signed_at,omitempty" example:"2024-12-01T10:00:00Z"`
 	TerminationAgreementDocumentTenantSignedAt          *time.Time `json:"termination_agreement_document_tenant_signed_at,omitempty"           example:"2024-12-02T11:00:00Z"`
 
-	ActivatedAt   *time.Time `json:"activated_at,omitempty"    example:"2024-06-01T09:00:00Z"`
-	CancelledAt   *time.Time `json:"cancelled_at,omitempty"    example:"2024-06-01T09:00:00Z"`
-	CompletedAt   *time.Time `json:"completed_at,omitempty"    example:"2024-06-01T09:00:00Z"`
-	TerminatedAt  *time.Time `json:"terminated_at,omitempty"   example:"2024-06-01T09:00:00Z"`
-	ParentLeaseId *string    `json:"parent_lease_id,omitempty" example:"b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"`
+	ActivatedAt  *time.Time `json:"activated_at,omitempty"    example:"2024-06-01T09:00:00Z"`
+	CancelledAt  *time.Time `json:"cancelled_at,omitempty"    example:"2024-06-01T09:00:00Z"`
+	CompletedAt  *time.Time `json:"completed_at,omitempty"    example:"2024-06-01T09:00:00Z"`
+	TerminatedAt *time.Time `json:"terminated_at,omitempty"   example:"2024-06-01T09:00:00Z"`
+	// Type is ORIGINAL or RENEWAL. Read with parent_lease_id, it is what lets a
+	// lease list group a tenancy instead of showing unrelated sibling rows.
+	Type          string  `json:"type"                      example:"ORIGINAL"`
+	ParentLeaseId *string `json:"parent_lease_id,omitempty" example:"b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"`
 
 	FinancialAccount *OutputTenantApplicationFinancials `json:"financial_account,omitempty"`
 
@@ -186,7 +214,9 @@ func DBLeaseToRest(i *models.Lease) any {
 		"cancelled_at":                       i.CancelledAt,
 		"completed_at":                       i.CompletedAt,
 		"terminated_at":                      i.TerminatedAt,
+		"type":                               i.Type,
 		"parent_lease_id":                    i.ParentLeaseId,
+		"parent_lease":                       DBLeaseRefToRest(i.ParentLease),
 		"financial_account":                  DBTenantApplicationFinancialsToRest(i.Financials),
 		"created_at":                         i.CreatedAt,
 		"updated_at":                         i.UpdatedAt,

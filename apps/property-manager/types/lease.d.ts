@@ -15,6 +15,13 @@ interface Lease {
 		| 'Lease.Status.Cancelled'
 		| 'Lease.Status.Terminated'
 	parent_lease_id: Nullable<string>
+	/**
+	 * ORIGINAL or RENEWAL. Read with parent_lease_id, it is what lets a lease
+	 * list say where a term came from without grouping the table.
+	 */
+	type: 'ORIGINAL' | 'RENEWAL'
+	/** Present only when asked for with populate=ParentLease. */
+	parent_lease?: Nullable<{ id: string; code: string; status: string }>
 	meta: StringRecord
 
 	rent_fee: number
@@ -55,9 +62,10 @@ interface Lease {
 	terminated_by: Nullable<ClientUser>
 
 	/**
-	 * The tenant ledger this lease bills against, attached by the service from
-	 * financial_accounts.lease_id. Absent until the application's charges were
-	 * prepared — it is NOT reachable through tenant_application, whose own
+	 * The tenant ledger this lease bills against, resolved through the lease's
+	 * own financial_account_id. One account spans every term of a tenancy, so
+	 * a renewal shares its parent's. Absent until the application's charges
+	 * were prepared — it is NOT reachable through tenant_application, whose own
 	 * financial_account is a computed view GORM leaves nil on a preload.
 	 */
 	financial_account: Nullable<TenantApplicationFinancials>

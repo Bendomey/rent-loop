@@ -28,6 +28,9 @@ type LeaseService interface {
 	GetCurrentForAccount(context context.Context, financialAccountID string) (*models.Lease, error)
 	// SetFinancialAccount writes the lease half of the lease <-> account link.
 	SetFinancialAccount(context context.Context, leaseID, financialAccountID string) error
+	// RenewLease continues a tenancy with a new term. The renewal is created
+	// Pending; the daily lifecycle sweeps activate it and complete the parent.
+	RenewLease(context context.Context, input RenewLeaseInput) (*models.Lease, error)
 	// ListTermsForAccount and HasMoveOutEvidence together satisfy
 	// financials.LeaseTermReader, which is how the closure service reads lease
 	// state without the financials package importing this one.
@@ -102,6 +105,39 @@ type CreateLeaseInput struct {
 	LeaseAgreementDocumentUrl       *string // nullable — may not be set at creation time
 	TerminationAgreementDocumentUrl *string
 	ParentLeaseId                   *string
+	Type                            string
+}
+
+// leaseFromCreateInput maps the service input onto the model.
+//
+// Extracted so the mapping is testable without a database — it existed inline,
+// and that is how ParentLeaseId came to be declared in the input and never
+// assigned, silently dropping every renewal's lineage.
+func leaseFromCreateInput(input CreateLeaseInput) models.Lease {
+	leaseType := input.Type
+	if leaseType == "" {
+		leaseType = models.LeaseTypeOriginal
+	}
+
+	return models.Lease{
+		Status:                          input.Status,
+		Type:                            leaseType,
+		UnitId:                          input.UnitId,
+		TenantId:                        input.TenantId,
+		TenantApplicationId:             input.TenantApplicationId,
+		RentFee:                         input.RentFee,
+		RentFeeCurrency:                 input.RentFeeCurrency,
+		PaymentFrequency:                input.PaymentFrequency,
+		MoveInDate:                      input.MoveInDate,
+		StayDurationFrequency:           input.StayDurationFrequency,
+		StayDuration:                    input.StayDuration,
+		KeyHandoverDate:                 input.KeyHandoverDate,
+		UtilityTransfersDate:            input.UtilityTransfersDate,
+		PropertyInspectionDate:          input.PropertyInspectionDate,
+		LeaseAgreementDocumentUrl:       input.LeaseAgreementDocumentUrl,
+		TerminationAgreementDocumentUrl: input.TerminationAgreementDocumentUrl,
+		ParentLeaseId:                   input.ParentLeaseId,
+	}
 }
 
 func (s *leaseService) CreateLease(ctx context.Context, input CreateLeaseInput) (*models.Lease, error) {
@@ -118,25 +154,11 @@ func (s *leaseService) CreateLease(ctx context.Context, input CreateLeaseInput) 
 
 	moveOutDate := leaseEndDate(input.MoveInDate, input.StayDuration, input.StayDurationFrequency)
 
-	lease := models.Lease{
-		Status:                          input.Status,
-		UnitId:                          input.UnitId,
-		TenantId:                        input.TenantId,
-		TenantApplicationId:             input.TenantApplicationId,
-		RentFee:                         input.RentFee,
-		RentFeeCurrency:                 input.RentFeeCurrency,
-		PaymentFrequency:                input.PaymentFrequency,
-		Meta:                            *metaJson,
-		MoveInDate:                      input.MoveInDate,
-		StayDurationFrequency:           input.StayDurationFrequency,
-		StayDuration:                    input.StayDuration,
-		MoveOutDate:                     &moveOutDate,
-		KeyHandoverDate:                 input.KeyHandoverDate,
-		UtilityTransfersDate:            input.UtilityTransfersDate,
-		PropertyInspectionDate:          input.PropertyInspectionDate,
-		LeaseAgreementDocumentUrl:       input.LeaseAgreementDocumentUrl,
-		TerminationAgreementDocumentUrl: input.TerminationAgreementDocumentUrl,
-	}
+	// Meta and MoveOutDate are computed here rather than mapped, so they are
+	// assigned onto the mapped struct.
+	lease := leaseFromCreateInput(input)
+	lease.Meta = *metaJson
+	lease.MoveOutDate = &moveOutDate
 
 	err := s.repo.Create(ctx, &lease)
 	if err != nil {

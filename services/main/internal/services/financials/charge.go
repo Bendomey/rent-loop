@@ -55,7 +55,11 @@ func HasDirtyInstances(views []ChargeView) bool {
 }
 
 type MaterialiseForAccountInput struct {
-	FinancialAccountID    string
+	FinancialAccountID string
+	// LeaseID scopes everything this call creates to one contractual term.
+	// Nil for application-stage preparation, where no lease exists yet —
+	// approval stamps those afterwards via ScopeUnassignedToLease.
+	LeaseID               *string
 	RentFee               int64
 	Currency              string
 	PaymentFrequency      string
@@ -67,7 +71,11 @@ type MaterialiseForAccountInput struct {
 }
 
 type CreateAdHocChargeInput struct {
-	FinancialAccountID       string
+	FinancialAccountID string
+	// LeaseID scopes the charge to a contractual term. Nil is meaningful and
+	// common: an account credit, a write-off or a goodwill discount belongs to
+	// the relationship rather than to any one term.
+	LeaseID                  *string
 	Name                     string
 	Category                 string
 	Amount                   int64 // signed
@@ -99,6 +107,10 @@ type ChargeService interface {
 	// ScopeUnassignedToLease gives an application's charges the contractual
 	// context of the lease that application became.
 	ScopeUnassignedToLease(ctx context.Context, financialAccountID, leaseID string) error
+	// CloseDefinitionsForLease marks a term's rent definitions CLOSED, so a
+	// renewal does not leave a second ACTIVE template behind and the account
+	// keeps exactly one answer to "what is the rent?".
+	CloseDefinitionsForLease(ctx context.Context, financialAccountID, leaseID string) error
 	ListViews(ctx context.Context, financialAccountID string) ([]ChargeView, error)
 	// ListInstances returns the persisted models. The transformation layer
 	// needs Name, Currency and VoidedAt, which ChargeView deliberately does
@@ -145,6 +157,37 @@ func (s *chargeService) ListInstances(
 	return *instances, nil
 }
 
+func (s *chargeService) CloseDefinitionsForLease(
+	ctx context.Context,
+	financialAccountID, leaseID string,
+) error {
+	activeStatus := "ACTIVE"
+	definitions, err := s.repo.ListDefinitions(ctx, repository.ListChargeDefinitionsFilter{
+		FinancialAccountID: &financialAccountID,
+		LeaseID:            &leaseID,
+		Status:             &activeStatus,
+	})
+	if err != nil {
+		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err:      err,
+			Metadata: map[string]string{"function": "CloseDefinitionsForLease", "action": "listing definitions"},
+		})
+	}
+
+	for i := range *definitions {
+		definition := (*definitions)[i]
+		definition.Status = "CLOSED"
+		if updateErr := s.repo.UpdateDefinition(ctx, &definition); updateErr != nil {
+			return pkg.InternalServerError(updateErr.Error(), &pkg.RentLoopErrorParams{
+				Err:      updateErr,
+				Metadata: map[string]string{"function": "CloseDefinitionsForLease", "action": "closing definition"},
+			})
+		}
+	}
+
+	return nil
+}
+
 func (s *chargeService) ScopeUnassignedToLease(ctx context.Context, financialAccountID, leaseID string) error {
 	if err := s.repo.ScopeUnassignedToLease(ctx, financialAccountID, leaseID); err != nil {
 		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
@@ -186,6 +229,7 @@ func (s *chargeService) MaterialiseForAccount(
 ) error {
 	rentDefinition := &models.ChargeDefinition{
 		FinancialAccountID: input.FinancialAccountID,
+		LeaseID:            input.LeaseID,
 		Name:               "Rent",
 		Category:           CategoryRent,
 		Amount:             input.RentFee,
@@ -223,6 +267,7 @@ func (s *chargeService) MaterialiseForAccount(
 		periodEnd := draft.PeriodEnd
 		instances = append(instances, models.ChargeInstance{
 			FinancialAccountID: input.FinancialAccountID,
+			LeaseID:            input.LeaseID,
 			ChargeDefinitionID: &definitionID,
 			Name:               draft.Name,
 			Category:           draft.Category,
@@ -237,6 +282,7 @@ func (s *chargeService) MaterialiseForAccount(
 	if input.SecurityDepositFee > 0 {
 		depositDefinition := &models.ChargeDefinition{
 			FinancialAccountID: input.FinancialAccountID,
+			LeaseID:            input.LeaseID,
 			Name:               "Security Deposit",
 			Category:           CategorySecurityDeposit,
 			Amount:             input.SecurityDepositFee,
@@ -257,6 +303,7 @@ func (s *chargeService) MaterialiseForAccount(
 		depositDefinitionID := depositDefinition.ID.String()
 		instances = append(instances, models.ChargeInstance{
 			FinancialAccountID: input.FinancialAccountID,
+			LeaseID:            input.LeaseID,
 			ChargeDefinitionID: &depositDefinitionID,
 			Name:               "Security Deposit",
 			Category:           CategorySecurityDeposit,
@@ -310,6 +357,7 @@ func (s *chargeService) CreateAdHoc(
 
 	instance := &models.ChargeInstance{
 		FinancialAccountID:       input.FinancialAccountID,
+		LeaseID:                  input.LeaseID,
 		Name:                     input.Name,
 		Category:                 input.Category,
 		Amount:                   input.Amount,

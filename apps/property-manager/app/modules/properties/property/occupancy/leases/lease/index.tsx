@@ -11,7 +11,11 @@ import { LeaseSummaryCard } from './components/lease-summary-card'
 import { StartLeaseDialog } from './components/start-lease-dialog'
 import { LeaseFinancialsTab } from './financials'
 import { overdueTotal } from './financials/account'
+import { renewBlockedReason } from './renewal/can-renew'
+import { buildChain } from './renewal/chain'
+import { LeaseChain } from './renewal/lease-chain'
 import { useGetInvoices } from '~/api/invoices'
+import { useGetTenantLeases } from '~/api/leases'
 import { useHasPropertyPermissions } from '~/components/permissions/use-has-role'
 import { Avatar, AvatarFallback } from '~/components/ui/avatar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
@@ -64,6 +68,20 @@ export function LeaseDetailModule() {
 	// The tab carries a dot while anything is overdue, so the badge is read off
 	// the same invoice list the tab renders rather than a second source.
 	const accountId = lease?.financial_account?.id ?? null
+	/*
+	 * The tenancy this term belongs to.
+	 *
+	 * One call for the tenant's leases, then the chain is walked client-side —
+	 * a chain endpoint would be a second way to ask a question this already
+	 * answers, and the page has reason to know the tenant's leases anyway.
+	 */
+	const { data: tenantLeasePage } = useGetTenantLeases(
+		clientId,
+		propertyId,
+		safeString(lease?.tenant_id),
+		{ pagination: { page: 1, per: 100 } },
+	)
+
 	const { data: invoicePage } = useGetInvoices(clientId, propertyId, {
 		pagination: { page: 1, per: 200 },
 		filters: { financial_account_id: accountId ?? undefined },
@@ -92,6 +110,12 @@ export function LeaseDetailModule() {
 	const canEditChecklist = managerPermission === PermissionState.AUTHORIZED
 
 	const tenantName = tenant ? `${tenant.first_name} ${tenant.last_name}` : null
+	const tenantLeases = tenantLeasePage?.rows ?? []
+	const chain = buildChain(tenantLeases, lease.id)
+	const renewalChildren = tenantLeases.filter(
+		(other) => other.parent_lease_id === lease.id,
+	)
+	const renewHref = `/properties/${propertyId}/occupancy/leases/${lease.id}/renew`
 	const subtitle = `Lease · ${unit?.name ?? '—'} · ${tenantName ?? '—'}`
 
 	return (
@@ -110,6 +134,24 @@ export function LeaseDetailModule() {
 						isPending={isPending}
 						isTerminable={isTerminable}
 						onStartLease={() => setStartLeaseOpen(true)}
+						renewHref={renewHref}
+						renewBlockedReason={renewBlockedReason(lease, renewalChildren)}
+					/>
+				</div>
+
+				{/*
+				 * The chain sits outside the tabs on purpose: it is identity and
+				 * navigation, not a detail, and it matters most on Money where the
+				 * tenancy's whole balance is shown.
+				 */}
+				<div className="mx-5 mt-5">
+					<LeaseChain
+						chain={chain}
+						viewingId={lease.id}
+						tenantName={tenantName ?? 'This tenant'}
+						hrefFor={(term) =>
+							`/properties/${propertyId}/occupancy/leases/${term.id}`
+						}
 					/>
 				</div>
 

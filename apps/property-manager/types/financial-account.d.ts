@@ -25,6 +25,12 @@ type RentBillingCadence =
 interface ChargeInstance {
 	id: string
 	financial_account_id: string
+	/**
+	 * The term this charge belongs to. NULL means it belongs to the account
+	 * rather than to any one term — a credit, a write-off, or a charge raised
+	 * before the lease existed — so it shows in every term's view.
+	 */
+	lease_id?: Nullable<string>
 	name: string
 	category: ChargeCategory
 	/** Signed. Negative is a refund. Minor units. */

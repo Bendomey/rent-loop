@@ -17,6 +17,12 @@ import (
 // Completed means lease ran its full duration and ended.
 // Cancelled means lease was never activated after being created.
 
+// Lease types.
+const (
+	LeaseTypeOriginal = "ORIGINAL"
+	LeaseTypeRenewal  = "RENEWAL"
+)
+
 // Lease represents a lease agreement in the system.
 type Lease struct {
 	BaseModelSoftDelete
@@ -74,6 +80,12 @@ type Lease struct {
 	TerminatedAt   *time.Time
 	TerminatedById *string
 	TerminatedBy   *ClientUser
+
+	// Type distinguishes a first tenancy from a continuation. Only ORIGINAL
+	// and RENEWAL are used today; the column is an enum so the wider lineage
+	// (EXTENSION, RENT_REVIEW, UNIT_CHANGE, ...) can land later without a
+	// migration.
+	Type string `gorm:"not null;default:'ORIGINAL';index;"`
 
 	// for lease renewals and extensions
 	ParentLeaseId *string `gorm:"index;"`

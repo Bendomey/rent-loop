@@ -25,6 +25,19 @@ type PrepareChargesInput struct {
 	AutoIssueDaysBefore   int64
 }
 
+// OpenForLeaseInput opens an account for a lease that already exists, rather
+// than for an application. Used only when a renewal moves units and the PM has
+// said the money should not follow.
+type OpenForLeaseInput struct {
+	// Provenance, inherited from the parent's account. The renewal has no
+	// application of its own.
+	OriginTenantApplicationID string
+	TenantID                  string
+	Currency                  string
+	ClientID                  *string
+	PropertyID                *string
+}
+
 type UpdateBillingPolicyInput struct {
 	FinancialAccountID  string
 	Cadence             *string
@@ -49,6 +62,10 @@ type FinancialAccountService interface {
 	// Revive returns a CLOSURE_ELIGIBLE account to ACTIVE. Called when a
 	// renewal lands on an account that looked finished.
 	Revive(ctx context.Context, accountID string) error
+	// OpenForLease creates an account for an existing lease. Unlike
+	// PrepareCharges it creates no charges: the caller materialises the term
+	// itself, because it already knows the lease the charges belong to.
+	OpenForLease(ctx context.Context, input OpenForLeaseInput) (*models.FinancialAccount, error)
 	GetByID(ctx context.Context, accountID string) (*models.FinancialAccount, error)
 	LinkLease(ctx context.Context, accountID, tenantID string) error
 	Relocate(ctx context.Context, accountID, propertyID string) error
@@ -127,6 +144,35 @@ func (s *financialAccountService) GetByApplication(
 	applicationID string,
 ) (*models.FinancialAccount, error) {
 	return s.repo.GetOne(ctx, repository.GetFinancialAccountQuery{TenantApplicationID: &applicationID})
+}
+
+func (s *financialAccountService) OpenForLease(
+	ctx context.Context,
+	input OpenForLeaseInput,
+) (*models.FinancialAccount, error) {
+	account := &models.FinancialAccount{
+		OriginTenantApplicationID: input.OriginTenantApplicationID,
+		TenantID:                  &input.TenantID,
+		ClientID:                  input.ClientID,
+		PropertyID:                input.PropertyID,
+		Currency:                  input.Currency,
+		// No prepayment is known at this point, so there is nothing to derive
+		// a cadence from. MANUAL means the sweep leaves it alone until a PM
+		// sets a policy, which is safer than inventing one.
+		RentBillingCadence:  CadenceManual,
+		RentBillingInterval: 1,
+		AutoIssueDaysBefore: 5,
+		Status:              StatusActive,
+	}
+
+	if err := s.repo.Create(ctx, account); err != nil {
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err:      err,
+			Metadata: map[string]string{"function": "OpenForLease", "action": "creating account"},
+		})
+	}
+
+	return account, nil
 }
 
 // Revive undoes eligibility. It does not touch ClosedAt, because an account
