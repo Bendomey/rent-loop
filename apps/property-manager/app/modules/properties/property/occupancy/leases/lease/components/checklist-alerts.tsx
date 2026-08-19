@@ -67,9 +67,10 @@ export function ChecklistAlerts({ lease, canEdit, propertyId }: Props) {
 	const draftCheckOut = checkOut?.status === 'DRAFT' ? checkOut : undefined
 
 	const isPendingLease = lease.status === 'Lease.Status.Pending'
-	const showLeaseStarting =
-		shouldShowCheckInAlert(lease, checklists) || isPendingLease
 	const showLeaseEnding = shouldShowLeaseEndingAlert(lease)
+	const showLeaseStarting =
+		!showLeaseEnding &&
+		(shouldShowCheckInAlert(lease, checklists) || isPendingLease)
 
 	if (
 		!showLeaseStarting &&
