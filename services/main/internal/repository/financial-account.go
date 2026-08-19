@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
@@ -29,6 +30,7 @@ type FinancialAccountRepository interface {
 	// pre-filter by due date or the cadence quantity would be capped by the
 	// lead window.
 	ListActiveForBilling(ctx context.Context) (*[]models.FinancialAccount, error)
+	ListDueForClosure(ctx context.Context, eligibleBefore time.Time) (*[]models.FinancialAccount, error)
 	// SumSuccessfulPayments totals every successful payment made against this
 	// account's invoices. It must go through invoices rather than through
 	// allocations: a fully unallocated overpayment has no allocation rows at
@@ -115,6 +117,30 @@ func (r *financialAccountRepository) SumSuccessfulPayments(
 		return 0, nil
 	}
 	return *total, nil
+}
+
+// ListDueForClosure returns accounts whose leases have all ended and which
+// have sat eligible for at least the grace period.
+//
+// The gates are NOT applied here — money is the service's question, and a
+// repository that filtered on it would duplicate EvaluateClosureGates in SQL.
+func (r *financialAccountRepository) ListDueForClosure(
+	ctx context.Context,
+	eligibleBefore time.Time,
+) (*[]models.FinancialAccount, error) {
+	var accounts []models.FinancialAccount
+
+	err := lib.ResolveDB(ctx, r.DB).
+		Model(&models.FinancialAccount{}).
+		Where("financial_accounts.status = ?", "CLOSURE_ELIGIBLE").
+		Where("financial_accounts.closure_eligible_at IS NOT NULL").
+		Where("financial_accounts.closure_eligible_at <= ?", eligibleBefore).
+		Find(&accounts).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &accounts, nil
 }
 
 func (r *financialAccountRepository) ListActiveForBilling(

@@ -190,6 +190,7 @@ func (h *FinancialAccountHandler) ListCharges(w http.ResponseWriter, r *http.Req
 //	@Failure		400			{object}	lib.HTTPError										"Zero amount, non-negative reversal, or a reversal exceeding what was settled"
 //	@Failure		401			{object}	string												"Invalid or absent authentication token"
 //	@Failure		422			{object}	lib.HTTPError										"Validation error"
+//	@Failure		409			{object}	lib.HTTPError										"The tenancy's account is closed"
 //	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/financial-accounts/{account_id}/charges [post]
 func (h *FinancialAccountHandler) CreateCharge(w http.ResponseWriter, r *http.Request) {
 	if _, ok := lib.ClientUserFromContext(r.Context()); !ok {
@@ -626,7 +627,7 @@ func (h *FinancialAccountHandler) CloseAccount(w http.ResponseWriter, r *http.Re
 
 	err := h.financials.Closure.Close(r.Context(), financials.CloseAccountInput{
 		FinancialAccountID:   chi.URLParam(r, "account_id"),
-		ClosedByID:           clientUser.ID,
+		ClosedByID:           &clientUser.ID,
 		Reason:               body.Reason,
 		DepositResolution:    resolution,
 		DepositForfeitReason: body.DepositForfeitReason,

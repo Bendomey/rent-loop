@@ -7,6 +7,7 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
+	log "github.com/sirupsen/logrus"
 )
 
 // DepositResolution is what the PM decided happens to money still held.
@@ -31,9 +32,10 @@ type ClosureEligibility struct {
 
 type CloseAccountInput struct {
 	FinancialAccountID string
-	ClosedByID         string
-	Reason             string
-	DepositResolution  DepositResolution
+	// Nil when the closure sweep acted rather than a person.
+	ClosedByID        *string
+	Reason            string
+	DepositResolution DepositResolution
 	// Set when the deposit is forfeited; recorded on the closure row.
 	DepositForfeitReason *string
 }
@@ -56,6 +58,9 @@ type ClosureService interface {
 	RecomputeEligibility(ctx context.Context, accountID string) error
 	Close(ctx context.Context, input CloseAccountInput) error
 	Reopen(ctx context.Context, input ReopenAccountInput) error
+	// CloseDueAccounts is the nightly sweep. onlyAccountID empty means every
+	// due account, which is what the cron passes.
+	CloseDueAccounts(ctx context.Context, asOf time.Time, onlyAccountID string) (int, int, error)
 }
 
 type closureService struct {
@@ -322,4 +327,88 @@ func (s *closureService) Reopen(ctx context.Context, input ReopenAccountInput) e
 	}
 
 	return nil
+}
+
+// CloseDueAccounts closes every account that has been eligible for the grace
+// period and has nothing held and nothing owed.
+//
+// asOf is a parameter rather than time.Now() because a 90-day rule is
+// untestable by a suite that runs in seconds unless the instant is an input.
+// onlyAccountID empty means every due account, which is what the cron passes.
+//
+// A failure on one account is logged and skipped rather than aborting the run:
+// a sweep that stops at the first problem leaves every later account untouched
+// until someone notices.
+func (s *closureService) CloseDueAccounts(
+	ctx context.Context,
+	asOf time.Time,
+	onlyAccountID string,
+) (int, int, error) {
+	accounts, err := s.accounts.ListDueForClosure(ctx, asOf.AddDate(0, 0, -ClosureGraceDays))
+	if err != nil {
+		return 0, 0, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err:      err,
+			Metadata: map[string]string{"function": "CloseDueAccounts", "action": "listing due accounts"},
+		})
+	}
+
+	var closed, skipped int
+
+	for i := range *accounts {
+		account := (*accounts)[i]
+		accountID := account.ID.String()
+
+		if onlyAccountID != "" && accountID != onlyAccountID {
+			continue
+		}
+
+		// The query already filters on the grace period; the rule lives in one
+		// place and this is that place.
+		if !IsDueForClosure(account.ClosureEligibleAt, asOf) {
+			skipped++
+
+			continue
+		}
+
+		// The gates are the authority, not the query. An account holding a
+		// deposit or carrying arrears is left open indefinitely: the system
+		// cannot tell unpaid rent from rent collected in cash and never
+		// recorded, and that fact lives in someone's head.
+		gateInput, _, gateErr := s.gateInput(ctx, accountID)
+		if gateErr != nil {
+			log.WithError(gateErr).WithField("account_id", accountID).
+				Error("closure sweep could not evaluate gates")
+
+			skipped++
+
+			continue
+		}
+
+		// Nothing held is the only shape this sweep ever closes, so there is no
+		// deposit decision to make — which is what makes automating it safe.
+		gateInput.DepositResolved = gateInput.DepositHeldAmount == 0
+
+		if !CanClose(EvaluateClosureGates(gateInput)) {
+			skipped++
+
+			continue
+		}
+
+		// ClosedByID stays nil: no person decided this.
+		if closeErr := s.Close(ctx, CloseAccountInput{
+			FinancialAccountID: accountID,
+			Reason:             "Closed automatically: the tenancy ended and nothing was left outstanding",
+		}); closeErr != nil {
+			log.WithError(closeErr).WithField("account_id", accountID).
+				Error("closure sweep failed to close account")
+
+			skipped++
+
+			continue
+		}
+
+		closed++
+	}
+
+	return closed, skipped, nil
 }

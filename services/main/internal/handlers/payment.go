@@ -44,6 +44,7 @@ type CreateOfflinePaymentRequest struct {
 //	@Failure		401		{object}	string										"Invalid or absent authentication token"
 //	@Failure		422		{object}	lib.HTTPError								"Validation error"
 //	@Failure		500		{object}	string										"An unexpected error occurred"
+//	@Failure		409		{object}	lib.HTTPError								"The tenancy's account is closed"
 //	@Router			/api/v1/payments/offline [post]
 func (h *PaymentHandler) CreateOfflinePayment(w http.ResponseWriter, r *http.Request) {
 	var body CreateOfflinePaymentRequest

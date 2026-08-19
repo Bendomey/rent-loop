@@ -71,7 +71,12 @@ interface FinancialAccount {
 	rent_billing_interval: number
 	/** Issuance lead time BEFORE the due date, not the payment grace after it. */
 	auto_issue_days_before: number
-	status: 'ACTIVE' | 'CLOSED'
+	/**
+	 * CLOSURE_ELIGIBLE is not "closed pending paperwork" — every lease has
+	 * ended, but the tenancy is still live and still takes money. Only CLOSED
+	 * stops writing.
+	 */
+	status: 'ACTIVE' | 'CLOSURE_ELIGIBLE' | 'CLOSED'
 	closed_at?: Nullable<string>
 	created_at: string
 	updated_at: string

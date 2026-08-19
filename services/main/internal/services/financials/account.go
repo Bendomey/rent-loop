@@ -358,7 +358,7 @@ func New(
 	chargeRepo repository.ChargeRepository,
 	allocationRepo repository.PaymentAllocationRepository,
 ) *Financials {
-	charges := NewChargeService(chargeRepo)
+	charges := NewChargeService(chargeRepo, accountRepo)
 	allocation := NewAllocationService(chargeRepo, allocationRepo, accountRepo)
 	accounts := NewFinancialAccountService(accountRepo, charges, allocation)
 

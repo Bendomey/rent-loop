@@ -132,6 +132,19 @@ func (s *paymentService) CreateOfflinePayment(
 		return nil, invoiceErr
 	}
 
+	// A closed account has no unpaid invoice — the outstanding gate guarantees
+	// it — so there is nothing legitimate left to receive against one.
+	if invoice.FinancialAccountID != nil && s.financials != nil {
+		account, accErr := s.financials.Accounts.GetByID(ctx, *invoice.FinancialAccountID)
+		if accErr != nil {
+			return nil, accErr
+		}
+
+		if openErr := financials.AssertAccountOpen(account.Status); openErr != nil {
+			return nil, openErr
+		}
+	}
+
 	if !lib.StringInSlice(invoice.Status, []string{"ISSUED", "PARTIALLY_PAID"}) {
 		return nil, pkg.BadRequestError("invoice is not in a valid state to accept payments", &pkg.RentLoopErrorParams{
 			Metadata: map[string]string{

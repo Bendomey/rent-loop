@@ -17,6 +17,14 @@ type fakeAccountRepo struct{ accounts []models.FinancialAccount }
 func (f *fakeAccountRepo) ListActiveForBilling(context.Context) (*[]models.FinancialAccount, error) {
 	return &f.accounts, nil
 }
+
+// Not exercised here: the closure sweep has its own coverage, and this fake
+// exists for issuance.
+func (f *fakeAccountRepo) ListDueForClosure(
+	context.Context, time.Time,
+) (*[]models.FinancialAccount, error) {
+	return &[]models.FinancialAccount{}, nil
+}
 func (f *fakeAccountRepo) Create(context.Context, *models.FinancialAccount) error { return nil }
 func (f *fakeAccountRepo) Update(context.Context, *models.FinancialAccount) error { return nil }
 func (f *fakeAccountRepo) GetOne(

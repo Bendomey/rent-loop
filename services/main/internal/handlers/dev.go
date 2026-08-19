@@ -182,3 +182,81 @@ func (h *DevHandler) RunLeaseLifecycle(w http.ResponseWriter, r *http.Request) {
 		},
 	})
 }
+
+type RunAccountClosureBody struct {
+	// AsOf is the instant the sweep should believe it is running at. Omit it
+	// for the wall clock. The 90-day grace period can therefore be crossed in
+	// one call without back-dating closure_eligible_at.
+	AsOf *string `json:"as_of,omitempty"                example:"2027-03-03T00:00:00Z"`
+	// FinancialAccountID restricts the sweep to a single account, so a
+	// scenario does not close unrelated ledgers as a side effect.
+	FinancialAccountID *string `json:"financial_account_id,omitempty"`
+}
+
+type RunAccountClosureResponse struct {
+	Closed  int    `json:"closed"  example:"1"`
+	Skipped int    `json:"skipped" example:"0"`
+	AsOf    string `json:"as_of"   example:"2027-03-03T00:00:00Z"`
+}
+
+// RunAccountClosure godoc
+//
+//	@Summary		Run the account closure sweep (non-production only)
+//	@Description	Runs the same sweep the `0 1 * * *` cron runs, optionally at a supplied instant. Registered only when the server's environment is not production. Exists so end-to-end scenarios can cross the 90-day grace period without back-dating rows. This is deliberately not an operational action: a property manager never closes an account by hand.
+//	@Tags			Dev
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body		RunAccountClosureBody					false	"Optional instant and account to sweep"
+//	@Success		200		{object}	object{data=RunAccountClosureResponse}	"Sweep completed"
+//	@Failure		400		{object}	lib.HTTPError							"as_of is not a valid RFC3339 timestamp"
+//	@Failure		401		{object}	string									"Invalid or absent authentication token"
+//	@Failure		500		{object}	string									"An unexpected error occurred"
+//	@Router			/api/v1/dev/jobs/account-closure [post]
+func (h *DevHandler) RunAccountClosure(w http.ResponseWriter, r *http.Request) {
+	// Global sweep, so there is no client or property to scope to. This route
+	// sits in the top-level protected group where UserFromContext is what the
+	// auth middleware populates.
+	if _, ok := lib.UserFromContext(r.Context()); !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+
+		return
+	}
+
+	var body RunAccountClosureBody
+	// An absent body is the manual trigger, not an error.
+	_ = json.NewDecoder(r.Body).Decode(&body)
+
+	asOf := time.Now()
+
+	if body.AsOf != nil {
+		parsed, parseErr := time.Parse(time.RFC3339, *body.AsOf)
+		if parseErr != nil {
+			http.Error(w, "invalid 'as_of' timestamp", http.StatusBadRequest)
+
+			return
+		}
+
+		asOf = parsed
+	}
+
+	only := ""
+	if body.FinancialAccountID != nil {
+		only = *body.FinancialAccountID
+	}
+
+	closed, skipped, err := h.financials.Closure.CloseDueAccounts(r.Context(), asOf, only)
+	if err != nil {
+		HandleErrorResponse(w, err)
+
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": RunAccountClosureResponse{
+			Closed:  closed,
+			Skipped: skipped,
+			AsOf:    asOf.Format(time.RFC3339),
+		},
+	})
+}

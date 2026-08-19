@@ -75,6 +75,7 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 			if appCtx.Config.Env != "production" {
 				r.Post("/v1/dev/jobs/invoice-issuance", handlers.DevHandler.RunInvoiceIssuance)
 				r.Post("/v1/dev/jobs/lease-lifecycle", handlers.DevHandler.RunLeaseLifecycle)
+				r.Post("/v1/dev/jobs/account-closure", handlers.DevHandler.RunAccountClosure)
 			}
 
 			// client-scoped routes — require valid client membership

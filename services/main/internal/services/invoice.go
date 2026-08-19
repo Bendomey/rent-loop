@@ -145,7 +145,27 @@ type CreateInvoiceInput struct {
 	NotificationTenantID *string
 }
 
+// assertAccountOpen refuses billing work against a closed account. A closed
+// account has no unpaid invoice — the outstanding gate guarantees it — so
+// there is nothing legitimate left to bill or receive.
+func (s *invoiceService) assertAccountOpen(ctx context.Context, accountID *string) error {
+	if accountID == nil || s.financials == nil {
+		return nil
+	}
+
+	account, err := s.financials.Accounts.GetByID(ctx, *accountID)
+	if err != nil {
+		return err
+	}
+
+	return financials.AssertAccountOpen(account.Status)
+}
+
 func (s *invoiceService) CreateInvoice(ctx context.Context, input CreateInvoiceInput) (*models.Invoice, error) {
+	if err := s.assertAccountOpen(ctx, input.FinancialAccountID); err != nil {
+		return nil, err
+	}
+
 	// Composition is the only way in for account-backed invoices. A
 	// hand-built one would have lines claiming no charge, so the ledger and
 	// the invoice would immediately disagree.
@@ -948,6 +968,10 @@ func (s *invoiceService) AddLineItem(ctx context.Context, input AddLineItemInput
 				"action":   "getting invoice",
 			},
 		})
+	}
+
+	if openErr := s.assertAccountOpen(ctx, invoice.FinancialAccountID); openErr != nil {
+		return nil, openErr
 	}
 
 	// Account-backed invoices must go through composition. A free-form line

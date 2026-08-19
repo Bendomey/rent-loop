@@ -7293,6 +7293,12 @@
                             "type": "string"
                         }
                     },
+                    "409": {
+                        "description": "The tenancy's account is closed",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
                     "422": {
                         "description": "Validation error",
                         "schema": {
@@ -7899,6 +7905,12 @@
                             "type": "string"
                         }
                     },
+                    "409": {
+                        "description": "The tenancy's account is closed",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
                     "422": {
                         "description": "Validation error",
                         "schema": {
@@ -8355,6 +8367,12 @@
                     },
                     "404": {
                         "description": "Invoice not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "409": {
+                        "description": "The tenancy's account is closed",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -17497,6 +17515,67 @@
                 }
             }
         },
+        "/api/v1/dev/jobs/account-closure": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Runs the same sweep the `0 1 * * *` cron runs, optionally at a supplied instant. Registered only when the server's environment is not production. Exists so end-to-end scenarios can cross the 90-day grace period without back-dating rows. This is deliberately not an operational action: a property manager never closes an account by hand.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dev"
+                ],
+                "summary": "Run the account closure sweep (non-production only)",
+                "parameters": [
+                    {
+                        "description": "Optional instant and account to sweep",
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.RunAccountClosureBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Sweep completed",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/handlers.RunAccountClosureResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "as_of is not a valid RFC3339 timestamp",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/dev/jobs/invoice-issuance": {
             "post": {
                 "security": [
@@ -19598,6 +19677,12 @@
                         "description": "Invalid or absent authentication token",
                         "schema": {
                             "type": "string"
+                        }
+                    },
+                    "409": {
+                        "description": "The tenancy's account is closed",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
                         }
                     },
                     "422": {
@@ -23492,6 +23577,37 @@
             "properties": {
                 "reason": {
                     "type": "string"
+                }
+            }
+        },
+        "handlers.RunAccountClosureBody": {
+            "type": "object",
+            "properties": {
+                "as_of": {
+                    "description": "AsOf is the instant the sweep should believe it is running at. Omit it\nfor the wall clock. The 90-day grace period can therefore be crossed in\none call without back-dating closure_eligible_at.",
+                    "type": "string",
+                    "example": "2027-03-03T00:00:00Z"
+                },
+                "financial_account_id": {
+                    "description": "FinancialAccountID restricts the sweep to a single account, so a\nscenario does not close unrelated ledgers as a side effect.",
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.RunAccountClosureResponse": {
+            "type": "object",
+            "properties": {
+                "as_of": {
+                    "type": "string",
+                    "example": "2027-03-03T00:00:00Z"
+                },
+                "closed": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "skipped": {
+                    "type": "integer",
+                    "example": 0
                 }
             }
         },

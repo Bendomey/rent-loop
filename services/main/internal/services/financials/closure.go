@@ -1,5 +1,11 @@
 package financials
 
+import (
+	"time"
+
+	"github.com/Bendomey/rent-loop/services/main/pkg"
+)
+
 // Financial account statuses.
 //
 // CLOSURE_ELIGIBLE is not "closed pending paperwork" — it is a live account
@@ -126,6 +132,44 @@ func CanClose(gates []ClosureGate) bool {
 	}
 
 	return true
+}
+
+// ClosureGraceDays is how long an account sits eligible before the sweep acts.
+//
+// Long enough that a late renewal still lands inside the window and revives
+// the account on its own; short enough that finished tenancies do not pile up.
+// The grace period is not protecting against error — the gates do that — it is
+// protecting against acting while the manager still considers the tenancy live.
+const ClosureGraceDays = 90
+
+// IsDueForClosure reports whether an eligible account has waited long enough.
+//
+// asOf is passed rather than read from the clock: a 90-day rule is untestable
+// by a suite that runs in seconds unless the instant is an input.
+func IsDueForClosure(eligibleAt *time.Time, asOf time.Time) bool {
+	if eligibleAt == nil {
+		return false
+	}
+
+	return !eligibleAt.After(asOf.AddDate(0, 0, -ClosureGraceDays))
+}
+
+// AssertAccountOpen refuses a write against a closed account.
+//
+// A closed account that still accepts charges is not closed, it is merely
+// labelled. Recording a payment is included: the outstanding gate means a
+// closed account has no unpaid invoice, so there is nothing legitimate to
+// receive.
+//
+// CLOSURE_ELIGIBLE deliberately passes. An eligible account is still open — a
+// late charge on a tenancy that has just ended is ordinary, and refusing it
+// would make the sweep's own grace period unusable.
+func AssertAccountOpen(status string) error {
+	if status == StatusClosed {
+		return pkg.ConflictError("FinancialAccountClosed", nil)
+	}
+
+	return nil
 }
 
 // ReusableAccountStatuses is the set a tenancy lookup will join rather than

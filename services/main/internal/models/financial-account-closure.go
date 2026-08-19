@@ -15,10 +15,14 @@ type FinancialAccountClosure struct {
 	FinancialAccountID string `gorm:"type:uuid;not null;index;"`
 	FinancialAccount   FinancialAccount
 
-	Reason     string     `gorm:"not null;"`
-	ClosedAt   time.Time  `gorm:"not null;"`
-	ClosedByID string     `gorm:"type:uuid;not null;"`
-	ClosedBy   ClientUser `gorm:"foreignKey:ClosedByID"`
+	Reason   string    `gorm:"not null;"`
+	ClosedAt time.Time `gorm:"not null;"`
+	// Null when the closure sweep acted rather than a person. The audit row
+	// exists to say who decided, so "nobody, it aged out" must stay
+	// distinguishable from a named property manager — never papered over with
+	// a synthetic user that later reads as a real one.
+	ClosedByID *string     `gorm:"type:uuid;"`
+	ClosedBy   *ClientUser `gorm:"foreignKey:ClosedByID"`
 
 	// The account's state at the moment of closure, frozen. Recomputing these
 	// later would give different answers once refunds have posted.

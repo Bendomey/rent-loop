@@ -27,6 +27,7 @@ export function MoneyHero({
 	currency,
 	tenantName,
 	readonly,
+	closedReason,
 	onPay,
 	onAddFee,
 }: {
@@ -36,6 +37,12 @@ export function MoneyHero({
 	currency: string
 	tenantName: string
 	readonly: boolean
+	/**
+	 * Why the money actions cannot be used, when they cannot. Present means
+	 * disabled-and-explained rather than hidden: someone who expects to add a
+	 * charge and finds nothing has no way to learn why.
+	 */
+	closedReason?: Nullable<string>
 	onPay: () => void
 	onAddFee: () => void
 }) {
@@ -150,7 +157,21 @@ export function MoneyHero({
 					)}
 				</p>
 
-				{!readonly ? (
+				{closedReason ? (
+					<div className="flex flex-col gap-2">
+						<div className="flex flex-wrap gap-2">
+							<Button variant="outline" disabled title={closedReason}>
+								<Plus className="size-4" />
+								Add a fee
+							</Button>
+							<Button disabled title={closedReason}>
+								<Check className="size-4" />
+								{tenantName} paid me
+							</Button>
+						</div>
+						<p className="text-muted-foreground text-sm">{closedReason}</p>
+					</div>
+				) : !readonly ? (
 					<div className="flex flex-wrap gap-2">
 						<Button variant="outline" onClick={onAddFee}>
 							<Plus className="size-4" />

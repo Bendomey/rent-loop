@@ -1700,6 +1700,33 @@ definitions:
     required:
     - reason
     type: object
+  handlers.RunAccountClosureBody:
+    properties:
+      as_of:
+        description: |-
+          AsOf is the instant the sweep should believe it is running at. Omit it
+          for the wall clock. The 90-day grace period can therefore be crossed in
+          one call without back-dating closure_eligible_at.
+        example: "2027-03-03T00:00:00Z"
+        type: string
+      financial_account_id:
+        description: |-
+          FinancialAccountID restricts the sweep to a single account, so a
+          scenario does not close unrelated ledgers as a side effect.
+        type: string
+    type: object
+  handlers.RunAccountClosureResponse:
+    properties:
+      as_of:
+        example: "2027-03-03T00:00:00Z"
+        type: string
+      closed:
+        example: 1
+        type: integer
+      skipped:
+        example: 0
+        type: integer
+    type: object
   handlers.RunInvoiceIssuanceBody:
     properties:
       as_of:
@@ -10170,6 +10197,10 @@ paths:
           description: Invalid or absent authentication token
           schema:
             type: string
+        "409":
+          description: The tenancy's account is closed
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
         "422":
           description: Validation error
           schema:
@@ -10574,6 +10605,10 @@ paths:
           description: Invalid or absent authentication token
           schema:
             type: string
+        "409":
+          description: The tenancy's account is closed
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
         "422":
           description: Validation error
           schema:
@@ -10870,6 +10905,10 @@ paths:
             type: string
         "404":
           description: Invoice not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "409":
+          description: The tenancy's account is closed
           schema:
             $ref: '#/definitions/lib.HTTPError'
         "422":
@@ -17067,6 +17106,48 @@ paths:
       summary: Get booking status by tracking code (phone-verified)
       tags:
       - Public
+  /api/v1/dev/jobs/account-closure:
+    post:
+      consumes:
+      - application/json
+      description: 'Runs the same sweep the `0 1 * * *` cron runs, optionally at a
+        supplied instant. Registered only when the server''s environment is not production.
+        Exists so end-to-end scenarios can cross the 90-day grace period without back-dating
+        rows. This is deliberately not an operational action: a property manager never
+        closes an account by hand.'
+      parameters:
+      - description: Optional instant and account to sweep
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/handlers.RunAccountClosureBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Sweep completed
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/handlers.RunAccountClosureResponse'
+            type: object
+        "400":
+          description: as_of is not a valid RFC3339 timestamp
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Run the account closure sweep (non-production only)
+      tags:
+      - Dev
   /api/v1/dev/jobs/invoice-issuance:
     post:
       consumes:
@@ -18441,6 +18522,10 @@ paths:
           description: Invalid or absent authentication token
           schema:
             type: string
+        "409":
+          description: The tenancy's account is closed
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
         "422":
           description: Validation error
           schema:

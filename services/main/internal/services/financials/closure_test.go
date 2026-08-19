@@ -1,6 +1,9 @@
 package financials
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 // Every term in the chain has ended and nothing follows. This is the only
 // shape that may be closed.
@@ -206,5 +209,31 @@ func TestDepositHeldFullyRefunded(t *testing.T) {
 
 	if got := DepositHeld(views); got != 0 {
 		t.Errorf("got %d, want 0", got)
+	}
+}
+
+func TestIsDueForClosureWaitsOutTheGracePeriod(t *testing.T) {
+	asOf := time.Date(2026, 8, 19, 0, 0, 0, 0, time.UTC)
+	ninetyOne := asOf.AddDate(0, 0, -91)
+	thirty := asOf.AddDate(0, 0, -30)
+	exactly := asOf.AddDate(0, 0, -ClosureGraceDays)
+
+	cases := []struct {
+		name       string
+		eligibleAt *time.Time
+		want       bool
+	}{
+		{"past the grace period", &ninetyOne, true},
+		{"exactly at the grace period", &exactly, true},
+		{"still inside the grace period", &thirty, false},
+		{"never became eligible", nil, false},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := IsDueForClosure(tc.eligibleAt, asOf); got != tc.want {
+				t.Fatalf("IsDueForClosure = %v, want %v", got, tc.want)
+			}
+		})
 	}
 }

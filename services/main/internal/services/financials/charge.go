@@ -130,11 +130,29 @@ type ChargeService interface {
 }
 
 type chargeService struct {
-	repo repository.ChargeRepository
+	repo     repository.ChargeRepository
+	accounts repository.FinancialAccountRepository
 }
 
-func NewChargeService(repo repository.ChargeRepository) ChargeService {
-	return &chargeService{repo: repo}
+func NewChargeService(
+	repo repository.ChargeRepository,
+	accounts repository.FinancialAccountRepository,
+) ChargeService {
+	return &chargeService{repo: repo, accounts: accounts}
+}
+
+// assertOpen refuses a write against a closed account.
+//
+// The status is read here rather than trusted from the caller: every write
+// path reaches this service from somewhere different, and a guard that relied
+// on each of them remembering to check would be a guard in name only.
+func (s *chargeService) assertOpen(ctx context.Context, accountID string) error {
+	account, err := s.accounts.GetOne(ctx, repository.GetFinancialAccountQuery{ID: &accountID})
+	if err != nil {
+		return pkg.NotFoundError("FinancialAccountNotFound", &pkg.RentLoopErrorParams{Err: err})
+	}
+
+	return AssertAccountOpen(account.Status)
 }
 
 func (s *chargeService) ListInstances(
@@ -227,6 +245,10 @@ func (s *chargeService) MaterialiseForAccount(
 	ctx context.Context,
 	input MaterialiseForAccountInput,
 ) error {
+	if err := s.assertOpen(ctx, input.FinancialAccountID); err != nil {
+		return err
+	}
+
 	rentDefinition := &models.ChargeDefinition{
 		FinancialAccountID: input.FinancialAccountID,
 		LeaseID:            input.LeaseID,
@@ -335,6 +357,10 @@ func (s *chargeService) CreateAdHoc(
 	ctx context.Context,
 	input CreateAdHocChargeInput,
 ) (*models.ChargeInstance, error) {
+	if err := s.assertOpen(ctx, input.FinancialAccountID); err != nil {
+		return nil, err
+	}
+
 	if input.Amount == 0 {
 		return nil, pkg.BadRequestError("ChargeAmountCannotBeZero", nil)
 	}
