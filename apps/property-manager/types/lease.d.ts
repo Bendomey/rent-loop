@@ -3,6 +3,13 @@ interface FetchLeaseFilter {
 	unit_ids?: string[]
 	ids?: string[]
 	property_id?: string
+	/**
+	 * Drops leases that already carry a renewal which is not Terminated or
+	 * Cancelled. A renewed lease stays Active until its own term runs out, so
+	 * without this an "expiring soon" list nags about a tenancy that is
+	 * plainly continuing.
+	 */
+	exclude_renewed?: boolean
 }
 
 interface Lease {

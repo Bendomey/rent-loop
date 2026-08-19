@@ -94,6 +94,10 @@ function useRiskRecords(
 				status: 'Lease.Status.Active',
 				move_out_date_from: today,
 				move_out_date_to: windowEnd,
+				// Matches Leases.expiringCount, which the card above reports.
+				// Without it the list contradicts its own number: a renewed
+				// lease is still Active until its term runs out.
+				exclude_renewed: true,
 				property_id: propertyId,
 				order_by: 'leases.move_out_date',
 				order: 'asc',

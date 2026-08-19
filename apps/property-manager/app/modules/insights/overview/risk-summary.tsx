@@ -11,7 +11,7 @@ interface OutstandingRow {
 	'Invoices.outstandingPropertyCount': string | null
 }
 interface ExpiringRow {
-	'Leases.activeCount': string | null
+	'Leases.expiringCount': string | null
 	'Leases.expiringPropertyCount': string | null
 }
 interface MaintenanceRow {
@@ -52,7 +52,7 @@ export function RiskSummary() {
 		token,
 		['ins-ov-risk-expiring', scopeKey],
 		{
-			measures: ['Leases.activeCount', 'Leases.expiringPropertyCount'],
+			measures: ['Leases.expiringCount', 'Leases.expiringPropertyCount'],
 			timeDimensions: [
 				{ dimension: 'Leases.moveOutDate', dateRange: [today, in60Days] },
 			],
@@ -81,7 +81,7 @@ export function RiskSummary() {
 	)
 
 	const expiringRow = expiringQuery.data?.[0]
-	const expiring = parseNum(expiringRow?.['Leases.activeCount'])
+	const expiring = parseNum(expiringRow?.['Leases.expiringCount'])
 	const expiringProperties = parseNum(
 		expiringRow?.['Leases.expiringPropertyCount'],
 	)

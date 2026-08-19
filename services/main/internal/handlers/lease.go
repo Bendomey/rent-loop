@@ -170,6 +170,7 @@ type ListLeasesQuery struct {
 	UnitIds                    *[]string `json:"unit_ids,omitempty"                      validate:"omitempty,dive,uuid4"                                                                                                           example:"a8098c1a-f86e-11da-bd1a-00112444be1e" description:"List of unit IDs to filter by"                                                     collectionFormat:"multi"`
 	MoveOutDateFrom            *string   `json:"move_out_date_from,omitempty"            validate:"omitempty"                                                                                                                      example:"2026-08-01"                           description:"Only leases whose move-out date is on or after this date (RFC3339 or YYYY-MM-DD)"`
 	MoveOutDateTo              *string   `json:"move_out_date_to,omitempty"              validate:"omitempty"                                                                                                                      example:"2026-09-30"                           description:"Only leases whose move-out date is on or before this date (RFC3339 or YYYY-MM-DD)"`
+	ExcludeRenewed             *bool     `json:"exclude_renewed,omitempty"               validate:"omitempty"                                                                                                                      example:"true"                                 description:"Drop leases that already carry a renewal which is not Terminated or Cancelled"`
 }
 
 // ListLeasesByTenant godoc
@@ -228,6 +229,7 @@ func (h *LeaseHandler) ListLeasesByTenant(w http.ResponseWriter, r *http.Request
 		UnitIds:                    lib.NullOrStringArray(r.URL.Query()["unit_ids"]),
 		MoveOutDateFrom:            moveOutFrom,
 		MoveOutDateTo:              moveOutTo,
+		ExcludeRenewed:             lib.NullOrBool(r.URL.Query().Get("exclude_renewed")),
 	}
 
 	leases, leasesErr := h.service.ListLeases(r.Context(), input)
@@ -307,6 +309,7 @@ func (h *LeaseHandler) ListLeasesByProperty(w http.ResponseWriter, r *http.Reque
 		UnitIds:                    lib.NullOrStringArray(r.URL.Query()["unit_ids"]),
 		MoveOutDateFrom:            moveOutFrom,
 		MoveOutDateTo:              moveOutTo,
+		ExcludeRenewed:             lib.NullOrBool(r.URL.Query().Get("exclude_renewed")),
 	}
 
 	leases, leasesErr := h.service.ListLeases(r.Context(), input)
@@ -390,6 +393,7 @@ func (h *LeaseHandler) ListLeasesAcrossProperties(w http.ResponseWriter, r *http
 		UnitIds:                    lib.NullOrStringArray(r.URL.Query()["unit_ids"]),
 		MoveOutDateFrom:            moveOutFrom,
 		MoveOutDateTo:              moveOutTo,
+		ExcludeRenewed:             lib.NullOrBool(r.URL.Query().Get("exclude_renewed")),
 	}
 
 	leases, leasesErr := h.service.ListLeases(r.Context(), input)
@@ -470,6 +474,7 @@ func (h *LeaseHandler) ListLeasesByTenantAccount(w http.ResponseWriter, r *http.
 		UnitIds:                    lib.NullOrStringArray(r.URL.Query()["unit_ids"]),
 		MoveOutDateFrom:            moveOutFrom,
 		MoveOutDateTo:              moveOutTo,
+		ExcludeRenewed:             lib.NullOrBool(r.URL.Query().Get("exclude_renewed")),
 	}
 
 	leases, leasesErr := h.service.ListLeases(r.Context(), input)

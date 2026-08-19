@@ -252,6 +252,7 @@ type ListLeasesFilter struct {
 	UnitIds                    *[]string
 	MoveOutDateFrom            *time.Time
 	MoveOutDateTo              *time.Time
+	ExcludeRenewed             *bool
 }
 
 func (r *leaseRepository) List(ctx context.Context, filterQuery ListLeasesFilter) (*[]models.Lease, error) {
@@ -269,6 +270,7 @@ func (r *leaseRepository) List(ctx context.Context, filterQuery ListLeasesFilter
 		leaseFilterScope("lease_agreement_document_mode", filterQuery.LeaseAgreementDocumentMode),
 		leaseArrayFilterScope("unit_id", filterQuery.UnitIds),
 		leaseMoveOutDateRangeScope(filterQuery.MoveOutDateFrom, filterQuery.MoveOutDateTo),
+		excludeRenewedLeasesScope(filterQuery.ExcludeRenewed),
 		IDsFilterScope("leases", filterQuery.IDs),
 		DateRangeScope("leases", filterQuery.DateRange),
 		SearchScope("leases", filterQuery.Search),
@@ -305,6 +307,7 @@ func (r *leaseRepository) Count(ctx context.Context, filterQuery ListLeasesFilte
 		leaseFilterScope("lease_agreement_document_mode", filterQuery.LeaseAgreementDocumentMode),
 		leaseArrayFilterScope("unit_id", filterQuery.UnitIds),
 		leaseMoveOutDateRangeScope(filterQuery.MoveOutDateFrom, filterQuery.MoveOutDateTo),
+		excludeRenewedLeasesScope(filterQuery.ExcludeRenewed),
 		IDsFilterScope("leases", filterQuery.IDs),
 		DateRangeScope("leases", filterQuery.DateRange),
 		SearchScope("leases", filterQuery.Search),
@@ -370,6 +373,28 @@ func leaseMoveOutDateRangeScope(from, to *time.Time) func(db *gorm.DB) *gorm.DB 
 			db = db.Where("leases.move_out_date <= ?", *to)
 		}
 		return db
+	}
+}
+
+// excludeRenewedLeasesScope drops leases that have already been renewed.
+//
+// A renewed lease is still Active until its own term runs out, so "expiring in
+// 60 days" would otherwise nag about a tenancy that is already continuing —
+// the renewal sits right there, overlapping. The child's status is what
+// settles it: Terminated or Cancelled means the renewal did not take, and the
+// parent really is ending.
+func excludeRenewedLeasesScope(exclude *bool) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if exclude == nil || !*exclude {
+			return db
+		}
+
+		return db.Where(`NOT EXISTS (
+			SELECT 1 FROM leases renewal
+			WHERE renewal.parent_lease_id = leases.id
+			  AND renewal.deleted_at IS NULL
+			  AND renewal.status NOT IN ('Lease.Status.Terminated', 'Lease.Status.Cancelled')
+		)`)
 	}
 }
 

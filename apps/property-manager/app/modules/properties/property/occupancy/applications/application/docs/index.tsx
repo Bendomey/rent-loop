@@ -268,9 +268,9 @@ export function PropertyTenantApplicationDocs() {
 										<>
 											<p className="font-bold">Ready to decide?</p>
 											<p className="text-muted-foreground mt-1.5 text-sm leading-relaxed">
-												Approve to create {pronouns.possessive} lease, or decline
-												to end this application. Nothing filled in is deleted
-												either way.
+												Approve to create {pronouns.possessive} lease, or
+												decline to end this application. Nothing filled in is
+												deleted either way.
 											</p>
 											<div className="mt-3.5 flex flex-col gap-2">
 												<Button

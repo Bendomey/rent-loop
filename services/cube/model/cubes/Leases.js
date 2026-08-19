@@ -41,7 +41,25 @@ cube(`Leases`, {
       sql: `${propertyId}`,
       type: `countDistinct`,
       title: `Properties With Leases Expiring`,
-      filters: [{ sql: `${CUBE}.status = 'Lease.Status.Active'` }],
+      filters: [
+        { sql: `${CUBE}.status = 'Lease.Status.Active'` },
+        { sql: `${CUBE}.has_live_renewal = FALSE` },
+      ],
+    },
+
+    // Active leases actually coming to an end. Pair with a moveOutDate
+    // timeDimension to scope the window.
+    //
+    // Distinct from activeCount: a renewed lease stays Active until its own
+    // term runs out, so it would otherwise be counted as expiring while the
+    // tenancy is plainly continuing.
+    expiringCount: {
+      type: `count`,
+      title: `Leases Expiring`,
+      filters: [
+        { sql: `${CUBE}.status = 'Lease.Status.Active'` },
+        { sql: `${CUBE}.has_live_renewal = FALSE` },
+      ],
     },
   },
 
@@ -68,6 +86,23 @@ cube(`Leases`, {
       sql: `status`,
       type: `string`,
       title: `Lease Status`,
+    },
+
+    // Whether this lease has already been renewed.
+    //
+    // The child's status is what settles it: Terminated or Cancelled means the
+    // renewal did not take and the parent really is ending. Anything else —
+    // Pending, Active, Completed — means the tenancy continues past this
+    // lease's own move-out date.
+    hasLiveRenewal: {
+      sql: `EXISTS (
+        SELECT 1 FROM leases renewal
+        WHERE renewal.parent_lease_id = ${CUBE}.id
+          AND renewal.deleted_at IS NULL
+          AND renewal.status NOT IN ('Lease.Status.Terminated', 'Lease.Status.Cancelled')
+      )`,
+      type: `boolean`,
+      title: `Has Live Renewal`,
     },
 
     activatedAt: {

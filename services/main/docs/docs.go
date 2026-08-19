@@ -3767,6 +3767,12 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "type": "boolean",
+                        "example": true,
+                        "name": "exclude_renewed",
+                        "in": "query"
+                    },
+                    {
                         "type": "array",
                         "items": {
                             "type": "string"
@@ -8761,6 +8767,12 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "example": true,
+                        "name": "exclude_renewed",
                         "in": "query"
                     },
                     {
@@ -14678,6 +14690,12 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "type": "boolean",
+                        "example": true,
+                        "name": "exclude_renewed",
+                        "in": "query"
+                    },
+                    {
                         "type": "array",
                         "items": {
                             "type": "string"
@@ -17862,6 +17880,12 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "example": true,
+                        "name": "exclude_renewed",
                         "in": "query"
                     },
                     {

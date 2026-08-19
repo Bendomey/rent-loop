@@ -13,7 +13,7 @@ interface OutstandingRow {
 	'Invoices.outstandingAmount': string | null
 }
 interface ExpiringRow {
-	'Leases.activeCount': string | null
+	'Leases.expiringCount': string | null
 }
 interface MaintenanceRow {
 	'MaintenanceRequests.newCount': string | null
@@ -60,7 +60,7 @@ export function PropertyRiskSummary({ propertyId }: Props) {
 		token,
 		['prop-risk-expiring', propertyId],
 		{
-			measures: ['Leases.activeCount'],
+			measures: ['Leases.expiringCount'],
 			timeDimensions: [
 				{ dimension: 'Leases.moveOutDate', dateRange: [today, in60Days] },
 			],
@@ -84,7 +84,7 @@ export function PropertyRiskSummary({ propertyId }: Props) {
 	const outstanding = parseNum(
 		outstandingQuery.data?.[0]?.['Invoices.outstandingAmount'],
 	)
-	const expiring = parseNum(expiringQuery.data?.[0]?.['Leases.activeCount'])
+	const expiring = parseNum(expiringQuery.data?.[0]?.['Leases.expiringCount'])
 	const maintenanceRow = maintenanceQuery.data?.[0]
 	const openMaintenance =
 		parseNum(maintenanceRow?.['MaintenanceRequests.newCount']) +
