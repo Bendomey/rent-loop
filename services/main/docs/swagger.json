@@ -10498,7 +10498,7 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "Continues a tenancy with a new term. The renewal is created Pending with its own rent and charges, inheriting the parent's tenant, currency and financial account; the daily lifecycle sweeps activate it and complete the parent on the changeover day. A renewal never re-charges the security deposit. It may move the tenant to another unit, in which case carry_financial_account decides whether the money follows.",
+                "description": "Continues a tenancy with a new term. The renewal is created Pending with its own rent and charges, inheriting the parent's tenant, currency and financial account; the daily lifecycle sweeps activate it and complete the parent on the changeover day. A renewal never re-charges the security deposit. It may move the tenant to another unit, in which case carry_financial_account decides whether the money follows. If the tenancy's financial account was already closed, renewing reopens it and continues on the same ledger rather than opening a second one; the reopen is recorded against the closure with the calling user.",
                 "consumes": [
                     "application/json"
                 ],
