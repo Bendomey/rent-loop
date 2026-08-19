@@ -465,6 +465,12 @@ export interface ChargeRow {
 	due_date: string
 	invoiced_amount: number
 	settled_amount: number
+	/**
+	 * Null while the charge belongs to an application. Approval stamps it with
+	 * the lease it just created, which is how a lease is found from an account
+	 * now that one account can span a whole renewal chain.
+	 */
+	lease_id: string | null
 }
 
 /**
