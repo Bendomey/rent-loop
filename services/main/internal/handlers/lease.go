@@ -34,12 +34,12 @@ type RenewLeaseBody struct {
 	// Only meaningful when unit_id differs from the parent's; sending it on a
 	// same-unit renewal is refused rather than ignored.
 	CarryFinancialAccount *bool `json:"carry_financial_account"`
-	
+
 	// Fees are one-off amounts due at the start of the new term — a deposit
 	// top-up when rent has risen, a renewal fee, a utility. Created with the
 	// renewal so a term never exists with half its money on it.
 	Fees []RenewLeaseFeeBody `json:"fees" validate:"omitempty,dive"`
-	
+
 	LeaseAgreementDocumentUrl *string `json:"lease_agreement_document_url" validate:"omitempty,url"`
 }
 
