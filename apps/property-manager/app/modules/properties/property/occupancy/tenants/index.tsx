@@ -114,6 +114,9 @@ export function PropertyTenantsModule() {
 											<TypographyMuted className="text-xs">
 												{tenant.gender === 'MALE' ? 'Male' : 'Female'}
 											</TypographyMuted>
+											<TypographyMuted className="mt-1 font-mono text-[11px] tracking-wide text-zinc-500 dark:text-zinc-400">
+												{tenant.code}
+											</TypographyMuted>
 										</div>
 									</div>
 

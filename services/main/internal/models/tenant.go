@@ -1,10 +1,17 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"github.com/Bendomey/rent-loop/services/main/internal/lib"
+	"github.com/getsentry/raven-go"
+	"gorm.io/gorm"
+)
 
 // Tenant represents a tenant in the system.
 type Tenant struct {
 	BaseModelSoftDelete
+	Code string `gorm:"uniqueIndex;"`
 
 	FirstName       string `gorm:"not null;"`
 	OtherNames      *string
@@ -37,4 +44,21 @@ type Tenant struct {
 
 	Leases   []Lease   `gorm:"foreignKey:TenantId"`
 	Bookings []Booking `gorm:"foreignKey:TenantID"`
+}
+
+// BeforeCreate stamps every new tenant with its code.
+func (t *Tenant) BeforeCreate(tx *gorm.DB) error {
+	uniqueCode, genErr := lib.GeneratePrefixedCode(tx, &Tenant{}, "TEN")
+	if genErr != nil {
+		raven.CaptureError(genErr, map[string]string{
+			"function": "BeforeCreateTenantHook",
+			"action":   "Generating a unique code",
+		})
+
+		return genErr
+	}
+
+	t.Code = *uniqueCode
+
+	return nil
 }

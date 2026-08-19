@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Calendar, MapPin, Pencil, User } from 'lucide-react'
+import { Calendar, Hash, MapPin, Pencil, User } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useRevalidator } from 'react-router'
@@ -132,6 +132,15 @@ export function TenantProfileBasicInformationCard({
 			<CardContent className="space-y-4">
 				<Separator />
 				<div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+					<InfoRow
+						icon={<Hash size={18} />}
+						label="Tenant ID"
+						value={
+							tenant?.id ? (
+								<span className="font-mono tracking-wide">{tenant.id}</span>
+							) : null
+						}
+					/>
 					<InfoRow
 						icon={<Calendar size={18} />}
 						label="Date of Birth"

@@ -9,6 +9,7 @@ import (
 
 type OutputTenant struct {
 	ID              string     `json:"id"                          example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
+	Code            string     `json:"code"                        example:"TEN-2608-AB12CD"`
 	FirstName       string     `json:"first_name"                  example:"John"`
 	OtherNames      *string    `json:"other_names,omitempty"       example:"Michael"`
 	LastName        string     `json:"last_name"                   example:"Doe"`
@@ -54,6 +55,7 @@ func DBAdminTenantToRest(i *models.Tenant) any {
 
 	data := map[string]any{
 		"id":                                i.ID,
+		"code":                              i.Code,
 		"first_name":                        i.FirstName,
 		"other_names":                       i.OtherNames,
 		"last_name":                         i.LastName,
@@ -116,6 +118,7 @@ func DBTenantToRest(i *models.Tenant) any {
 
 	data := map[string]any{
 		"id":                                i.ID,
+		"code":                              i.Code,
 		"first_name":                        i.FirstName,
 		"other_names":                       i.OtherNames,
 		"last_name":                         i.LastName,
