@@ -494,8 +494,6 @@ export interface AccountRow {
 	id: string
 	code: string
 	property_id: string | null
-	/** Null until the application is approved — approval is what sets it. */
-	lease_id: string | null
 }
 
 /**
