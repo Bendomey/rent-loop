@@ -600,7 +600,7 @@ func (s *tenantApplicationService) attachFinancials(
 		FinancialAccountID: &accountID,
 	})
 
-	application.Financials = &models.TenantApplicationFinancials{
+	application.Financials = &models.AccountFinancials{
 		Account:           account,
 		TotalCharged:      summary.TotalCharged,
 		TotalSettled:      summary.TotalSettled,
@@ -1307,21 +1307,47 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 		return nil, createLeaseErr
 	}
 
-	// The entire application -> lease financial transition: two columns. Not a
-	// single charge, invoice, payment or allocation moves, which is why paying
-	// before and after approval are the same operation.
+	// The application -> lease financial transition. Not a single charge,
+	// invoice, payment or allocation moves, which is why paying before and
+	// after approval are the same operation.
+	//
+	// An approval always gets its own account. Accounts are shared along a
+	// RENEWAL CHAIN, not by tenant and property: production has tenants
+	// holding several concurrent leases on different units at one property,
+	// and those are separate money relationships with separate deposits.
+	// A renewal resolves its account from its parent lease instead, which is
+	// the renewal endpoint's job.
 	//
 	// An application approved before charges were prepared simply has no
 	// account yet; that is not an error.
 	if account, accErr := s.financials.Accounts.GetByApplication(
 		transCtx, input.TenantApplicationID,
 	); accErr == nil && account != nil {
-		linkErr := s.financials.Accounts.LinkLease(
-			transCtx, account.ID.String(), lease.ID.String(), tenant.ID.String(),
-		)
-		if linkErr != nil {
+		accountID := account.ID.String()
+
+		if linkErr := s.financials.Accounts.LinkLease(transCtx, accountID, tenant.ID.String()); linkErr != nil {
 			transaction.Rollback()
 			return nil, linkErr
+		}
+
+		// The other half of the link. Many leases can point at one account, so
+		// this FK lives on the lease.
+		if leaseLinkErr := s.leaseService.SetFinancialAccount(
+			transCtx, lease.ID.String(), accountID,
+		); leaseLinkErr != nil {
+			transaction.Rollback()
+			return nil, leaseLinkErr
+		}
+
+		// The charges were prepared against the application, before any lease
+		// existed, so they carry no contractual context yet. This is where
+		// they get it — without it every new account would have unscoped
+		// charges and the "This Lease" view would come back empty.
+		if scopeErr := s.financials.Charges.ScopeUnassignedToLease(
+			transCtx, accountID, lease.ID.String(),
+		); scopeErr != nil {
+			transaction.Rollback()
+			return nil, scopeErr
 		}
 	}
 

@@ -11,6 +11,7 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/lib/emailtemplates"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
+	"github.com/Bendomey/rent-loop/services/main/internal/services/financials"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 	"github.com/jackc/pgx/v5/pgconn"
 	log "github.com/sirupsen/logrus"
@@ -33,6 +34,7 @@ type leaseTerminationService struct {
 	leaseRepo           repository.LeaseRepository
 	unitService         UnitService
 	notificationService NotificationService
+	financials          *financials.Financials
 }
 
 type LeaseTerminationServiceDeps struct {
@@ -41,6 +43,7 @@ type LeaseTerminationServiceDeps struct {
 	LeaseRepo           repository.LeaseRepository
 	UnitService         UnitService
 	NotificationService NotificationService
+	Financials          *financials.Financials
 }
 
 func NewLeaseTerminationService(deps LeaseTerminationServiceDeps) LeaseTerminationService {
@@ -50,6 +53,7 @@ func NewLeaseTerminationService(deps LeaseTerminationServiceDeps) LeaseTerminati
 		leaseRepo:           deps.LeaseRepo,
 		unitService:         deps.UnitService,
 		notificationService: deps.NotificationService,
+		financials:          deps.Financials,
 	}
 }
 
@@ -348,6 +352,17 @@ func (s *leaseTerminationService) Complete(ctx context.Context, input CompleteLe
 			Message:   smsMessage,
 		},
 	)
+
+	// This is the only route to Lease.Status.Terminated, so the account's
+	// eligibility is re-evaluated here as well as in the lease service.
+	// Advisory, so a failure is logged rather than failing the termination.
+	if lease.FinancialAccountID != nil && s.financials != nil && s.financials.Closure != nil {
+		if eligErr := s.financials.Closure.RecomputeEligibility(
+			ctx, *lease.FinancialAccountID,
+		); eligErr != nil {
+			log.WithError(eligErr).Error("[LeaseTerminationService] recomputing closure eligibility")
+		}
+	}
 
 	return nil
 }

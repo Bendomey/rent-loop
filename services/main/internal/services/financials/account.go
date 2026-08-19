@@ -25,6 +25,19 @@ type PrepareChargesInput struct {
 	AutoIssueDaysBefore   int64
 }
 
+// OpenForLeaseInput opens an account for a lease that already exists, rather
+// than for an application. Used only when a renewal moves units and the PM has
+// said the money should not follow.
+type OpenForLeaseInput struct {
+	// Provenance, inherited from the parent's account. The renewal has no
+	// application of its own.
+	OriginTenantApplicationID string
+	TenantID                  string
+	Currency                  string
+	ClientID                  *string
+	PropertyID                *string
+}
+
 type UpdateBillingPolicyInput struct {
 	FinancialAccountID  string
 	Cadence             *string
@@ -46,9 +59,15 @@ type AccountSummary struct {
 type FinancialAccountService interface {
 	PrepareCharges(ctx context.Context, input PrepareChargesInput) (*models.FinancialAccount, error)
 	GetByApplication(ctx context.Context, applicationID string) (*models.FinancialAccount, error)
-	GetByLease(ctx context.Context, leaseID string) (*models.FinancialAccount, error)
+	// Revive returns a CLOSURE_ELIGIBLE account to ACTIVE. Called when a
+	// renewal lands on an account that looked finished.
+	Revive(ctx context.Context, accountID string) error
+	// OpenForLease creates an account for an existing lease. Unlike
+	// PrepareCharges it creates no charges: the caller materialises the term
+	// itself, because it already knows the lease the charges belong to.
+	OpenForLease(ctx context.Context, input OpenForLeaseInput) (*models.FinancialAccount, error)
 	GetByID(ctx context.Context, accountID string) (*models.FinancialAccount, error)
-	LinkLease(ctx context.Context, accountID, leaseID, tenantID string) error
+	LinkLease(ctx context.Context, accountID, tenantID string) error
 	Relocate(ctx context.Context, accountID, propertyID string) error
 	UpdateBillingPolicy(ctx context.Context, input UpdateBillingPolicyInput) error
 	Summary(ctx context.Context, accountID string) (*AccountSummary, error)
@@ -85,14 +104,14 @@ func (s *financialAccountService) PrepareCharges(
 	}
 
 	account := &models.FinancialAccount{
-		TenantApplicationID: input.TenantApplicationID,
-		ClientID:            input.ClientID,
-		PropertyID:          input.PropertyID,
-		Currency:            input.Currency,
-		RentBillingCadence:  policy.Cadence,
-		RentBillingInterval: policy.Interval,
-		AutoIssueDaysBefore: autoIssue,
-		Status:              "ACTIVE",
+		OriginTenantApplicationID: input.TenantApplicationID,
+		ClientID:                  input.ClientID,
+		PropertyID:                input.PropertyID,
+		Currency:                  input.Currency,
+		RentBillingCadence:        policy.Cadence,
+		RentBillingInterval:       policy.Interval,
+		AutoIssueDaysBefore:       autoIssue,
+		Status:                    "ACTIVE",
 	}
 
 	if err := s.repo.Create(ctx, account); err != nil {
@@ -127,11 +146,58 @@ func (s *financialAccountService) GetByApplication(
 	return s.repo.GetOne(ctx, repository.GetFinancialAccountQuery{TenantApplicationID: &applicationID})
 }
 
-func (s *financialAccountService) GetByLease(
+func (s *financialAccountService) OpenForLease(
 	ctx context.Context,
-	leaseID string,
+	input OpenForLeaseInput,
 ) (*models.FinancialAccount, error) {
-	return s.repo.GetOne(ctx, repository.GetFinancialAccountQuery{LeaseID: &leaseID})
+	account := &models.FinancialAccount{
+		OriginTenantApplicationID: input.OriginTenantApplicationID,
+		TenantID:                  &input.TenantID,
+		ClientID:                  input.ClientID,
+		PropertyID:                input.PropertyID,
+		Currency:                  input.Currency,
+		// No prepayment is known at this point, so there is nothing to derive
+		// a cadence from. MANUAL means the sweep leaves it alone until a PM
+		// sets a policy, which is safer than inventing one.
+		RentBillingCadence:  CadenceManual,
+		RentBillingInterval: 1,
+		AutoIssueDaysBefore: 5,
+		Status:              StatusActive,
+	}
+
+	if err := s.repo.Create(ctx, account); err != nil {
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err:      err,
+			Metadata: map[string]string{"function": "OpenForLease", "action": "creating account"},
+		})
+	}
+
+	return account, nil
+}
+
+// Revive undoes eligibility. It does not touch ClosedAt, because an account
+// that reached CLOSED is not reusable and never arrives here.
+func (s *financialAccountService) Revive(ctx context.Context, accountID string) error {
+	account, err := s.repo.GetOne(ctx, repository.GetFinancialAccountQuery{ID: &accountID})
+	if err != nil {
+		return pkg.NotFoundError("FinancialAccountNotFound", &pkg.RentLoopErrorParams{Err: err})
+	}
+
+	if account.Status != StatusClosureEligible {
+		return nil
+	}
+
+	account.Status = StatusActive
+	account.ClosureEligibleAt = nil
+
+	if updateErr := s.repo.Update(ctx, account); updateErr != nil {
+		return pkg.InternalServerError(updateErr.Error(), &pkg.RentLoopErrorParams{
+			Err:      updateErr,
+			Metadata: map[string]string{"function": "Revive", "action": "reviving account"},
+		})
+	}
+
+	return nil
 }
 
 func (s *financialAccountService) GetByID(
@@ -141,25 +207,26 @@ func (s *financialAccountService) GetByID(
 	return s.repo.GetOne(ctx, repository.GetFinancialAccountQuery{ID: &accountID})
 }
 
-// LinkLease is the entire application -> lease transition. Setting these two
-// columns is all that happens: no charge, invoice, payment or allocation moves,
-// which is why paying before and after approval are the same operation.
-func (s *financialAccountService) LinkLease(
-	ctx context.Context,
-	accountID, leaseID, tenantID string,
-) error {
+// LinkLease completes the application -> lease transition. It stamps the
+// tenant onto the account, which is what turns an application-stage account
+// (TenantID IS NULL) into a live tenancy. No charge, invoice, payment or
+// allocation moves, which is why paying before and after approval are the same
+// operation.
+//
+// The other half of the link — leases.financial_account_id — is written by the
+// caller on the lease row, because many leases now point at one account.
+func (s *financialAccountService) LinkLease(ctx context.Context, accountID, tenantID string) error {
 	account, err := s.repo.GetOne(ctx, repository.GetFinancialAccountQuery{ID: &accountID})
 	if err != nil {
 		return pkg.NotFoundError("FinancialAccountNotFound", &pkg.RentLoopErrorParams{Err: err})
 	}
 
-	account.LeaseID = &leaseID
 	account.TenantID = &tenantID
 
 	if updateErr := s.repo.Update(ctx, account); updateErr != nil {
 		return pkg.InternalServerError(updateErr.Error(), &pkg.RentLoopErrorParams{
 			Err:      updateErr,
-			Metadata: map[string]string{"function": "LinkLease", "action": "linking lease"},
+			Metadata: map[string]string{"function": "LinkLease", "action": "linking tenant"},
 		})
 	}
 
@@ -282,6 +349,8 @@ type Financials struct {
 	Allocation AllocationService
 	// Issuance is attached after InvoiceService exists — see SetIssuance.
 	Issuance IssuanceService
+	// Closure is attached after LeaseService exists — see SetClosure.
+	Closure ClosureService
 }
 
 func New(
@@ -289,7 +358,7 @@ func New(
 	chargeRepo repository.ChargeRepository,
 	allocationRepo repository.PaymentAllocationRepository,
 ) *Financials {
-	charges := NewChargeService(chargeRepo)
+	charges := NewChargeService(chargeRepo, accountRepo)
 	allocation := NewAllocationService(chargeRepo, allocationRepo, accountRepo)
 	accounts := NewFinancialAccountService(accountRepo, charges, allocation)
 
@@ -301,4 +370,11 @@ func New(
 // InvoiceService allocates charges, so neither can be built first.
 func (f *Financials) SetIssuance(svc IssuanceService) {
 	f.Issuance = svc
+}
+
+// SetClosure completes the facade once the lease service exists. Closure needs
+// to read lease terms, and the lease service already depends on this package,
+// so the dependency is injected after construction exactly as issuance is.
+func (f *Financials) SetClosure(svc ClosureService) {
+	f.Closure = svc
 }

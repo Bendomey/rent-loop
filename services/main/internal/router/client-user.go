@@ -75,6 +75,7 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 			if appCtx.Config.Env != "production" {
 				r.Post("/v1/dev/jobs/invoice-issuance", handlers.DevHandler.RunInvoiceIssuance)
 				r.Post("/v1/dev/jobs/lease-lifecycle", handlers.DevHandler.RunLeaseLifecycle)
+				r.Post("/v1/dev/jobs/account-closure", handlers.DevHandler.RunAccountClosure)
 			}
 
 			// client-scoped routes — require valid client membership
@@ -293,6 +294,8 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 								Patch("/status:active", handlers.LeaseHandler.ActivateLease)
 							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
 								Patch("/status:cancelled", handlers.LeaseHandler.CancelLease)
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+								Post("/renew", handlers.LeaseHandler.RenewLease)
 
 							r.Route("/checklists", func(r chi.Router) {
 								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
@@ -393,6 +396,10 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 								Patch("/billing-policy", handlers.FinancialAccountHandler.UpdateBillingPolicy)
 							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
 								Post("/invoices:compose", handlers.FinancialAccountHandler.ComposeInvoice)
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+								Post("/close", handlers.FinancialAccountHandler.CloseAccount)
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+								Post("/reopen", handlers.FinancialAccountHandler.ReopenAccount)
 						})
 
 						r.Route("/invoices", func(r chi.Router) {

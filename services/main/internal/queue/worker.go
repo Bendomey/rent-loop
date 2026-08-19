@@ -59,6 +59,7 @@ func RegisterWorkers(redisURL string, appCtx pkg.AppContext, repo repository.Rep
 			FinancialAccountInvoicingHandlers(svcs.Financials.Issuance),
 			InvoiceReminderHandlers(repo.InvoiceRepository, appCtx, svcs.NotificationService),
 			ForexSyncHandlers(svcs.ExchangeRateService),
+			AccountClosureHandlers(svcs.Financials.Closure),
 			LeaseLifecycleHandlers(
 				repo.LeaseRepository,
 				repo.LeaseChecklistRepository,
@@ -146,6 +147,19 @@ func RegisterScheduler(redisURL string) {
 	); err != nil {
 		raven.CaptureError(err, nil)
 		log.Fatal("failed to register lease completion schedule:", err)
+	}
+
+	// Daily at 01:00 UTC — after the midnight lease sweeps, so an account whose
+	// last lease completed tonight is already eligible when this runs. The
+	// ordering is a convenience, not a requirement: the sweep reads state, so
+	// an account missed tonight is simply closed tomorrow.
+	if _, err = scheduler.Register(
+		"0 1 * * *",
+		asynq.NewTask(TypeFinancialAccountClosure, nil),
+		asynq.MaxRetry(1),
+	); err != nil {
+		raven.CaptureError(err, nil)
+		log.Fatal("failed to register account closure schedule:", err)
 	}
 
 	go func() {

@@ -7301,6 +7301,12 @@ const docTemplate = `{
                             "type": "string"
                         }
                     },
+                    "409": {
+                        "description": "The tenancy's account is closed",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
                     "422": {
                         "description": "Validation error",
                         "schema": {
@@ -7393,6 +7399,88 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/financial-accounts/{account_id}/close": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Ends a tenancy's financial relationship and releases the deposit. Every blocking gate must pass: all leases ended, nothing outstanding, and the held deposit resolved. Missing move-out evidence warns but does not block. Releasing or offsetting posts a reversing SECURITY_DEPOSIT charge; forfeiting requires a reason. Writes an audit row rather than flipping a status.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "FinancialAccounts"
+                ],
+                "summary": "Close a financial account",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Financial account ID",
+                        "name": "account_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Closure decision",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CloseAccountBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Account closed",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "A blocking gate has not passed, the account is already closed, or a forfeit was given without a reason",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Financial account not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/clients/{client_id}/properties/{property_id}/financial-accounts/{account_id}/invoices:compose": {
             "post": {
                 "security": [
@@ -7462,6 +7550,88 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Financial account or charge not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/financial-accounts/{account_id}/reopen": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns a closed account to ACTIVE. Recorded on the original closure row with the reason, so an accidental closure leaves a trail rather than silently rewriting history. Any deposit refund already posted is NOT reversed — that is a separate charge.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "FinancialAccounts"
+                ],
+                "summary": "Reopen a closed financial account",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Financial account ID",
+                        "name": "account_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Reason for reopening",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ReopenAccountBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Account reopened",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "The account is not closed, or no reason was given",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Financial account or its closure record not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -7741,6 +7911,12 @@ const docTemplate = `{
                         "description": "Invalid or absent authentication token",
                         "schema": {
                             "type": "string"
+                        }
+                    },
+                    "409": {
+                        "description": "The tenancy's account is closed",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
                         }
                     },
                     "422": {
@@ -8199,6 +8375,12 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Invoice not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "409": {
+                        "description": "The tenancy's account is closed",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -10330,6 +10512,88 @@ const docTemplate = `{
                         "description": "An unexpected error occurred",
                         "schema": {
                             "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/renew": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Continues a tenancy with a new term. The renewal is created Pending with its own rent and charges, inheriting the parent's tenant, currency and financial account; the daily lifecycle sweeps activate it and complete the parent on the changeover day. A renewal never re-charges the security deposit. It may move the tenant to another unit, in which case carry_financial_account decides whether the money follows. If the tenancy's financial account was already closed, renewing reopens it and continues on the same ledger rather than opening a second one; the reopen is recorded against the closure with the calling user.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Leases"
+                ],
+                "summary": "Renew a lease",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Lease to renew",
+                        "name": "lease_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "New term",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.RenewLeaseBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Renewal created",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputLease"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Parent not renewable, already renewed, term overlaps the parent, destination unit at capacity, or the account flag sent on a same-unit renewal",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Lease not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
                         }
                     }
                 }
@@ -17259,6 +17523,67 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/dev/jobs/account-closure": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Runs the same sweep the ` + "`" + `0 1 * * *` + "`" + ` cron runs, optionally at a supplied instant. Registered only when the server's environment is not production. Exists so end-to-end scenarios can cross the 90-day grace period without back-dating rows. This is deliberately not an operational action: a property manager never closes an account by hand.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dev"
+                ],
+                "summary": "Run the account closure sweep (non-production only)",
+                "parameters": [
+                    {
+                        "description": "Optional instant and account to sweep",
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.RunAccountClosureBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Sweep completed",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/handlers.RunAccountClosureResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "as_of is not a valid RFC3339 timestamp",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/dev/jobs/invoice-issuance": {
             "post": {
                 "security": [
@@ -19362,6 +19687,12 @@ const docTemplate = `{
                             "type": "string"
                         }
                     },
+                    "409": {
+                        "description": "The tenancy's account is closed",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
                     "422": {
                         "description": "Validation error",
                         "schema": {
@@ -20958,6 +21289,43 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "financials.ClosureEligibility": {
+            "type": "object",
+            "properties": {
+                "can_close": {
+                    "type": "boolean"
+                },
+                "deposit_held_amount": {
+                    "type": "integer"
+                },
+                "gates": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/financials.ClosureGate"
+                    }
+                },
+                "outstanding_amount": {
+                    "type": "integer"
+                }
+            }
+        },
+        "financials.ClosureGate": {
+            "type": "object",
+            "properties": {
+                "blocking": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "passed": {
+                    "type": "boolean"
+                },
+                "reason": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.AddExpenseBody": {
             "type": "object",
             "required": [
@@ -21610,6 +21978,29 @@ const docTemplate = `{
                 "charge_instance_id": {
                     "type": "string",
                     "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                }
+            }
+        },
+        "handlers.CloseAccountBody": {
+            "type": "object",
+            "required": [
+                "reason"
+            ],
+            "properties": {
+                "deposit_forfeit_reason": {
+                    "type": "string"
+                },
+                "deposit_resolution": {
+                    "description": "RELEASE refunds the held deposit, OFFSET applies it against what is\nowed, FORFEIT keeps it and requires a reason. Ignored when no deposit\nis held.",
+                    "type": "string",
+                    "enum": [
+                        "RELEASE",
+                        "OFFSET",
+                        "FORFEIT"
+                    ]
+                },
+                "reason": {
+                    "type": "string"
                 }
             }
         },
@@ -23114,6 +23505,120 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.RenewLeaseBody": {
+            "type": "object",
+            "required": [
+                "move_in_date",
+                "stay_duration",
+                "stay_duration_frequency"
+            ],
+            "properties": {
+                "carry_financial_account": {
+                    "description": "Only meaningful when unit_id differs from the parent's; sending it on a\nsame-unit renewal is refused rather than ignored.",
+                    "type": "boolean"
+                },
+                "fees": {
+                    "description": "Fees are one-off amounts due at the start of the new term — a deposit\ntop-up when rent has risen, a renewal fee, a utility. Created with the\nrenewal so a term never exists with half its money on it.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.RenewLeaseFeeBody"
+                    }
+                },
+                "lease_agreement_document_url": {
+                    "type": "string"
+                },
+                "move_in_date": {
+                    "type": "string"
+                },
+                "rent_fee": {
+                    "description": "Optional. Omitted, each defaults to the parent's.",
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "stay_duration": {
+                    "type": "integer"
+                },
+                "stay_duration_frequency": {
+                    "type": "string"
+                },
+                "unit_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.RenewLeaseFeeBody": {
+            "type": "object",
+            "required": [
+                "amount",
+                "category",
+                "name"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "integer",
+                    "example": 15000
+                },
+                "category": {
+                    "type": "string",
+                    "enum": [
+                        "SECURITY_DEPOSIT",
+                        "AGENCY_FEE",
+                        "VAT",
+                        "UTILITY",
+                        "DAMAGE_CHARGE",
+                        "EARLY_TERMINATION_FEE",
+                        "OTHER"
+                    ],
+                    "example": "SECURITY_DEPOSIT"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Deposit top-up"
+                }
+            }
+        },
+        "handlers.ReopenAccountBody": {
+            "type": "object",
+            "required": [
+                "reason"
+            ],
+            "properties": {
+                "reason": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.RunAccountClosureBody": {
+            "type": "object",
+            "properties": {
+                "as_of": {
+                    "description": "AsOf is the instant the sweep should believe it is running at. Omit it\nfor the wall clock. The 90-day grace period can therefore be crossed in\none call without back-dating closure_eligible_at.",
+                    "type": "string",
+                    "example": "2027-03-03T00:00:00Z"
+                },
+                "financial_account_id": {
+                    "description": "FinancialAccountID restricts the sweep to a single account, so a\nscenario does not close unrelated ledgers as a side effect.",
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.RunAccountClosureResponse": {
+            "type": "object",
+            "properties": {
+                "as_of": {
+                    "type": "string",
+                    "example": "2027-03-03T00:00:00Z"
+                },
+                "closed": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "skipped": {
+                    "type": "integer",
+                    "example": 0
+                }
+            }
+        },
         "handlers.RunInvoiceIssuanceBody": {
             "type": "object",
             "properties": {
@@ -24375,6 +24880,14 @@ const docTemplate = `{
                         "$ref": "#/definitions/transformations.OutputChargeInstance"
                     }
                 },
+                "closure_eligibility": {
+                    "description": "ClosureEligibility is the PM's closure checklist: every gate with its\nblocking reason, so the UI can render the panel without a second call.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/financials.ClosureEligibility"
+                        }
+                    ]
+                },
                 "outstanding_amount": {
                     "type": "integer"
                 },
@@ -25199,6 +25712,14 @@ const docTemplate = `{
                     "type": "string",
                     "example": "2025-07-01T00:00:00Z"
                 },
+                "parent_lease": {
+                    "description": "ParentLease is present only when asked for with populate=ParentLease.\nDeliberately a reference rather than a whole lease: the caller wants the\ncode to print, and nesting whole leases would recurse up the chain.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/transformations.OutputLeaseRef"
+                        }
+                    ]
+                },
                 "parent_lease_id": {
                     "type": "string",
                     "example": "b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"
@@ -25274,6 +25795,11 @@ const docTemplate = `{
                 "termination_agreement_document_url": {
                     "type": "string",
                     "example": "https://example.com/termination.pdf"
+                },
+                "type": {
+                    "description": "Type is ORIGINAL or RENEWAL. Read with parent_lease_id, it is what lets a\nlease list group a tenancy instead of showing unrelated sibling rows.",
+                    "type": "string",
+                    "example": "ORIGINAL"
                 },
                 "unit": {
                     "$ref": "#/definitions/transformations.AdminOutputUnit"
@@ -25986,6 +26512,9 @@ const docTemplate = `{
                     "type": "integer",
                     "example": 0
                 },
+                "lease_id": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string",
                     "example": "Rent – February 2027"
@@ -26519,6 +27048,9 @@ const docTemplate = `{
                 "closed_at": {
                     "type": "string"
                 },
+                "closure_eligible_at": {
+                    "type": "string"
+                },
                 "code": {
                     "type": "string",
                     "example": "FA-2608-A1B2C3"
@@ -26533,9 +27065,6 @@ const docTemplate = `{
                 "id": {
                     "type": "string",
                     "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
-                },
-                "lease_id": {
-                    "type": "string"
                 },
                 "property_id": {
                     "type": "string"
@@ -26893,6 +27422,11 @@ const docTemplate = `{
                     "type": "string",
                     "example": "https://example.com/termination.pdf"
                 },
+                "type": {
+                    "description": "Type is ORIGINAL or RENEWAL. Read with parent_lease_id, it is what lets a\nlease list group a tenancy instead of showing unrelated sibling rows.",
+                    "type": "string",
+                    "example": "ORIGINAL"
+                },
                 "unit": {
                     "$ref": "#/definitions/transformations.OutputUnit"
                 },
@@ -27059,6 +27593,22 @@ const docTemplate = `{
                 "updated_at": {
                     "type": "string",
                     "example": "2024-06-10T09:00:00Z"
+                }
+            }
+        },
+        "transformations.OutputLeaseRef": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "2606N7AKJK"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "Lease.Status.Completed"
                 }
             }
         },

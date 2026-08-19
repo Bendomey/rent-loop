@@ -13,7 +13,12 @@ import {
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Link, useNavigate, useRouteLoaderData } from 'react-router'
+import {
+	Link,
+	useNavigate,
+	useRevalidator,
+	useRouteLoaderData,
+} from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { useUpdatePropertyUnit } from '~/api/units'
@@ -49,6 +54,7 @@ import {
 	TypographySmall,
 } from '~/components/ui/typography'
 import { QUERY_KEYS } from '~/lib/constants'
+import { toStringFeatures } from '~/lib/features'
 import {
 	convertCedisToPesewas,
 	convertPesewasToCedis,
@@ -158,6 +164,7 @@ export function EditPropertyAssetUnitModule() {
 	const { clientUser } = useClient()
 	const navigate = useNavigate()
 	const queryClient = useQueryClient()
+	const revalidator = useRevalidator()
 	const { mutate, isPending } = useUpdatePropertyUnit()
 
 	const property_id = safeString(clientUserProperty?.property?.id)
@@ -221,7 +228,7 @@ export function EditPropertyAssetUnitModule() {
 				name: safeString(unit.name),
 				description: safeString(unit.description),
 				images: unit.images ?? [],
-				features: unit.features ?? {},
+				features: toStringFeatures(unit.features),
 				type: unit.type,
 				area: unit.area ?? undefined,
 				max_occupants_allowed: unit.max_occupants_allowed ?? 1,
@@ -233,6 +240,11 @@ export function EditPropertyAssetUnitModule() {
 	}, [unit, rhfMethods])
 
 	const { watch, formState, setValue } = rhfMethods
+
+	// Rent and occupancy fields are hidden while a unit is occupied, so an
+	// error on one of them would otherwise block submit invisibly.
+	const onInvalid = () =>
+		toast.error('Some unit details need fixing before this can be saved.')
 
 	const onSubmit = async (formData: FormSchema) => {
 		const dirtyFields = formState.dirtyFields
@@ -247,13 +259,16 @@ export function EditPropertyAssetUnitModule() {
 						? formData.property_block_id
 						: undefined,
 					name: dirtyFields.name ? formData.name : undefined,
+					// null clears the column, undefined leaves it alone.
 					description: dirtyFields.description
-						? formData.description
+						? formData.description?.trim()
+							? formData.description
+							: null
 						: undefined,
 					images: dirtyFields.images ? formData.images : undefined,
 					features: dirtyFields.features ? formData.features : undefined,
 					type: dirtyFields.type ? formData.type : undefined,
-					area: dirtyFields.area ? formData.area : undefined,
+					area: dirtyFields.area ? (formData.area ?? null) : undefined,
 					max_occupants_allowed: dirtyFields.max_occupants_allowed
 						? formData.max_occupants_allowed
 						: undefined,
@@ -273,6 +288,9 @@ export function EditPropertyAssetUnitModule() {
 					toast.error('Failed to update property unit. Try again later.'),
 				onSuccess: () => {
 					toast.success('Property unit has been successfully updated')
+					// The $unitId loader does not re-run when we navigate back to a
+					// route it already matches.
+					void revalidator.revalidate()
 					void queryClient.invalidateQueries({
 						queryKey: [QUERY_KEYS.PROPERTY_UNITS],
 					})
@@ -287,7 +305,7 @@ export function EditPropertyAssetUnitModule() {
 	return (
 		<Form {...rhfMethods}>
 			<form
-				onSubmit={rhfMethods.handleSubmit(onSubmit)}
+				onSubmit={rhfMethods.handleSubmit(onSubmit, onInvalid)}
 				className="mx-6 my-6 space-y-10 md:mx-auto md:max-w-2/3"
 			>
 				{/* Header */}

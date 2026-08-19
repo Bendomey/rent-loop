@@ -17,6 +17,12 @@ import (
 // Completed means lease ran its full duration and ended.
 // Cancelled means lease was never activated after being created.
 
+// Lease types.
+const (
+	LeaseTypeOriginal = "ORIGINAL"
+	LeaseTypeRenewal  = "RENEWAL"
+)
+
 // Lease represents a lease agreement in the system.
 type Lease struct {
 	BaseModelSoftDelete
@@ -75,14 +81,24 @@ type Lease struct {
 	TerminatedById *string
 	TerminatedBy   *ClientUser
 
+	// Type distinguishes a first tenancy from a continuation. Only ORIGINAL
+	// and RENEWAL are used today; the column is an enum so the wider lineage
+	// (EXTENSION, RENT_REVIEW, UNIT_CHANGE, ...) can land later without a
+	// migration.
+	Type string `gorm:"not null;default:'ORIGINAL';index;"`
+
 	// for lease renewals and extensions
 	ParentLeaseId *string `gorm:"index;"`
 	ParentLease   *Lease
 
+	// The continuing financial relationship this term belongs to. Many leases
+	// share one account; a renewal inherits its parent's.
+	FinancialAccountID *string `gorm:"index;"`
+	FinancialAccount   *FinancialAccount
+
 	// Financials is a computed view attached in memory by the service — not a
-	// relation. The account is created against the application and linked to
-	// the lease at approval, so a lease can only reach it by lease_id.
-	Financials *TenantApplicationFinancials `gorm:"-"`
+	// relation.
+	Financials *AccountFinancials `gorm:"-"`
 }
 
 func (t *Lease) BeforeCreate(tx *gorm.DB) error {

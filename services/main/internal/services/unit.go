@@ -258,11 +258,11 @@ type UpdateUnitInput struct {
 	PropertyID          string
 	UnitID              string
 	Name                *string
-	Description         *string
+	Description         lib.Optional[string]
 	Images              *[]string
 	Tags                *[]string
 	Type                *string
-	Area                *float64
+	Area                lib.Optional[float64]
 	RentFee             *int64
 	RentFeeCurrency     *string
 	PaymentFrequency    *string
@@ -366,9 +366,13 @@ func (s *unitService) UpdateUnit(ctx context.Context, input UpdateUnitInput) (*m
 		unit.Tags = pq.StringArray(*input.Tags)
 	}
 
-	unit.Description = input.Description
+	if input.Description.IsSet {
+		unit.Description = input.Description.Ptr()
+	}
 
-	unit.Area = input.Area
+	if input.Area.IsSet {
+		unit.Area = input.Area.Ptr()
+	}
 
 	// A block move touches two blocks' unit counts alongside the unit itself,
 	// so every update runs behind the same all-or-nothing guarantee

@@ -50,6 +50,7 @@ import {
 } from '~/components/ui/typography'
 import { useNavigationBlocker } from '~/hooks/use-navigation-blocker'
 import { ASSET_MANAGEMENT_GUIDE_URL } from '~/lib/constants'
+import { toStringFeatures } from '~/lib/features'
 import { convertPesewasToCedis } from '~/lib/format-amount'
 import { sanitizeFilename, safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
@@ -246,7 +247,7 @@ export function NewPropertyAssetUnitsModule() {
 			name: `${sourceUnit.name} (copy)`,
 			description: sourceUnit.description ?? '',
 			images: sourceUnit.images ?? [],
-			features: sourceUnit.features ?? {},
+			features: toStringFeatures(sourceUnit.features),
 			tags: [],
 			area: sourceUnit.area ?? undefined,
 			max_occupants_allowed: sourceUnit.max_occupants_allowed ?? 1,

@@ -6,6 +6,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - **Never commit anything.** Do not run `git commit` under any circumstances — not for code, not for docs, not for specs. Leave all changes unstaged for the user to commit.
 
+- **Comment sparingly.** Only write a comment when the code cannot carry the
+  information itself — a non-obvious constraint, a subtle failure it guards
+  against, or a decision whose reasoning is invisible from the code. Never
+  restate what the code says, never narrate a change or its history, and never
+  head a block with a label (`// Reset form`, `// Actions`). Prefer clearer
+  names and smaller functions over an explanation. Default to none; one or two
+  lines when it earns its place. This applies to test files too.
+
 ## Project Overview
 
 Rent-Loop is a property rental management platform consisting of a Go backend API, React Router v7 frontend applications, and a Flutter mobile app.

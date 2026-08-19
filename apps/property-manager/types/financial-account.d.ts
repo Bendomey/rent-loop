@@ -25,6 +25,12 @@ type RentBillingCadence =
 interface ChargeInstance {
 	id: string
 	financial_account_id: string
+	/**
+	 * The term this charge belongs to. NULL means it belongs to the account
+	 * rather than to any one term — a credit, a write-off, or a charge raised
+	 * before the lease existed — so it shows in every term's view.
+	 */
+	lease_id?: Nullable<string>
 	name: string
 	category: ChargeCategory
 	/** Signed. Negative is a refund. Minor units. */
@@ -65,7 +71,12 @@ interface FinancialAccount {
 	rent_billing_interval: number
 	/** Issuance lead time BEFORE the due date, not the payment grace after it. */
 	auto_issue_days_before: number
-	status: 'ACTIVE' | 'CLOSED'
+	/**
+	 * CLOSURE_ELIGIBLE is not "closed pending paperwork" — every lease has
+	 * ended, but the tenancy is still live and still takes money. Only CLOSED
+	 * stops writing.
+	 */
+	status: 'ACTIVE' | 'CLOSURE_ELIGIBLE' | 'CLOSED'
 	closed_at?: Nullable<string>
 	created_at: string
 	updated_at: string

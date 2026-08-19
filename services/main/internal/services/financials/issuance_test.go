@@ -17,6 +17,14 @@ type fakeAccountRepo struct{ accounts []models.FinancialAccount }
 func (f *fakeAccountRepo) ListActiveForBilling(context.Context) (*[]models.FinancialAccount, error) {
 	return &f.accounts, nil
 }
+
+// Not exercised here: the closure sweep has its own coverage, and this fake
+// exists for issuance.
+func (f *fakeAccountRepo) ListDueForClosure(
+	context.Context, time.Time,
+) (*[]models.FinancialAccount, error) {
+	return &[]models.FinancialAccount{}, nil
+}
 func (f *fakeAccountRepo) Create(context.Context, *models.FinancialAccount) error { return nil }
 func (f *fakeAccountRepo) Update(context.Context, *models.FinancialAccount) error { return nil }
 func (f *fakeAccountRepo) GetOne(
@@ -44,10 +52,18 @@ func (f *fakeChargeService) CreateAdHoc(
 ) (*models.ChargeInstance, error) {
 	return nil, nil
 }
+func (f *fakeChargeService) ReassignAccount(context.Context, string, string) error { return nil }
+func (f *fakeChargeService) CloseDefinitionsForLease(context.Context, string, string) error {
+	return nil
+}
+
+func (f *fakeChargeService) ScopeUnassignedToLease(context.Context, string, string) error {
+	return nil
+}
 func (f *fakeChargeService) VoidInstance(context.Context, VoidChargeInput) error   { return nil }
 func (f *fakeChargeService) RederiveRent(context.Context, RederiveRentInput) error { return nil }
 func (f *fakeChargeService) ListInstances(
-	context.Context, string, bool,
+	context.Context, string, *string, bool,
 ) ([]models.ChargeInstance, error) {
 	return nil, nil
 }

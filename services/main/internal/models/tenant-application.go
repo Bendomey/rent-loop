@@ -56,7 +56,7 @@ type TenantApplication struct {
 	// application had exactly one invoice. It now has a financial account with
 	// many charges and any number of invoices composed against them, so "the"
 	// payment invoice no longer exists as a concept.
-	Financials *TenantApplicationFinancials `gorm:"-"`
+	Financials *AccountFinancials `gorm:"-"`
 
 	// docs setup
 	LeaseAgreementDocumentMode *string // MANUAL | ONLINE

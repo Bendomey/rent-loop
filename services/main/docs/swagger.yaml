@@ -1,4 +1,28 @@
 definitions:
+  financials.ClosureEligibility:
+    properties:
+      can_close:
+        type: boolean
+      deposit_held_amount:
+        type: integer
+      gates:
+        items:
+          $ref: '#/definitions/financials.ClosureGate'
+        type: array
+      outstanding_amount:
+        type: integer
+    type: object
+  financials.ClosureGate:
+    properties:
+      blocking:
+        type: boolean
+      name:
+        type: string
+      passed:
+        type: boolean
+      reason:
+        type: string
+    type: object
   handlers.AddExpenseBody:
     properties:
       amount:
@@ -476,6 +500,25 @@ definitions:
     required:
     - amount
     - charge_instance_id
+    type: object
+  handlers.CloseAccountBody:
+    properties:
+      deposit_forfeit_reason:
+        type: string
+      deposit_resolution:
+        description: |-
+          RELEASE refunds the held deposit, OFFSET applies it against what is
+          owed, FORFEIT keeps it and requires a reason. Ignored when no deposit
+          is held.
+        enum:
+        - RELEASE
+        - OFFSET
+        - FORFEIT
+        type: string
+      reason:
+        type: string
+    required:
+    - reason
     type: object
   handlers.ComposeInvoiceBody:
     properties:
@@ -1592,6 +1635,98 @@ definitions:
     required:
     - reason
     type: object
+  handlers.RenewLeaseBody:
+    properties:
+      carry_financial_account:
+        description: |-
+          Only meaningful when unit_id differs from the parent's; sending it on a
+          same-unit renewal is refused rather than ignored.
+        type: boolean
+      fees:
+        description: |-
+          Fees are one-off amounts due at the start of the new term — a deposit
+          top-up when rent has risen, a renewal fee, a utility. Created with the
+          renewal so a term never exists with half its money on it.
+        items:
+          $ref: '#/definitions/handlers.RenewLeaseFeeBody'
+        type: array
+      lease_agreement_document_url:
+        type: string
+      move_in_date:
+        type: string
+      rent_fee:
+        description: Optional. Omitted, each defaults to the parent's.
+        minimum: 0
+        type: integer
+      stay_duration:
+        type: integer
+      stay_duration_frequency:
+        type: string
+      unit_id:
+        type: string
+    required:
+    - move_in_date
+    - stay_duration
+    - stay_duration_frequency
+    type: object
+  handlers.RenewLeaseFeeBody:
+    properties:
+      amount:
+        example: 15000
+        type: integer
+      category:
+        enum:
+        - SECURITY_DEPOSIT
+        - AGENCY_FEE
+        - VAT
+        - UTILITY
+        - DAMAGE_CHARGE
+        - EARLY_TERMINATION_FEE
+        - OTHER
+        example: SECURITY_DEPOSIT
+        type: string
+      name:
+        example: Deposit top-up
+        type: string
+    required:
+    - amount
+    - category
+    - name
+    type: object
+  handlers.ReopenAccountBody:
+    properties:
+      reason:
+        type: string
+    required:
+    - reason
+    type: object
+  handlers.RunAccountClosureBody:
+    properties:
+      as_of:
+        description: |-
+          AsOf is the instant the sweep should believe it is running at. Omit it
+          for the wall clock. The 90-day grace period can therefore be crossed in
+          one call without back-dating closure_eligible_at.
+        example: "2027-03-03T00:00:00Z"
+        type: string
+      financial_account_id:
+        description: |-
+          FinancialAccountID restricts the sweep to a single account, so a
+          scenario does not close unrelated ledgers as a side effect.
+        type: string
+    type: object
+  handlers.RunAccountClosureResponse:
+    properties:
+      as_of:
+        example: "2027-03-03T00:00:00Z"
+        type: string
+      closed:
+        example: 1
+        type: integer
+      skipped:
+        example: 0
+        type: integer
+    type: object
   handlers.RunInvoiceIssuanceBody:
     properties:
       as_of:
@@ -2505,6 +2640,12 @@ definitions:
         items:
           $ref: '#/definitions/transformations.OutputChargeInstance'
         type: array
+      closure_eligibility:
+        allOf:
+        - $ref: '#/definitions/financials.ClosureEligibility'
+        description: |-
+          ClosureEligibility is the PM's closure checklist: every gate with its
+          blocking reason, so the UI can render the panel without a second call.
       outstanding_amount:
         type: integer
       total_charged:
@@ -3083,6 +3224,13 @@ definitions:
       move_out_date:
         example: "2025-07-01T00:00:00Z"
         type: string
+      parent_lease:
+        allOf:
+        - $ref: '#/definitions/transformations.OutputLeaseRef'
+        description: |-
+          ParentLease is present only when asked for with populate=ParentLease.
+          Deliberately a reference rather than a whole lease: the caller wants the
+          code to print, and nesting whole leases would recurse up the chain.
       parent_lease_id:
         example: b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456
         type: string
@@ -3139,6 +3287,12 @@ definitions:
         type: string
       terminationAgreementDocumentPropertyManagerSignedBy:
         $ref: '#/definitions/transformations.OutputClientUser'
+      type:
+        description: |-
+          Type is ORIGINAL or RENEWAL. Read with parent_lease_id, it is what lets a
+          lease list group a tenancy instead of showing unrelated sibling rows.
+        example: ORIGINAL
+        type: string
       unit:
         $ref: '#/definitions/transformations.AdminOutputUnit'
       unit_id:
@@ -3658,6 +3812,8 @@ definitions:
       invoiced_amount:
         example: 0
         type: integer
+      lease_id:
+        type: string
       name:
         example: Rent – February 2027
         type: string
@@ -4043,6 +4199,8 @@ definitions:
         type: string
       closed_at:
         type: string
+      closure_eligible_at:
+        type: string
       code:
         example: FA-2608-A1B2C3
         type: string
@@ -4053,8 +4211,6 @@ definitions:
         type: string
       id:
         example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
-        type: string
-      lease_id:
         type: string
       property_id:
         type: string
@@ -4317,6 +4473,12 @@ definitions:
       termination_agreement_document_url:
         example: https://example.com/termination.pdf
         type: string
+      type:
+        description: |-
+          Type is ORIGINAL or RENEWAL. Read with parent_lease_id, it is what lets a
+          lease list group a tenancy instead of showing unrelated sibling rows.
+        example: ORIGINAL
+        type: string
       unit:
         $ref: '#/definitions/transformations.OutputUnit'
       unit_id:
@@ -4436,6 +4598,17 @@ definitions:
         type: string
       updated_at:
         example: "2024-06-10T09:00:00Z"
+        type: string
+    type: object
+  transformations.OutputLeaseRef:
+    properties:
+      code:
+        example: 2606N7AKJK
+        type: string
+      id:
+        type: string
+      status:
+        example: Lease.Status.Completed
         type: string
     type: object
   transformations.OutputLeaseTermination:
@@ -10024,6 +10197,10 @@ paths:
           description: Invalid or absent authentication token
           schema:
             type: string
+        "409":
+          description: The tenancy's account is closed
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
         "422":
           description: Validation error
           schema:
@@ -10089,6 +10266,64 @@ paths:
       summary: Void a charge
       tags:
       - FinancialAccounts
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/financial-accounts/{account_id}/close:
+    post:
+      consumes:
+      - application/json
+      description: 'Ends a tenancy''s financial relationship and releases the deposit.
+        Every blocking gate must pass: all leases ended, nothing outstanding, and
+        the held deposit resolved. Missing move-out evidence warns but does not block.
+        Releasing or offsetting posts a reversing SECURITY_DEPOSIT charge; forfeiting
+        requires a reason. Writes an audit row rather than flipping a status.'
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Financial account ID
+        in: path
+        name: account_id
+        required: true
+        type: string
+      - description: Closure decision
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CloseAccountBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Account closed
+          schema:
+            properties:
+              data:
+                type: boolean
+            type: object
+        "400":
+          description: A blocking gate has not passed, the account is already closed,
+            or a forfeit was given without a reason
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Financial account not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+      security:
+      - BearerAuth: []
+      summary: Close a financial account
+      tags:
+      - FinancialAccounts
   /api/v1/admin/clients/{client_id}/properties/{property_id}/financial-accounts/{account_id}/invoices:compose:
     post:
       consumes:
@@ -10140,6 +10375,62 @@ paths:
       security:
       - BearerAuth: []
       summary: Compose an invoice from charges on a financial account
+      tags:
+      - FinancialAccounts
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/financial-accounts/{account_id}/reopen:
+    post:
+      consumes:
+      - application/json
+      description: Returns a closed account to ACTIVE. Recorded on the original closure
+        row with the reason, so an accidental closure leaves a trail rather than silently
+        rewriting history. Any deposit refund already posted is NOT reversed — that
+        is a separate charge.
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Financial account ID
+        in: path
+        name: account_id
+        required: true
+        type: string
+      - description: Reason for reopening
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.ReopenAccountBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Account reopened
+          schema:
+            properties:
+              data:
+                type: boolean
+            type: object
+        "400":
+          description: The account is not closed, or no reason was given
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Financial account or its closure record not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+      security:
+      - BearerAuth: []
+      summary: Reopen a closed financial account
       tags:
       - FinancialAccounts
   /api/v1/admin/clients/{client_id}/properties/{property_id}/invoices:
@@ -10314,6 +10605,10 @@ paths:
           description: Invalid or absent authentication token
           schema:
             type: string
+        "409":
+          description: The tenancy's account is closed
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
         "422":
           description: Validation error
           schema:
@@ -10610,6 +10905,10 @@ paths:
             type: string
         "404":
           description: Invoice not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "409":
+          description: The tenancy's account is closed
           schema:
             $ref: '#/definitions/lib.HTTPError'
         "422":
@@ -12012,6 +12311,69 @@ paths:
       summary: Submit lease checklist
       tags:
       - LeaseChecklist
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/renew:
+    post:
+      consumes:
+      - application/json
+      description: Continues a tenancy with a new term. The renewal is created Pending
+        with its own rent and charges, inheriting the parent's tenant, currency and
+        financial account; the daily lifecycle sweeps activate it and complete the
+        parent on the changeover day. A renewal never re-charges the security deposit.
+        It may move the tenant to another unit, in which case carry_financial_account
+        decides whether the money follows. If the tenancy's financial account was
+        already closed, renewing reopens it and continues on the same ledger rather
+        than opening a second one; the reopen is recorded against the closure with
+        the calling user.
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Lease to renew
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - description: New term
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.RenewLeaseBody'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Renewal created
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputLease'
+            type: object
+        "400":
+          description: Parent not renewable, already renewed, term overlaps the parent,
+            destination unit at capacity, or the account flag sent on a same-unit
+            renewal
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Lease not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+      security:
+      - BearerAuth: []
+      summary: Renew a lease
+      tags:
+      - Leases
   /api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/status:active:
     patch:
       consumes:
@@ -16744,6 +17106,48 @@ paths:
       summary: Get booking status by tracking code (phone-verified)
       tags:
       - Public
+  /api/v1/dev/jobs/account-closure:
+    post:
+      consumes:
+      - application/json
+      description: 'Runs the same sweep the `0 1 * * *` cron runs, optionally at a
+        supplied instant. Registered only when the server''s environment is not production.
+        Exists so end-to-end scenarios can cross the 90-day grace period without back-dating
+        rows. This is deliberately not an operational action: a property manager never
+        closes an account by hand.'
+      parameters:
+      - description: Optional instant and account to sweep
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/handlers.RunAccountClosureBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Sweep completed
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/handlers.RunAccountClosureResponse'
+            type: object
+        "400":
+          description: as_of is not a valid RFC3339 timestamp
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Run the account closure sweep (non-production only)
+      tags:
+      - Dev
   /api/v1/dev/jobs/invoice-issuance:
     post:
       consumes:
@@ -18118,6 +18522,10 @@ paths:
           description: Invalid or absent authentication token
           schema:
             type: string
+        "409":
+          description: The tenancy's account is closed
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
         "422":
           description: Validation error
           schema:

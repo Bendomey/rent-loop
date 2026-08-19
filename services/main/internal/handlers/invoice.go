@@ -63,6 +63,7 @@ type CreateInvoiceRequest struct {
 //	@Failure		401			{object}	string										"Invalid or absent authentication token"
 //	@Failure		422			{object}	lib.HTTPError								"Validation error"
 //	@Failure		500			{object}	string										"An unexpected error occurred"
+//	@Failure		409			{object}	lib.HTTPError								"The tenancy's account is closed"
 //	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/invoices [post]
 func (h *InvoiceHandler) CreateInvoice(w http.ResponseWriter, r *http.Request) {
 	_, ok := lib.ClientUserFromContext(r.Context())
@@ -503,6 +504,7 @@ type AddLineItemRequest struct {
 //	@Failure		404			{object}	lib.HTTPError										"Invoice not found"
 //	@Failure		422			{object}	lib.HTTPError										"Validation error"
 //	@Failure		500			{object}	string												"An unexpected error occurred"
+//	@Failure		409			{object}	lib.HTTPError										"The tenancy's account is closed"
 //	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/invoices/{invoice_id}/line-items [post]
 func (h *InvoiceHandler) AddLineItem(w http.ResponseWriter, r *http.Request) {
 	var body AddLineItemRequest
@@ -917,7 +919,7 @@ func (h *InvoiceHandler) TenantGetInvoice(w http.ResponseWriter, r *http.Request
 	if !ownedByTenant && invoice.FinancialAccountID != nil {
 		account, accErr := h.services.Financials.Accounts.GetByID(r.Context(), *invoice.FinancialAccountID)
 		if accErr == nil && account != nil {
-			ownedByTenant = account.TenantApplicationID == lease.TenantApplicationId
+			ownedByTenant = account.OriginTenantApplicationID == lease.TenantApplicationId
 		}
 	}
 

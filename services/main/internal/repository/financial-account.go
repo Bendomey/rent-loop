@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
@@ -11,8 +12,12 @@ import (
 type GetFinancialAccountQuery struct {
 	ID                  *string
 	TenantApplicationID *string
-	LeaseID             *string
-	Populate            *[]string
+	TenantID            *string
+	PropertyID          *string
+	// Statuses restricts the lookup to a set — resolution passes
+	// {ACTIVE, CLOSURE_ELIGIBLE}, since an eligible account is still reusable.
+	Statuses *[]string
+	Populate *[]string
 }
 
 type FinancialAccountRepository interface {
@@ -25,6 +30,7 @@ type FinancialAccountRepository interface {
 	// pre-filter by due date or the cadence quantity would be capped by the
 	// lead window.
 	ListActiveForBilling(ctx context.Context) (*[]models.FinancialAccount, error)
+	ListDueForClosure(ctx context.Context, eligibleBefore time.Time) (*[]models.FinancialAccount, error)
 	// SumSuccessfulPayments totals every successful payment made against this
 	// account's invoices. It must go through invoices rather than through
 	// allocations: a fully unallocated overpayment has no allocation rows at
@@ -54,8 +60,18 @@ func (r *financialAccountRepository) GetOne(
 ) (*models.FinancialAccount, error) {
 	var account models.FinancialAccount
 
-	db := lib.ResolveDB(ctx, r.DB).Model(&models.FinancialAccount{})
+	db := applyFinancialAccountQuery(lib.ResolveDB(ctx, r.DB).Model(&models.FinancialAccount{}), query)
 
+	if err := db.First(&account).Error; err != nil {
+		return nil, err
+	}
+
+	return &account, nil
+}
+
+// applyFinancialAccountQuery is extracted so GetOne and its tests render the
+// same predicates.
+func applyFinancialAccountQuery(db *gorm.DB, query GetFinancialAccountQuery) *gorm.DB {
 	if query.Populate != nil {
 		for _, populate := range *query.Populate {
 			db = db.Preload(populate)
@@ -68,15 +84,17 @@ func (r *financialAccountRepository) GetOne(
 	if query.TenantApplicationID != nil {
 		db = db.Where("financial_accounts.tenant_application_id = ?", *query.TenantApplicationID)
 	}
-	if query.LeaseID != nil {
-		db = db.Where("financial_accounts.lease_id = ?", *query.LeaseID)
+	if query.TenantID != nil {
+		db = db.Where("financial_accounts.tenant_id = ?", *query.TenantID)
+	}
+	if query.PropertyID != nil {
+		db = db.Where("financial_accounts.property_id = ?", *query.PropertyID)
+	}
+	if query.Statuses != nil {
+		db = db.Where("financial_accounts.status IN ?", *query.Statuses)
 	}
 
-	if err := db.First(&account).Error; err != nil {
-		return nil, err
-	}
-
-	return &account, nil
+	return db
 }
 
 func (r *financialAccountRepository) SumSuccessfulPayments(
@@ -101,6 +119,30 @@ func (r *financialAccountRepository) SumSuccessfulPayments(
 	return *total, nil
 }
 
+// ListDueForClosure returns accounts whose leases have all ended and which
+// have sat eligible for at least the grace period.
+//
+// The gates are NOT applied here — money is the service's question, and a
+// repository that filtered on it would duplicate EvaluateClosureGates in SQL.
+func (r *financialAccountRepository) ListDueForClosure(
+	ctx context.Context,
+	eligibleBefore time.Time,
+) (*[]models.FinancialAccount, error) {
+	var accounts []models.FinancialAccount
+
+	err := lib.ResolveDB(ctx, r.DB).
+		Model(&models.FinancialAccount{}).
+		Where("financial_accounts.status = ?", "CLOSURE_ELIGIBLE").
+		Where("financial_accounts.closure_eligible_at IS NOT NULL").
+		Where("financial_accounts.closure_eligible_at <= ?", eligibleBefore).
+		Find(&accounts).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &accounts, nil
+}
+
 func (r *financialAccountRepository) ListActiveForBilling(
 	ctx context.Context,
 ) (*[]models.FinancialAccount, error) {
@@ -108,7 +150,7 @@ func (r *financialAccountRepository) ListActiveForBilling(
 
 	err := lib.ResolveDB(ctx, r.DB).
 		Model(&models.FinancialAccount{}).
-		Where("financial_accounts.status = ?", "ACTIVE").
+		Where("financial_accounts.status IN ?", []string{"ACTIVE", "CLOSURE_ELIGIBLE"}).
 		Where("financial_accounts.rent_billing_cadence != ?", "MANUAL").
 		Find(&accounts).Error
 	if err != nil {

@@ -45,6 +45,7 @@ type RentBillingPolicy struct {
 // tests.
 type ChargeView struct {
 	ID             string
+	LeaseID        *string
 	Category       string
 	Amount         int64 // signed; negative is owed to the tenant
 	DueDate        time.Time

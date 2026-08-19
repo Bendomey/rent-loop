@@ -77,6 +77,7 @@ func NewServices(params INewServicesParams) Services {
 		notificationService,
 		params.Repository.TenantAccountRepository,
 		params.Repository.TenantRepository,
+		params.Repository.LeaseRepository,
 		financialsFacade,
 	)
 
@@ -178,6 +179,17 @@ func NewServices(params INewServicesParams) Services {
 		financialsFacade,
 	)
 
+	// Attach closure now that LeaseService exists. Closure reads lease terms
+	// to decide eligibility, and LeaseService already depends on the financials
+	// facade, so the dependency is injected after construction — the same
+	// two-step as SetIssuance above.
+	financialsFacade.SetClosure(financials.NewClosureService(
+		params.Repository.FinancialAccountRepository,
+		params.Repository.FinancialAccountClosureRepository,
+		financialsFacade.Charges,
+		leaseService,
+	))
+
 	tenantAccountService := NewTenantAccountService(params.AppCtx, params.Repository.TenantAccountRepository)
 
 	paymentAccountService := NewPaymentAccountService(params.AppCtx, params.Repository.PaymentAccountRepository)
@@ -268,6 +280,7 @@ func NewServices(params INewServicesParams) Services {
 		LeaseRepo:           params.Repository.LeaseRepository,
 		UnitService:         unitService,
 		NotificationService: notificationService,
+		Financials:          financialsFacade,
 	})
 
 	expenseService := NewExpenseService(ExpenseServiceDeps{

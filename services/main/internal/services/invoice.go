@@ -64,6 +64,7 @@ type invoiceService struct {
 	notificationService NotificationService
 	tenantAccountRepo   repository.TenantAccountRepository
 	tenantRepo          repository.TenantRepository
+	leaseRepo           repository.LeaseRepository
 	// financials is the ONLY route to charge tables. This service never
 	// touches them directly.
 	financials *financials.Financials
@@ -77,6 +78,7 @@ func NewInvoiceService(
 	notificationService NotificationService,
 	tenantAccountRepo repository.TenantAccountRepository,
 	tenantRepo repository.TenantRepository,
+	leaseRepo repository.LeaseRepository,
 	financialsFacade *financials.Financials,
 ) InvoiceService {
 	return &invoiceService{
@@ -87,6 +89,7 @@ func NewInvoiceService(
 		notificationService: notificationService,
 		tenantAccountRepo:   tenantAccountRepo,
 		tenantRepo:          tenantRepo,
+		leaseRepo:           leaseRepo,
 		financials:          financialsFacade,
 	}
 }
@@ -142,7 +145,27 @@ type CreateInvoiceInput struct {
 	NotificationTenantID *string
 }
 
+// assertAccountOpen refuses billing work against a closed account. A closed
+// account has no unpaid invoice — the outstanding gate guarantees it — so
+// there is nothing legitimate left to bill or receive.
+func (s *invoiceService) assertAccountOpen(ctx context.Context, accountID *string) error {
+	if accountID == nil || s.financials == nil {
+		return nil
+	}
+
+	account, err := s.financials.Accounts.GetByID(ctx, *accountID)
+	if err != nil {
+		return err
+	}
+
+	return financials.AssertAccountOpen(account.Status)
+}
+
 func (s *invoiceService) CreateInvoice(ctx context.Context, input CreateInvoiceInput) (*models.Invoice, error) {
+	if err := s.assertAccountOpen(ctx, input.FinancialAccountID); err != nil {
+		return nil, err
+	}
+
 	// Composition is the only way in for account-backed invoices. A
 	// hand-built one would have lines claiming no charge, so the ledger and
 	// the invoice would immediately disagree.
@@ -947,6 +970,10 @@ func (s *invoiceService) AddLineItem(ctx context.Context, input AddLineItemInput
 		})
 	}
 
+	if openErr := s.assertAccountOpen(ctx, invoice.FinancialAccountID); openErr != nil {
+		return nil, openErr
+	}
+
 	// Account-backed invoices must go through composition. A free-form line
 	// here would claim no charge, so charge.invoiced_amount would silently
 	// disagree with the invoice the tenant is looking at.
@@ -1441,6 +1468,32 @@ func (s *invoiceService) ComposeFromAccount(
 	})
 }
 
+// payerLeaseFor attributes an invoice to a lease term.
+//
+// The charges being invoiced answer this themselves whenever they agree — an
+// invoice for March rent belongs to whichever term contains March. They cannot
+// answer when they are all account-level (a deposit, a credit) or when they
+// disagree, which is arrears from an ended term billed alongside the new
+// term's rent; those fall back to the account's current lease.
+func (s *invoiceService) payerLeaseFor(
+	ctx context.Context,
+	accountID string,
+	views []financials.ChargeView,
+) *string {
+	if derived := financials.DerivePayerLease(views); derived != nil {
+		return derived
+	}
+
+	current, err := s.leaseRepo.GetCurrentForAccount(ctx, accountID)
+	if err != nil || current == nil {
+		return nil
+	}
+
+	id := current.ID.String()
+
+	return &id
+}
+
 // ComposeAccountInvoice satisfies financials.InvoiceComposer. It is what the
 // issuance sweep calls once SelectIssuableCharges has decided what is due.
 func (s *invoiceService) ComposeAccountInvoice(
@@ -1458,7 +1511,7 @@ func (s *invoiceService) ComposeAccountInvoice(
 		FinancialAccountID:   accountID,
 		Claims:               claims,
 		PayerType:            "TENANT",
-		PayerLeaseID:         summary.Account.LeaseID,
+		PayerLeaseID:         s.payerLeaseFor(ctx, accountID, summary.Charges),
 		PayeeType:            "PROPERTY_OWNER",
 		PayeeClientID:        summary.Account.ClientID,
 		ContextType:          "LEASE_RENT",

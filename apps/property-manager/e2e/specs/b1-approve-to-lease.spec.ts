@@ -1,8 +1,8 @@
 /**
  * B1 — approving an application creates a lease and occupies the unit.
  *
- * This is the hinge of the whole flow: it is where a financial account gains
- * its lease_id, and where the unit stops being available to anyone else. The
+ * This is the hinge of the whole flow: it is where an account's charges gain
+ * their lease, and where the unit stops being available to anyone else. The
  * application is built through the API (a2 already covers building one through
  * the UI) so this case tests only the approval.
  */
@@ -59,29 +59,33 @@ test('approving an application creates a lease and occupies the unit', async ({
 	// list is paginated and searchable only by lease code, so under a full-suite
 	// run the shared E2E property accumulates enough leases to push this one off
 	// page one — the same accumulation the units assertion below already guards
-	// against with search. The account's lease_id is also the more direct claim:
-	// gaining it is what approval is for.
+	// against with search.
+	//
+	// The lease is read off the charges, not off the account. One account now
+	// spans every lease of a renewal chain, so it has no single lease to point
+	// at; the link runs the other way, and approval stamps the account's
+	// until-then unscoped charges with the lease it just created. That stamp is
+	// the direct evidence approval did its job.
 	const accountId = await getApplicationAccountId(
 		s.token,
 		s.clientId,
 		s.propertyId,
 		application.id,
 	)
-	const { account } = await getAccount(
+	const { charges } = await getAccount(
 		s.token,
 		s.clientId,
 		s.propertyId,
 		accountId,
 	)
+	const leaseId = charges.find((charge) => charge.lease_id)?.lease_id
 	expect(
-		account.lease_id,
-		'approval should have hung the account off a lease',
+		leaseId,
+		"approval should have scoped the account's charges to a lease",
 	).toBeTruthy()
 
-	// And the lease it points at is the one for this unit, viewable in the UI.
-	await page.goto(
-		`/properties/${s.propertyId}/occupancy/leases/${account.lease_id}`,
-	)
+	// And the lease they point at is the one for this unit, viewable in the UI.
+	await page.goto(`/properties/${s.propertyId}/occupancy/leases/${leaseId}`)
 	await expect(page.getByText(unit.name).first()).toBeVisible({
 		timeout: 30_000,
 	})

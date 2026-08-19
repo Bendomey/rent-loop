@@ -65,6 +65,12 @@ export interface LeaseMoney {
 	owes: number
 	lateTotal: number
 	paidToDate: number
+	/**
+	 * The live charges this term is answerable for, after scoping. Anything
+	 * deriving from the ledger must read this rather than the account's own
+	 * list, or it silently reverts to the whole tenancy.
+	 */
+	charges: ChargeInstance[]
 	/** Live charges — removed ones stay on the record but stop counting. */
 	chargeCount: number
 	/** What the whole term comes to, removed charges excluded. */
@@ -137,13 +143,64 @@ export function deriveLeaseMoney(
 	summary: AccountSummary,
 	invoices: Invoice[],
 	asAt: Date,
+	/**
+	 * Scope to one term. The account spans a whole tenancy — every renewal
+	 * shares it — so a renewal's page would otherwise show the parent's rent
+	 * and the parent's payments as though they were its own.
+	 *
+	 * Omit it for the account-wide view.
+	 */
+	leaseId?: string,
 ): LeaseMoney {
-	const live = summary.charges.filter(isLive)
+	const accountLive = summary.charges.filter(isLive)
+	const accountById = new Map(accountLive.map((charge) => [charge.id, charge]))
+
+	/*
+	 * A charge with no lease_id is not "unscoped data we should hide" — it
+	 * belongs to the account rather than to any one term, which is what a
+	 * credit, a write-off or a pre-lease charge is. Those must appear in every
+	 * term's view, so NULL is included deliberately rather than filtered out.
+	 *
+	 * This is also why the scoping is done here and not by the API's ?lease_id=
+	 * filter: that filter is a strict equality and drops the NULLs. On real
+	 * data 157 charges on single-lease accounts carry no lease_id, 48 of them
+	 * rent — enough that a strict filter would visibly lose money on the
+	 * ordinary single-term lease this page mostly shows.
+	 */
+	const live = accountLive.filter(
+		(charge) =>
+			!leaseId || charge.lease_id == null || charge.lease_id === leaseId,
+	)
 	const byId = new Map(live.map((charge) => [charge.id, charge]))
+
+	const claims = (invoice: Invoice, pool: Map<string, ChargeInstance>) =>
+		(invoice.line_items ?? []).some(
+			(item) => item.charge_instance_id && pool.has(item.charge_instance_id),
+		)
+
+	/*
+	 * A bill follows the charges it claims, which is the only link that
+	 * survives on real data: every TENANT_APPLICATION invoice — the deposit and
+	 * first rent, 66 of them in production — has a null payer_lease_id, so
+	 * filtering bills by payer_lease_id would empty the first lease's page.
+	 *
+	 * The last case matters too. 32 invoices claim no resolvable charge at all,
+	 * and dropping anything we cannot attribute would hide them outright. There
+	 * is nothing to place them by, so they stay unless payer_lease_id says they
+	 * belong to a different term.
+	 */
+	const inTerm = (invoice: Invoice) => {
+		if (!leaseId) return true
+		if (claims(invoice, byId)) return true
+		if (claims(invoice, accountById)) return false
+		return !invoice.payer_lease_id || invoice.payer_lease_id === leaseId
+	}
 
 	// A voided bill releases the charges it claimed, so it is not part of the
 	// account's story at all — its lines return to "still to come".
-	const standing = invoices.filter((invoice) => !invoice.voided_at)
+	const standing = invoices.filter(
+		(invoice) => !invoice.voided_at && inTerm(invoice),
+	)
 
 	const groups: BillGroup[] = standing.map((invoice) => {
 		// A line whose charge is not in the ledger is skipped rather than
@@ -254,11 +311,24 @@ export function deriveLeaseMoney(
 		waitingLate,
 		comingTotal: unclaimed.reduce((sum, charge) => sum + unbilled(charge), 0),
 		paidTotal: paid.reduce((sum, group) => sum + group.invoice.total_amount, 0),
-		// The server's own totals. A second opinion here could only disagree
-		// with the figures every other screen is quoting.
-		owes: summary.outstanding_amount,
+		/*
+		 * Derived from the same charges the listing below is built from, so the
+		 * hero can never contradict what it sits above. The server's totals are
+		 * account-wide by design and cannot be used once the page is scoped to
+		 * a term — that mismatch is the whole bug this scoping fixes.
+		 *
+		 * Unscoped, these are the server's figures: outstanding_amount is
+		 * defined as the sum of unsettled non-voided charges, which is exactly
+		 * what is summed here.
+		 */
+		owes: leaseId
+			? live.reduce((sum, c) => sum + (c.amount - c.settled_amount), 0)
+			: summary.outstanding_amount,
 		lateTotal,
-		paidToDate: summary.total_settled,
+		paidToDate: leaseId
+			? live.reduce((sum, c) => sum + c.settled_amount, 0)
+			: summary.total_settled,
+		charges: live,
 		chargeCount: live.length,
 		totalCharged: live.reduce((sum, charge) => sum + charge.amount, 0),
 	}

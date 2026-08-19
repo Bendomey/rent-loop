@@ -1,4 +1,5 @@
-import { AlertTriangle, CheckIcon, Download, RefreshCw } from 'lucide-react'
+import { AlertTriangle, CheckIcon, Download, RotateCw } from 'lucide-react'
+import { Link } from 'react-router'
 import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
@@ -7,7 +8,12 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from '~/components/ui/tooltip'
-import { getLeaseStatusClass, getLeaseStatusLabel } from '~/lib/lease.utils'
+import { localizedDayjs } from '~/lib/date'
+import {
+	getLeaseStatusClass,
+	getLeaseStatusLabel,
+	leaseExpiringInDays,
+} from '~/lib/lease.utils'
 
 interface LeaseHeaderProps {
 	lease: Lease
@@ -15,6 +21,10 @@ interface LeaseHeaderProps {
 	isPending: boolean
 	isTerminable: boolean
 	onStartLease: () => void
+	/** Where the renewal wizard lives for this lease. */
+	renewHref: string
+	/** Why renewing is off, or null when it is available. */
+	renewBlockedReason: Nullable<string>
 }
 
 export function LeaseHeader({
@@ -23,7 +33,11 @@ export function LeaseHeader({
 	isPending,
 	isTerminable,
 	onStartLease,
+	renewHref,
+	renewBlockedReason,
 }: LeaseHeaderProps) {
+	const expiringInDays = leaseExpiringInDays(lease)
+
 	return (
 		<div className="flex flex-wrap items-start justify-between gap-4">
 			<div>
@@ -37,11 +51,56 @@ export function LeaseHeader({
 					>
 						{getLeaseStatusLabel(lease.status)}
 					</Badge>
+					{expiringInDays !== null && (
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Badge
+									variant="outline"
+									className="border-transparent bg-amber-500 px-2.5 py-0.5 text-xs text-white dark:bg-amber-600"
+								>
+									{expiringInDays === 0
+										? 'Ends today'
+										: `Ends in ${expiringInDays} ${expiringInDays === 1 ? 'day' : 'days'}`}
+								</Badge>
+							</TooltipTrigger>
+							<TooltipContent>
+								Move-out {localizedDayjs(lease.move_out_date).format('LL')}
+							</TooltipContent>
+						</Tooltip>
+					)}
 				</div>
 				<p className="text-muted-foreground mt-1.5 text-sm">{subtitle}</p>
 			</div>
 
 			<div className="flex flex-wrap items-center gap-2">
+				<PropertyPermissionGuard roles={['MANAGER']}>
+					{renewBlockedReason ? (
+						<Tooltip>
+							{/*
+							 * A disabled button fires no pointer events, so the
+							 * tooltip needs a live wrapper — otherwise the reason
+							 * the button is off is the one thing you cannot read.
+							 */}
+							<TooltipTrigger asChild>
+								<span tabIndex={0}>
+									<Button variant="outline" size="sm" disabled>
+										<RotateCw className="size-4" />
+										Renew
+									</Button>
+								</span>
+							</TooltipTrigger>
+							<TooltipContent>{renewBlockedReason}</TooltipContent>
+						</Tooltip>
+					) : (
+						<Button variant="outline" size="sm" asChild>
+							<Link to={renewHref}>
+								<RotateCw className="size-4" />
+								Renew
+							</Link>
+						</Button>
+					)}
+				</PropertyPermissionGuard>
+
 				{lease.lease_agreement_document_url && (
 					<Button variant="outline" size="sm" asChild>
 						<a
@@ -66,22 +125,6 @@ export function LeaseHeader({
 							Start Lease
 							<CheckIcon className="size-4" />
 						</Button>
-					</PropertyPermissionGuard>
-				)}
-
-				{isTerminable && (
-					<PropertyPermissionGuard roles={['MANAGER']}>
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<span tabIndex={0}>
-									<Button variant="outline" size="sm" disabled>
-										<RefreshCw className="size-4" />
-										Renew
-									</Button>
-								</span>
-							</TooltipTrigger>
-							<TooltipContent>Coming soon</TooltipContent>
-						</Tooltip>
 					</PropertyPermissionGuard>
 				)}
 

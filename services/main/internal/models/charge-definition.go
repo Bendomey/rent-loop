@@ -12,6 +12,11 @@ type ChargeDefinition struct {
 	FinancialAccountID string `gorm:"not null;index;"`
 	FinancialAccount   FinancialAccount
 
+	// Contractual context. Null means the definition belongs to the
+	// relationship rather than to any one contract.
+	LeaseID *string `gorm:"index;"`
+	Lease   *Lease
+
 	Name string `gorm:"not null;"` // "Monthly Rent"
 	// RENT | SECURITY_DEPOSIT | AGENCY_FEE | VAT | UTILITY | DAMAGE_CHARGE
 	// | EARLY_TERMINATION_FEE | OTHER

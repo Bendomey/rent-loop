@@ -132,6 +132,19 @@ func (s *paymentService) CreateOfflinePayment(
 		return nil, invoiceErr
 	}
 
+	// A closed account has no unpaid invoice — the outstanding gate guarantees
+	// it — so there is nothing legitimate left to receive against one.
+	if invoice.FinancialAccountID != nil && s.financials != nil {
+		account, accErr := s.financials.Accounts.GetByID(ctx, *invoice.FinancialAccountID)
+		if accErr != nil {
+			return nil, accErr
+		}
+
+		if openErr := financials.AssertAccountOpen(account.Status); openErr != nil {
+			return nil, openErr
+		}
+	}
+
 	if !lib.StringInSlice(invoice.Status, []string{"ISSUED", "PARTIALLY_PAID"}) {
 		return nil, pkg.BadRequestError("invoice is not in a valid state to accept payments", &pkg.RentLoopErrorParams{
 			Metadata: map[string]string{
@@ -268,9 +281,18 @@ func (s *paymentService) CreateOfflinePayment(
 	var notifyLeaseID, notifyApplicationID *string
 	if invoice.FinancialAccountID != nil && s.financials != nil {
 		if account, accErr := s.financials.Accounts.GetByID(ctx, *invoice.FinancialAccountID); accErr == nil {
-			notifyLeaseID = account.LeaseID
-			applicationID := account.TenantApplicationID
+			applicationID := account.OriginTenantApplicationID
 			notifyApplicationID = &applicationID
+
+			// An account spans every term of a tenancy, so it cannot name a
+			// lease on its own. The notification is about money that just
+			// landed, so the current term is the right one to show.
+			if current, curErr := s.leaseService.GetCurrentForAccount(
+				ctx, *invoice.FinancialAccountID,
+			); curErr == nil && current != nil {
+				id := current.ID.String()
+				notifyLeaseID = &id
+			}
 		}
 	}
 

@@ -110,11 +110,13 @@ export function LeaseFinancialsTab({
 		)
 	}
 
-	const money = deriveLeaseMoney(summary, invoices, new Date())
+	const money = deriveLeaseMoney(summary, invoices, new Date(), lease.id)
 	// Null on a MANUAL account: the sweep skips it entirely, so there is no
 	// next bill to name. "Whole term up front" stores MANUAL too.
 	const next = nextIssue(
-		summary.charges,
+		// Scoped, not summary.charges: an unbilled charge on the previous term
+		// would otherwise be announced as this term's next bill.
+		money.charges,
 		summary.account.auto_issue_days_before,
 		summary.account.rent_billing_cadence,
 	)
@@ -123,6 +125,20 @@ export function LeaseFinancialsTab({
 	// Terminated tenancies are a record: the money still reads, but there is
 	// nothing left to change about how it is collected.
 	const readonly = lease.status === 'Lease.Status.Terminated'
+	/*
+	 * A closed tenancy has been filed away — the API refuses new charges, bills
+	 * and payments on it, so offering them would be offering a wall.
+	 *
+	 * CLOSURE_ELIGIBLE is deliberately not included: every lease has ended, but
+	 * the tenancy is still live and a late charge on it is ordinary.
+	 *
+	 * The word "account" never reaches the landlord. Their concept is the
+	 * tenancy; the ledger behind it is ours.
+	 */
+	const closedReason =
+		summary.account.status === 'CLOSED'
+			? 'This tenancy is finished — its books are closed.'
+			: null
 
 	return (
 		<div className="grid grid-cols-12 gap-4">
@@ -133,6 +149,7 @@ export function LeaseFinancialsTab({
 					currency={summary.account.currency}
 					tenantName={tenantName}
 					readonly={readonly}
+					closedReason={closedReason}
 					/*
 					 * Always the charge picker, never a bill. Someone handing over
 					 * money is paying for rent or a repair — whether Rentloop has
@@ -156,7 +173,7 @@ export function LeaseFinancialsTab({
 					nextIssue={next}
 					currency={summary.account.currency}
 					tenantName={tenantName}
-					readonly={readonly}
+					readonly={readonly || Boolean(closedReason)}
 					onPay={setPaying}
 					onAddFee={() => setAddOpen(true)}
 					onRemoveFee={setRemoving}
@@ -171,7 +188,7 @@ export function LeaseFinancialsTab({
 					tenantName={tenantName}
 					tenantPhone={lease.tenant?.phone ?? null}
 					tenantEmail={lease.tenant?.email ?? null}
-					readonly={readonly}
+					readonly={readonly || Boolean(closedReason)}
 					clientId={clientId}
 					propertyId={propertyId}
 				/>

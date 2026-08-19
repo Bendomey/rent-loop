@@ -17,6 +17,9 @@ type ChargeInstance struct {
 	FinancialAccountID string `gorm:"not null;index;"`
 	FinancialAccount   FinancialAccount
 
+	LeaseID *string `gorm:"index;"`
+	Lease   *Lease
+
 	ChargeDefinitionID *string `gorm:"index;"` // null for ad-hoc one-offs
 	ChargeDefinition   *ChargeDefinition
 
