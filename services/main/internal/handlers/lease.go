@@ -588,7 +588,7 @@ func (h *LeaseHandler) CancelLease(w http.ResponseWriter, r *http.Request) {
 // RenewLease godoc
 //
 //	@Summary		Renew a lease
-//	@Description	Continues a tenancy with a new term. The renewal is created Pending with its own rent and charges, inheriting the parent's tenant, currency and financial account; the daily lifecycle sweeps activate it and complete the parent on the changeover day. A renewal never re-charges the security deposit. It may move the tenant to another unit, in which case carry_financial_account decides whether the money follows.
+//	@Description	Continues a tenancy with a new term. The renewal is created Pending with its own rent and charges, inheriting the parent's tenant, currency and financial account; the daily lifecycle sweeps activate it and complete the parent on the changeover day. A renewal never re-charges the security deposit. It may move the tenant to another unit, in which case carry_financial_account decides whether the money follows. If the tenancy's financial account was already closed, renewing reopens it and continues on the same ledger rather than opening a second one; the reopen is recorded against the closure with the calling user.
 //	@Tags			Leases
 //	@Accept			json
 //	@Produce		json
@@ -603,7 +603,8 @@ func (h *LeaseHandler) CancelLease(w http.ResponseWriter, r *http.Request) {
 //	@Failure		422			{object}	lib.HTTPError								"Validation error"
 //	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/renew [post]
 func (h *LeaseHandler) RenewLease(w http.ResponseWriter, r *http.Request) {
-	if _, clientUserOk := lib.ClientUserFromContext(r.Context()); !clientUserOk {
+	clientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
+	if !clientUserOk {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
@@ -628,6 +629,7 @@ func (h *LeaseHandler) RenewLease(w http.ResponseWriter, r *http.Request) {
 		CarryFinancialAccount:     body.CarryFinancialAccount,
 		Fees:                      renewalFeesFromBody(body.Fees),
 		LeaseAgreementDocumentUrl: body.LeaseAgreementDocumentUrl,
+		ClientUserID:              clientUser.ID,
 	})
 	if err != nil {
 		HandleErrorResponse(w, err)

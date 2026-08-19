@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
@@ -27,6 +28,11 @@ type RenewLeaseInput struct {
 	// Only meaningful when UnitID differs from the parent's. Nil or true
 	// carries the parent's financial account; false opens a new one.
 	CarryFinancialAccount *bool
+
+	// The property manager performing the renewal. Recorded on the closure row
+	// when the renewal reopens a closed account, so a reopen is never
+	// anonymous.
+	ClientUserID string
 
 	// Fees are one-off amounts the tenant pays at the start of the new term —
 	// a deposit top-up when rent has risen, a renewal fee, a utility. They are
@@ -276,11 +282,56 @@ func (s *leaseService) linkRenewalFinancials(
 	accountID := *parent.FinancialAccountID
 
 	if carry {
-		// A renewal negotiated after the parent ended lands on an account that
-		// already looks finished. Reviving it is what stops a second account
-		// opening for the same tenancy.
-		if reviveErr := s.financials.Accounts.Revive(ctx, accountID); reviveErr != nil {
-			return reviveErr
+		account, accountErr := s.financials.Accounts.GetByID(ctx, accountID)
+		if accountErr != nil {
+			return accountErr
+		}
+
+		switch account.Status {
+		case financials.StatusClosed:
+			// Unlike the advisory eligibility recompute elsewhere, this cannot
+			// be skipped when the service is absent: proceeding would attach a
+			// new term to a closed ledger that refuses charges.
+			if s.financials.Closure == nil {
+				return pkg.InternalServerError(
+					"closure service unavailable",
+					&pkg.RentLoopErrorParams{
+						Metadata: map[string]string{
+							"function": "linkRenewalFinancials",
+							"action":   "reopening a closed account for a renewal",
+						},
+					},
+				)
+			}
+
+			/*
+			 * The tenancy was tidied away and the tenant then renewed. Closure
+			 * is bookkeeping, not a statement that the relationship ended, so
+			 * a renewal undoes it rather than starting a second ledger beside
+			 * it — which would split one tenant's money across two accounts
+			 * for no reason a landlord could see.
+			 *
+			 * Reopen, not Revive: only Reopen clears ClosedAt and stamps the
+			 * closure row, so the reversal leaves a trail instead of silently
+			 * rewriting history.
+			 */
+			if reopenErr := s.financials.Closure.Reopen(ctx, financials.ReopenAccountInput{
+				FinancialAccountID: accountID,
+				ReopenedByID:       input.ClientUserID,
+				Reason: fmt.Sprintf(
+					"Reopened by a renewal of lease %s — the tenancy continued", parent.Code,
+				),
+			}); reopenErr != nil {
+				return reopenErr
+			}
+		default:
+			// A renewal negotiated after the parent ended lands on an account
+			// that already looks finished. Reviving it is what stops a second
+			// account opening for the same tenancy. A no-op unless the account
+			// is CLOSURE_ELIGIBLE.
+			if reviveErr := s.financials.Accounts.Revive(ctx, accountID); reviveErr != nil {
+				return reviveErr
+			}
 		}
 	} else {
 		parentAccount, accErr := s.financials.Accounts.GetByID(ctx, accountID)
