@@ -2,6 +2,7 @@ import type { CubeFilter } from '~/api/analytics'
 import { useCubeQuery, useGetAnalyticsToken } from '~/api/analytics'
 import { localizedDayjs } from '~/lib/date'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
+import { EXPIRING_WINDOW_DAYS } from '~/lib/lease.utils'
 import { safeString } from '~/lib/strings'
 import {
 	RiskSummaryCard,
@@ -45,7 +46,9 @@ export function PropertyRiskSummary({ propertyId }: Props) {
 	]
 
 	const today = localizedDayjs().format('YYYY-MM-DD')
-	const in60Days = localizedDayjs().add(60, 'day').format('YYYY-MM-DD')
+	const windowEnd = localizedDayjs()
+		.add(EXPIRING_WINDOW_DAYS, 'day')
+		.format('YYYY-MM-DD')
 
 	const outstandingQuery = useCubeQuery<OutstandingRow>(
 		token,
@@ -62,7 +65,7 @@ export function PropertyRiskSummary({ propertyId }: Props) {
 		{
 			measures: ['Leases.expiringCount'],
 			timeDimensions: [
-				{ dimension: 'Leases.moveOutDate', dateRange: [today, in60Days] },
+				{ dimension: 'Leases.moveOutDate', dateRange: [today, windowEnd] },
 			],
 			filters: propertyFilter('Leases.propertyId'),
 		},
@@ -109,7 +112,7 @@ export function PropertyRiskSummary({ propertyId }: Props) {
 			isPending: expiringQuery.isPending,
 			propertyCount: expiring > 0 ? 1 : 0,
 			emptyText: 'Nothing expiring soon',
-			modalDescription: 'Leases ending within 60 days.',
+			modalDescription: `Leases ending within ${EXPIRING_WINDOW_DAYS} days.`,
 		},
 		{
 			type: 'maintenance',

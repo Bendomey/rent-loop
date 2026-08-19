@@ -17,11 +17,11 @@ import {
 import { Skeleton } from '~/components/ui/skeleton'
 import { localizedDayjs } from '~/lib/date'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
+import { EXPIRING_WINDOW_DAYS } from '~/lib/lease.utils'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
 
 const PAGE_SIZE = 10
-const EXPIRING_WINDOW_DAYS = 60
 
 /** One modal row, flattened from whichever resource the risk type maps to. */
 interface RiskRecord {

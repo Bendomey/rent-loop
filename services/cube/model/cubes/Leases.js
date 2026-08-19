@@ -43,7 +43,7 @@ cube(`Leases`, {
       title: `Properties With Leases Expiring`,
       filters: [
         { sql: `${CUBE}.status = 'Lease.Status.Active'` },
-        { sql: `${CUBE}.has_live_renewal = FALSE` },
+        { sql: `${hasLiveRenewal} = FALSE` },
       ],
     },
 
@@ -58,7 +58,7 @@ cube(`Leases`, {
       title: `Leases Expiring`,
       filters: [
         { sql: `${CUBE}.status = 'Lease.Status.Active'` },
-        { sql: `${CUBE}.has_live_renewal = FALSE` },
+        { sql: `${hasLiveRenewal} = FALSE` },
       ],
     },
   },

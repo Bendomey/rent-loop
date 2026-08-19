@@ -1,17 +1,14 @@
 import { localizedDayjs } from './date'
 
-/** Mirrors the Insights risk-summary "leases expiring" window. */
-const EXPIRING_SOON_WINDOW_DAYS = 60
-
 /**
- * When a term is close enough that a manager should be acting on it.
+ * How close a term has to be before the product calls it expiring.
  *
- * Deliberately tighter than EXPIRING_SOON_WINDOW_DAYS. The list badge answers
- * "what state is this lease in", and two months out is worth knowing; the
- * header tag answers "does this need me today", and a tag that sits there for
- * two months stops being read.
+ * One number for every surface that asks the question — the Insights card, its
+ * drill-down list, the lease-table badge and the lease header tag. They used to
+ * disagree (60 and 14), which meant a lease could read Expiring in a table and
+ * carry no tag on its own page.
  */
-const ENDS_IMMINENTLY_DAYS = 14
+export const EXPIRING_WINDOW_DAYS = 30
 
 export function getLeaseStatusLabel(status: Lease['status']) {
 	switch (status) {
@@ -56,7 +53,7 @@ export function getLeaseStatusClass(status: Lease['status']) {
  * - a lease whose move-out date has passed reads **Ended**, matching a lease
  *   already stored with that status — a term that has run out is not
  *   "expiring";
- * - one ending within the next {@link EXPIRING_SOON_WINDOW_DAYS} days reads
+ * - one ending within the next {@link EXPIRING_WINDOW_DAYS} days reads
  *   **Expiring**;
  * - cancelled and terminated leases keep their own label. They ended
  *   deliberately, and the term overlay would hide why.
@@ -68,10 +65,8 @@ export function getLeaseStatusClass(status: Lease['status']) {
  * Days until the term ends, when that is close enough to act on — otherwise
  * null.
  *
- * Uses the tighter ENDS_IMMINENTLY_DAYS rather than the list badge's window:
- * this tag asks a manager to act, and one that lingers for two months is
- * furniture. Cancelled and terminated leases are excluded — they ended
- * deliberately and are not running out.
+ * Cancelled and terminated leases are excluded: they ended deliberately and
+ * are not running out.
  */
 export function leaseExpiringInDays(
 	lease: Pick<Lease, 'status' | 'move_out_date'>,
@@ -88,7 +83,7 @@ export function leaseExpiringInDays(
 		localizedDayjs(),
 		'day',
 	)
-	if (daysLeft < 0 || daysLeft > ENDS_IMMINENTLY_DAYS) return null
+	if (daysLeft < 0 || daysLeft > EXPIRING_WINDOW_DAYS) return null
 
 	return daysLeft
 }
@@ -119,7 +114,7 @@ export function getLeaseDisplayStatus(
 		}
 	}
 
-	if (daysLeft !== null && daysLeft <= EXPIRING_SOON_WINDOW_DAYS) {
+	if (daysLeft !== null && daysLeft <= EXPIRING_WINDOW_DAYS) {
 		return {
 			label: 'Expiring',
 			className: 'bg-amber-500 text-white dark:bg-amber-600',
