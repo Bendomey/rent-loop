@@ -134,7 +134,6 @@ export function LeaseRenewalModule() {
 	const [rent, setRent] = useState<string>(String((lease?.rent_fee ?? 0) / 100))
 	const [fees, setFees] = useState<RenewLeaseFee[]>([])
 	const [unitId, setUnitId] = useState<string>(lease?.unit?.id ?? '')
-	const [carry, setCarry] = useState(true)
 	const [signed, setSigned] = useState<Nullable<Lease>>(null)
 
 	// Every hook is above this line: the guard cannot sit any earlier without
@@ -197,10 +196,8 @@ export function LeaseRenewalModule() {
 					stay_duration: duration,
 					stay_duration_frequency: frequency,
 					rent_fee: rentMinor,
-					// Both are sent only on a move: the API refuses the carry flag
-					// on a same-room renewal rather than ignoring it.
 					...(unitChanged
-						? { unit_id: unitId, carry_financial_account: carry }
+						? { unit_id: unitId, carry_financial_account: true }
 						: {}),
 					fees: fees.filter((fee) => fee.amount > 0),
 				},
@@ -320,16 +317,12 @@ export function LeaseRenewalModule() {
 					{frequency.toLowerCase()}.
 				</>
 			)}
-			{step !== 'term' && unitChanged && (
+			{step !== 'term' && (
 				<>
-					{' '}
-					{carry
-						? 'Their deposit and running balance come with them.'
-						: 'The new room starts with a clean balance — the old one is settled on its own.'}
+					{unitChanged
+						? ' Their deposit and running balance come with them.'
+						: ' Their deposit and balance carry on untouched.'}
 				</>
-			)}
-			{step !== 'term' && !unitChanged && (
-				<> Their deposit and balance carry on untouched.</>
 			)}
 		</>
 	)
@@ -592,8 +585,6 @@ export function LeaseRenewalModule() {
 									currentUnitName={lease.unit?.name ?? '—'}
 									unitId={unitId}
 									onUnitChange={setUnitId}
-									carry={carry}
-									onCarryChange={setCarry}
 									currency={currency}
 									parentEnd={parentLastDay}
 									onRentSuggestion={(minor) => setRent(String(minor / 100))}
@@ -698,13 +689,11 @@ export function LeaseRenewalModule() {
 												feeTotal > 0,
 											],
 											...(unitChanged
-												? ([
-														[
-															'Their money',
-															carry ? 'Carries over' : 'Starts fresh',
-															!carry,
-														],
-													] as [string, string, boolean][])
+												? ([['Their money', 'Carries over', false]] as [
+														string,
+														string,
+														boolean,
+													][])
 												: []),
 										]}
 									/>

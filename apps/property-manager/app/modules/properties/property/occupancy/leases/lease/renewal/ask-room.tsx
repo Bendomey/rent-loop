@@ -13,8 +13,11 @@ const money = (minor: number, currency: string) =>
  * Which room the new term is written against.
  *
  * Renewals stay put, so the current room is shown as the answer already given
- * and the alternatives open only on request. Moving rooms is the one case that
- * needs the money question, which is why the two live together.
+ * and the alternatives open only on request.
+ *
+ * A move used to ask whether the money followed. It no longer does: the
+ * tenant's balance and deposit always carry to the new room, so there is
+ * nothing here for the PM to decide.
  */
 export function AskRoom({
 	clientId,
@@ -23,8 +26,6 @@ export function AskRoom({
 	currentUnitName,
 	unitId,
 	onUnitChange,
-	carry,
-	onCarryChange,
 	currency,
 	parentEnd,
 	onRentSuggestion,
@@ -35,8 +36,6 @@ export function AskRoom({
 	currentUnitName: string
 	unitId: string
 	onUnitChange: (next: string) => void
-	carry: boolean
-	onCarryChange: (next: boolean) => void
 	currency: string
 	parentEnd: Nullable<Date>
 	/** A different room comes with its own listed rent. */
@@ -137,39 +136,6 @@ export function AskRoom({
 				)}
 			</Question>
 
-			{changed && (
-				<Question
-					q="What happens to their money?"
-					done
-					help={
-						<>
-							They are changing room, so their running balance and deposit can
-							follow them, or the books on {currentUnitName} can be closed and
-							the new room started clean.
-						</>
-					}
-				>
-					<div className="grid gap-3 sm:grid-cols-2">
-						<RadioCard
-							on={carry}
-							onClick={() => onCarryChange(true)}
-							label="Keep their existing balance and deposit"
-							sub="The deposit and anything owed follow them to the new room"
-							right={
-								<span className="bg-success-bg text-success rounded-[20px] px-[9px] py-[3px] text-[11px] font-bold whitespace-nowrap">
-									Usual
-								</span>
-							}
-						/>
-						<RadioCard
-							on={!carry}
-							onClick={() => onCarryChange(false)}
-							label="Start a fresh balance for the new room"
-							sub={`The new room starts at zero — ${currentUnitName} is settled separately, deposit included`}
-						/>
-					</div>
-				</Question>
-			)}
 		</>
 	)
 }
