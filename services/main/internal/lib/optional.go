@@ -93,6 +93,7 @@ func (o Optional[T]) WasSet() bool {
 var (
 	_ OptionalValue = Optional[string]{}
 	_ OptionalValue = Optional[int64]{}
+	_ OptionalValue = Optional[float64]{}
 	_ OptionalValue = Optional[time.Time]{}
 )
 
@@ -114,6 +115,7 @@ func NewValidator() *validator.Validate {
 	v.RegisterCustomTypeFunc(optionalCustomTypeFunc,
 		Optional[string]{},
 		Optional[int64]{},
+		Optional[float64]{},
 		Optional[[]string]{},
 		Optional[time.Time]{},
 	)
