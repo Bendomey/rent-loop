@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { z } from 'zod'
+import { UnitAvailabilitySummaryCard } from './unit-summary-card'
 import {
 	useCreateDateBlock,
 	useDeleteDateBlock,
@@ -119,6 +120,7 @@ export function AvailabilityModule() {
 		filters: {},
 	})
 	const units = unitsData?.rows ?? []
+	const selectedUnit = units.find((u) => u.id === selectedUnitId)
 
 	useEffect(() => {
 		const rows = unitsData?.rows
@@ -228,6 +230,59 @@ export function AvailabilityModule() {
 			</div>
 
 			<div className="grid grid-cols-12 gap-6">
+				<div className="col-span-12 space-y-4 lg:col-span-4">
+					{selectedUnit ? (
+						<UnitAvailabilitySummaryCard unit={selectedUnit} />
+					) : null}
+
+					{selectedBlock ? (
+						<Card className="shadow-none">
+							<CardHeader>
+								<CardTitle className="text-sm">Block Details</CardTitle>
+							</CardHeader>
+							<CardContent className="space-y-3">
+								<Row
+									label="Type"
+									value={
+										BLOCK_TYPE_CONFIG[selectedBlock.block_type]?.label ??
+										selectedBlock.block_type
+									}
+								/>
+								<Row
+									label="Start"
+									value={localizedDayjs(selectedBlock.start_date).format(
+										'MMM D, YYYY',
+									)}
+								/>
+								<Row
+									label="End"
+									value={localizedDayjs(selectedBlock.end_date).format(
+										'MMM D, YYYY',
+									)}
+								/>
+								{selectedBlock.reason ? (
+									<Row label="Reason" value={selectedBlock.reason} />
+								) : null}
+								{selectedBlock.block_type !== 'BOOKING' &&
+								selectedBlock.block_type !== 'LEASE' ? (
+									<PropertyPermissionGuard roles={['MANAGER']}>
+										<Button
+											size="sm"
+											variant="outline"
+											className="w-full border-rose-500 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950"
+											disabled={isDeleting}
+											onClick={() => void handleDeleteBlock(selectedBlock.id)}
+										>
+											{isDeleting ? <Spinner /> : null}
+											Remove Block
+										</Button>
+									</PropertyPermissionGuard>
+								) : null}
+							</CardContent>
+						</Card>
+					) : null}
+				</div>
+
 				{/* Calendar */}
 				<div className="col-span-12 lg:col-span-8">
 					<Card className="mb-3 shadow-none">
@@ -289,62 +344,12 @@ export function AvailabilityModule() {
 							)}
 						</CardContent>
 					</Card>
-				</div>
-
-				{/* Block detail / legend */}
-				<div className="col-span-12 space-y-4 lg:col-span-4">
-					{selectedBlock ? (
-						<Card className="shadow-none">
-							<CardHeader>
-								<CardTitle className="text-sm">Block Details</CardTitle>
-							</CardHeader>
-							<CardContent className="space-y-3">
-								<Row
-									label="Type"
-									value={
-										BLOCK_TYPE_CONFIG[selectedBlock.block_type]?.label ??
-										selectedBlock.block_type
-									}
-								/>
-								<Row
-									label="Start"
-									value={localizedDayjs(selectedBlock.start_date).format(
-										'MMM D, YYYY',
-									)}
-								/>
-								<Row
-									label="End"
-									value={localizedDayjs(selectedBlock.end_date).format(
-										'MMM D, YYYY',
-									)}
-								/>
-								{selectedBlock.reason ? (
-									<Row label="Reason" value={selectedBlock.reason} />
-								) : null}
-								{selectedBlock.block_type !== 'BOOKING' &&
-								selectedBlock.block_type !== 'LEASE' ? (
-									<PropertyPermissionGuard roles={['MANAGER']}>
-										<Button
-											size="sm"
-											variant="outline"
-											className="w-full border-rose-500 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950"
-											disabled={isDeleting}
-											onClick={() => void handleDeleteBlock(selectedBlock.id)}
-										>
-											{isDeleting ? <Spinner /> : null}
-											Remove Block
-										</Button>
-									</PropertyPermissionGuard>
-								) : null}
-							</CardContent>
-						</Card>
-					) : null}
 
 					<Card className="shadow-none">
 						<CardHeader>
 							<CardTitle className="text-sm">Legend</CardTitle>
 						</CardHeader>
-						<CardContent className="space-y-2">
+						<CardContent className="flex flex-wrap items-center gap-x-5 gap-y-2">
 							{Object.entries(BLOCK_TYPE_CONFIG).map(([type, cfg]) => (
 								<div key={type} className="flex items-center gap-2">
 									<span

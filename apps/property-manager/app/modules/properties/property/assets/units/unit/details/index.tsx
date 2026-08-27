@@ -2,6 +2,7 @@ import dayjs from 'dayjs'
 import { Calendar, Copy, Link } from 'lucide-react'
 import { toast } from 'sonner'
 import { useUnitContext } from '../context'
+import { UnitAvailabilityCard } from './components'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { TypographyMuted, TypographyP } from '~/components/ui/typography'
@@ -45,6 +46,7 @@ export function PropertyAssetUnitDetailsModule() {
 
 	return (
 		<div className="my-3 space-y-4">
+
 			{/* Additional Images */}
 			{images.length >= 2 ? (
 				<Card className="shadow-none">
@@ -192,6 +194,8 @@ export function PropertyAssetUnitDetailsModule() {
 					</CardContent>
 				</Card>
 			) : null}
+
+			<UnitAvailabilityCard unit={unit} />
 
 			{/* Timeline */}
 			<Card className="shadow-none">
