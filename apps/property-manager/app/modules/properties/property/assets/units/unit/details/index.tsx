@@ -46,7 +46,6 @@ export function PropertyAssetUnitDetailsModule() {
 
 	return (
 		<div className="my-3 space-y-4">
-			<UnitAvailabilityCard unit={unit} />
 
 			{/* Additional Images */}
 			{images.length >= 2 ? (
@@ -195,6 +194,8 @@ export function PropertyAssetUnitDetailsModule() {
 					</CardContent>
 				</Card>
 			) : null}
+
+			<UnitAvailabilityCard unit={unit} />
 
 			{/* Timeline */}
 			<Card className="shadow-none">
