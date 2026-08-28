@@ -50,10 +50,6 @@ export function AssignDialog({
 		},
 	)
 
-	const assignableUsers = (clientUsers?.rows ?? []).filter(
-		(user) => user.status === 'ClientUser.Status.Active',
-	)
-
 	const assignWorker = useAssignWorker()
 	const assignManager = useAssignManager()
 
@@ -111,7 +107,7 @@ export function AssignDialog({
 							/>
 						</SelectTrigger>
 						<SelectContent>
-							{assignableUsers.map((user) => (
+							{clientUsers?.rows.map((user) => (
 								<SelectItem key={user.id} value={user.id}>
 									{user.user?.name || 'Unnamed User'}
 								</SelectItem>

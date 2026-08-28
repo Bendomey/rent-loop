@@ -27,7 +27,10 @@ export const formatAmount = (amount: number, currency = 'GHS'): string => {
  * 100,000 it falls back to the exact amount; pair with a title/tooltip showing
  * the precise value.
  */
-export const formatAmountCompact = (amount: number, currency = 'GHS'): string => {
+export const formatAmountCompact = (
+	amount: number,
+	currency = 'GHS',
+): string => {
 	if (Math.abs(amount) < 100_000) return formatAmount(amount, currency)
 	const { symbol, locale } = getConfig(currency)
 	const formatted = amount.toLocaleString(locale, {
