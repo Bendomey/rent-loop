@@ -53,8 +53,8 @@ function AvailabilitySentence({
 				</>
 			) : here.kind === 'LEASE' ? (
 				<>
-					{unit.name} is <b>rented out</b> up to and including {longDate(here.to)}
-					.
+					{unit.name} is <b>rented out</b> up to and including{' '}
+					{longDate(here.to)}.
 				</>
 			) : (
 				<>
@@ -155,11 +155,11 @@ export function UnitAvailabilityCard({ unit }: { unit: PropertyUnit }) {
 							next && setView(next as 'calendar' | 'list')
 						}
 					>
-						<ToggleGroupItem value="calendar" className="gap-1.5 py-1.5 px-3.5">
+						<ToggleGroupItem value="calendar" className="gap-1.5 px-3.5 py-1.5">
 							<CalendarIcon className="size-4" />
 							Calendar
 						</ToggleGroupItem>
-						<ToggleGroupItem value="list" className="gap-1.5 py-1.5 px-3.5">
+						<ToggleGroupItem value="list" className="gap-1.5 px-3.5 py-1.5">
 							<ListIcon className="size-4" />
 							List
 						</ToggleGroupItem>

@@ -44,6 +44,7 @@ export function AssignDialog({
 	const { data: clientUsers, isPending: isLoadingUsers } = useGetClientUsers(
 		safeString(clientUser?.client_id),
 		{
+			filters: { status: 'ClientUser.Status.Active' },
 			pagination: { page: 1, per: 100 },
 			populate: ['User'],
 		},

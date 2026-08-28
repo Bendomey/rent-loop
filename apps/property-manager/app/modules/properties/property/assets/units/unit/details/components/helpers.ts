@@ -31,7 +31,8 @@ export const KIND_LABEL: Record<AvailabilityKind, string> = {
 export const KIND_CELL: Record<AvailabilityKind, string> = {
 	FREE: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-900',
 	BOOKING: 'bg-blue-600 text-white border-blue-600',
-	LEASE: 'bg-zinc-900 text-white border-zinc-900 dark:bg-zinc-200 dark:text-zinc-900 dark:border-zinc-200',
+	LEASE:
+		'bg-zinc-900 text-white border-zinc-900 dark:bg-zinc-200 dark:text-zinc-900 dark:border-zinc-200',
 	MAINTENANCE: 'bg-orange-500 text-white border-orange-500',
 	PERSONAL:
 		'bg-zinc-400 text-white border-zinc-400 dark:bg-zinc-600 dark:border-zinc-600',
@@ -58,7 +59,11 @@ export const HOLD_KINDS: {
 		label: 'It is being fixed',
 		hint: 'Repairs, painting, plumbing',
 	},
-	{ value: 'PERSONAL', label: 'You are keeping it', hint: 'Family, your own use' },
+	{
+		value: 'PERSONAL',
+		label: 'You are keeping it',
+		hint: 'Family, your own use',
+	},
 	{ value: 'OTHER', label: 'Something else', hint: 'Say why below' },
 ]
 
@@ -69,9 +74,7 @@ export const daysWord = (n: number) => (n === 1 ? '1 day' : `${n} days`)
 export const longDate = (d: Dayjs) => d.format('D MMMM YYYY')
 export const shortDate = (d: Dayjs) => d.format('D MMM')
 
-export function buildStretches(
-	blocks: UnitDateBlock[] | undefined,
-): Stretch[] {
+export function buildStretches(blocks: UnitDateBlock[] | undefined): Stretch[] {
 	if (!blocks) return []
 	return blocks
 		.map((b) => ({
@@ -104,10 +107,8 @@ export function currentStretch(
 	today: Dayjs,
 ): Stretch | null {
 	return (
-		stretches.find(
-			(s) =>
-				!today.isBefore(s.from) && !today.isAfter(s.to),
-		) ?? null
+		stretches.find((s) => !today.isBefore(s.from) && !today.isAfter(s.to)) ??
+		null
 	)
 }
 

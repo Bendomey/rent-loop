@@ -139,7 +139,7 @@ export function HoldDatesDialog({
 										className={cn(
 											'mt-0.5 size-4 shrink-0 rounded-full border-2',
 											on
-												? 'border-rose-500 bg-rose-500 ring-2 ring-inset ring-white dark:ring-zinc-950'
+												? 'border-rose-500 bg-rose-500 ring-2 ring-white ring-inset dark:ring-zinc-950'
 												: 'border-muted-foreground/40',
 										)}
 									/>
@@ -211,13 +211,13 @@ export function HoldDatesDialog({
 				) : fromD && toD && nights > 0 && kind ? (
 					<div className="rounded-lg border p-3">
 						<p className="font-serif text-base">
-							That is {nightsWord(nights)} off the market — {shortDate(fromD)} up
-							to and including {shortDate(toD)}.
+							That is {nightsWord(nights)} off the market — {shortDate(fromD)}{' '}
+							up to and including {shortDate(toD)}.
 						</p>
 						<p className="text-muted-foreground mt-1.5 text-sm">
 							{formatAmount(nightly * nights, unit.rent_fee_currency)} you will
-							not take in bookings. It shows as “
-							{KIND_LABEL[kind]}” on the calendar.
+							not take in bookings. It shows as “{KIND_LABEL[kind]}” on the
+							calendar.
 						</p>
 					</div>
 				) : (

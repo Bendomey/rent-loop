@@ -59,7 +59,8 @@ function MonthGrid({
 									: stretch
 										? cn('font-medium', KIND_CELL[stretch.kind])
 										: 'border-emerald-200 bg-emerald-50/60 font-medium text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300',
-								isToday && 'ring-2 ring-rose-600 ring-offset-1 ring-offset-background',
+								isToday &&
+									'ring-offset-background ring-2 ring-rose-600 ring-offset-1',
 							)}
 						>
 							{d.date()}
