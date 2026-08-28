@@ -68,6 +68,10 @@ export function TenantPaymentsModule() {
 			},
 			pagination: { page, per },
 			sorter,
+			search: {
+				query: searchParams.get('query') ?? undefined,
+				fields: ['code'],
+			},
 		},
 	)
 
