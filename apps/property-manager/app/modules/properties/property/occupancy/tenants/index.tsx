@@ -48,7 +48,7 @@ export function PropertyTenantsModule() {
 			sorter: { sort: 'desc', sort_by: 'created_at' },
 			search: {
 				query: searchParams.get('query') ?? undefined,
-				fields: ['first_name', 'last_name', 'other_names', 'email', 'phone'],
+				fields: ['first_name', 'last_name', 'other_names', 'email', 'phone', 'code'],
 			},
 		})
 
