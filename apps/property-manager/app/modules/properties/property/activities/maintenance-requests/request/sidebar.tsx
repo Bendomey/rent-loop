@@ -138,7 +138,9 @@ export function MaintenanceRequestSidebar({ mr, propertyId }: SidebarProps) {
 	})
 
 	const assignableUsers = (propertyMembers?.rows ?? []).flatMap((member) =>
-		member.client_user ? [member.client_user] : [],
+		member.client_user?.status === 'ClientUser.Status.Active'
+			? [member.client_user]
+			: [],
 	)
 
 	const handleStatusChange = (status: MaintenanceRequestStatus) => {

@@ -44,9 +44,14 @@ export function AssignDialog({
 	const { data: clientUsers, isPending: isLoadingUsers } = useGetClientUsers(
 		safeString(clientUser?.client_id),
 		{
+			filters: { status: 'ClientUser.Status.Active' },
 			pagination: { page: 1, per: 100 },
 			populate: ['User'],
 		},
+	)
+
+	const assignableUsers = (clientUsers?.rows ?? []).filter(
+		(user) => user.status === 'ClientUser.Status.Active',
 	)
 
 	const assignWorker = useAssignWorker()
@@ -106,7 +111,7 @@ export function AssignDialog({
 							/>
 						</SelectTrigger>
 						<SelectContent>
-							{clientUsers?.rows.map((user) => (
+							{assignableUsers.map((user) => (
 								<SelectItem key={user.id} value={user.id}>
 									{user.user?.name || 'Unnamed User'}
 								</SelectItem>
