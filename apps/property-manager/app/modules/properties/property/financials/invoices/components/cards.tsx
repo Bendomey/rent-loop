@@ -131,7 +131,7 @@ export function RentPaymentSectionCards({ propertyId }: Props) {
 						)}
 					</div>
 					<CardTitle
-						className="min-w-0 truncate text-3xl font-semibold tabular-nums @[250px]/card:text-4xl"
+						className="text-3xl font-semibold whitespace-nowrap tabular-nums @[250px]/card:text-4xl"
 						title={formatAmount(convertPesewasToCedis(thisMonthPaid))}
 					>
 						{isLoading ? (
@@ -167,7 +167,7 @@ export function RentPaymentSectionCards({ propertyId }: Props) {
 						)}
 					</div>
 					<CardTitle
-						className="min-w-0 truncate text-3xl font-semibold tabular-nums @[250px]/card:text-4xl"
+						className="text-3xl font-semibold whitespace-nowrap tabular-nums @[250px]/card:text-4xl"
 						title={formatAmount(convertPesewasToCedis(outstandingAmount))}
 					>
 						{isLoading ? (
@@ -191,7 +191,7 @@ export function RentPaymentSectionCards({ propertyId }: Props) {
 							All time
 						</Badge>
 					</div>
-					<CardTitle className="min-w-0 truncate text-3xl font-semibold tabular-nums @[250px]/card:text-4xl">
+					<CardTitle className="text-3xl font-semibold whitespace-nowrap tabular-nums @[250px]/card:text-4xl">
 						{isLoading ? (
 							<Skeleton className="h-8 w-16" />
 						) : (
@@ -221,7 +221,7 @@ export function RentPaymentSectionCards({ propertyId }: Props) {
 							Month-on-month
 						</Badge>
 					</div>
-					<CardTitle className="min-w-0 truncate text-3xl font-semibold tabular-nums @[250px]/card:text-4xl">
+					<CardTitle className="text-3xl font-semibold whitespace-nowrap tabular-nums @[250px]/card:text-4xl">
 						{isLoading ? (
 							<Skeleton className="h-8 w-20" />
 						) : (
