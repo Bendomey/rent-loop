@@ -30,6 +30,8 @@ import { localizedDayjs } from '~/lib/date'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 import {
 	getInvoiceContextTypeLabel,
+	getInvoicePayeeTypeLabel,
+	getInvoicePayerTypeLabel,
 	getInvoiceStatusLabel,
 } from '~/lib/invoice'
 import { safeString } from '~/lib/strings'
@@ -91,7 +93,7 @@ export function PropertyFinancialsPaymentsModule() {
 			sorter,
 			search: {
 				query: searchParams.get('query') ?? undefined,
-				fields: ['end_date', 'payer_lease_id', 'code'],
+				fields: ['code'],
 			},
 		},
 	)
@@ -140,10 +142,16 @@ export function PropertyFinancialsPaymentsModule() {
 				header: 'Type',
 				enableSorting: true,
 				meta: { sortKey: 'invoices.context_type' },
-				cell: ({ getValue }) => (
-					<span className="truncate text-xs text-zinc-600 dark:text-white">
-						{getInvoiceContextTypeLabel(getValue<Invoice['context_type']>())}
-					</span>
+				cell: ({ row }) => (
+					<div className="flex min-w-40 flex-col">
+						<span className="truncate text-xs text-zinc-600 dark:text-white">
+							{getInvoiceContextTypeLabel(row.original.context_type)}
+						</span>
+						<span className="text-muted-foreground truncate text-[11px]">
+							{getInvoicePayerTypeLabel(row.original.payer_type)} →{' '}
+							{getInvoicePayeeTypeLabel(row.original.payee_type)}
+						</span>
+					</div>
 				),
 			},
 			{

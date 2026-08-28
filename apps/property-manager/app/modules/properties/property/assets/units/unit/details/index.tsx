@@ -46,7 +46,6 @@ export function PropertyAssetUnitDetailsModule() {
 
 	return (
 		<div className="my-3 space-y-4">
-
 			{/* Additional Images */}
 			{images.length >= 2 ? (
 				<Card className="shadow-none">

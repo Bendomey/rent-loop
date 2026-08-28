@@ -3,7 +3,6 @@ import { useCubeQuery, useGetAnalyticsToken } from '~/api/analytics'
 import { Badge } from '~/components/ui/badge'
 import {
 	Card,
-	CardAction,
 	CardDescription,
 	CardFooter,
 	CardHeader,
@@ -11,7 +10,11 @@ import {
 } from '~/components/ui/card'
 import { Skeleton } from '~/components/ui/skeleton'
 import { localizedDayjs } from '~/lib/date'
-import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
+import {
+	convertPesewasToCedis,
+	formatAmount,
+	formatAmountCompact,
+} from '~/lib/format-amount'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
 
@@ -110,19 +113,12 @@ export function RentPaymentSectionCards({ propertyId }: Props) {
 			{/* Rental Received this month */}
 			<Card className="hover:from-primary/10 @container/card gap-3 py-4 transition-all duration-300 ease-out hover:-translate-y-[2px] hover:scale-[1.02] hover:shadow-lg">
 				<CardHeader>
-					<CardDescription>Rental Received (this month)</CardDescription>
-					<CardTitle className="text-3xl font-semibold tabular-nums @[250px]/card:text-4xl">
-						{isLoading ? (
-							<Skeleton className="h-8 w-32" />
-						) : (
-							formatAmount(convertPesewasToCedis(thisMonthPaid))
-						)}
-					</CardTitle>
-					<CardAction>
+					<div className="flex flex-col gap-1.5 @[260px]/card:flex-row @[260px]/card:items-start @[260px]/card:justify-between">
+						<CardDescription>Rental Received (this month)</CardDescription>
 						{!isLoading && (
 							<Badge
 								variant="outline"
-								className={`gap-1 ${revDelta >= 0 ? 'text-emerald-600' : 'text-red-600'}`}
+								className={`w-fit gap-1 ${revDelta >= 0 ? 'text-emerald-600' : 'text-red-600'}`}
 							>
 								{revDelta >= 0 ? (
 									<TrendingUp className="h-4 w-4" />
@@ -133,7 +129,17 @@ export function RentPaymentSectionCards({ propertyId }: Props) {
 								{revDelta.toFixed(1)}%
 							</Badge>
 						)}
-					</CardAction>
+					</div>
+					<CardTitle
+						className="min-w-0 truncate text-3xl font-semibold tabular-nums @[250px]/card:text-4xl"
+						title={formatAmount(convertPesewasToCedis(thisMonthPaid))}
+					>
+						{isLoading ? (
+							<Skeleton className="h-8 w-32" />
+						) : (
+							formatAmountCompact(convertPesewasToCedis(thisMonthPaid))
+						)}
+					</CardTitle>
 				</CardHeader>
 				<CardFooter className="text-muted-foreground text-xs">
 					Compared to {formatAmount(convertPesewasToCedis(lastMonthPaid))} last
@@ -144,19 +150,12 @@ export function RentPaymentSectionCards({ propertyId }: Props) {
 			{/* Outstanding Amount */}
 			<Card className="hover:from-primary/10 @container/card gap-3 py-4 transition-all duration-300 ease-out hover:-translate-y-[2px] hover:scale-[1.02] hover:shadow-lg">
 				<CardHeader>
-					<CardDescription>Outstanding Amount</CardDescription>
-					<CardTitle className="text-3xl font-semibold tabular-nums @[25px]/card:text-4xl">
-						{isLoading ? (
-							<Skeleton className="h-8 w-32" />
-						) : (
-							formatAmount(convertPesewasToCedis(outstandingAmount))
-						)}
-					</CardTitle>
-					<CardAction>
+					<div className="flex flex-col gap-1.5 @[260px]/card:flex-row @[260px]/card:items-start @[260px]/card:justify-between">
+						<CardDescription>Outstanding Amount</CardDescription>
 						{!isLoading && (
 							<Badge
 								variant="outline"
-								className={`gap-1 ${outstandingAmount > 0 ? 'text-red-600' : 'text-emerald-600'}`}
+								className={`w-fit gap-1 ${outstandingAmount > 0 ? 'text-red-600' : 'text-emerald-600'}`}
 							>
 								{outstandingAmount > 0 ? (
 									<TrendingDown className="h-4 w-4" />
@@ -166,7 +165,17 @@ export function RentPaymentSectionCards({ propertyId }: Props) {
 								{outstandingAmount > 0 ? 'Pending' : 'Clear'}
 							</Badge>
 						)}
-					</CardAction>
+					</div>
+					<CardTitle
+						className="min-w-0 truncate text-3xl font-semibold tabular-nums @[250px]/card:text-4xl"
+						title={formatAmount(convertPesewasToCedis(outstandingAmount))}
+					>
+						{isLoading ? (
+							<Skeleton className="h-8 w-32" />
+						) : (
+							formatAmountCompact(convertPesewasToCedis(outstandingAmount))
+						)}
+					</CardTitle>
 				</CardHeader>
 				<CardFooter className="text-muted-foreground text-xs">
 					Issued &amp; partially paid invoices
@@ -176,19 +185,19 @@ export function RentPaymentSectionCards({ propertyId }: Props) {
 			{/* Total Invoices */}
 			<Card className="hover:from-primary/10 @container/card gap-3 py-4 transition-all duration-300 ease-out hover:-translate-y-[2px] hover:scale-[1.02] hover:shadow-lg">
 				<CardHeader>
-					<CardDescription>Total Invoices</CardDescription>
-					<CardTitle className="text-3xl font-semibold tabular-nums @[250px]/card:text-4xl">
+					<div className="flex flex-col gap-1.5 @[260px]/card:flex-row @[260px]/card:items-start @[260px]/card:justify-between">
+						<CardDescription>Total Invoices</CardDescription>
+						<Badge variant="outline" className="w-fit gap-1">
+							All time
+						</Badge>
+					</div>
+					<CardTitle className="min-w-0 truncate text-3xl font-semibold tabular-nums @[250px]/card:text-4xl">
 						{isLoading ? (
 							<Skeleton className="h-8 w-16" />
 						) : (
 							totalCount.toLocaleString()
 						)}
 					</CardTitle>
-					<CardAction>
-						<Badge variant="outline" className="gap-1">
-							All time
-						</Badge>
-					</CardAction>
 				</CardHeader>
 				<CardFooter className="text-muted-foreground text-xs">
 					All invoices for this property
@@ -198,18 +207,11 @@ export function RentPaymentSectionCards({ propertyId }: Props) {
 			{/* Revenue Growth MoM */}
 			<Card className="hover:from-primary/10 @container/card gap-3 py-4 transition-all duration-300 ease-out hover:-translate-y-[2px] hover:scale-[1.02] hover:shadow-lg">
 				<CardHeader>
-					<CardDescription>Revenue Growth (MoM)</CardDescription>
-					<CardTitle className="text-3xl font-semibold tabular-nums @[250px]/card:text-4xl">
-						{isLoading ? (
-							<Skeleton className="h-8 w-20" />
-						) : (
-							`${revDelta >= 0 ? '+' : ''}${revDelta.toFixed(1)}%`
-						)}
-					</CardTitle>
-					<CardAction>
+					<div className="flex flex-col gap-1.5 @[260px]/card:flex-row @[260px]/card:items-start @[260px]/card:justify-between">
+						<CardDescription>Revenue Growth (MoM)</CardDescription>
 						<Badge
 							variant="outline"
-							className={`gap-1 ${revDelta >= 0 ? 'text-emerald-600' : 'text-red-600'}`}
+							className={`w-fit gap-1 ${revDelta >= 0 ? 'text-emerald-600' : 'text-red-600'}`}
 						>
 							{revDelta >= 0 ? (
 								<TrendingUp className="h-4 w-4" />
@@ -218,7 +220,14 @@ export function RentPaymentSectionCards({ propertyId }: Props) {
 							)}
 							Month-on-month
 						</Badge>
-					</CardAction>
+					</div>
+					<CardTitle className="min-w-0 truncate text-3xl font-semibold tabular-nums @[250px]/card:text-4xl">
+						{isLoading ? (
+							<Skeleton className="h-8 w-20" />
+						) : (
+							`${revDelta >= 0 ? '+' : ''}${revDelta.toFixed(1)}%`
+						)}
+					</CardTitle>
 				</CardHeader>
 				<CardFooter className="text-muted-foreground text-xs">
 					Based on paid invoices this vs last month
