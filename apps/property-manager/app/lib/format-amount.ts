@@ -23,15 +23,15 @@ export const formatAmount = (amount: number, currency = 'GHS'): string => {
 }
 
 /**
- * Short form for headline figures on cards — "GH₵ 250K", "GH₵ 3.4M". Below
- * 100,000 it falls back to the exact amount; pair with a title/tooltip showing
- * the precise value.
+ * Short form for headline figures on cards — "GH₵ 950", "GH₵ 17.5K",
+ * "GH₵ 3.4M". Small values are left intact; larger ones are abbreviated so the
+ * number never has to wrap or truncate. Pair with a title/tooltip carrying the
+ * exact amount from `formatAmount`.
  */
 export const formatAmountCompact = (
 	amount: number,
 	currency = 'GHS',
 ): string => {
-	if (Math.abs(amount) < 100_000) return formatAmount(amount, currency)
 	const { symbol, locale } = getConfig(currency)
 	const formatted = amount.toLocaleString(locale, {
 		notation: 'compact',
