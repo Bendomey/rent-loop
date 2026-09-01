@@ -296,15 +296,44 @@ and say so at the point the duration is chosen, not at submission.
 
 ## 6. Backfill
 
-The eight Pending leases holding no block need one. A gormigrate job in the
-shape of the existing backfill, narrowed to leases with no block row.
+A gormigrate job in the shape of the existing backfill
+(`init/migration/jobs/backfill-unit-date-blocks-from-leases.go`), selecting
+**every lease with no block row regardless of status**, rather than filtering
+on `status IN ('Pending','Active')` the way the original job did.
+
+The practical delta today is still the eight Pending leases — §1's counts show
+Active, Completed and Terminated already at full coverage. Selecting on the
+missing row instead of the status buys the job independence from those counts
+staying true, and catches anything the original run's `ON CONFLICT DO NOTHING`
+dropped.
+
+**`Lease.Status.Cancelled` is the one exclusion.** §3 has `CancelLease`
+release the dates; backfilling a cancelled lease would manufacture the exact
+claim the runtime is being changed to remove.
+
+**Terminated leases need an end date the original job cannot produce.** That
+job derives `end_date` from `move_in_date + stay_duration` for every row. For
+a lease ended early that writes a block running to the *original* term end — a
+live claim on a room the tenant has already left, which is what §3's truncate
+rule exists to prevent. Unlike the stale past blocks of §7, which never
+overlap a future window, an overstated terminated block sits inside future
+windows and will make the §4 guard refuse valid leases. So `end_date` becomes
+status-dependent: `Terminated` takes the actual end (`leases.terminated_at`,
+or the `LeaseTermination` record's effective date), everything else keeps the
+duration-derived value. Completed leases ran to term, so the two agree there.
 
 **Trap:** `AutoMigrate` runs *before* the gormigrate job list in this repo,
 so a job may add rows but must not rename a column or add a NOT NULL one to a
-populated table. This is why `SlotsOccupied` is `*int` and nullable:
-AutoMigrate adds it to the existing `unit_date_blocks` rows without a default
-and without failing, and `NULL` already carries the meaning those rows need —
-absolute. No separate migration job is required for the column itself.
+populated table. This is why `SlotsOccupied` is `*int` and nullable: the table
+is populated, and `NULL` already carries the meaning those rows need —
+absolute.
+
+`slots_occupied` still gets its own `ADD COLUMN IF NOT EXISTS` job, per this
+repo's convention for every added column (`AddLeaseMoveOutDate`,
+`AddTenantCode`, and the rest). AutoMigrate would also add it, but the backfill
+job below *writes* the column, and that dependency should be an ordered job
+rather than an implicit reliance on AutoMigrate having run first. The column
+job is registered immediately before the backfill.
 
 ---
 
@@ -318,6 +347,12 @@ absolute. No separate migration job is required for the column itself.
   a confirmed booking can refuse a lease. That is the intent (§4), but it is
   a new failure mode for a flow PMs use daily, and it deserves its own
   release note rather than arriving silently.
+- **A refusal has no override.** The guard refuses outright; there is no
+  proceed-anyway path. A PM who knows the block is wrong — the tenant left
+  early, the booking fell through — resolves it in the flow that owns the
+  block: cancel the booking, terminate the lease, delete the manual block.
+  The refusal message should say which block stands in the way so that route
+  is obvious, or the failure reads as a bug.
 - **Capacity is trusted.** The sweep is only as correct as
   `max_occupants_allowed`, which defaults to 1 and has never gated anything
   before. A unit whose capacity was left at the default while housing two
@@ -346,11 +381,7 @@ absolute. No separate migration job is required for the column itself.
 
 ## Open questions for planning
 
-1. **Does the guard refuse, or warn?** A hard refusal is correct and is what
-   `ConfirmBooking` does. A PM overriding a block — the tenant left early,
-   the booking fell through — has no path today except deleting the block.
-   Worth deciding before implementation, not during.
-2. **Beds become real entities later.** Counting is deliberately enough for
+1. **Beds become real entities later.** Counting is deliberately enough for
    this spec: availability only ever asks *how many* beds are taken, never
    which. Modelling beds as entities — so a block, a lease or a booking names
    the bunk it occupies — is intended future work, not a gap being overlooked.
@@ -362,4 +393,5 @@ Settled during design: a `BOOKING` occupies one slot rather than the whole
 unit; scope is carried by `slots_occupied` on the block rather than inferred
 from `block_type`; manual blocks default to absolute and the UI offers no
 alternative in this release; and a saturated day refuses outright rather
-than warning.
+than warning — the guard is a hard refusal, matching `ConfirmBooking`, with
+no override or proceed-anyway path.

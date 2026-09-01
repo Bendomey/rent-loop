@@ -15379,6 +15379,12 @@ const docTemplate = `{
                         "name": "to",
                         "in": "query",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Lease whose own renewal chain must not count toward saturation",
+                        "name": "exclude_lease_id",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -15388,9 +15394,20 @@ const docTemplate = `{
                             "type": "object",
                             "properties": {
                                 "data": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/definitions/transformations.AdminOutputUnitDateBlock"
+                                    "type": "object",
+                                    "properties": {
+                                        "blocks": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.AdminOutputUnitDateBlock"
+                                            }
+                                        },
+                                        "saturated_ranges": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.OutputSaturatedRange"
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -22399,6 +22416,10 @@ const docTemplate = `{
                 "reason": {
                     "type": "string"
                 },
+                "slots_occupied": {
+                    "type": "integer",
+                    "minimum": 1
+                },
                 "start_date": {
                     "type": "string"
                 }
@@ -25462,6 +25483,9 @@ const docTemplate = `{
                 "reason": {
                     "type": "string"
                 },
+                "slots_occupied": {
+                    "type": "integer"
+                },
                 "start_date": {
                     "type": "string"
                 },
@@ -28139,6 +28163,19 @@ const docTemplate = `{
                     "type": "string",
                     "format": "date-time",
                     "example": "2023-01-01T00:00:00Z"
+                }
+            }
+        },
+        "transformations.OutputSaturatedRange": {
+            "type": "object",
+            "properties": {
+                "end_date": {
+                    "type": "string",
+                    "example": "2026-09-10"
+                },
+                "start_date": {
+                    "type": "string",
+                    "example": "2026-09-01"
                 }
             }
         },

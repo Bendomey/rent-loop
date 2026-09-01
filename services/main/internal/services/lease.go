@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -21,6 +22,9 @@ import (
 type LeaseService interface {
 	CreateLease(context context.Context, input CreateLeaseInput) (*models.Lease, error)
 	UpdateLease(context context.Context, input UpdateLeaseInput) (*models.Lease, error)
+	// ChainLeaseIDs returns every lease in a lease's renewal lineage — its
+	// ancestors, itself, and their descendants.
+	ChainLeaseIDs(context context.Context, leaseID string) ([]string, error)
 	GetByIDWithPopulate(context context.Context, query repository.GetLeaseQuery) (*models.Lease, error)
 	// GetCurrentForAccount returns the account's Active lease, or its most
 	// recent by move-in date. The fallback for attributing money to a term
@@ -140,6 +144,134 @@ func leaseFromCreateInput(input CreateLeaseInput) models.Lease {
 	}
 }
 
+// ChainLeaseIDs returns every lease in the given lease's renewal lineage —
+// its ancestors, itself, and their descendants.
+//
+// A same-unit renewal overlaps nothing of its parent's term, but a chain of
+// three terms in one room must not have term two refuse term three.
+func (s *leaseService) ChainLeaseIDs(ctx context.Context, leaseID string) ([]string, error) {
+	// A cyclic parent_lease_id would otherwise spin here forever, and a
+	// lineage is small enough that tracking what has been seen costs nothing.
+	seen := map[string]bool{}
+
+	root := leaseID
+	for !seen[root] {
+		seen[root] = true
+
+		lease, err := s.repo.GetOneWithPopulate(ctx, repository.GetLeaseQuery{ID: root})
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				break
+			}
+			return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+				Err:      err,
+				Metadata: map[string]string{"function": "ChainLeaseIDs", "action": "walking to the root"},
+			})
+		}
+		if lease.ParentLeaseId == nil {
+			break
+		}
+		root = *lease.ParentLeaseId
+	}
+
+	collected := map[string]bool{root: true}
+	ids := []string{root}
+	for queue := []string{root}; len(queue) > 0; {
+		current := queue[0]
+		queue = queue[1:]
+
+		children, err := s.repo.ListChildren(ctx, current)
+		if err != nil {
+			return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+				Err:      err,
+				Metadata: map[string]string{"function": "ChainLeaseIDs", "action": "listing children"},
+			})
+		}
+		for _, child := range *children {
+			id := child.ID.String()
+			if collected[id] {
+				continue
+			}
+			collected[id] = true
+			ids = append(ids, id)
+			queue = append(queue, id)
+		}
+	}
+
+	return ids, nil
+}
+
+func leaseBlockInput(lease models.Lease) CreateSystemBlockInput {
+	end := lease.MoveOutDate
+	if end == nil {
+		derived := leaseEndDate(lease.MoveInDate, lease.StayDuration, lease.StayDurationFrequency)
+		end = &derived
+	}
+
+	leaseID := lease.ID.String()
+	slot := 1
+	startDate, endDate := BlockRange(lease.MoveInDate, *end)
+
+	return CreateSystemBlockInput{
+		UnitID:        lease.UnitId,
+		StartDate:     startDate,
+		EndDate:       endDate,
+		BlockType:     "LEASE",
+		SlotsOccupied: &slot,
+		LeaseID:       &leaseID,
+		Reason:        fmt.Sprintf("System block for lease #%s", lease.Code),
+	}
+}
+
+// assertUnitFreeForTerm refuses a term the unit cannot carry.
+//
+// The caller must already hold the unit's lock: the blocks read here are only
+// a decision if nothing can claim the same dates before the write lands.
+//
+// exclude names the leases whose own blocks must not count — a term being
+// moved, or the renewal lineage a new term continues.
+func (s *leaseService) assertUnitFreeForTerm(
+	ctx context.Context,
+	caller, unitID string,
+	start, end time.Time,
+	exclude []string,
+) error {
+	unit, unitErr := s.unitService.GetUnitByID(ctx, unitID)
+	if unitErr != nil {
+		return unitErr
+	}
+
+	// Asked in the units the blocks are stored in, so the answer matches what
+	// the write will actually claim.
+	from, to := BlockRange(start, end)
+
+	blocks, blocksErr := s.unitDateBlockService.GetAvailability(ctx, unitID, from, to)
+	if blocksErr != nil {
+		return pkg.InternalServerError(blocksErr.Error(), &pkg.RentLoopErrorParams{
+			Err:      blocksErr,
+			Metadata: map[string]string{"function": caller, "action": "reading the unit's claims"},
+		})
+	}
+
+	ranges := SaturatedRanges(blocksExcludingChain(blocks, exclude), unit.MaxOccupantsAllowed)
+
+	// Name the span that blocks the term: a refusal the PM cannot trace back
+	// to a booking or a lease reads as a bug rather than a decision.
+	if clash := FirstSaturatedOverlap(from, to, ranges); clash != nil {
+		return pkg.ConflictError("UnitDatesUnavailableForTerm", &pkg.RentLoopErrorParams{
+			Err: errors.New("the unit is at capacity for part of this term"),
+			Metadata: map[string]string{
+				"function":         caller,
+				"action":           "checking the unit's availability",
+				"unavailable_from": clash.Start.Format("2006-01-02"),
+				"unavailable_to":   clash.End.Format("2006-01-02"),
+			},
+		})
+	}
+
+	return nil
+}
+
 func (s *leaseService) CreateLease(ctx context.Context, input CreateLeaseInput) (*models.Lease, error) {
 	metaJson, marshallErr := lib.InterfaceToJSON(input.Meta)
 	if marshallErr != nil {
@@ -154,6 +286,31 @@ func (s *leaseService) CreateLease(ctx context.Context, input CreateLeaseInput) 
 
 	moveOutDate := leaseEndDate(input.MoveInDate, input.StayDuration, input.StayDurationFrequency)
 
+	// Taken before the availability read and held to commit, so two approvals
+	// racing for the last bed in a unit resolve one after the other instead of
+	// both seeing it free.
+	if lockErr := s.unitDateBlockService.LockUnit(ctx, input.UnitId); lockErr != nil {
+		return nil, pkg.InternalServerError(lockErr.Error(), &pkg.RentLoopErrorParams{
+			Err:      lockErr,
+			Metadata: map[string]string{"function": "CreateLease", "action": "locking the unit"},
+		})
+	}
+
+	var chain []string
+	if input.ParentLeaseId != nil {
+		var chainErr error
+		chain, chainErr = s.ChainLeaseIDs(ctx, *input.ParentLeaseId)
+		if chainErr != nil {
+			return nil, chainErr
+		}
+	}
+
+	if guardErr := s.assertUnitFreeForTerm(
+		ctx, "CreateLease", input.UnitId, input.MoveInDate, moveOutDate, chain,
+	); guardErr != nil {
+		return nil, guardErr
+	}
+
 	// Meta and MoveOutDate are computed here rather than mapped, so they are
 	// assigned onto the mapped struct.
 	lease := leaseFromCreateInput(input)
@@ -167,6 +324,18 @@ func (s *leaseService) CreateLease(ctx context.Context, input CreateLeaseInput) 
 			Metadata: map[string]string{
 				"function": "CreateLease",
 				"action":   "creating lease",
+			},
+		})
+	}
+
+	// A dropped write here is a double-book, so it rides the caller's
+	// transaction and its failure rolls the lease back.
+	if _, blockErr := s.unitDateBlockService.CreateSystemBlock(ctx, leaseBlockInput(lease)); blockErr != nil {
+		return nil, pkg.InternalServerError(blockErr.Error(), &pkg.RentLoopErrorParams{
+			Err: blockErr,
+			Metadata: map[string]string{
+				"function": "CreateLease",
+				"action":   "claiming the unit's dates",
 			},
 		})
 	}
@@ -237,6 +406,12 @@ func (s *leaseService) UpdateLease(ctx context.Context, input UpdateLeaseInput) 
 		return nil, pkg.BadRequestError("LeaseIsNotPending", nil)
 	}
 
+	// The term, the rent schedule and the unit's date claim move together or
+	// not at all, and the unit lock the term guard takes is only held for the
+	// life of a transaction.
+	tx := s.appCtx.DB.Begin()
+	ctx = lib.WithTransaction(ctx, tx)
+
 	if input.Status != nil {
 		lease.Status = *input.Status
 	}
@@ -267,6 +442,26 @@ func (s *leaseService) UpdateLease(ctx context.Context, input UpdateLeaseInput) 
 		// Previously-sent thresholds were computed against the old MoveOutDate
 		// and no longer apply now that it has moved.
 		lease.RemindersSent = pq.StringArray{}
+
+		// Editing a term is another way of claiming dates, so it answers to the
+		// same guard creating one does — otherwise a pending lease could be slid
+		// onto a span the unit has no room for. Its own block is excluded: it is
+		// the thing being moved.
+		if lockErr := s.unitDateBlockService.LockUnit(ctx, lease.UnitId); lockErr != nil {
+			tx.Rollback()
+			return nil, pkg.InternalServerError(lockErr.Error(), &pkg.RentLoopErrorParams{
+				Err:      lockErr,
+				Metadata: map[string]string{"function": "UpdateLease", "action": "locking the unit"},
+			})
+		}
+
+		if guardErr := s.assertUnitFreeForTerm(
+			ctx, "UpdateLease", lease.UnitId, lease.MoveInDate, moveOutDate,
+			[]string{lease.ID.String()},
+		); guardErr != nil {
+			tx.Rollback()
+			return nil, guardErr
+		}
 	}
 
 	if input.LeaseAgreementDocumentUrl != nil {
@@ -276,6 +471,7 @@ func (s *leaseService) UpdateLease(ctx context.Context, input UpdateLeaseInput) 
 	if input.Meta != nil {
 		meta, marshallErr := lib.InterfaceToJSON(*input.Meta)
 		if marshallErr != nil {
+			tx.Rollback()
 			return nil, pkg.InternalServerError(marshallErr.Error(), &pkg.RentLoopErrorParams{
 				Err: marshallErr,
 				Metadata: map[string]string{
@@ -334,6 +530,7 @@ func (s *leaseService) UpdateLease(ctx context.Context, input UpdateLeaseInput) 
 				StayDurationFrequency: lease.StayDurationFrequency,
 			})
 			if rederiveErr != nil {
+				tx.Rollback()
 				return nil, rederiveErr
 			}
 		}
@@ -341,12 +538,34 @@ func (s *leaseService) UpdateLease(ctx context.Context, input UpdateLeaseInput) 
 
 	err := s.repo.Update(ctx, lease)
 	if err != nil {
+		tx.Rollback()
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
 			Err: err,
 			Metadata: map[string]string{
 				"function": "UpdateLease",
 				"action":   "updating lease",
 			},
+		})
+	}
+
+	if input.MoveInDate != nil || input.StayDurationFrequency != nil || input.StayDuration != nil {
+		if blockErr := s.unitDateBlockService.MoveLeaseBlock(ctx, *lease); blockErr != nil {
+			tx.Rollback()
+			return nil, pkg.InternalServerError(blockErr.Error(), &pkg.RentLoopErrorParams{
+				Err: blockErr,
+				Metadata: map[string]string{
+					"function": "UpdateLease",
+					"action":   "moving the unit's date claim",
+				},
+			})
+		}
+	}
+
+	if commitErr := tx.Commit().Error; commitErr != nil {
+		tx.Rollback()
+		return nil, pkg.InternalServerError(commitErr.Error(), &pkg.RentLoopErrorParams{
+			Err:      commitErr,
+			Metadata: map[string]string{"function": "UpdateLease", "action": "committing transaction"},
 		})
 	}
 
@@ -597,24 +816,6 @@ func (s *leaseService) ActivateLease(ctx context.Context, input ActivateLeaseInp
 		})
 	}
 
-	// Create UnitDateBlock for the lease duration (for availability calendar)
-	go func() {
-		leaseID := lease.ID.String()
-		moveOutDate := lease.MoveOutDate
-		if moveOutDate == nil {
-			computed := leaseEndDate(lease.MoveInDate, lease.StayDuration, lease.StayDurationFrequency)
-			moveOutDate = &computed
-		}
-		_, _ = s.unitDateBlockService.CreateSystemBlock(context.Background(), CreateSystemBlockInput{
-			UnitID:    lease.UnitId,
-			StartDate: lease.MoveInDate,
-			EndDate:   *moveOutDate,
-			BlockType: "LEASE",
-			LeaseID:   &leaseID,
-			Reason:    "Active lease",
-		})
-	}()
-
 	startDate := lease.MoveInDate.Format("January 2, 2006")
 
 	smsMessage := strings.NewReplacer(
@@ -695,13 +896,42 @@ func (s *leaseService) CancelLease(ctx context.Context, input CancelLeaseInput) 
 	lease.CancelledAt = &now
 	lease.CancelledById = &input.ClientUserId
 
-	err := s.repo.Update(ctx, lease)
+	// Status and claim move together. Cancelling is one-way — a retry stops at
+	// LeaseIsAlreadyCancelled — so a released status with a surviving block
+	// would strand the room with no way back.
+	transaction := s.appCtx.DB.Begin()
+	transCtx := lib.WithTransaction(ctx, transaction)
+
+	err := s.repo.Update(transCtx, lease)
 	if err != nil {
+		transaction.Rollback()
 		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
 			Err: err,
 			Metadata: map[string]string{
 				"function": "CancelLease",
 				"action":   "updating lease",
+			},
+		})
+	}
+
+	if blockErr := s.unitDateBlockService.ReleaseLeaseBlock(transCtx, lease.ID.String()); blockErr != nil {
+		transaction.Rollback()
+		return pkg.InternalServerError(blockErr.Error(), &pkg.RentLoopErrorParams{
+			Err: blockErr,
+			Metadata: map[string]string{
+				"function": "CancelLease",
+				"action":   "releasing the unit's date claim",
+			},
+		})
+	}
+
+	if commitErr := transaction.Commit().Error; commitErr != nil {
+		transaction.Rollback()
+		return pkg.InternalServerError(commitErr.Error(), &pkg.RentLoopErrorParams{
+			Err: commitErr,
+			Metadata: map[string]string{
+				"function": "CancelLease",
+				"action":   "committing cancellation",
 			},
 		})
 	}

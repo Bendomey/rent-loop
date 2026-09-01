@@ -793,6 +793,9 @@ definitions:
         type: string
       reason:
         type: string
+      slots_occupied:
+        minimum: 1
+        type: integer
       start_date:
         type: string
     required:
@@ -3026,6 +3029,8 @@ definitions:
         type: string
       reason:
         type: string
+      slots_occupied:
+        type: integer
       start_date:
         type: string
       unit_id:
@@ -4972,6 +4977,15 @@ definitions:
       updated_at:
         example: "2023-01-01T00:00:00Z"
         format: date-time
+        type: string
+    type: object
+  transformations.OutputSaturatedRange:
+    properties:
+      end_date:
+        example: "2026-09-10"
+        type: string
+      start_date:
+        example: "2026-09-01"
         type: string
     type: object
   transformations.OutputSession:
@@ -15515,6 +15529,10 @@ paths:
         name: to
         required: true
         type: string
+      - description: Lease whose own renewal chain must not count toward saturation
+        in: query
+        name: exclude_lease_id
+        type: string
       produces:
       - application/json
       responses:
@@ -15523,9 +15541,16 @@ paths:
           schema:
             properties:
               data:
-                items:
-                  $ref: '#/definitions/transformations.AdminOutputUnitDateBlock'
-                type: array
+                properties:
+                  blocks:
+                    items:
+                      $ref: '#/definitions/transformations.AdminOutputUnitDateBlock'
+                    type: array
+                  saturated_ranges:
+                    items:
+                      $ref: '#/definitions/transformations.OutputSaturatedRange'
+                    type: array
+                type: object
             type: object
         "400":
           description: Bad Request

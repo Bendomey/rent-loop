@@ -135,6 +135,8 @@ func ServiceAutoMigration(db *gorm.DB) error {
 		jobs.AddMaintenanceRequestAssets(),
 		jobs.AddUserProfilePhotoUrl(),
 		jobs.AddTenantCode(),
+		jobs.AddUnitDateBlockSlotsOccupied(),
+		jobs.BackfillUnitDateBlocksForAllLeases(),
 	}
 
 	m = gormigrate.New(db, gormigrate.DefaultOptions, migrations)

@@ -21,6 +21,10 @@ type UnitDateBlock struct {
 
 	BlockType string `gorm:"not null;index;"`
 
+	// How much of the unit this block holds. NULL is absolute — the whole
+	// unit. A number is that many beds.
+	SlotsOccupied *int `gorm:"index;"`
+
 	BookingID *string `gorm:"index;"`
 	Booking   *Booking
 

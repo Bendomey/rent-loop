@@ -9,6 +9,7 @@ import (
 	"gorm.io/datatypes"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
+	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/internal/services"
 	"github.com/Bendomey/rent-loop/services/main/internal/transformations"
@@ -22,6 +23,7 @@ type BookingHandler struct {
 	unitDateBlockService services.UnitDateBlockService
 	propertyService      services.PropertyService
 	unitService          services.UnitService
+	leaseService         services.LeaseService
 }
 
 func NewBookingHandler(appCtx pkg.AppContext, svcs services.Services) BookingHandler {
@@ -31,6 +33,7 @@ func NewBookingHandler(appCtx pkg.AppContext, svcs services.Services) BookingHan
 		unitDateBlockService: svcs.UnitDateBlockService,
 		propertyService:      svcs.PropertyService,
 		unitService:          svcs.UnitService,
+		leaseService:         svcs.LeaseService,
 	}
 }
 
@@ -64,10 +67,11 @@ type CancelBookingRequest struct {
 }
 
 type CreateDateBlockRequest struct {
-	StartDate time.Time `json:"start_date" validate:"required"`
-	EndDate   time.Time `json:"end_date"   validate:"required"`
-	BlockType string    `json:"block_type" validate:"required,oneof=MAINTENANCE PERSONAL OTHER"`
-	Reason    string    `json:"reason"`
+	StartDate     time.Time `json:"start_date"     validate:"required"`
+	EndDate       time.Time `json:"end_date"       validate:"required"`
+	BlockType     string    `json:"block_type"     validate:"required,oneof=MAINTENANCE PERSONAL OTHER"`
+	SlotsOccupied *int      `json:"slots_occupied" validate:"omitempty,min=1"`
+	Reason        string    `json:"reason"`
 }
 
 type PublicCreateBookingRequest struct {
@@ -506,8 +510,9 @@ func (h *BookingHandler) CancelBooking(w http.ResponseWriter, r *http.Request) {
 }
 
 type GetAvailabilityFilterRequest struct {
-	From string `json:"from" validate:"required,datetime=2006-01-02T15:04:05Z07:00"`
-	To   string `json:"to"   validate:"required,datetime=2006-01-02T15:04:05Z07:00"`
+	From           string `json:"from"             validate:"required,datetime=2006-01-02T15:04:05Z07:00"`
+	To             string `json:"to"               validate:"required,datetime=2006-01-02T15:04:05Z07:00"`
+	ExcludeLeaseID string `json:"exclude_lease_id" validate:"omitempty,uuid"`
 }
 
 // GetAvailability godoc
@@ -517,23 +522,25 @@ type GetAvailabilityFilterRequest struct {
 //	@Security	BearerAuth
 //	@Produce	json
 //
-//	@Param		client_id	path		string	true	"Client ID"
+//	@Param		client_id			path		string	true	"Client ID"
 //
-//	@Param		property_id	path		string	true	"Property ID"
-//	@Param		unit_id		path		string	true	"Unit ID"
-//	@Param		from		query		string	true	"Start date (RFC3339)"
-//	@Param		to			query		string	true	"End date (RFC3339)"
-//	@Success	200			{object}	object{data=[]transformations.AdminOutputUnitDateBlock}
-//	@Failure	400			{object}	lib.HTTPError
-//	@Failure	401			{object}	string
-//	@Failure	500			{object}	string
+//	@Param		property_id			path		string	true	"Property ID"
+//	@Param		unit_id				path		string	true	"Unit ID"
+//	@Param		from				query		string	true	"Start date (RFC3339)"
+//	@Param		to					query		string	true	"End date (RFC3339)"
+//	@Param		exclude_lease_id	query		string	false	"Lease whose own renewal chain must not count toward saturation"
+//	@Success	200					{object}	object{data=object{blocks=[]transformations.AdminOutputUnitDateBlock,saturated_ranges=[]transformations.OutputSaturatedRange}}
+//	@Failure	400					{object}	lib.HTTPError
+//	@Failure	401					{object}	string
+//	@Failure	500					{object}	string
 //	@Router		/api/v1/admin/clients/{client_id}/properties/{property_id}/units/{unit_id}/availability [get]
 func (h *BookingHandler) GetAvailability(w http.ResponseWriter, r *http.Request) {
 	unitID := chi.URLParam(r, "unit_id")
 
 	filters := GetAvailabilityFilterRequest{
-		From: r.URL.Query().Get("from"),
-		To:   r.URL.Query().Get("to"),
+		From:           r.URL.Query().Get("from"),
+		To:             r.URL.Query().Get("to"),
+		ExcludeLeaseID: r.URL.Query().Get("exclude_lease_id"),
 	}
 
 	if !lib.ValidateRequest(h.appCtx.Validator, filters, w) {
@@ -557,12 +564,42 @@ func (h *BookingHandler) GetAvailability(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	out := make([]any, len(blocks))
-	for i := range blocks {
-		out[i] = transformations.DBUnitDateBlockToRest(&blocks[i])
+	unit, unitErr := h.unitService.GetUnitByID(r.Context(), unitID)
+	if unitErr != nil {
+		HandleErrorResponse(w, unitErr)
+		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]any{"data": out})
+	excluded := map[string]bool{}
+	if filters.ExcludeLeaseID != "" {
+		chain, chainErr := h.leaseService.ChainLeaseIDs(r.Context(), filters.ExcludeLeaseID)
+		if chainErr != nil {
+			HandleErrorResponse(w, chainErr)
+			return
+		}
+		for _, id := range chain {
+			excluded[id] = true
+		}
+	}
+
+	// The excluded chain still appears in blocks — a renewal's own term is
+	// worth showing — but does not count toward saturation.
+	counted := make([]models.UnitDateBlock, 0, len(blocks))
+	out := make([]any, 0, len(blocks))
+	for i := range blocks {
+		out = append(out, transformations.DBUnitDateBlockToRest(&blocks[i]))
+		if blocks[i].LeaseID != nil && excluded[*blocks[i].LeaseID] {
+			continue
+		}
+		counted = append(counted, blocks[i])
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{"data": map[string]any{
+		"blocks": out,
+		"saturated_ranges": transformations.SaturatedRangesToRest(
+			services.SaturatedRanges(counted, unit.MaxOccupantsAllowed),
+		),
+	}})
 }
 
 // CreateDateBlock godoc
@@ -601,6 +638,7 @@ func (h *BookingHandler) CreateDateBlock(w http.ResponseWriter, r *http.Request)
 		StartDate:             body.StartDate,
 		EndDate:               body.EndDate,
 		BlockType:             body.BlockType,
+		SlotsOccupied:         body.SlotsOccupied,
 		Reason:                body.Reason,
 		CreatedByClientUserID: clientUser.ID,
 	})

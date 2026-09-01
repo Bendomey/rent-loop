@@ -29,31 +29,34 @@ type LeaseTerminationService interface {
 }
 
 type leaseTerminationService struct {
-	appCtx              pkg.AppContext
-	repo                repository.LeaseTerminationRepository
-	leaseRepo           repository.LeaseRepository
-	unitService         UnitService
-	notificationService NotificationService
-	financials          *financials.Financials
+	appCtx               pkg.AppContext
+	repo                 repository.LeaseTerminationRepository
+	leaseRepo            repository.LeaseRepository
+	unitService          UnitService
+	unitDateBlockService UnitDateBlockService
+	notificationService  NotificationService
+	financials           *financials.Financials
 }
 
 type LeaseTerminationServiceDeps struct {
-	AppCtx              pkg.AppContext
-	Repo                repository.LeaseTerminationRepository
-	LeaseRepo           repository.LeaseRepository
-	UnitService         UnitService
-	NotificationService NotificationService
-	Financials          *financials.Financials
+	AppCtx               pkg.AppContext
+	Repo                 repository.LeaseTerminationRepository
+	LeaseRepo            repository.LeaseRepository
+	UnitService          UnitService
+	UnitDateBlockService UnitDateBlockService
+	NotificationService  NotificationService
+	Financials           *financials.Financials
 }
 
 func NewLeaseTerminationService(deps LeaseTerminationServiceDeps) LeaseTerminationService {
 	return &leaseTerminationService{
-		appCtx:              deps.AppCtx,
-		repo:                deps.Repo,
-		leaseRepo:           deps.LeaseRepo,
-		unitService:         deps.UnitService,
-		notificationService: deps.NotificationService,
-		financials:          deps.Financials,
+		appCtx:               deps.AppCtx,
+		repo:                 deps.Repo,
+		leaseRepo:            deps.LeaseRepo,
+		unitService:          deps.UnitService,
+		unitDateBlockService: deps.UnitDateBlockService,
+		notificationService:  deps.NotificationService,
+		financials:           deps.Financials,
 	}
 }
 
@@ -293,6 +296,16 @@ func (s *leaseTerminationService) Complete(ctx context.Context, input CompleteLe
 		return pkg.InternalServerError(leaseUpdateErr.Error(), &pkg.RentLoopErrorParams{
 			Err:      leaseUpdateErr,
 			Metadata: map[string]string{"function": "Complete", "action": "updating lease status"},
+		})
+	}
+
+	// The room stays claimed through a term the tenant has already left
+	// unless the block is pulled back to the actual end.
+	if blockErr := s.unitDateBlockService.TruncateLeaseBlock(txCtx, lease.ID.String(), now); blockErr != nil {
+		tx.Rollback()
+		return pkg.InternalServerError(blockErr.Error(), &pkg.RentLoopErrorParams{
+			Err:      blockErr,
+			Metadata: map[string]string{"function": "Complete", "action": "truncating the unit's date claim"},
 		})
 	}
 
