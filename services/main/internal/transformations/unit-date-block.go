@@ -1,8 +1,8 @@
 package transformations
 
 import (
+	"github.com/Bendomey/rent-loop/services/main/internal/lib/availability"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
-	"github.com/Bendomey/rent-loop/services/main/internal/services"
 	"github.com/gofrs/uuid"
 )
 
@@ -67,7 +67,7 @@ type OutputSaturatedRange struct {
 	EndDate   string `json:"end_date"   example:"2026-09-10"`
 }
 
-func SaturatedRangesToRest(ranges []services.SaturatedRange) []OutputSaturatedRange {
+func SaturatedRangesToRest(ranges []availability.SaturatedRange) []OutputSaturatedRange {
 	out := make([]OutputSaturatedRange, 0, len(ranges))
 	for _, r := range ranges {
 		out = append(out, OutputSaturatedRange{

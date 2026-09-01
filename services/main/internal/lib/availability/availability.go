@@ -1,4 +1,4 @@
-package services
+package availability
 
 import (
 	"sort"
@@ -142,7 +142,9 @@ func TruncatedEnd(start, originalEnd, actualEnd time.Time) time.Time {
 	return end
 }
 
-func blocksExcludingChain(blocks []models.UnitDateBlock, chain []string) []models.UnitDateBlock {
+// BlocksExcludingChain drops the blocks belonging to a lease's own renewal
+// lineage, so a term is not refused by the chain it continues.
+func BlocksExcludingChain(blocks []models.UnitDateBlock, chain []string) []models.UnitDateBlock {
 	excluded := make(map[string]bool, len(chain))
 	for _, id := range chain {
 		excluded[id] = true

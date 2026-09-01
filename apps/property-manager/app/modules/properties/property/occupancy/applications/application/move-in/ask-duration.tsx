@@ -1,6 +1,8 @@
+import { TriangleAlert } from 'lucide-react'
 import { useState } from 'react'
 import { DurationStepper } from './duration-stepper'
 import { DURATION_PRESETS, durationLabel } from './term'
+import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import type { PaymentFrequency } from '~/lib/schedule'
@@ -19,6 +21,7 @@ export function AskDuration({
 	frequency,
 	readonly,
 	dim,
+	termClashes,
 }: {
 	value: number
 	onChange: (next: number) => void
@@ -26,6 +29,8 @@ export function AskDuration({
 	readonly: boolean
 	/** The date is not set yet, so this question is not the one to answer. */
 	dim: boolean
+	/** The start is free but the term runs into days that are not. */
+	termClashes: boolean
 }) {
 	const presets = DURATION_PRESETS[frequency]
 	const [custom, setCustom] = useState(!presets.includes(value))
@@ -131,6 +136,19 @@ export function AskDuration({
 					) : null}
 				</>
 			)}
+
+			{termClashes ? (
+				<Alert className="bg-warning-bg mt-4 border-transparent">
+					<TriangleAlert className="text-warning size-4" />
+					<AlertTitle className="text-warning">
+						The unit fills up partway through this term
+					</AlertTitle>
+					<AlertDescription>
+						The move-in date is free, but a later part of the stay is not.
+						Shorten it or pick a later start.
+					</AlertDescription>
+				</Alert>
+			) : null}
 		</section>
 	)
 }

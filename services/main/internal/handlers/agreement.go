@@ -48,7 +48,7 @@ func (h *AgreementHandler) GetAgreements(w http.ResponseWriter, r *http.Request)
 
 	output := make([]interface{}, 0, len(agreements))
 	for _, a := range agreements {
-		output = append(output, transformations.AgreementWithAcceptanceToRest(a))
+		output = append(output, transformations.AgreementWithAcceptanceToRest(a.Agreement, a.UserHasAccepted))
 	}
 
 	json.NewEncoder(w).Encode(map[string]interface{}{

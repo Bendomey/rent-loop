@@ -1,4 +1,4 @@
-package services
+package availability
 
 import (
 	"testing"
@@ -15,7 +15,7 @@ func TestBlocksExcludingChainDropsChainMembers(t *testing.T) {
 		{LeaseID: &theirs, StartDate: day(1), EndDate: day(10), SlotsOccupied: slot(1)},
 	}
 
-	got := blocksExcludingChain(blocks, []string{mine})
+	got := BlocksExcludingChain(blocks, []string{mine})
 
 	if len(got) != 1 {
 		t.Fatalf("got %d blocks, want 1", len(got))
@@ -31,7 +31,7 @@ func TestBlocksExcludingChainKeepsUnattachedBlocks(t *testing.T) {
 	mine := "lease-a"
 	blocks := []models.UnitDateBlock{{StartDate: day(1), EndDate: day(10)}}
 
-	if got := blocksExcludingChain(blocks, []string{mine}); len(got) != 1 {
+	if got := BlocksExcludingChain(blocks, []string{mine}); len(got) != 1 {
 		t.Errorf("got %d blocks, want the maintenance block kept", len(got))
 	}
 }

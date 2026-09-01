@@ -3,6 +3,7 @@ import { formatDay } from './term'
 import { DatePickerInput } from '~/components/date-picker-input'
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
 import { Button } from '~/components/ui/button'
+import { dayIsSaturated } from '~/lib/availability'
 import { quickDates } from '~/lib/move-in-dates'
 import { type Pronouns, verb } from '~/lib/pronouns'
 import { cn } from '~/lib/utils'
@@ -11,14 +12,19 @@ import { cn } from '~/lib/utils'
  * "When do they get the keys?"
  *
  * When the unit is not free yet the constraint is part of the question — the
- * help line names who is still in there and a quick-pick offers the first
- * workable day — rather than an error raised after the fact.
+ * days it is full cannot be picked and a quick-pick offers the first workable
+ * day — rather than an error raised after the fact.
+ *
+ * The copy says "the unit", never a tenant's name: what holds the days may be
+ * a booking or a maintenance block, and neither has an occupant.
  */
 export function AskDate({
 	value,
 	onChange,
 	freeFrom,
-	occupant,
+	ranges,
+	availabilityPending,
+	availabilityFailed,
 	blocked,
 	readonly,
 	applicantName,
@@ -27,13 +33,15 @@ export function AskDate({
 	value: Nullable<Date>
 	onChange: (next: Nullable<Date>) => void
 	freeFrom: Nullable<Date>
-	occupant: Nullable<string>
+	ranges: SaturatedRange[]
+	availabilityPending: boolean
+	availabilityFailed: boolean
 	blocked: boolean
 	readonly: boolean
 	applicantName: string
 	pronouns: Pronouns
 }) {
-	const offers = quickDates({ today: new Date(), freeFrom, occupant })
+	const offers = quickDates({ today: new Date(), freeFrom })
 	const firstFree = freeFrom
 		? offers.find((offer) => offer.key === 'free-from')?.date
 		: undefined
@@ -54,8 +62,7 @@ export function AskDate({
 						The application doesn&rsquo;t come with a date — agree one with{' '}
 						{applicantName} and set it here.{' '}
 						<b className="text-foreground">
-							{occupant ?? 'Someone'} is in this unit until{' '}
-							{formatDay(freeFrom)}
+							This unit is occupied until {formatDay(freeFrom)}
 						</b>
 						, so {pronouns.subject} cannot start before{' '}
 						{firstFree ? formatDay(firstFree) : 'then'}.
@@ -105,7 +112,8 @@ export function AskDate({
 					<DatePickerInput
 						value={value ?? undefined}
 						placeholder="Pick a date"
-						readOnly={readonly}
+						readOnly={readonly || availabilityPending}
+						disabled={(day) => dayIsSaturated(day, ranges)}
 						onChange={(next) => onChange(next ?? null)}
 					/>
 				</div>
@@ -116,18 +124,30 @@ export function AskDate({
 				) : null}
 			</div>
 
+			{availabilityFailed ? (
+				<Alert className="bg-warning-bg mt-4 border-transparent">
+					<TriangleAlert className="text-warning size-4" />
+					<AlertTitle className="text-warning">
+						Couldn&rsquo;t check what this unit already has booked
+					</AlertTitle>
+					<AlertDescription>
+						Every date is selectable, but a clash will be refused when the
+						tenancy is approved.
+					</AlertDescription>
+				</Alert>
+			) : null}
+
 			{blocked && freeFrom ? (
 				<Alert className="bg-warning-bg mt-4 border-transparent">
 					<TriangleAlert className="text-warning size-4" />
 					<AlertTitle className="text-warning">
-						The unit isn&rsquo;t empty on that date
+						The unit isn&rsquo;t free on that date
 					</AlertTitle>
 					<AlertDescription className="flex flex-col items-start gap-3">
 						<span>
-							{occupant ?? 'The sitting tenant'} is there until{' '}
-							{formatDay(freeFrom)}. Two tenancies cannot hold the same unit at
-							once — to move {applicantName} in first you would end that lease
-							early, from the lease itself.
+							Every bed is taken until {formatDay(freeFrom)}. To move{' '}
+							{applicantName} in sooner, free one up first — cancel the booking
+							or end the lease that holds it, from that record.
 						</span>
 						{firstFree ? (
 							<Button

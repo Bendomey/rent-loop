@@ -3,7 +3,7 @@
  *
  * Two groups, not three. An earlier draft had a "Free soon" group derived from
  * the sitting tenants' lease end dates; that was cut, so a capacity clash
- * surfaces at the move-in step through `useUnitAvailability` instead — which is
+ * surfaces at the move-in step through the unit availability endpoint instead — which is
  * where the date being clashed with is actually chosen.
  */
 

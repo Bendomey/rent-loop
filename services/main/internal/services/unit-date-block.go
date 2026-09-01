@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/Bendomey/rent-loop/services/main/internal/lib/availability"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
@@ -152,7 +153,7 @@ func (s *unitDateBlockService) TruncateLeaseBlock(
 		ctx,
 		leaseID,
 		block.StartDate,
-		TruncatedEnd(block.StartDate, block.EndDate, end),
+		availability.TruncatedEnd(block.StartDate, block.EndDate, end),
 	)
 }
 
