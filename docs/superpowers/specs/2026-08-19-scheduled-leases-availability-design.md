@@ -324,10 +324,16 @@ duration-derived value. Completed leases ran to term, so the two agree there.
 
 **Trap:** `AutoMigrate` runs *before* the gormigrate job list in this repo,
 so a job may add rows but must not rename a column or add a NOT NULL one to a
-populated table. This is why `SlotsOccupied` is `*int` and nullable:
-AutoMigrate adds it to the existing `unit_date_blocks` rows without a default
-and without failing, and `NULL` already carries the meaning those rows need —
-absolute. No separate migration job is required for the column itself.
+populated table. This is why `SlotsOccupied` is `*int` and nullable: the table
+is populated, and `NULL` already carries the meaning those rows need —
+absolute.
+
+`slots_occupied` still gets its own `ADD COLUMN IF NOT EXISTS` job, per this
+repo's convention for every added column (`AddLeaseMoveOutDate`,
+`AddTenantCode`, and the rest). AutoMigrate would also add it, but the backfill
+job below *writes* the column, and that dependency should be an ordered job
+rather than an implicit reliance on AutoMigrate having run first. The column
+job is registered immediately before the backfill.
 
 ---
 

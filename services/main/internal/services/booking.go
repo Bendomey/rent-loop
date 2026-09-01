@@ -511,13 +511,16 @@ func (s *bookingService) ConfirmBooking(ctx context.Context, input ConfirmBookin
 	}
 
 	bookingID := booking.ID.String()
+	bookingSlot := 1
+	blockStart, blockEnd := BlockRange(booking.CheckInDate, booking.CheckOutDate)
 	if _, err := s.unitDateBlockService.CreateSystemBlock(transCtx, CreateSystemBlockInput{
-		UnitID:    booking.UnitID,
-		StartDate: booking.CheckInDate,
-		EndDate:   booking.CheckOutDate,
-		BlockType: "BOOKING",
-		BookingID: &bookingID,
-		Reason:    fmt.Sprintf("System block for booking #%s", booking.Code),
+		UnitID:        booking.UnitID,
+		StartDate:     blockStart,
+		EndDate:       blockEnd,
+		BlockType:     "BOOKING",
+		SlotsOccupied: &bookingSlot,
+		BookingID:     &bookingID,
+		Reason:        fmt.Sprintf("System block for booking #%s", booking.Code),
 	}); err != nil {
 		tx.Rollback()
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{

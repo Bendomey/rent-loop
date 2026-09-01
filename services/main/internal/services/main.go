@@ -275,12 +275,13 @@ func NewServices(params INewServicesParams) Services {
 	exchangeRateService := NewExchangeRateService(params.AppCtx, params.Repository.ExchangeRateRepository)
 
 	leaseTerminationService := NewLeaseTerminationService(LeaseTerminationServiceDeps{
-		AppCtx:              params.AppCtx,
-		Repo:                params.Repository.LeaseTerminationRepository,
-		LeaseRepo:           params.Repository.LeaseRepository,
-		UnitService:         unitService,
-		NotificationService: notificationService,
-		Financials:          financialsFacade,
+		AppCtx:               params.AppCtx,
+		Repo:                 params.Repository.LeaseTerminationRepository,
+		LeaseRepo:            params.Repository.LeaseRepository,
+		UnitService:          unitService,
+		UnitDateBlockService: unitDateBlockService,
+		NotificationService:  notificationService,
+		Financials:           financialsFacade,
 	})
 
 	expenseService := NewExpenseService(ExpenseServiceDeps{
