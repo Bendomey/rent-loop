@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Bendomey/rent-loop/services/main/internal/lib/availability"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
-	"github.com/Bendomey/rent-loop/services/main/internal/services"
 	"github.com/gofrs/uuid"
 )
 
@@ -41,7 +41,7 @@ func TestDBUnitDateBlockToRestCarriesSlots(t *testing.T) {
 }
 
 func TestSaturatedRangesToRestFormatsDates(t *testing.T) {
-	ranges := []services.SaturatedRange{{
+	ranges := []availability.SaturatedRange{{
 		Start: time.Date(2026, 9, 1, 0, 0, 0, 0, time.UTC),
 		End:   time.Date(2026, 9, 10, 0, 0, 0, 0, time.UTC),
 	}}

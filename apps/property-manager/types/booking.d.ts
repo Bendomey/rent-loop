@@ -94,10 +94,22 @@ interface UnitDateBlock {
 	start_date: Date
 	end_date: Date
 	block_type: BlockType
+	slots_occupied: Nullable<number>
 	booking_id: Nullable<string>
 	lease_id: Nullable<string>
 	reason: string
 	created_at: Date
+}
+
+/** A span where the unit is at capacity. Half-open: `[start_date, end_date)`. */
+interface SaturatedRange {
+	start_date: string
+	end_date: string
+}
+
+interface UnitAvailability {
+	blocks: UnitDateBlock[]
+	saturated_ranges: SaturatedRange[]
 }
 
 interface FetchBookingFilter {

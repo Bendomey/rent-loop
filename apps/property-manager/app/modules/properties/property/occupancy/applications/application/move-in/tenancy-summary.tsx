@@ -21,7 +21,6 @@ export function TenancySummary({
 	periods,
 	blocked,
 	freeFrom,
-	occupant,
 	applicantName,
 	pronouns,
 	readonly,
@@ -37,7 +36,6 @@ export function TenancySummary({
 	periods: SchedulePeriod[]
 	blocked: boolean
 	freeFrom: Nullable<Date>
-	occupant: Nullable<string>
 	applicantName: string
 	pronouns: Pronouns
 	readonly: boolean
@@ -66,9 +64,8 @@ export function TenancySummary({
 						) : blocked && freeFrom ? (
 							<>
 								You&rsquo;ve put {applicantName} in on <b>{formatDay(start)}</b>
-								, but <b>{occupant ?? 'someone'}</b> is still in the unit until{' '}
-								<b>{formatDay(freeFrom)}</b>. Two tenancies cannot hold the same
-								unit, so pick a later date.
+								, but the unit is <b>occupied until {formatDay(freeFrom)}</b>.
+								Every bed is spoken for until then, so pick a later date.
 							</>
 						) : (
 							<>

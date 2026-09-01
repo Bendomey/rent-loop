@@ -8,7 +8,7 @@ import { AskDate } from './ask-date'
 import { AskDuration } from './ask-duration'
 import { TenancySummary } from './tenancy-summary'
 import { TermBar } from './term-bar'
-import { useUnitAvailability } from './use-unit-availability'
+import { useGetUnitAvailability } from '~/api/bookings'
 import { useAdminUpdateTenantApplication } from '~/api/tenant-applications'
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
 import {
@@ -22,6 +22,11 @@ import {
 	AlertDialogTitle,
 } from '~/components/ui/alert-dialog'
 import { Card, CardContent } from '~/components/ui/card'
+import {
+	dayIsSaturated,
+	firstFreeDay,
+	termIsSaturated,
+} from '~/lib/availability'
 import { QUERY_KEYS } from '~/lib/constants'
 import { pronounsFor } from '~/lib/pronouns'
 import type { PaymentFrequency } from '~/lib/schedule'
@@ -81,16 +86,40 @@ export function PropertyTenantApplicationMoveIn() {
 	const [date, setDate] = useState<Nullable<Date>>(savedDate)
 	const [duration, setDuration] = useState(savedDuration ?? 6)
 
-	// M3 — capacity-aware: consults max_occupants_allowed, and the slot is
-	// freed by the Nth earliest-ending lease.
-	const { freeFrom, occupant } = useUnitAvailability(
+	// Fixed for the life of the component: a window recomputed every render
+	// would be a new query key every render.
+	const [availabilityWindow] = useState(() => {
+		const from = new Date()
+		const to = new Date(from)
+		to.setFullYear(to.getFullYear() + 2)
+		return { from, to }
+	})
+
+	// M3 — the server answers this now, capacity-aware and over every kind of
+	// block. Deriving it from the lease list saw only leases, was capped at
+	// twenty of them, and could not express "free, busy for a fortnight, free
+	// again".
+	const {
+		data: availability,
+		isPending: availabilityPending,
+		isError: availabilityFailed,
+	} = useGetUnitAvailability(
 		clientId,
 		propertyId,
 		safeString(unit?.id),
-		safeString(application?.id),
-		unit?.max_occupants_allowed,
+		availabilityWindow.from,
+		availabilityWindow.to,
 	)
-	const clashes = Boolean(date && freeFrom && freeFrom > date)
+
+	// Fail open: a picker that disables everything because a request failed
+	// stops a PM working, and the server refuses a bad term either way.
+	const ranges = availability?.saturated_ranges ?? []
+	// Only when the unit is full *now*. A unit free today but busy in November
+	// has ranges and is not "occupied until" anything.
+	const freeFrom = dayIsSaturated(availabilityWindow.from, ranges)
+		? firstFreeDay(availabilityWindow.from, ranges)
+		: null
+	const clashes = Boolean(date && dayIsSaturated(date, ranges))
 
 	// M7 — the rent the term is priced at: the agreed figure once it exists,
 	// otherwise the unit's listing, which is all financial setup has to offer.
@@ -98,6 +127,11 @@ export function PropertyTenantApplicationMoveIn() {
 	const rent = rentAgreed ? (application?.rent_fee ?? 0) : (unit?.rent_fee ?? 0)
 
 	const end = date ? termEndDate(date, duration, frequency) : null
+	// The picker only disables starts, so a free start can still buy a term
+	// that runs into a full span. Say so where the duration is chosen.
+	const termClashes = Boolean(
+		date && end && !clashes && termIsSaturated(date, end, ranges),
+	)
 	const periods = date
 		? buildSchedule({
 				rent,
@@ -198,7 +232,7 @@ export function PropertyTenantApplicationMoveIn() {
 				? 'Change either answer and everything below follows.'
 				: 'Two answers and this step is done.'
 
-	const settled = Boolean(date) && !clashes && !dirty
+	const settled = Boolean(date) && !clashes && !termClashes && !dirty
 
 	return (
 		<div className="m-5">
@@ -246,7 +280,9 @@ export function PropertyTenantApplicationMoveIn() {
 								value={date}
 								onChange={setDate}
 								freeFrom={freeFrom}
-								occupant={occupant}
+								ranges={ranges}
+								availabilityPending={availabilityPending}
+								availabilityFailed={availabilityFailed}
 								blocked={clashes}
 								readonly={readonly}
 								applicantName={applicantName}
@@ -258,6 +294,7 @@ export function PropertyTenantApplicationMoveIn() {
 								frequency={frequency}
 								readonly={readonly}
 								dim={!date}
+								termClashes={termClashes}
 							/>
 						</CardContent>
 					</Card>
@@ -290,13 +327,12 @@ export function PropertyTenantApplicationMoveIn() {
 						periods={periods}
 						blocked={clashes}
 						freeFrom={freeFrom}
-						occupant={occupant}
 						applicantName={applicantName}
 						pronouns={pronouns}
 						readonly={readonly}
 						dirty={dirty && Boolean(savedDate)}
 						saving={isPending}
-						canSave={Boolean(date) && dirty && !clashes}
+						canSave={Boolean(date) && dirty && !clashes && !termClashes}
 						onSave={() => (rebuilds ? setConfirmRebuild(true) : save())}
 					/>
 				</div>

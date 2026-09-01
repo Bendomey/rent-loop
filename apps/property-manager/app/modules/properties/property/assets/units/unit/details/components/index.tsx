@@ -128,13 +128,14 @@ export function UnitAvailabilityCard({ unit }: { unit: PropertyUnit }) {
 		}
 	}, [])
 
-	const { data: blocks, isPending } = useGetUnitAvailability(
+	const { data: availability, isPending } = useGetUnitAvailability(
 		clientId,
 		unit.property_id,
 		unit.id,
 		rangeFrom,
 		rangeTo,
 	)
+	const blocks = availability?.blocks
 
 	const stretches = useMemo(() => buildStretches(blocks), [blocks])
 	const byDay = useMemo(() => stretchByDay(stretches), [stretches])

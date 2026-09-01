@@ -17,10 +17,12 @@ import {
 import { AskRoom } from './ask-room'
 import { Chip, MoneyField, Notice, Question, TermBar } from './parts'
 import { SummaryRail } from './summary-rail'
+import { useGetUnitAvailability } from '~/api/bookings'
 import { type RenewLeaseFee, useRenewLease } from '~/api/leases'
 import { DatePickerInput } from '~/components/date-picker-input'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
+import { dayIsSaturated, termIsSaturated } from '~/lib/availability'
 import { formatAmount } from '~/lib/format-amount'
 import { type PaymentFrequency, termEndDate } from '~/lib/schedule'
 import { safeString } from '~/lib/strings'
@@ -136,9 +138,43 @@ export function LeaseRenewalModule() {
 	const [unitId, setUnitId] = useState<string>(lease?.unit?.id ?? '')
 	const [signed, setSigned] = useState<Nullable<Lease>>(null)
 
+	/*
+	 * Fixed on first render. A window recomputed each render would be a new
+	 * query key each render, and `new Date()` alone would never settle.
+	 */
+	const [availabilityWindow] = useState(() => {
+		const from = lease?.move_out_date
+			? new Date(lease.move_out_date)
+			: new Date()
+		const to = new Date(from)
+		to.setFullYear(to.getFullYear() + 5)
+		return { from, to }
+	})
+
+	/*
+	 * The parent's own chain is excluded server-side. Without that a same-unit
+	 * renewal would be refused by the term it continues, and a third term by
+	 * the second.
+	 */
+	const {
+		data: availability,
+		isPending: availabilityPending,
+		isError: availabilityFailed,
+	} = useGetUnitAvailability(
+		clientId,
+		propertyId,
+		unitId,
+		availabilityWindow.from,
+		availabilityWindow.to,
+		lease?.id,
+	)
+
 	// Every hook is above this line: the guard cannot sit any earlier without
 	// changing hook order between renders.
 	if (!lease) return null
+
+	// Fail open — the server guard still refuses a bad term.
+	const ranges = availability?.saturated_ranges ?? []
 
 	const rentMinor = Math.round(Number(rent || 0) * 100)
 	const feeTotal = fees.reduce((sum, fee) => sum + fee.amount, 0)
@@ -172,7 +208,12 @@ export function LeaseRenewalModule() {
 	const latestStart = new Date(earliestStart)
 	latestStart.setFullYear(latestStart.getFullYear() + 5)
 
-	const ready = !!date && !early && (step === 'term' || rentMinor > 0)
+	// Saturation is an additional constraint on the parent-end floor, never a
+	// looser one.
+	const termClashes = Boolean(date && end && termIsSaturated(date, end, ranges))
+
+	const ready =
+		!!date && !early && !termClashes && (step === 'term' || rentMinor > 0)
 	const actionLabel =
 		step === 'term'
 			? 'Next: room & rent'
@@ -443,10 +484,44 @@ export function LeaseRenewalModule() {
 											value={date ?? undefined}
 											onChange={(next) => setDate(next ?? null)}
 											startMonth={earliestStart}
+											readOnly={availabilityPending}
 											endMonth={latestStart}
-											disabled={(day) => dayKey(day) < dayKey(earliestStart)}
+											disabled={(day) =>
+												dayKey(day) < dayKey(earliestStart) ||
+												dayIsSaturated(day, ranges)
+											}
 										/>
 									</div>
+									{availabilityFailed && (
+										<div className="mt-4">
+											<Notice
+												tone="warning"
+												icon={<TriangleAlert className="size-[17px]" />}
+												title="Couldn’t check what this room already has booked"
+												body={
+													<>
+														Every date is selectable, but a clash will be
+														refused when the renewal is created.
+													</>
+												}
+											/>
+										</div>
+									)}
+									{termClashes && !early && (
+										<div className="mt-4">
+											<Notice
+												tone="warning"
+												icon={<TriangleAlert className="size-[17px]" />}
+												title="The room fills up partway through this term"
+												body={
+													<>
+														The start date is free, but a later part of the term
+														is not. Shorten it or start later.
+													</>
+												}
+											/>
+										</div>
+									)}
 									{early && parentEnd && parentLastDay && (
 										<div className="mt-4">
 											<Notice

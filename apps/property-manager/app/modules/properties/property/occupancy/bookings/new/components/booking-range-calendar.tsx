@@ -65,8 +65,9 @@ export function BookingRangeCalendar({
 
 	const ninetyDaysOut = useMemo(() => addDays(today, 90), [today])
 
-	const { data: blocks = [], isPending: loadingAvailability } =
+	const { data: availability, isPending: loadingAvailability } =
 		useGetUnitAvailability(clientId, propertyId, unitId, today, ninetyDaysOut)
+	const blocks = availability?.blocks ?? []
 
 	const disabledDates = useMemo(() => blocksToDisabledDates(blocks), [blocks])
 

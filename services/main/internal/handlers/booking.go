@@ -9,6 +9,7 @@ import (
 	"gorm.io/datatypes"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
+	"github.com/Bendomey/rent-loop/services/main/internal/lib/availability"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/internal/services"
@@ -597,7 +598,7 @@ func (h *BookingHandler) GetAvailability(w http.ResponseWriter, r *http.Request)
 	json.NewEncoder(w).Encode(map[string]any{"data": map[string]any{
 		"blocks": out,
 		"saturated_ranges": transformations.SaturatedRangesToRest(
-			services.SaturatedRanges(counted, unit.MaxOccupantsAllowed),
+			availability.SaturatedRanges(counted, unit.MaxOccupantsAllowed),
 		),
 	}})
 }

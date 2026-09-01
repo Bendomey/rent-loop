@@ -111,13 +111,16 @@ const getUnitAvailability = async (
 	unitId: string,
 	from: Date,
 	to: Date,
+	excludeLeaseId?: string,
 ) => {
 	try {
 		const params = new URLSearchParams({
 			from: from.toISOString(),
 			to: to.toISOString(),
 		})
-		const response = await fetchClient<ApiResponse<UnitDateBlock[]>>(
+		if (excludeLeaseId) params.set('exclude_lease_id', excludeLeaseId)
+
+		const response = await fetchClient<ApiResponse<UnitAvailability>>(
 			`/v1/admin/clients/${clientId}/properties/${propertyId}/units/${unitId}/availability?${params.toString()}`,
 		)
 		return response.parsedBody.data
@@ -136,6 +139,7 @@ export const useGetUnitAvailability = (
 	unitId: string,
 	from: Date,
 	to: Date,
+	excludeLeaseId?: string,
 ) =>
 	useQuery({
 		queryKey: [
@@ -145,8 +149,19 @@ export const useGetUnitAvailability = (
 			unitId,
 			from.toISOString(),
 			to.toISOString(),
+			// Without this a renewal and a plain view of the same unit would
+			// share a cache entry and show each other's answer.
+			excludeLeaseId ?? null,
 		],
-		queryFn: () => getUnitAvailability(clientId, propertyId, unitId, from, to),
+		queryFn: () =>
+			getUnitAvailability(
+				clientId,
+				propertyId,
+				unitId,
+				from,
+				to,
+				excludeLeaseId,
+			),
 		enabled: !!clientId && !!propertyId && !!unitId,
 	})
 

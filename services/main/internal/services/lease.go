@@ -9,6 +9,7 @@ import (
 
 	"github.com/Bendomey/rent-loop/services/main/internal/clients/gatekeeper"
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
+	"github.com/Bendomey/rent-loop/services/main/internal/lib/availability"
 	"github.com/Bendomey/rent-loop/services/main/internal/lib/emailtemplates"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
@@ -210,7 +211,7 @@ func leaseBlockInput(lease models.Lease) CreateSystemBlockInput {
 
 	leaseID := lease.ID.String()
 	slot := 1
-	startDate, endDate := BlockRange(lease.MoveInDate, *end)
+	startDate, endDate := availability.BlockRange(lease.MoveInDate, *end)
 
 	return CreateSystemBlockInput{
 		UnitID:        lease.UnitId,
@@ -243,7 +244,7 @@ func (s *leaseService) assertUnitFreeForTerm(
 
 	// Asked in the units the blocks are stored in, so the answer matches what
 	// the write will actually claim.
-	from, to := BlockRange(start, end)
+	from, to := availability.BlockRange(start, end)
 
 	blocks, blocksErr := s.unitDateBlockService.GetAvailability(ctx, unitID, from, to)
 	if blocksErr != nil {
@@ -253,11 +254,11 @@ func (s *leaseService) assertUnitFreeForTerm(
 		})
 	}
 
-	ranges := SaturatedRanges(blocksExcludingChain(blocks, exclude), unit.MaxOccupantsAllowed)
+	ranges := availability.SaturatedRanges(availability.BlocksExcludingChain(blocks, exclude), unit.MaxOccupantsAllowed)
 
 	// Name the span that blocks the term: a refusal the PM cannot trace back
 	// to a booking or a lease reads as a bug rather than a decision.
-	if clash := FirstSaturatedOverlap(from, to, ranges); clash != nil {
+	if clash := availability.FirstSaturatedOverlap(from, to, ranges); clash != nil {
 		return pkg.ConflictError("UnitDatesUnavailableForTerm", &pkg.RentLoopErrorParams{
 			Err: errors.New("the unit is at capacity for part of this term"),
 			Metadata: map[string]string{

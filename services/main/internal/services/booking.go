@@ -10,6 +10,7 @@ import (
 
 	"github.com/Bendomey/rent-loop/services/main/internal/clients/gatekeeper"
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
+	"github.com/Bendomey/rent-loop/services/main/internal/lib/availability"
 	"github.com/Bendomey/rent-loop/services/main/internal/lib/emailtemplates"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
@@ -512,7 +513,7 @@ func (s *bookingService) ConfirmBooking(ctx context.Context, input ConfirmBookin
 
 	bookingID := booking.ID.String()
 	bookingSlot := 1
-	blockStart, blockEnd := BlockRange(booking.CheckInDate, booking.CheckOutDate)
+	blockStart, blockEnd := availability.BlockRange(booking.CheckInDate, booking.CheckOutDate)
 	if _, err := s.unitDateBlockService.CreateSystemBlock(transCtx, CreateSystemBlockInput{
 		UnitID:        booking.UnitID,
 		StartDate:     blockStart,

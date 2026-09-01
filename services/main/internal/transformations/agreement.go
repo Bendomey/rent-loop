@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
-	"github.com/Bendomey/rent-loop/services/main/internal/services"
 )
 
 type OutputAgreement struct {
@@ -19,17 +18,17 @@ type OutputAgreement struct {
 	UpdatedAt       time.Time `json:"updated_at"        example:"2026-04-03T00:00:00Z"`
 }
 
-func AgreementWithAcceptanceToRest(a services.AgreementWithAcceptance) map[string]interface{} {
+func AgreementWithAcceptanceToRest(a models.Agreement, userHasAccepted bool) map[string]interface{} {
 	return map[string]interface{}{
-		"id":                a.Agreement.ID.String(),
-		"name":              a.Agreement.Name,
-		"version":           a.Agreement.Version,
-		"content":           a.Agreement.Content,
-		"effective_date":    a.Agreement.EffectiveDate,
-		"is_active":         a.Agreement.IsActive,
-		"user_has_accepted": a.UserHasAccepted,
-		"created_at":        a.Agreement.CreatedAt,
-		"updated_at":        a.Agreement.UpdatedAt,
+		"id":                a.ID.String(),
+		"name":              a.Name,
+		"version":           a.Version,
+		"content":           a.Content,
+		"effective_date":    a.EffectiveDate,
+		"is_active":         a.IsActive,
+		"user_has_accepted": userHasAccepted,
+		"created_at":        a.CreatedAt,
+		"updated_at":        a.UpdatedAt,
 	}
 }
 

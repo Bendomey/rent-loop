@@ -132,13 +132,15 @@ export function AvailabilityModule() {
 	const rangeFrom = dayjs(currentMonth).startOf('month').toDate()
 	const rangeTo = dayjs(currentMonth).endOf('month').toDate()
 
-	const { data: blocks, isPending: isLoadingBlocks } = useGetUnitAvailability(
-		clientId,
-		propertyId,
-		selectedUnitId,
-		rangeFrom,
-		rangeTo,
-	)
+	const { data: availability, isPending: isLoadingBlocks } =
+		useGetUnitAvailability(
+			clientId,
+			propertyId,
+			selectedUnitId,
+			rangeFrom,
+			rangeTo,
+		)
+	const blocks = availability?.blocks
 
 	const modifiers = blocksToModifiers(blocks)
 	const modifiersStyles: Record<string, React.CSSProperties> = {
