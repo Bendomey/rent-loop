@@ -141,6 +141,7 @@ export function buildRows(stretches: Stretch[], today: Dayjs): TimelineRow[] {
 	let cursor = today
 	const upcoming = stretches.filter((s) => !s.to.isBefore(today))
 	upcoming.forEach((s, i) => {
+		if (s.to.isBefore(cursor)) return
 		const gap = s.from.diff(cursor, 'day')
 		if (gap > 0) {
 			rows.push({
