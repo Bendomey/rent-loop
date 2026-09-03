@@ -15,9 +15,9 @@ export function meta({ loaderData, location }: Route.MetaArgs) {
 	return getSocialMetas({
 		url,
 		origin: loaderData.origin,
-		title: 'Rentloop for Tenants — Your rental, in your pocket.',
+		title: 'Pay Rent and Track Maintenance Online | Rentloop for Tenants',
 		description:
-			'Pay rent, submit maintenance, find your paperwork — all in the app your landlord gave you. Free for tenants.',
+			'Pay rent, submit maintenance requests and find your rental agreement in one app. For tenants renting.',
 	})
 }
 

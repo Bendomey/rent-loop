@@ -15,10 +15,9 @@ export function meta({ loaderData, location }: Route.MetaArgs) {
 	return getSocialMetas({
 		url,
 		origin: loaderData.origin,
-		title:
-			'Rentloop for Property Managers — Run your rentals like you mean it.',
+		title: 'Property Management Software for Landlords | Rentloop',
 		description:
-			"Rentals, rent, maintenance, applications — all in one place. The dashboard that does the chasing so you don't have to.",
+			'Rent collection, tenant management, maintenance tracking and rental agreements in one dashboard. Built for property managers and landlords.',
 	})
 }
 
