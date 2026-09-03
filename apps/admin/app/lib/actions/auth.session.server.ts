@@ -31,7 +31,7 @@ const {
 		httpOnly: true,
 		path: '/',
 		sameSite: 'lax',
-		secrets: ['s3cret1'], // TODO: use env var
+		secrets: ['s3cret1-admin'], // TODO: use env var
 		secure: isProduction,
 	},
 })

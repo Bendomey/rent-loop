@@ -7,7 +7,7 @@ export const WEBSITE_URL = `https://rentloopapp.com`
 
 export const ASSET_MANAGEMENT_GUIDE_URL = `${WEBSITE_URL}/blog/understanding-asset-management`
 
-export const USER_CIPHER = 'rentloop-account'
+export const USER_CIPHER = 'rentloop-admin'
 
 export const COMING_SOON_ROUTE = '/coming-soon'
 
