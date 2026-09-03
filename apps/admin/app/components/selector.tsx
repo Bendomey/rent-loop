@@ -235,7 +235,11 @@ export function Selector(props: Props) {
 				</Button>
 			</PopoverTrigger>
 
-			<PopoverContent id={popoverId} className="w-auto max-w-96 p-0" align="start">
+			<PopoverContent
+				id={popoverId}
+				className="w-auto max-w-96 p-0"
+				align="start"
+			>
 				<Command>
 					<CommandInput
 						className="text-xs focus:ring-0"
