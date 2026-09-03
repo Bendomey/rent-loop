@@ -1,5 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { AlertCircleIcon, CheckCircle2Icon, ShieldCheck } from 'lucide-react'
+import {
+	AlertCircleIcon,
+	CheckCircle2Icon,
+	EyeIcon,
+	EyeOffIcon,
+	ShieldCheck,
+} from 'lucide-react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, useFetcher, useLoaderData } from 'react-router'
 import { z } from 'zod'
@@ -32,6 +39,7 @@ type FormSchema = z.infer<typeof ValidationSchema>
 export function LoginModule() {
 	const { error, success } = useLoaderData()
 	const fetcher = useFetcher<{ error: string }>()
+	const [showPassword, setShowPassword] = useState(false)
 
 	const rhfMethods = useForm<FormSchema>({
 		resolver: zodResolver(ValidationSchema),
@@ -117,11 +125,29 @@ export function LoginModule() {
 										<FormItem>
 											<FormLabel>Password</FormLabel>
 											<FormControl>
-												<Input
-													type="password"
-													{...field}
-													placeholder="* * * * * * * *"
-												/>
+												<div className="relative">
+													<Input
+														type={showPassword ? 'text' : 'password'}
+														{...field}
+														placeholder="* * * * * * * *"
+														className="pr-9"
+													/>
+													<button
+														type="button"
+														onClick={() => setShowPassword((prev) => !prev)}
+														className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2"
+														tabIndex={-1}
+													>
+														{showPassword ? (
+															<EyeOffIcon className="size-4" />
+														) : (
+															<EyeIcon className="size-4" />
+														)}
+														<span className="sr-only">
+															{showPassword ? 'Hide password' : 'Show password'}
+														</span>
+													</button>
+												</div>
 											</FormControl>
 											<FieldDescription>
 												Forgot your password?{' '}
