@@ -6,47 +6,259 @@ import {
 	Em,
 	Eyebrow,
 	Hairline,
+	Headline,
 	MarketingPage,
 	Placeholder,
 	RL,
 	SectionHeader,
 	SubHead,
 } from '~/components/marketing'
+import { customers } from '~/content/customers'
 import { BOOK_DEMO_URL, PROPERTY_MANAGER_APP_URL } from '~/lib/constants'
 
-// ── Hero · Two Doors ─────────────────────────────────────────
+// ── Hero ─────────────────────────────────────────────────────
 function Hero() {
 	return (
-		<div className="mx-auto flex max-w-[1280px] flex-col items-center px-4 pt-8 pb-14 md:px-14 md:pt-14 md:pb-24">
-			<div className="mb-[22px] flex items-center gap-2.5">
-				<span className="font-rl-sans text-rl-crimson flex items-center gap-2 text-[12.5px] font-semibold tracking-[1.2px] uppercase">
-					<span className="bg-rl-crimson h-1.5 w-1.5 rounded-full" />
-					One platform · two front doors
-				</span>
-			</div>
+		<div className="mx-auto flex max-w-[1280px] flex-col items-center px-4 pt-8 pb-14 md:px-14 md:pt-14 md:pb-20">
+			<Eyebrow>Property management software</Eyebrow>
 
-			<h1 className="font-rl-serif text-rl-ink m-0 text-center text-[42px] leading-[1.05] font-normal tracking-[-1.0px] sm:text-[64px] md:text-[88px] md:leading-[1.02] md:tracking-[-2.2px]">
-				Renting, <Em>finally</Em>
-				<br />
-				figured out.
-			</h1>
+			<div className="mt-5">
+				<Headline
+					size="clamp(40px, 7vw, 84px)"
+					lh={1.04}
+					ls={-2}
+					align="center"
+				>
+					Property management
+					<br />
+					software, built to <Em>Scale.</Em>
+				</Headline>
+			</div>
 
 			<BodyText
 				size={18}
 				color={RL.muted}
 				align="center"
-				maxWidth={620}
+				maxWidth={640}
 				lh={1.55}
 			>
-				<div className="mt-[22px]">
-					Rentloop is the rental platform built for the way you actually live
-					and work. One side for the people who own buildings. One side for the
-					people who live in them.
+				<div className="mt-6">
+					Rentloop puts properties, tenants, rent, maintenance and rental
+					records in one place — so your rental business stops living in
+					WhatsApp, spreadsheets and bank statements.
 				</div>
 			</BodyText>
 
-			{/* Two doors */}
-			<div className="mt-10 flex w-full max-w-[1080px] flex-col gap-5 md:mt-14 md:flex-row">
+			<div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+				<CTAButton
+					kind="primary"
+					size="lg"
+					href={`${PROPERTY_MANAGER_APP_URL}/apply`}
+				>
+					Start free
+				</CTAButton>
+				<CTAButton kind="outline" size="lg" href={BOOK_DEMO_URL}>
+					Book a demo
+				</CTAButton>
+			</div>
+
+			<Link
+				to="/tenants"
+				className="font-rl-sans text-rl-muted hover:text-rl-ink mt-5 text-[14px] no-underline"
+			>
+				I rent a place →
+			</Link>
+
+			<div className="font-rl-sans text-rl-muted-soft mt-7 flex flex-wrap items-center justify-center gap-7 text-[13.5px]">
+				<span>✓ 1 – 3 units free, forever</span>
+				<span>✓ No card required</span>
+				<span>✓ No per-unit fees</span>
+			</div>
+
+			<div className="relative mt-12 w-full md:mt-16">
+				<img
+					src="/images/pm-dashboard-hero.webp"
+					alt="The Rentloop property manager dashboard showing revenue, outstanding rent, active leases and occupancy rate in Ghana cedis."
+					className="border-rl-hairline w-full rounded-[20px] border object-cover shadow-[0_40px_90px_-30px_rgba(0,0,0,0.28)]"
+				/>
+				<div className="bg-rl-ink absolute -bottom-8 -left-4 hidden h-[340px] w-[170px] rounded-[30px] border border-black/50 p-1.5 shadow-[0_30px_70px_-20px_rgba(0,0,0,0.4)] md:block lg:-left-10 lg:h-[420px] lg:w-[210px]">
+					<div className="h-full w-full overflow-hidden rounded-[24px]">
+						<img
+							src="/images/pm-full-mobile-view.webp"
+							alt=""
+							className="h-full w-full object-cover object-top"
+						/>
+					</div>
+				</div>
+			</div>
+		</div>
+	)
+}
+
+// ── Customer band ─────────────────────────────────────────────
+function CustomerBand() {
+	if (customers.length === 0) return null
+	return (
+		<div className="mx-auto max-w-[1280px] px-4 py-8 md:px-14 md:py-10">
+			<div className="font-rl-sans text-rl-muted-soft text-center text-[13px] tracking-[0.4px] uppercase">
+				Trusted by property managers in Ghana
+			</div>
+			<div className="mt-6 flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
+				{customers.map((c) => (
+					<div key={c.name} className="text-center">
+						<div className="font-rl-serif text-rl-ink text-[20px] tracking-[-0.3px]">
+							{c.name}
+						</div>
+						{c.detail && (
+							<div className="font-rl-sans text-rl-muted mt-0.5 text-[12.5px]">
+								{c.detail}
+							</div>
+						)}
+					</div>
+				))}
+			</div>
+		</div>
+	)
+}
+
+// ── Problem ───────────────────────────────────────────────────
+function Problem() {
+	const places = [
+		{
+			t: 'WhatsApp',
+			s: 'Rent reminders, complaints and receipts, buried six months deep.',
+		},
+		{
+			t: 'Spreadsheets',
+			s: 'One per property, none of them current.',
+		},
+		{
+			t: 'Bank statements',
+			s: 'Payments you still match to a tenant by hand.',
+		},
+		{
+			t: 'Paper agreements',
+			s: 'Signed, filed somewhere, hard to produce when it matters.',
+		},
+		{
+			t: 'Photos on your phone',
+			s: 'The leaking tap, the meter reading, the move-in condition.',
+		},
+	]
+	return (
+		<div className="mx-auto max-w-[1280px] px-4 py-10 md:px-14 md:py-16">
+			<SectionHeader
+				eyebrow="The problem"
+				title={
+					<>
+						Property management without the <Em>WhatsApp</Em> chaos.
+					</>
+				}
+				body="Right now your rental business lives in five places. None of them talk to each other."
+				align="center"
+				maxWidth={700}
+			/>
+			<div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 md:mt-14 lg:grid-cols-5">
+				{places.map((p, i) => (
+					<div
+						key={i}
+						className="border-rl-hairline rounded-[18px] border bg-white px-6 py-7"
+					>
+						<div className="font-rl-serif text-rl-ink text-[19px] tracking-[-0.3px]">
+							{p.t}
+						</div>
+						<BodyText size={13.5} color={RL.muted} lh={1.5}>
+							<div className="mt-2">{p.s}</div>
+						</BodyText>
+					</div>
+				))}
+			</div>
+			<div className="mt-9 flex justify-center">
+				<BodyText size={17} color={RL.muted} align="center" maxWidth={620}>
+					Rentloop brings the whole rental lifecycle into one place — and keeps
+					it there.
+				</BodyText>
+			</div>
+		</div>
+	)
+}
+
+// ── Lifecycle ─────────────────────────────────────────────────
+function Lifecycle() {
+	const stages = [
+		{
+			n: '01',
+			t: 'Fill your portfolio',
+			s: 'Properties, blocks, units and availability — a single unit or two hundred, long-let or short stay.',
+		},
+		{
+			n: '02',
+			t: 'Run the tenancy',
+			s: 'Applications, rental agreements, e-signatures, invoices, payments and maintenance requests.',
+		},
+		{
+			n: '03',
+			t: 'Keep the record',
+			s: 'Every payment, expense, document and activity stays attached to the right property.',
+		},
+	]
+	return (
+		<div className="mx-auto max-w-[1280px] px-4 pt-8 pb-14 md:px-14 md:pt-10 md:pb-20">
+			<SectionHeader
+				eyebrow="The rental loop"
+				title={
+					<>
+						Everything that happens <Em>after</Em> someone rents your property.
+					</>
+				}
+				body="Application, agreement, move-in, rent, maintenance, renewal, move-out. Rentloop covers the whole loop, not just the paperwork at the start."
+				align="center"
+				maxWidth={720}
+			/>
+			<div className="mt-10 grid grid-cols-1 gap-5 md:mt-14 md:grid-cols-3">
+				{stages.map((s, i) => (
+					<div
+						key={i}
+						className="border-rl-hairline relative rounded-[20px] border bg-white px-7 pt-7 pb-8"
+						style={{ boxShadow: '0 1px 0 rgba(0,0,0,0.02)' }}
+					>
+						<div className="font-rl-mono text-rl-crimson mb-[18px] text-[12.5px] tracking-[1px]">
+							STAGE {s.n}
+						</div>
+						<SubHead size={26} ls={-0.4}>
+							{s.t}
+						</SubHead>
+						<BodyText size={14.5} color={RL.muted} lh={1.55}>
+							<div className="mt-3">{s.s}</div>
+						</BodyText>
+						{i < 2 && (
+							<div className="bg-rl-cream border-rl-hairline font-rl-sans text-rl-ink absolute top-1/2 right-[-16px] z-10 hidden h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border text-sm md:flex">
+								→
+							</div>
+						)}
+					</div>
+				))}
+			</div>
+		</div>
+	)
+}
+
+// ── Two doors ─────────────────────────────────────────────────
+function TwoDoors() {
+	return (
+		<div className="mx-auto max-w-[1280px] px-4 py-10 md:px-14 md:py-16">
+			<SectionHeader
+				eyebrow="Two ways in"
+				title={
+					<>
+						One platform. <Em>Two</Em> experiences.
+					</>
+				}
+				body="One workspace for the people who run buildings. One app for the people who live in them."
+				align="center"
+				maxWidth={680}
+			/>
+			<div className="mt-10 flex w-full flex-col gap-5 md:mt-14 md:flex-row">
 				{/* Manager door — white */}
 				<Link
 					to="/managers"
@@ -69,7 +281,7 @@ function Hero() {
 					</BodyText>
 					<div className="mt-2">
 						<img
-							src="/images/project-screenshot.webp"
+							src="/images/pm-dashboard-hero.webp"
 							alt=""
 							className="h-[200px] w-full rounded-[14px] object-cover object-top"
 						/>
@@ -125,72 +337,6 @@ function Hero() {
 					</div>
 				</Link>
 			</div>
-
-			<div className="font-rl-sans text-rl-muted-soft mt-8 flex flex-wrap items-center justify-center gap-7 text-[13.5px]">
-				<span>✓ 1 – 3 units free, forever</span>
-				<span>✓ No card required</span>
-				<span>✓ No per-unit fees</span>
-			</div>
-		</div>
-	)
-}
-
-// ── How it works ─────────────────────────────────────────────
-function HowItWorks() {
-	const steps = [
-		{
-			n: '01',
-			t: 'Set up your properties',
-			s: 'Single unit or 200. Rental agreement for long stays, guest booking for short stays — Rentloop handles both.',
-		},
-		{
-			n: '02',
-			t: 'Invite the people',
-			s: 'Bulk-invite tenants, draft a rental agreement, collect e-signatures, all from one place.',
-		},
-		{
-			n: '03',
-			t: 'Get paid. Sleep well.',
-			s: "Rent collects itself. Maintenance tracks itself. You're free to do the rest of your life.",
-		},
-	]
-	return (
-		<div className="mx-auto max-w-[1280px] px-4 pt-8 pb-14 md:px-14 md:pt-10 md:pb-20">
-			<SectionHeader
-				eyebrow="How rentloop works"
-				title={
-					<>
-						Three steps from <Em>messy</Em> to <Em>managed.</Em>
-					</>
-				}
-				body="The short version. The long version is on the role pages."
-				align="center"
-				maxWidth={680}
-			/>
-			<div className="mt-10 grid grid-cols-1 gap-5 md:mt-14 md:grid-cols-3">
-				{steps.map((s, i) => (
-					<div
-						key={i}
-						className="border-rl-hairline relative rounded-[20px] border bg-white px-7 pt-7 pb-8"
-						style={{ boxShadow: '0 1px 0 rgba(0,0,0,0.02)' }}
-					>
-						<div className="font-rl-mono text-rl-crimson mb-[18px] text-[12.5px] tracking-[1px]">
-							STEP {s.n}
-						</div>
-						<SubHead size={26} ls={-0.4}>
-							{s.t}
-						</SubHead>
-						<BodyText size={14.5} color={RL.muted} lh={1.55}>
-							<div className="mt-3">{s.s}</div>
-						</BodyText>
-						{i < 2 && (
-							<div className="bg-rl-cream border-rl-hairline font-rl-sans text-rl-ink absolute top-1/2 right-[-16px] z-10 hidden h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border text-sm md:flex">
-								→
-							</div>
-						)}
-					</div>
-				))}
-			</div>
 		</div>
 	)
 }
@@ -244,8 +390,8 @@ function ManagerPreview() {
 				{/* Big tile */}
 				<div className="border-rl-hairline flex flex-col gap-[18px] rounded-[20px] border bg-white p-7">
 					<img
-						src="/images/project-screenshot.webp"
-						alt=""
+						src="/images/pm-dashboard-hero.webp"
+						alt="Rentloop dashboard showing revenue, occupancy and active leases."
 						className="h-[340px] w-full rounded-[14px] object-cover object-top"
 					/>
 					<div>
@@ -403,6 +549,54 @@ function TenantPreview() {
 	)
 }
 
+// ── Built for Ghana ───────────────────────────────────────────
+function BuiltForGhana() {
+	const facts = [
+		{ t: 'Cedis', s: 'Every invoice, expense and report in GH₵.' },
+		{ t: 'Mobile Money', s: 'The way most of your tenants already pay.' },
+		{ t: 'Bank transfer', s: 'Logged against the right tenant and unit.' },
+		{ t: 'Cash and offline', s: 'Record a payment you took in person.' },
+		{
+			t: 'Long-let and short stay',
+			s: 'Rental agreements and guest bookings in one portfolio.',
+		},
+		{
+			t: 'Compounds and blocks',
+			s: 'Properties, blocks and units, the way buildings are actually organised here.',
+		},
+	]
+	return (
+		<div className="mx-auto max-w-[1280px] px-4 py-10 md:px-14 md:py-16">
+			<SectionHeader
+				eyebrow="Built for Ghana"
+				title={
+					<>
+						Built for how renting <Em>actually</Em> works here.
+					</>
+				}
+				body="Not a foreign product with the currency swapped out."
+				align="center"
+				maxWidth={680}
+			/>
+			<div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 md:mt-14 md:grid-cols-3">
+				{facts.map((f, i) => (
+					<div
+						key={i}
+						className="border-rl-hairline rounded-[18px] border bg-white px-6 py-7"
+					>
+						<div className="font-rl-serif text-rl-ink text-[20px] tracking-[-0.3px]">
+							{f.t}
+						</div>
+						<BodyText size={13.5} color={RL.muted} lh={1.5}>
+							<div className="mt-2">{f.s}</div>
+						</BodyText>
+					</div>
+				))}
+			</div>
+		</div>
+	)
+}
+
 // ── Pricing strip ─────────────────────────────────────────────
 function PricingStrip() {
 	return (
@@ -435,29 +629,35 @@ export function Home() {
 	return (
 		<MarketingPage current="home">
 			<Hero />
+			<CustomerBand />
 			<Hairline />
-			<HowItWorks />
+			<Problem />
 			<Hairline />
+			<Lifecycle />
 			<ManagerPreview />
+			<TwoDoors />
 			<TenantPreview />
+			<BuiltForGhana />
 			<PricingStrip />
 			<div className="px-4 md:px-14">
 				<div className="mx-auto max-w-[1280px]">
 					<CTABand
-						eyebrow="The whole rental loop"
+						eyebrow="Get started"
 						title={
 							<>
-								One platform. <Em>Two sides.</Em> Zero spreadsheets.
+								Your properties have enough problems.
+								<br />
+								Your <Em color={RL.crimsonLight}>software</Em> shouldn't be one.
 							</>
 						}
-						body="Whether you're collecting rent or paying it — start the part of Rentloop that's for you."
+						body="Start free on 1 – 3 units. No card, no per-unit fees."
 						primary={
 							<CTAButton
 								kind="primary"
 								size="lg"
 								href={`${PROPERTY_MANAGER_APP_URL}/apply`}
 							>
-								Start free trial
+								Start free
 							</CTAButton>
 						}
 						secondary={

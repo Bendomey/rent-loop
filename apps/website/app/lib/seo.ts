@@ -9,8 +9,8 @@ const baseKeywords =
 
 export function getSocialMetas({
 	url,
-	title = `${capitalize(APP_NAME)} - Smart renting made simple.`,
-	description = 'Smart renting made simple.',
+	title = `${capitalize(APP_NAME)} — Property management software built to scale your rental business`,
+	description = 'Rentloop is property management software built to scale your rental business. Manage properties, tenants, rent, maintenance and rental records in one place.',
 	images = [],
 	keywords = '',
 	origin,
@@ -97,8 +97,13 @@ export function getOrganizationSchema(origin: string) {
 		name: 'RentLoop',
 		url: origin,
 		logo: `${origin}/logo.png`,
-		description: 'Smart renting made simple.',
+		description:
+			'Rentloop is property management software built for Ghana. Manage properties, tenants, rent, maintenance and rental records in one place.',
 		sameAs: ['https://twitter.com/rentloopgh'],
+		areaServed: {
+			'@type': 'Country',
+			name: 'Ghana',
+		},
 		contactPoint: {
 			'@type': 'ContactPoint',
 			contactType: 'customer service',
@@ -116,7 +121,8 @@ export function getWebsiteSchema(origin: string) {
 		'@type': 'WebSite',
 		name: 'RentLoop',
 		url: origin,
-		description: 'Smart renting made simple.',
+		description:
+			'Rentloop is property management software built for Ghana. Manage properties, tenants, rent, maintenance and rental records in one place.',
 	}
 }
 
@@ -131,7 +137,8 @@ export function getSoftwareAppSchema(origin: string) {
 		applicationCategory: 'BusinessApplication',
 		operatingSystem: 'Web',
 		url: origin,
-		description: 'Smart renting made simple.',
+		description:
+			'Rentloop is property management software built for Ghana. Manage properties, tenants, rent, maintenance and rental records in one place.',
 		offers: {
 			'@type': 'Offer',
 			price: '0',

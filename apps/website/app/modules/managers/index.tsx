@@ -22,20 +22,20 @@ function Hero() {
 					<Eyebrow>For property managers</Eyebrow>
 					<div className="mt-5">
 						<h1 className="font-rl-serif text-rl-ink m-0 text-[40px] leading-[1.05] font-normal tracking-[-0.8px] md:text-[70px] md:tracking-[-1.4px]">
-							Akosua manages <Em>47 units.</Em>
+							Run the property.
 							<br />
-							From her phone. Mostly.
+							Not the <Em>paperwork.</Em>
 						</h1>
 					</div>
 					<BodyText size={17} color={RL.muted} maxWidth={500}>
 						<div className="mt-6 leading-[1.6]">
-							Two compounds, one block of apartments, and a short-let by the
-							beach. Before Rentloop, it was three spreadsheets and a WhatsApp
-							group called{' '}
+							Compounds, apartment blocks, short-lets by the beach. Rentloop
+							holds the properties, the tenants, the rent, the maintenance and
+							the records — so none of it lives in a WhatsApp group called{' '}
 							<span className="font-rl-mono text-rl-ink text-[14px]">
 								"RENT 🚨"
 							</span>
-							. Now it's one tab. Sometimes one tap.
+							.
 						</div>
 					</BodyText>
 					<div className="mt-8 flex flex-wrap gap-3">
@@ -50,32 +50,13 @@ function Hero() {
 							Book a demo
 						</CTAButton>
 					</div>
-					{/* Testimonial card */}
-					<div className="border-rl-hairline font-rl-sans mt-10 flex max-w-[480px] items-center gap-4 rounded-2xl border bg-white px-5 py-[18px] shadow-[0_1px_0_rgba(0,0,0,0.02),0_12px_32px_-16px_rgba(0,0,0,0.08)]">
-						<div
-							className="font-rl-serif text-rl-crimson border-rl-hairline-soft flex h-12 w-12 shrink-0 items-center justify-center rounded-full border text-[18px]"
-							style={{
-								background: `linear-gradient(135deg, ${RL.creamDeep}, ${RL.creamWarm})`,
-							}}
-						>
-							AO
-						</div>
-						<div>
-							<div className="text-rl-ink font-rl-serif text-[15px] leading-[1.4] italic">
-								"I haven't sent a 'where's my rent' message since November."
-							</div>
-							<div className="text-rl-muted mt-1 text-[12.5px]">
-								— Akosua O., property manager · Accra
-							</div>
-						</div>
-					</div>
 				</div>
 
 				{/* Right column — hidden on mobile to keep hero clean */}
 				<div className="relative hidden h-[620px] pt-3 md:block md:flex-1">
 					<img
-						src="/images/pm-main-dashboard.webp"
-						alt=""
+						src="/images/pm-dashboard-hero.webp"
+						alt="Rentloop property manager dashboard showing revenue, outstanding rent and occupancy."
 						className="h-full w-full rounded-[20px] object-cover object-left"
 					/>
 					{/* Phone overlap */}
@@ -95,10 +76,10 @@ function Hero() {
 						</div>
 						<div>
 							<div className="text-rl-ink text-[13px] font-semibold">
-								Akua just paid March rent
+								Unit B4 — rent paid
 							</div>
 							<div className="text-rl-muted text-[11.5px]">
-								GH¢ 1,200 · 2 min ago
+								GH₵ 1,200 · 2 min ago
 							</div>
 						</div>
 					</div>
@@ -111,10 +92,10 @@ function Hero() {
 // ── Metric strip ─────────────────────────────────────────────
 function MetricStrip() {
 	const stats = [
-		{ n: '1 → 1,000', l: 'units, same dashboard' },
-		{ n: '< 3 min', l: 'to draft a rental agreement' },
-		{ n: '2 modes', l: 'rental agreement or guest booking' },
-		{ n: '98%', l: 'on-time rent collection' },
+		{ n: '1 – 3 units', l: 'free, forever' },
+		{ n: '2 rental modes', l: 'long-term agreements and short stays' },
+		{ n: 'GH₵', l: 'cedis, Mobile Money and bank transfer' },
+		{ n: 'Every payment', l: 'invoiced, receipted and logged' },
 	]
 	return (
 		<div className="mx-auto max-w-[1280px] px-4 py-6 md:px-14 md:py-8">
@@ -153,7 +134,7 @@ function DashboardSection() {
 					The first screen <Em>tells</Em> the whole story.
 				</>
 			}
-			body="The numbers that matter, in the order Akosua actually checks them. Open the app, glance, close the app, get on with your day."
+			body="The numbers that matter, in the order you actually check them. Open the app, glance, close the app, get on with your day."
 		>
 			<div className="grid grid-cols-1 gap-[18px]">
 				<FeatureCard

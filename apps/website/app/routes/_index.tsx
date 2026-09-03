@@ -23,8 +23,9 @@ export function meta({ loaderData, location }: Route.MetaArgs) {
 	const meta = getSocialMetas({
 		url,
 		origin: loaderData.origin,
+		title: 'Property Management Software | Rentloop',
 		description:
-			'Your all-in-one property management solution designed to simplify renting for landlords and delight tenants.',
+			'Manage properties, tenants, rent, maintenance and rental records in one place. Built for property managers — cedis, Mobile Money and bank transfer.',
 	})
 
 	const structuredData = [
