@@ -12,10 +12,8 @@ import {
 import { useState } from 'react'
 import { ExternalLink } from '~/components/layout/ExternalLink'
 import { MarketingFooter, MarketingNav, TopBar } from '~/components/marketing'
-import {
-	ENTERPRISE_ACCOUNT_REQUEST_URL,
-	PROPERTY_MANAGER_APP_URL,
-} from '~/lib/constants'
+import { getApplyUrl } from '~/lib/apply-url'
+import { ENTERPRISE_ACCOUNT_REQUEST_URL } from '~/lib/constants'
 import {
 	type BillingInterval,
 	YEARLY_DISCOUNT_LABEL,
@@ -47,7 +45,11 @@ export function PricingModule() {
 							on up to 3 units, and move up whenever your portfolio outgrows it.
 						</p>
 						<a
-							href={`${PROPERTY_MANAGER_APP_URL}/apply`}
+							href={getApplyUrl({
+								plan: plans[0],
+								medium: 'pricing_hero',
+								campaign: 'get_started_free',
+							})}
 							className="mt-8 inline-block rounded-md bg-rose-600 px-6 py-3 text-sm font-semibold text-white shadow-xs hover:bg-rose-500"
 						>
 							Get started free
@@ -165,7 +167,11 @@ export function PricingModule() {
 									</ul>
 
 									<a
-										href={`${PROPERTY_MANAGER_APP_URL}/apply`}
+										href={getApplyUrl({
+											plan: tier,
+											interval,
+											medium: 'pricing_plan_card',
+										})}
 										className={`mt-8 block rounded-md px-5 py-2.5 text-center text-sm font-semibold ${
 											tier.highlighted
 												? 'bg-rose-600 text-white hover:bg-rose-500'
