@@ -1,6 +1,6 @@
 import type { Route } from './+types/download'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
-import { getSocialMetas } from '~/lib/seo'
+import { getBreadcrumbSchema, getSocialMetas, pageKeywords } from '~/lib/seo'
 import { DownloadModule } from '~/modules'
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -10,16 +10,28 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export function meta({ loaderData, location }: Route.MetaArgs) {
-	return getSocialMetas({
-		title: 'Download the App | RentLoop',
-		description:
-			'Get the RentLoop mobile app for iOS and Android. Manage your properties, track rent, and stay connected with tenants — all from your phone.',
-		url: getDisplayUrl({
-			origin: loaderData.origin,
-			path: location.pathname,
-		}),
+	const url = getDisplayUrl({
 		origin: loaderData.origin,
+		path: location.pathname,
 	})
+
+	const meta = getSocialMetas({
+		title: 'Download the Rentloop Tenant App — Android & iOS',
+		description:
+			'Get the free Rentloop app for Android and iOS. Pay rent with Mobile Money, keep every receipt, track maintenance requests and stay in touch with your landlord.',
+		url,
+		origin: loaderData.origin,
+		keywords: pageKeywords.download,
+	})
+
+	const structuredData = [
+		getBreadcrumbSchema(loaderData.origin, [
+			{ name: 'Home', path: '/' },
+			{ name: 'Download', path: '/download' },
+		]),
+	]
+
+	return [...meta, { 'script:ld+json': structuredData }]
 }
 
 export default DownloadModule

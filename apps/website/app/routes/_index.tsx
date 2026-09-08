@@ -5,6 +5,7 @@ import {
 	getSocialMetas,
 	getSoftwareAppSchema,
 	getWebsiteSchema,
+	pageKeywords,
 } from '~/lib/seo'
 import { Home } from '~/modules'
 
@@ -25,7 +26,8 @@ export function meta({ loaderData, location }: Route.MetaArgs) {
 		origin: loaderData.origin,
 		title: 'Property Management Software | Rentloop',
 		description:
-			'Manage properties, tenants, rent, maintenance and rental records in one place. Built for property managers — cedis, Mobile Money and bank transfer.',
+			'Manage properties, tenants, rent and maintenance in one place. Built for landlords and property managers — collect rent in cedis via Mobile Money or bank transfer.',
+		keywords: pageKeywords.home,
 	})
 
 	const structuredData = [

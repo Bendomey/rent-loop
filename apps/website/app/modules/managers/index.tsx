@@ -29,9 +29,10 @@ function Hero() {
 					</div>
 					<BodyText size={17} color={RL.muted} maxWidth={500}>
 						<div className="mt-6 leading-[1.6]">
-							Compounds, apartment blocks, short-lets by the beach. Rentloop
-							holds the properties, the tenants, the rent, the maintenance and
-							the records — so none of it lives in a WhatsApp group called{' '}
+							Compounds, apartment blocks, student hostels, short-lets by the
+							beach. Rentloop holds the properties, the tenants, the rent, the
+							maintenance and the records — so none of it lives in a WhatsApp
+							group called{' '}
 							<span className="font-rl-mono text-rl-ink text-[14px]">
 								"RENT 🚨"
 							</span>
@@ -92,7 +93,7 @@ function Hero() {
 // ── Metric strip ─────────────────────────────────────────────
 function MetricStrip() {
 	const stats = [
-		{ n: '1 – 3 units', l: 'free, forever' },
+		{ n: 'Up to 3 units', l: 'free, forever' },
 		{ n: '2 rental modes', l: 'long-term agreements and short stays' },
 		{ n: 'GH₵', l: 'cedis, Mobile Money and bank transfer' },
 		{ n: 'Every payment', l: 'invoiced, receipted and logged' },
@@ -580,7 +581,7 @@ export function ManagersPage() {
 								Or all of them.
 							</>
 						}
-						body="Free for 1 – 3 units, forever. No card, no calls, no nonsense. We made it easy because we had to use it ourselves."
+						body="Free for up to 3 units, forever. No card, no calls, no nonsense. We made it easy because we had to use it ourselves."
 						primary={
 							<CTAButton
 								kind="primary"

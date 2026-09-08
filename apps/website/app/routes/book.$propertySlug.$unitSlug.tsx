@@ -2,7 +2,7 @@ import type { Route } from './+types/book.$propertySlug.$unitSlug'
 import { getUnitForBookingPageServer } from '~/api/bookings/server'
 import { environmentVariables } from '~/lib/actions/env.server'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
-import { getSocialMetas } from '~/lib/seo'
+import { getSocialMetas, pageKeywords } from '~/lib/seo'
 import { BookModule } from '~/modules'
 
 export async function loader({ params, request }: Route.LoaderArgs) {
@@ -34,9 +34,8 @@ export function meta({ loaderData, location }: Route.MetaArgs) {
 		keywords: [
 			loaderData.unit.name,
 			loaderData.unit.property?.name ?? 'rentals',
-			'booking',
-			'reservation',
-		].join(', '),
+			...pageKeywords.bookings,
+		],
 	})
 }
 

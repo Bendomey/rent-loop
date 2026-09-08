@@ -480,7 +480,7 @@ function AuthCallout() {
 function Rally() {
 	const [copied, setCopied] = useState(false)
 
-	const pitch = `Hi — I found this rental platform that handles rent collection, maintenance, and rental agreements in one place. The first 1 – 3 units are free. Want me to send the demo? Their site has a section for managers: rentloopapp.com/managers`
+	const pitch = `Hi — I found this rental platform that handles rent collection, maintenance, and rental agreements in one place. The first 3 units are free. Want me to send the demo? Their site has a section for managers: rentloopapp.com/managers`
 
 	const pitchPoints = [
 		{
@@ -496,7 +496,7 @@ function Rally() {
 			s: 'Push notifications instead of guilt-trip phone calls.',
 		},
 		{
-			t: '1 – 3 units free',
+			t: 'Free for up to 3 units',
 			s: 'For your landlord. They pay nothing until they go past 3 units.',
 		},
 	]

@@ -1,6 +1,6 @@
 import type { Route } from './+types/blog._index'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
-import { getSocialMetas } from '~/lib/seo'
+import { getBreadcrumbSchema, getSocialMetas, pageKeywords } from '~/lib/seo'
 import { BlogIndexModule } from '~/modules'
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -10,16 +10,28 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export function meta({ loaderData, location }: Route.MetaArgs) {
-	return getSocialMetas({
-		title: 'Blog | RentLoop',
-		description:
-			'Guides, tips, and updates from the Rentloop team. Learn how to manage your rental properties smarter.',
-		url: getDisplayUrl({
-			origin: loaderData.origin,
-			path: location.pathname,
-		}),
+	const url = getDisplayUrl({
 		origin: loaderData.origin,
+		path: location.pathname,
 	})
+
+	const meta = getSocialMetas({
+		title: 'Property Management Insights | Rentloop Blog',
+		description:
+			'Guides on collecting rent, rent advance, tenancy agreements and running a rental portfolio — from the Rentloop team.',
+		url,
+		origin: loaderData.origin,
+		keywords: pageKeywords.blog,
+	})
+
+	const structuredData = [
+		getBreadcrumbSchema(loaderData.origin, [
+			{ name: 'Home', path: '/' },
+			{ name: 'Blog', path: '/blog' },
+		]),
+	]
+
+	return [...meta, { 'script:ld+json': structuredData }]
 }
 
 export default BlogIndexModule

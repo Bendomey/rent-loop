@@ -1,6 +1,6 @@
 ---
 title: 'Understanding Asset Management in Rentloop'
-description: 'Learn how Rentloop organises your rental portfolio with properties, blocks, and units — and how billing scales with your unit count.'
+description: 'Learn how Rentloop organises your rental portfolio with properties, blocks, and units — and how your plan is set by your total unit count.'
 date: '2026-03-22'
 author: 'Rentloop Team'
 slug: 'understanding-asset-management'
@@ -61,7 +61,7 @@ For Single properties, Rentloop creates a hidden "Main" block automatically. You
 
 ## What are Units?
 
-Units are the **actual spaces tenants rent**. Each unit belongs to a block, has its own configuration, and is billed individually.
+Units are the **actual spaces tenants rent**. Each unit belongs to a block and has its own configuration, and your total unit count is what determines which plan you need.
 
 Rentloop supports five unit types to cover both residential and commercial rentals:
 
@@ -83,21 +83,21 @@ Units can be duplicated with one click, which is useful when you have many simil
 
 ## How Billing is Based on Units
 
-Here is the most important thing to understand about Rentloop pricing: **you are billed per unit, not per property or block**.
+Here is the most important thing to understand about Rentloop pricing: **your plan is set by your total unit count, not by how many properties or blocks you have**.
 
-Properties and blocks are free organisational containers — you can create as many as you need. What determines your billing tier is the **total number of units** across your entire portfolio.
+Properties and blocks are free organisational containers — you can create as many as you need. What determines which plan you need is the **total number of units** across your entire portfolio.
 
 A few examples to make this concrete:
 
-| Scenario                               | Properties | Blocks   | Units | Monthly Cost  |
-| -------------------------------------- | ---------- | -------- | ----- | ------------- |
-| Landlord renting out a single house    | 1          | 1 (auto) | 1     | Free          |
-| 3 houses in different locations        | 3          | 3 (auto) | 3     | Free          |
-| Small apartment block with 8 units     | 1          | 1        | 8     | GHS 99 – 399  |
-| Two apartment complexes, 30 units each | 2          | 4        | 60    | GHS 400 – 899 |
-| Large hostel with 120 rooms            | 1          | 6        | 120   | GHS 400 – 899 |
+| Scenario                               | Properties | Blocks   | Units | Plan       | Monthly Cost |
+| -------------------------------------- | ---------- | -------- | ----- | ---------- | ------------ |
+| Landlord renting out a single house    | 1          | 1 (auto) | 1     | Free       | GHS 0        |
+| 3 houses in different locations        | 3          | 3 (auto) | 3     | Free       | GHS 0        |
+| Small apartment block with 8 units     | 1          | 1        | 8     | Starter    | GHS 149      |
+| Two apartment complexes, 30 units each | 2          | 4        | 60    | Growth     | GHS 299      |
+| Large hostel with 120 rooms            | 1          | 6        | 120   | Enterprise | Custom       |
 
-Your first 3 units are free. From 4 to 50 units, you’re on the Starter plan (GHS 99–399/month). From 51 to 150 units, you move to the Growth plan (GHS 400–899/month). For portfolios above 150 units, reach out for a custom Enterprise plan.
+Free covers up to 3 units at no cost. Starter covers up to 50 units at GHS 149/month or GHS 1,490/year, and Growth covers up to 100 units at GHS 299/month or GHS 2,990/year. For portfolios above 100 units, reach out for a custom Enterprise plan. You pick your plan when you sign up and can change it whenever your portfolio changes.
 
 See the full [pricing breakdown](/pricing) for details.
 
@@ -109,7 +109,7 @@ Kofi owns three houses in Accra, each rented to a different family. He creates t
 
 ### The Apartment Complex Owner
 
-Ama owns a complex in Tema with two buildings. Building A has 12 apartments and Building B has 18 apartments. She creates one **Multi** property, adds two blocks (Block A and Block B), and adds units to each. Her 30 total units fall in the 4–50 Starter range, so she pays GHS 99–399/month.
+Ama owns a complex in Tema with two buildings. Building A has 12 apartments and Building B has 18 apartments. She creates one **Multi** property, adds two blocks (Block A and Block B), and adds units to each. Her 30 total units fit comfortably inside Starter’s 50-unit limit, so she pays GHS 149/month.
 
 ### The Mixed-Use Developer
 
@@ -117,12 +117,12 @@ A developer manages an office park with three sections: a commercial ground floo
 
 ### The University Hostel
 
-A hostel operator has 150 rooms across 5 floors. One **Multi** property, five blocks (one per floor), 30 units per floor. At 150 units total, the portfolio falls in the 51–150 Growth range, so they pay GHS 400–899/month. Rentloop applies the right plan automatically.
+A hostel operator has 90 rooms across 3 floors. One **Multi** property, three blocks (one per floor), 30 units per floor. At 90 units total, the portfolio fits inside Growth’s 100-unit limit, so they pay GHS 299/month. Past 100 units they would move to a custom Enterprise plan.
 
 ## Getting Started
 
 Setting up your portfolio in Rentloop takes minutes. When you create a property, the wizard walks you through choosing Single or Multi, adding your property details and address, and getting to the dashboard.
 
-From there, Multi properties let you add blocks and units one by one — or duplicate existing units to speed things up. Your billing updates automatically as you grow.
+From there, Multi properties let you add blocks and units one by one — or duplicate existing units to speed things up. When you outgrow your plan’s unit limit, upgrading takes effect immediately and the unused time on your current plan is credited against the new one.
 
 [Create your account](https://pm.rentloopapp.com/apply) and start building your portfolio today. The first 3 units are free, forever.
