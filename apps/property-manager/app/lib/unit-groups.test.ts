@@ -3,6 +3,7 @@ import {
 	isPickable,
 	partitionUnits,
 	unavailableReason,
+	unitAvailability,
 	unitTypesOf,
 } from './unit-groups'
 
@@ -85,4 +86,50 @@ test('a single-type property offers no types to choose between', () => {
 			unit('b', 'Unit.Status.Occupied', 'STUDIO'),
 		]),
 	).toEqual(['STUDIO'])
+})
+
+test('a free room reads as free', () => {
+	expect(unitAvailability('Unit.Status.Available')).toEqual({
+		label: 'Free',
+		tone: 'success',
+	})
+})
+
+test('a shared room says it still has space', () => {
+	expect(unitAvailability('Unit.Status.PartiallyOccupied')).toEqual({
+		label: 'Space for another',
+		tone: 'success',
+	})
+})
+
+// Warned about, never hidden: the sitting tenant may be leaving before the new
+// term starts, so an occupied room stays a legitimate choice.
+test('a taken room is warned about in the landlord’s words', () => {
+	expect(unitAvailability('Unit.Status.Occupied')).toEqual({
+		label: 'Someone lives here',
+		tone: 'warning',
+	})
+	expect(unitAvailability('Unit.Status.Maintenance')).toEqual({
+		label: 'Under maintenance',
+		tone: 'warning',
+	})
+})
+
+test('the chip agrees with isPickable on which rooms read as free', () => {
+	const statuses = [
+		'Unit.Status.Available',
+		'Unit.Status.PartiallyOccupied',
+		'Unit.Status.Occupied',
+		'Unit.Status.Maintenance',
+		'Unit.Status.Draft',
+	] as const
+	for (const status of statuses) {
+		expect(unitAvailability(status).tone === 'success').toBe(isPickable(status))
+	}
+})
+
+test('an unknown status still says something', () => {
+	expect(unitAvailability('Unit.Status.Something' as never).label).toBe(
+		'Not available',
+	)
 })
