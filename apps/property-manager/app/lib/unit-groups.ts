@@ -27,6 +27,24 @@ const REASONS: Record<string, string> = {
 export const unavailableReason = (status: PropertyUnit['status']) =>
 	REASONS[status] ?? 'Not available'
 
+export interface UnitAvailability {
+	label: string
+	tone: 'success' | 'warning'
+}
+
+export const unitAvailability = (
+	status: PropertyUnit['status'],
+): UnitAvailability => {
+	switch (status) {
+		case 'Unit.Status.Available':
+			return { label: 'Free', tone: 'success' }
+		case 'Unit.Status.PartiallyOccupied':
+			return { label: 'Space for another', tone: 'success' }
+		default:
+			return { label: unavailableReason(status), tone: 'warning' }
+	}
+}
+
 export interface UnitPartition {
 	free: PropertyUnit[]
 	unavailable: PropertyUnit[]
