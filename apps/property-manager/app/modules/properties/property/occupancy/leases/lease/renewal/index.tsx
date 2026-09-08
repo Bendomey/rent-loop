@@ -24,7 +24,17 @@ import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import { dayIsSaturated, termIsSaturated } from '~/lib/availability'
 import { formatAmount } from '~/lib/format-amount'
-import { type PaymentFrequency, termEndDate } from '~/lib/schedule'
+import {
+	defaultDuration,
+	durationBare,
+	durationOptions,
+	durationWords,
+} from '~/lib/renewal-term'
+import {
+	buildSchedule,
+	type PaymentFrequency,
+	termEndDate,
+} from '~/lib/schedule'
 import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
 import { useClient } from '~/providers/client-provider'
@@ -33,30 +43,13 @@ import type { loader } from '~/routes/_auth.properties.$propertyId.occupancy.lea
 type Step = 'term' | 'room' | 'review'
 
 const STEPS: [Step, string][] = [
-	['term', 'New term'],
 	['room', 'Room & rent'],
+	['term', 'New term'],
 	['review', 'Check it over'],
 ]
 
 const money = (minor: number, currency: string) =>
 	formatAmount(minor / 100, currency)
-
-/** "a year" reads better than "12 months" in a sentence. */
-const durationWords = (n: number) =>
-	n === 12
-		? 'a year'
-		: n === 24
-			? 'two years'
-			: n === 6
-				? 'six months'
-				: `${n} months`
-const durationBare = (n: number) => durationWords(n).replace(/^a /, '')
-
-const DURATIONS = [
-	{ n: 6, label: '6 months' },
-	{ n: 12, label: '1 year', tag: 'Most renewals' },
-	{ n: 24, label: '2 years' },
-]
 
 function StepRail({ step }: { step: Step }) {
 	const at = STEPS.findIndex(([key]) => key === step)
@@ -126,12 +119,15 @@ export function LeaseRenewalModule() {
 	const renew = useRenewLease()
 
 	const frequency = (lease?.payment_frequency ?? 'MONTHLY') as PaymentFrequency
+	const termFrequency = (lease?.stay_duration_frequency ??
+		lease?.payment_frequency ??
+		'MONTHLY') as PaymentFrequency
 	const currency = lease?.rent_fee_currency ?? 'GHS'
 	const parentEnd = lease?.move_out_date ? new Date(lease.move_out_date) : null
 
-	const [step, setStep] = useState<Step>('term')
+	const [step, setStep] = useState<Step>('room')
 	const [date, setDate] = useState<Nullable<Date>>(parentEnd)
-	const [duration, setDuration] = useState<number>(12)
+	const [durationChoice, setDurationChoice] = useState<Nullable<number>>(null)
 	const [custom, setCustom] = useState(false)
 	const [rent, setRent] = useState<string>(String((lease?.rent_fee ?? 0) / 100))
 	const [fees, setFees] = useState<RenewLeaseFee[]>([])
@@ -181,9 +177,24 @@ export function LeaseRenewalModule() {
 	const currentUnitId = lease.unit?.id ?? ''
 	const unitChanged = !!unitId && unitId !== currentUnitId
 	const early = !!date && !!parentEnd && date < parentEnd
-	const end = date ? termEndDate(date, duration, frequency) : null
+	const duration =
+		durationChoice ?? defaultDuration(lease.stay_duration, unitChanged)
+	const end = date ? termEndDate(date, duration, termFrequency) : null
 	const parentLastDay = parentEnd ? lastDayOfTerm(parentEnd) : null
 	const parentPeriods = lease.stay_duration || 1
+	const durations = durationOptions(lease.stay_duration, termFrequency)
+
+	const paymentsOver = (periods: number) =>
+		date
+			? buildSchedule({
+					rent: rentMinor,
+					moveIn: date,
+					stayDuration: periods,
+					stayFrequency: termFrequency,
+					paymentFrequency: frequency,
+				}).length
+			: 0
+	const payments = paymentsOver(duration)
 
 	/*
 	 * The earliest day a renewal may start — the same floor the API enforces,
@@ -213,18 +224,20 @@ export function LeaseRenewalModule() {
 	const termClashes = Boolean(date && end && termIsSaturated(date, end, ranges))
 
 	const ready =
-		!!date && !early && !termClashes && (step === 'term' || rentMinor > 0)
+		step === 'room'
+			? rentMinor > 0 && !!unitId
+			: !!date && !early && !termClashes && rentMinor > 0
 	const actionLabel =
-		step === 'term'
-			? 'Next: room & rent'
-			: step === 'room'
+		step === 'room'
+			? 'Next: the new term'
+			: step === 'term'
 				? 'Next: check it over'
 				: 'Sign the renewal'
 
 	const submit = async () => {
 		if (!date) return
 		if (step !== 'review') {
-			setStep(step === 'term' ? 'room' : 'review')
+			setStep(step === 'room' ? 'term' : 'review')
 			return
 		}
 		try {
@@ -235,7 +248,7 @@ export function LeaseRenewalModule() {
 				body: {
 					move_in_date: date.toISOString(),
 					stay_duration: duration,
-					stay_duration_frequency: frequency,
+					stay_duration_frequency: termFrequency,
 					rent_fee: rentMinor,
 					...(unitChanged
 						? { unit_id: unitId, carry_financial_account: true }
@@ -345,12 +358,14 @@ export function LeaseRenewalModule() {
 			</b>{' '}
 			stays on in{' '}
 			<b className="text-foreground">{lease.unit?.name ?? 'their room'}</b> for
-			another <b className="text-foreground">{durationBare(duration)}</b>, from{' '}
-			<b className="text-foreground">{date ? formatDay(date) : '—'}</b> to{' '}
+			another{' '}
+			<b className="text-foreground">{durationBare(duration, termFrequency)}</b>
+			, from <b className="text-foreground">{date ? formatDay(date) : '—'}</b>{' '}
+			to{' '}
 			<b className="text-foreground">
 				{end ? formatDay(lastDayOfTerm(end)) : '—'}
 			</b>
-			{step === 'term' ? (
+			{step === 'room' ? (
 				'.'
 			) : (
 				<>
@@ -358,7 +373,7 @@ export function LeaseRenewalModule() {
 					{frequency.toLowerCase()}.
 				</>
 			)}
-			{step !== 'term' && (
+			{step !== 'room' && (
 				<>
 					{unitChanged
 						? ' Their deposit and running balance come with them.'
@@ -369,10 +384,10 @@ export function LeaseRenewalModule() {
 	)
 
 	const rows: [string, string][] =
-		step === 'term' || !date
+		step === 'room' || !date
 			? []
 			: [
-					['Whole new term', money(rentMinor * duration + feeTotal, currency)],
+					['Whole new term', money(rentMinor * payments + feeTotal, currency)],
 					...(feeTotal > 0
 						? ([['One-off amounts', money(feeTotal, currency)]] as [
 								string,
@@ -413,18 +428,18 @@ export function LeaseRenewalModule() {
 				<Button variant="outline" size="sm" asChild>
 					<Link
 						to={
-							step === 'term'
+							step === 'room'
 								? `/properties/${propertyId}/occupancy/leases/${lease.id}`
 								: '#'
 						}
 						onClick={(event) => {
-							if (step === 'term') return
+							if (step === 'room') return
 							event.preventDefault()
-							setStep(step === 'review' ? 'room' : 'term')
+							setStep(step === 'review' ? 'term' : 'room')
 						}}
 					>
 						<ArrowLeft className="size-4" />
-						{step === 'term' ? 'Back to the lease' : 'Back a step'}
+						{step === 'room' ? 'Back to the lease' : 'Back a step'}
 					</Link>
 				</Button>
 			</div>
@@ -555,7 +570,11 @@ export function LeaseRenewalModule() {
 									q="How long for?"
 									dim={!date}
 									done={!!date}
-									help="This is a new contract, so the length is yours to set again. They can renew again after it."
+									help={
+										unitChanged
+											? 'A different room, so there is no length to carry over — set it for the new arrangement.'
+											: `Set to the same ${durationBare(parentPeriods, termFrequency)} they are on now. This is a new contract, so change it if they have agreed something different.`
+									}
 									foot={
 										custom
 											? 'Anything from 1 to 60 periods. An odd length is fine — rent still falls on the same day each period.'
@@ -563,14 +582,14 @@ export function LeaseRenewalModule() {
 									}
 								>
 									<div className="flex flex-wrap gap-3">
-										{DURATIONS.map((option) => {
+										{durations.map((option) => {
 											const on = !custom && duration === option.n
 											return (
 												<button
 													key={option.n}
 													type="button"
 													onClick={() => {
-														setDuration(option.n)
+														setDurationChoice(option.n)
 														setCustom(false)
 													}}
 													className={cn(
@@ -589,7 +608,8 @@ export function LeaseRenewalModule() {
 																: 'text-muted-foreground',
 														)}
 													>
-														{option.tag ?? `${option.n} rent payments`}
+														{option.tag ??
+															`${paymentsOver(option.n)} rent payments`}
 													</span>
 												</button>
 											)
@@ -619,7 +639,9 @@ export function LeaseRenewalModule() {
 												<button
 													type="button"
 													aria-label="One less"
-													onClick={() => setDuration(Math.max(1, duration - 1))}
+													onClick={() =>
+														setDurationChoice(Math.max(1, duration - 1))
+													}
 													className="flex h-11 w-10 items-center justify-center"
 												>
 													<Minus className="text-muted-foreground size-[17px]" />
@@ -631,7 +653,7 @@ export function LeaseRenewalModule() {
 													type="button"
 													aria-label="One more"
 													onClick={() =>
-														setDuration(Math.min(60, duration + 1))
+														setDurationChoice(Math.min(60, duration + 1))
 													}
 													className="flex h-11 w-10 items-center justify-center"
 												>
@@ -641,7 +663,7 @@ export function LeaseRenewalModule() {
 											<span className="text-muted-foreground text-[14.5px]">
 												periods — that’s{' '}
 												<b className="text-foreground">
-													{duration} rent payments
+													{payments} rent payments
 												</b>
 												{end ? `, ending ${formatDay(lastDayOfTerm(end))}` : ''}
 											</span>
@@ -704,7 +726,7 @@ export function LeaseRenewalModule() {
 													: `${money(lease.rent_fee - rentMinor, currency)} less`}
 											</b>{' '}
 											a {frequency.toLowerCase()} than now —{' '}
-											{money(rentMinor * duration, currency)} over the whole
+											{money(rentMinor * payments, currency)} over the whole
 											term.
 										</p>
 									)}
@@ -785,7 +807,7 @@ export function LeaseRenewalModule() {
 							<TermBar
 								startLabel={formatDay(date)}
 								endLabel={formatDay(lastDayOfTerm(end))}
-								durationLabel={durationWords(duration)}
+								durationLabel={durationWords(duration, termFrequency)}
 								oldPeriods={parentPeriods}
 								newPeriods={duration}
 								oldEndLabel={parentLastDay ? formatDay(parentLastDay) : '—'}
@@ -799,7 +821,7 @@ export function LeaseRenewalModule() {
 							<TermBar
 								startLabel={formatDay(date)}
 								endLabel={formatDay(lastDayOfTerm(end))}
-								durationLabel={durationWords(duration)}
+								durationLabel={durationWords(duration, termFrequency)}
 								oldPeriods={parentPeriods}
 								newPeriods={duration}
 								oldEndLabel={parentLastDay ? formatDay(parentLastDay) : '—'}
@@ -820,7 +842,7 @@ export function LeaseRenewalModule() {
 					foot={
 						step === 'review'
 							? 'This writes a new lease under the same tenancy. Nothing goes out to the tenant until they are billed.'
-							: early
+							: early && step !== 'room'
 								? `Move the start date to on or after ${parentEnd ? formatDay(parentEnd) : 'the current term’s end'} and this turns on.`
 								: 'Nothing is saved yet — you can change any of this on the last step.'
 					}
