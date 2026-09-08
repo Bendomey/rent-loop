@@ -1,14 +1,10 @@
 import { Home, RefreshCw } from 'lucide-react'
 import { useState } from 'react'
-import { Question, RadioCard } from './parts'
+import { Question } from './parts'
+import { PickRoomModal } from './pick-room-modal'
 import { useGetPropertyUnits } from '~/api/units'
 import { Button } from '~/components/ui/button'
-import { formatAmount } from '~/lib/format-amount'
-import { unitAvailability } from '~/lib/unit-groups'
 import { cn } from '~/lib/utils'
-
-const money = (minor: number, currency: string) =>
-	formatAmount(minor / 100, currency)
 
 /**
  * Which room the new term is written against.
@@ -86,73 +82,42 @@ export function AskRoom({
 								: 'The room they are in now'}
 						</p>
 					</div>
-					{changed ? (
+					<div className="flex flex-wrap items-center gap-2">
+						{changed && (
+							<Button
+								type="button"
+								variant="ghost"
+								size="sm"
+								onClick={() => onUnitChange(currentUnitId)}
+							>
+								Keep them in {currentUnitName}
+							</Button>
+						)}
 						<Button
 							type="button"
 							variant="outline"
 							size="sm"
-							onClick={() => {
-								onUnitChange(currentUnitId)
-								setPicking(false)
-							}}
+							onClick={() => setPicking(true)}
 						>
 							<RefreshCw className="size-4" />
-							Keep them in {currentUnitName}
+							{changed ? 'Pick a different room' : 'Move them to another room'}
 						</Button>
-					) : (
-						<Button
-							type="button"
-							variant="outline"
-							size="sm"
-							onClick={() => setPicking(!picking)}
-						>
-							<RefreshCw className="size-4" />
-							{picking ? 'Never mind' : 'Move them to another room'}
-						</Button>
-					)}
-				</div>
-
-				{picking && !changed && (
-					<div className="mt-4">
-						<p className="text-muted-foreground mb-3 text-[14.5px]">
-							Rooms they could take instead — an occupied one is still a valid
-							choice if that tenant is leaving first, and the next step will
-							tell you if the dates clash.
-						</p>
-						<div className="grid gap-3 sm:grid-cols-2">
-							{units
-								.filter((unit) => unit.id !== currentUnitId)
-								.map((unit) => {
-									const availability = unitAvailability(unit.status)
-									return (
-										<RadioCard
-											key={unit.id}
-											label={unit.name}
-											sub={`Listed at ${money(unit.rent_fee, currency)}`}
-											right={
-												<span
-													className={cn(
-														'shrink-0 rounded-full px-2.5 py-1 text-[12px] font-bold',
-														availability.tone === 'success'
-															? 'bg-success-bg text-success'
-															: 'bg-warning-bg text-warning',
-													)}
-												>
-													{availability.label}
-												</span>
-											}
-											onClick={() => {
-												onUnitChange(unit.id)
-												onRentSuggestion(unit.rent_fee)
-												setPicking(false)
-											}}
-										/>
-									)
-								})}
-						</div>
 					</div>
-				)}
+				</div>
 			</Question>
+
+			<PickRoomModal
+				open={picking}
+				onOpenChange={setPicking}
+				units={units}
+				currentUnitId={currentUnitId}
+				selectedUnitId={unitId}
+				currency={currency}
+				onPick={(unit) => {
+					onUnitChange(unit.id)
+					onRentSuggestion(unit.rent_fee)
+				}}
+			/>
 		</>
 	)
 }
