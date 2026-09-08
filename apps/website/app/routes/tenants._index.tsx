@@ -1,6 +1,6 @@
 import type { Route } from './+types/tenants._index'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
-import { getSocialMetas } from '~/lib/seo'
+import { getBreadcrumbSchema, getSocialMetas, pageKeywords } from '~/lib/seo'
 import { TenantsPage } from '~/modules/tenants/page'
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -12,13 +12,23 @@ export function meta({ loaderData, location }: Route.MetaArgs) {
 		origin: loaderData.origin,
 		path: location.pathname,
 	})
-	return getSocialMetas({
+	const meta = getSocialMetas({
 		url,
 		origin: loaderData.origin,
-		title: 'Pay Rent and Track Maintenance Online | Rentloop for Tenants',
+		title: 'Pay Rent with Mobile Money & Track Maintenance | Rentloop',
 		description:
-			'Pay rent, submit maintenance requests and find your rental agreement in one app. For tenants renting.',
+			'Pay rent with MTN, Telecel or AirtelTigo Mobile Money, get an instant receipt, submit maintenance requests and find your tenancy agreement — all in one app.',
+		keywords: pageKeywords.tenants,
 	})
+
+	const structuredData = [
+		getBreadcrumbSchema(loaderData.origin, [
+			{ name: 'Home', path: '/' },
+			{ name: 'For Tenants', path: '/tenants' },
+		]),
+	]
+
+	return [...meta, { 'script:ld+json': structuredData }]
 }
 
 export default TenantsPage

@@ -45,7 +45,8 @@ function Hero() {
 				<div className="mt-6">
 					Rentloop puts properties, tenants, rent, maintenance and rental
 					records in one place — so your rental business stops living in
-					WhatsApp, spreadsheets and bank statements.
+					WhatsApp, spreadsheets and bank statements. Built for Ghana, with rent
+					collected in cedis by Mobile Money or bank transfer.
 				</div>
 			</BodyText>
 
@@ -70,9 +71,9 @@ function Hero() {
 			</Link>
 
 			<div className="font-rl-sans text-rl-muted-soft mt-7 flex flex-wrap items-center justify-center gap-7 text-[13.5px]">
-				<span>✓ 1 – 3 units free, forever</span>
+				<span>✓ Free for up to 3 units</span>
 				<span>✓ No card required</span>
-				<span>✓ No per-unit fees</span>
+				<span>✓ Monthly or yearly billing</span>
 			</div>
 
 			<div className="relative mt-12 w-full md:mt-16">
@@ -607,10 +608,10 @@ function PricingStrip() {
 						Pricing
 					</div>
 					<div className="font-rl-serif text-rl-ink text-[26px] leading-[1.15] tracking-[-0.4px] md:text-[32px]">
-						Free for 1 – 3 units.
+						Free for up to 3 units.
 						<br />
 						<span className="text-rl-muted-soft">
-							Flat monthly after that. No per-unit fees.
+							Paid plans from GHS 149/month. Change plans anytime.
 						</span>
 					</div>
 				</div>
@@ -650,7 +651,7 @@ export function Home() {
 								Your <Em color={RL.crimsonLight}>software</Em> shouldn't be one.
 							</>
 						}
-						body="Start free on 1 – 3 units. No card, no per-unit fees."
+						body="Start free on up to 3 units. No card, and nothing to cancel."
 						primary={
 							<CTAButton
 								kind="primary"

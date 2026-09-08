@@ -1,11 +1,116 @@
 import { APP_NAME } from './constants'
+import { plans } from './plans'
 import { safeString } from './strings'
 import { capitalize } from './utils'
 
 const MAX_LENGTH_META_DESCRIPTION = 200
 
-const baseKeywords =
-	'property management, rental management, real estate software, tenant management, lease management, maintenance tracking, rent collection, property analytics, landlord tools, property manager software, real estate management, rental property software, tenant screening, online rent payments, property marketing, lease agreements, maintenance requests, financial reporting, property inspections, vacancy management, rental listings'
+const coreKeywords = [
+	'property management software',
+	'property management software Ghana',
+	'rental management software Ghana',
+	'landlord software Ghana',
+	'property management Accra',
+	'rent collection Ghana',
+	'estate management software Ghana',
+	'real estate software West Africa',
+	'property management software Africa',
+	'property management',
+	'rental management',
+	'tenant management',
+	'lease management',
+	'maintenance tracking',
+	'rent collection',
+	'landlord tools',
+	'property manager software',
+	'rental property software',
+]
+
+export const pageKeywords = {
+	home: [
+		'property management software Ghana',
+		'rental management software Ghana',
+		'landlord app Ghana',
+		'property management Accra',
+		'property manager Kumasi',
+		'rental management Tema',
+		'mobile money rent payment',
+		'collect rent in cedis',
+		'multi-property management',
+		'rental income tracking',
+		'property management dashboard',
+		'Buildium alternative',
+		'AppFolio alternative',
+	],
+	pricing: [
+		'property management software pricing',
+		'free property management software',
+		'affordable property management software',
+		'property management software for small landlords',
+		'rental software for 10 units',
+		'property management software free trial',
+		'property management software Ghana pricing',
+		'hostel management software Ghana pricing',
+	],
+	managers: [
+		'property management software for landlords',
+		'landlord software Ghana',
+		'caretaker management app',
+		'rent advance management',
+		'two year rent advance',
+		'tenancy agreement Ghana',
+		'rent control Ghana',
+		'hostel management software Ghana',
+		'student hostel management system',
+		'rental accounting software',
+		'property maintenance software',
+		'rent ledger',
+		'occupancy tracking',
+		'digital lease signing',
+		'tenant onboarding software',
+	],
+	tenants: [
+		'pay rent with MoMo',
+		'mobile money rent payment',
+		'MTN MoMo rent collection',
+		'rent payment app Ghana',
+		'rent receipt app',
+		'landlord tenant portal',
+		'automated rent reminders Ghana',
+		'maintenance request app',
+		'self-contained rental',
+		'chamber and hall',
+		'single room rental Ghana',
+	],
+	download: [
+		'rent payment app Ghana',
+		'tenant app Ghana',
+		'pay rent with MoMo',
+		'rent receipt app',
+		'property management app Android',
+		'property management app iOS',
+	],
+	blog: [
+		'how to collect rent in Ghana',
+		'how to manage rental property in Ghana',
+		'what is rent advance',
+		'how much rent advance is legal in Ghana',
+		'best way to track rent payments',
+		'tenant screening checklist Ghana',
+		'property management tips Ghana',
+	],
+	bookings: [
+		'short let management Ghana',
+		'serviced apartment management software',
+		'Airbnb management software Ghana',
+		'short stay booking system',
+		'guest booking management',
+		'vacation rental software Ghana',
+		'short stay Accra',
+	],
+}
+
+const baseKeywords = coreKeywords.join(', ')
 
 export function getSocialMetas({
 	url,
@@ -19,14 +124,13 @@ export function getSocialMetas({
 	url: string
 	title?: string
 	description?: string
-	keywords?: string
+	keywords?: string | string[]
 	origin?: string
 }) {
-	if (keywords.length) {
-		keywords = keywords.concat(`, ${baseKeywords}`)
-	} else {
-		keywords = baseKeywords
-	}
+	const pageTerms = Array.isArray(keywords) ? keywords.join(', ') : keywords
+	const allKeywords = pageTerms.length
+		? `${pageTerms}, ${baseKeywords}`
+		: baseKeywords
 
 	if (!images.length && origin) {
 		images = [`${origin}/images/og-image.png`]
@@ -56,7 +160,7 @@ export function getSocialMetas({
 		{ name: 'description', content: truncateDescription },
 		{
 			name: 'keywords',
-			content: `${APP_NAME}${keywords ? `, ${keywords}` : ''}`,
+			content: `${APP_NAME}, ${allKeywords}`,
 		},
 		{ name: 'robots', content: 'index, follow' },
 		{ name: 'author', content: 'RentLoop' },
@@ -98,12 +202,27 @@ export function getOrganizationSchema(origin: string) {
 		url: origin,
 		logo: `${origin}/logo.png`,
 		description:
-			'Rentloop is property management software built for Ghana. Manage properties, tenants, rent, maintenance and rental records in one place.',
+			'Rentloop is property management software built for Ghana. Manage properties, tenants, rent, maintenance and rental records in one place, with rent collected in cedis via Mobile Money or bank transfer.',
 		sameAs: ['https://twitter.com/rentloopgh'],
-		areaServed: {
-			'@type': 'Country',
-			name: 'Ghana',
-		},
+		areaServed: [
+			{ '@type': 'Country', name: 'Ghana' },
+			{ '@type': 'Country', name: 'Nigeria' },
+			{ '@type': 'Country', name: 'Kenya' },
+			{ '@type': 'Country', name: 'South Africa' },
+			{ '@type': 'Country', name: 'Canada' },
+			{ '@type': 'Country', name: 'United States' },
+			{ '@type': 'Country', name: 'United Kingdom' },
+			{ '@type': 'City', name: 'Accra' },
+			{ '@type': 'City', name: 'Kumasi' },
+			{ '@type': 'City', name: 'Takoradi' },
+			{ '@type': 'City', name: 'Tamale' },
+			{ '@type': 'City', name: 'Lagos' },
+			{ '@type': 'City', name: 'Nairobi' },
+			{ '@type': 'City', name: 'Johannesburg' },
+			{ '@type': 'City', name: 'Toronto' },
+			{ '@type': 'City', name: 'New York' },
+			{ '@type': 'City', name: 'London' },
+		],
 		contactPoint: {
 			'@type': 'ContactPoint',
 			contactType: 'customer service',
@@ -140,9 +259,85 @@ export function getSoftwareAppSchema(origin: string) {
 		description:
 			'Rentloop is property management software built for Ghana. Manage properties, tenants, rent, maintenance and rental records in one place.',
 		offers: {
-			'@type': 'Offer',
-			price: '0',
+			'@type': 'AggregateOffer',
 			priceCurrency: 'GHS',
+			lowPrice: String(Math.min(...plans.map((plan) => plan.priceMonthly))),
+			highPrice: String(Math.max(...plans.map((plan) => plan.priceMonthly))),
+			offerCount: String(plans.length),
+			offers: plans.map((plan) => ({
+				'@type': 'Offer',
+				name: `${plan.name} plan`,
+				description: plan.description,
+				price: String(plan.priceMonthly),
+				priceCurrency: 'GHS',
+				url: `${origin}/pricing`,
+			})),
 		},
+	}
+}
+
+export function getFaqSchema(faqs: { question: string; answer: string }[]) {
+	return {
+		'@context': 'https://schema.org',
+		'@type': 'FAQPage',
+		mainEntity: faqs.map((faq) => ({
+			'@type': 'Question',
+			name: faq.question,
+			acceptedAnswer: {
+				'@type': 'Answer',
+				text: faq.answer,
+			},
+		})),
+	}
+}
+
+export function getBlogPostingSchema({
+	origin,
+	url,
+	title,
+	description,
+	datePublished,
+	author,
+	image,
+}: {
+	origin: string
+	url: string
+	title: string
+	description: string
+	datePublished: string
+	author: string
+	image?: string
+}) {
+	return {
+		'@context': 'https://schema.org',
+		'@type': 'BlogPosting',
+		headline: title,
+		description,
+		datePublished,
+		dateModified: datePublished,
+		mainEntityOfPage: { '@type': 'WebPage', '@id': url },
+		author: { '@type': 'Organization', name: author, url: origin },
+		publisher: {
+			'@type': 'Organization',
+			name: 'RentLoop',
+			logo: { '@type': 'ImageObject', url: `${origin}/logo.png` },
+		},
+		...(image ? { image: [image] } : {}),
+	}
+}
+
+export function getBreadcrumbSchema(
+	origin: string,
+	crumbs: { name: string; path: string }[],
+) {
+	return {
+		'@context': 'https://schema.org',
+		'@type': 'BreadcrumbList',
+		itemListElement: crumbs.map((crumb, index) => ({
+			'@type': 'ListItem',
+			position: index + 1,
+			name: crumb.name,
+			item: `${origin}${crumb.path}`,
+		})),
 	}
 }

@@ -30,7 +30,7 @@ export const blogPosts: BlogPostEntry[] = [
 		meta: {
 			title: 'Understanding Asset Management in Rentloop',
 			description:
-				'Learn how Rentloop organises your rental portfolio with properties, blocks, and units — and how billing scales with your unit count.',
+				'Learn how Rentloop organises your rental portfolio with properties, blocks, and units — and how your plan is set by your total unit count.',
 			date: '2026-03-22',
 			author: 'Marketing Team',
 			slug: 'understanding-asset-management',
