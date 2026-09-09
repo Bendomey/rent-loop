@@ -102,6 +102,19 @@ func HasBlockingRenewal(children []models.Lease) bool {
 	return false
 }
 
+// LeaseHasRenewal reports whether a lease has already been continued by a
+// renewal — any child lease that isn't Cancelled. A renewed term's move-in and
+// move-out never really happen for the tenant (they were already in the unit
+// and stay), so those notifications are suppressed for it.
+func LeaseHasRenewal(ctx context.Context, repo repository.LeaseRepository, leaseID string) (bool, error) {
+	children, err := repo.ListChildren(ctx, leaseID)
+	if err != nil {
+		return false, err
+	}
+
+	return HasBlockingRenewal(*children), nil
+}
+
 // OverlapsParentTerm reports whether a renewal would start before its parent
 // finishes.
 //

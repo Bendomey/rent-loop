@@ -817,41 +817,45 @@ func (s *leaseService) ActivateLease(ctx context.Context, input ActivateLeaseInp
 		})
 	}
 
-	startDate := lease.MoveInDate.Format("January 2, 2006")
+	// A renewal's tenant is already in the unit, so the move-in notification
+	// would only confuse them. Activation itself still proceeds.
+	if lease.Type != models.LeaseTypeRenewal {
+		startDate := lease.MoveInDate.Format("January 2, 2006")
 
-	smsMessage := strings.NewReplacer(
-		"{{tenant_name}}", lease.Tenant.FirstName,
-		"{{unit_name}}", lease.Unit.Name,
-		"{{move_in_date}}", startDate,
-	).Replace(lib.LEASE_ACTIVATED_SMS_BODY)
+		smsMessage := strings.NewReplacer(
+			"{{tenant_name}}", lease.Tenant.FirstName,
+			"{{unit_name}}", lease.Unit.Name,
+			"{{move_in_date}}", startDate,
+		).Replace(lib.LEASE_ACTIVATED_SMS_BODY)
 
-	if lease.Tenant.Email != nil {
-		if htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render("lease/activated", emailtemplates.LeaseActivatedData{
-			TenantName: lease.Tenant.FirstName,
-			UnitName:   lease.Unit.Name,
-			MoveInDate: startDate,
-		}); renderErr != nil {
-			log.WithError(renderErr).Error("failed to render lease/activated email template")
-		} else {
-			go pkg.SendEmail(
-				s.appCtx.Config,
-				pkg.SendEmailInput{
-					Recipient: *lease.Tenant.Email,
-					Subject:   lib.LEASE_ACTIVATED_SUBJECT,
-					HtmlBody:  htmlBody,
-					TextBody:  textBody,
-				},
-			)
+		if lease.Tenant.Email != nil {
+			if htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render("lease/activated", emailtemplates.LeaseActivatedData{
+				TenantName: lease.Tenant.FirstName,
+				UnitName:   lease.Unit.Name,
+				MoveInDate: startDate,
+			}); renderErr != nil {
+				log.WithError(renderErr).Error("failed to render lease/activated email template")
+			} else {
+				go pkg.SendEmail(
+					s.appCtx.Config,
+					pkg.SendEmailInput{
+						Recipient: *lease.Tenant.Email,
+						Subject:   lib.LEASE_ACTIVATED_SUBJECT,
+						HtmlBody:  htmlBody,
+						TextBody:  textBody,
+					},
+				)
+			}
 		}
-	}
 
-	go s.appCtx.Clients.GatekeeperAPI.SendSMS(
-		context.Background(),
-		gatekeeper.SendSMSInput{
-			Recipient: lease.Tenant.Phone,
-			Message:   smsMessage,
-		},
-	)
+		go s.appCtx.Clients.GatekeeperAPI.SendSMS(
+			context.Background(),
+			gatekeeper.SendSMSInput{
+				Recipient: lease.Tenant.Phone,
+				Message:   smsMessage,
+			},
+		)
+	}
 
 	s.recomputeAccountEligibility(ctx, lease)
 
@@ -1132,50 +1136,61 @@ func (s *leaseService) CompleteLease(ctx context.Context, leaseID string) (*mode
 
 	unitName := lease.Unit.Name
 
-	smsMessage := strings.NewReplacer(
-		"{{tenant_name}}", lease.Tenant.FirstName,
-		"{{unit_name}}", unitName,
-	).Replace(lib.LEASE_COMPLETED_SMS_BODY)
-
-	if lease.Tenant.Email != nil {
-		if htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render(
-			"lease/completed",
-			emailtemplates.LeaseCompletedData{TenantName: lease.Tenant.FirstName, UnitName: unitName},
-		); renderErr != nil {
-			log.WithError(renderErr).Error("failed to render lease/completed email template")
-		} else {
-			go pkg.SendEmail(
-				s.appCtx.Config,
-				pkg.SendEmailInput{
-					Recipient: *lease.Tenant.Email,
-					Subject:   lib.LEASE_COMPLETED_SUBJECT,
-					HtmlBody:  htmlBody,
-					TextBody:  textBody,
-				},
-			)
-		}
+	renewed, renewedErr := LeaseHasRenewal(ctx, s.repo, lease.ID.String())
+	if renewedErr != nil {
+		log.WithError(renewedErr).WithField("lease_id", lease.ID.String()).
+			Warn("failed to check whether lease was renewed; sending completion notifications anyway")
 	}
 
-	go s.appCtx.Clients.GatekeeperAPI.SendSMS(
-		context.Background(),
-		gatekeeper.SendSMSInput{
-			Recipient: lease.Tenant.Phone,
-			Message:   smsMessage,
-		},
-	)
+	// A renewed term's tenant hasn't moved out — the tenancy continues — so the
+	// "lease completed" notice would only confuse them. The manager is still
+	// told below.
+	if !renewed {
+		smsMessage := strings.NewReplacer(
+			"{{tenant_name}}", lease.Tenant.FirstName,
+			"{{unit_name}}", unitName,
+		).Replace(lib.LEASE_COMPLETED_SMS_BODY)
 
-	if lease.Tenant.TenantAccount != nil {
-		tenantAccountID := lease.Tenant.TenantAccount.ID.String()
-		leaseID := lease.ID.String()
-		go func() {
-			_ = s.notificationService.SendToTenantAccount(
-				context.Background(),
-				tenantAccountID,
-				lib.LEASE_COMPLETED_SUBJECT,
-				smsMessage,
-				map[string]string{"type": "LEASE_COMPLETED", "lease_id": leaseID},
-			)
-		}()
+		if lease.Tenant.Email != nil {
+			if htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render(
+				"lease/completed",
+				emailtemplates.LeaseCompletedData{TenantName: lease.Tenant.FirstName, UnitName: unitName},
+			); renderErr != nil {
+				log.WithError(renderErr).Error("failed to render lease/completed email template")
+			} else {
+				go pkg.SendEmail(
+					s.appCtx.Config,
+					pkg.SendEmailInput{
+						Recipient: *lease.Tenant.Email,
+						Subject:   lib.LEASE_COMPLETED_SUBJECT,
+						HtmlBody:  htmlBody,
+						TextBody:  textBody,
+					},
+				)
+			}
+		}
+
+		go s.appCtx.Clients.GatekeeperAPI.SendSMS(
+			context.Background(),
+			gatekeeper.SendSMSInput{
+				Recipient: lease.Tenant.Phone,
+				Message:   smsMessage,
+			},
+		)
+
+		if lease.Tenant.TenantAccount != nil {
+			tenantAccountID := lease.Tenant.TenantAccount.ID.String()
+			leaseID := lease.ID.String()
+			go func() {
+				_ = s.notificationService.SendToTenantAccount(
+					context.Background(),
+					tenantAccountID,
+					lib.LEASE_COMPLETED_SUBJECT,
+					smsMessage,
+					map[string]string{"type": "LEASE_COMPLETED", "lease_id": leaseID},
+				)
+			}()
+		}
 	}
 
 	manager, managerErr := s.ResolveManagerRecipient(ctx, lease)
