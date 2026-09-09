@@ -21,7 +21,8 @@ export function WhatsNewModal() {
 	const [open, setOpen] = useState(false)
 
 	useEffect(() => {
-		if (headline && localStorage.getItem(SEEN_KEY) !== headline.id) setOpen(true)
+		if (headline && localStorage.getItem(SEEN_KEY) !== headline.id)
+			setOpen(true)
 	}, [])
 
 	if (!headline) return null
