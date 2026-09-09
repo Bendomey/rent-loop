@@ -13,8 +13,17 @@ export const getInvoiceForServer = async (
 		// whole preload with "unsupported relations for schema Invoice" and the
 		// request 500s. An invoice reaches its application through the financial
 		// account now, which is where TenantApplicationID lives.
+		const populate = [
+			'Payments',
+			'LineItems',
+			'FinancialAccount',
+			'Property',
+			'PayerClient',
+			'PayerLease.Tenant',
+			'PayerLease.Unit.PropertyBlock',
+		].join(',')
 		const response = await fetchServer<ApiResponse<Invoice>>(
-			`${apiConfig.baseUrl}/v1/admin/clients/${clientId}/properties/${props.property_id}/invoices/${props.invoice_id}?populate=Payments,LineItems,FinancialAccount`,
+			`${apiConfig.baseUrl}/v1/admin/clients/${clientId}/properties/${props.property_id}/invoices/${props.invoice_id}?populate=${populate}`,
 			{
 				...apiConfig,
 			},
