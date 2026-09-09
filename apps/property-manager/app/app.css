@@ -414,8 +414,12 @@
 
 	.print-sheet {
 		position: absolute;
-		inset: 0;
-		width: 100%;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: auto;
+		height: auto;
+		overflow: visible;
 		padding: 0;
 		-webkit-print-color-adjust: exact;
 		print-color-adjust: exact;
@@ -432,5 +436,13 @@
 		--border: var(--rl-hairline);
 		background-color: #ffffff !important;
 		color: var(--rl-ink) !important;
+	}
+
+	.print-sheet thead {
+		display: table-header-group;
+	}
+
+	.print-sheet tr {
+		break-inside: avoid;
 	}
 }

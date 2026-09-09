@@ -66,7 +66,7 @@ export function InvoiceSheet({
 						: `This amount already shows as owed against the agreement. What changes after ${invoice.due_date ? fmtDate(invoice.due_date) : 'the due date'} is that it counts as late. Nothing is added on top.`
 
 	return (
-		<div className="print-sheet bg-card text-card-foreground border-border relative overflow-hidden rounded-sm border shadow-sm">
+		<div className="print-sheet bg-card text-card-foreground border-border relative overflow-hidden rounded-sm border shadow-sm print:overflow-visible">
 			<div className="absolute inset-x-0 top-0 h-1 bg-rose-600" />
 			<div className="p-7 sm:p-12">
 				<div className="border-foreground/70 flex flex-wrap items-start justify-between gap-6 border-b-2 pb-6">
