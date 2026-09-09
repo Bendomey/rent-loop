@@ -41,11 +41,7 @@ export function PropertyFinancialsPaymentModule() {
 
 	return (
 		<div className="mx-auto max-w-4xl space-y-8 p-4 sm:p-6">
-			<InvoiceAnswer
-				invoice={invoice}
-				state={state}
-				propertyId={propertyId}
-			/>
+			<InvoiceAnswer invoice={invoice} state={state} propertyId={propertyId} />
 			<InvoiceSheet
 				invoice={invoice}
 				state={state}

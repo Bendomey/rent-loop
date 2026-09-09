@@ -152,37 +152,42 @@ export function InvoiceSheet({
 					</div>
 				</div>
 
-				<table className="mt-6 w-full text-sm">
-					<thead>
-						<tr className="border-foreground/70 text-muted-foreground border-b text-xs tracking-widest uppercase">
-							<th className="py-2 pr-3 text-left font-bold">Item</th>
-							<th className="px-3 py-2 text-right font-bold">Each</th>
-							<th className="px-3 py-2 text-right font-bold">Qty</th>
-							<th className="py-2 pl-3 text-right font-bold">Amount</th>
-						</tr>
-					</thead>
-					<tbody>
-						{invoice.line_items?.map((item) => (
-							<tr key={item.id} className="border-border border-b align-baseline">
-								<td className="py-3 pr-3">
-									<div className="font-medium">{item.label}</div>
-									<div className="text-muted-foreground text-xs">
-										{item.category}
-									</div>
-								</td>
-								<td className="text-muted-foreground px-3 py-3 text-right tabular-nums">
-									{money(item.unit_amount)}
-								</td>
-								<td className="text-muted-foreground px-3 py-3 text-right tabular-nums">
-									{item.quantity}
-								</td>
-								<td className="py-3 pl-3 text-right font-medium tabular-nums">
-									{money(item.total_amount)}
-								</td>
+				<div className="mt-6 overflow-x-auto print:overflow-visible">
+					<table className="w-full min-w-[32rem] text-sm print:min-w-0">
+						<thead>
+							<tr className="border-foreground/70 text-muted-foreground border-b text-xs tracking-widest uppercase">
+								<th className="py-2 pr-3 text-left font-bold">Item</th>
+								<th className="px-3 py-2 text-right font-bold">Each</th>
+								<th className="px-3 py-2 text-right font-bold">Qty</th>
+								<th className="py-2 pl-3 text-right font-bold">Amount</th>
 							</tr>
-						))}
-					</tbody>
-				</table>
+						</thead>
+						<tbody>
+							{invoice.line_items?.map((item) => (
+								<tr
+									key={item.id}
+									className="border-border border-b align-baseline"
+								>
+									<td className="py-3 pr-3">
+										<div className="font-medium">{item.label}</div>
+										<div className="text-muted-foreground text-xs">
+											{item.category}
+										</div>
+									</td>
+									<td className="text-muted-foreground px-3 py-3 text-right tabular-nums">
+										{money(item.unit_amount)}
+									</td>
+									<td className="text-muted-foreground px-3 py-3 text-right tabular-nums">
+										{item.quantity}
+									</td>
+									<td className="py-3 pl-3 text-right font-medium tabular-nums">
+										{money(item.total_amount)}
+									</td>
+								</tr>
+							))}
+						</tbody>
+					</table>
+				</div>
 				<div className="text-muted-foreground mt-3 text-xs">
 					{invoice.line_items?.length ?? 0}{' '}
 					{invoice.line_items?.length === 1 ? 'item' : 'items'} on this bill
@@ -202,12 +207,14 @@ export function InvoiceSheet({
 						</div>
 						<div className="border-foreground/70 flex justify-between border-t py-2 font-bold">
 							<span>The whole bill</span>
-							<span className="tabular-nums">{money(invoice.total_amount)}</span>
+							<span className="tabular-nums">
+								{money(invoice.total_amount)}
+							</span>
 						</div>
 						{paid > 0 && (
 							<div className="border-border text-muted-foreground flex justify-between border-t py-2">
 								<span>Paid so far</span>
-								<span className="tabular-nums text-emerald-600">
+								<span className="text-emerald-600 tabular-nums">
 									− {money(paid)}
 								</span>
 							</div>
@@ -223,9 +230,7 @@ export function InvoiceSheet({
 							<span
 								className={cn(
 									'text-xs font-bold tracking-widest uppercase',
-									owed > 0
-										? 'text-rose-600'
-										: 'text-emerald-600',
+									owed > 0 ? 'text-rose-600' : 'text-emerald-600',
 								)}
 							>
 								{owed > 0 ? 'Still owed' : 'Nothing owed'}
@@ -263,7 +268,9 @@ export function InvoiceSheet({
 									? 'It is late'
 									: 'After the due date'}
 						</Label>
-						<p className="text-muted-foreground mt-2 leading-relaxed">{terms}</p>
+						<p className="text-muted-foreground mt-2 leading-relaxed">
+							{terms}
+						</p>
 					</div>
 				</div>
 
