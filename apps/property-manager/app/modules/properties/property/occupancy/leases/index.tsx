@@ -18,6 +18,7 @@ import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
+import { getLeaseEndDate } from '~/lib/lease-checklist.utils'
 import { getLeaseDisplayStatus } from '~/lib/lease.utils'
 import { getPaymentFrequencyPeriodLabel } from '~/lib/properties.utils'
 import { safeString } from '~/lib/strings'
@@ -207,15 +208,24 @@ export function PropertyTenantLeasesModule() {
 				header: 'Duration',
 				enableSorting: true,
 				meta: { sortKey: 'leases.stay_duration' },
-				cell: ({ row }) => (
-					<span className="truncate text-xs text-zinc-600 dark:text-white">
-						{row.original.stay_duration}{' '}
-						{getPaymentFrequencyPeriodLabel(
-							row.original.stay_duration_frequency,
-							row.original.stay_duration ?? 1,
-						)}
-					</span>
-				),
+				cell: ({ row }) => {
+					const lease = row.original
+					return (
+						<div className="flex min-w-40 flex-col">
+							<span className="truncate text-xs text-zinc-600 dark:text-white">
+								{lease.stay_duration}{' '}
+								{getPaymentFrequencyPeriodLabel(
+									lease.stay_duration_frequency,
+									lease.stay_duration ?? 1,
+								)}
+							</span>
+							<span className="text-muted-foreground truncate text-[11px]">
+								{localizedDayjs(lease.move_in_date).format('MMM D, YYYY')} →{' '}
+								{localizedDayjs(getLeaseEndDate(lease)).format('MMM D, YYYY')}
+							</span>
+						</div>
+					)
+				},
 			},
 			{
 				id: 'actions',
