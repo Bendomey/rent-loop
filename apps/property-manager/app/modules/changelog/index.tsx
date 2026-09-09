@@ -16,7 +16,7 @@ import { localizedDayjs } from '~/lib/date'
 
 const LAST_SEEN_KEY = 'rl-changelog-last-seen'
 
-const highlightIcons: Record<ReleaseHighlight['icon'], typeof FileText> = {
+export const highlightIcons: Record<ReleaseHighlight['icon'], typeof FileText> = {
 	doc: FileText,
 	clock: Clock,
 	calendar: CalendarDays,
