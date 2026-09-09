@@ -109,7 +109,7 @@ const (
 	LEASE_ACTIVATED_SMS_BODY        = `Hi {{tenant_name}}, your lease for {{unit_name}} is now active. Move-in date: {{move_in_date}}.`
 	LEASE_CANCELLED_SMS_BODY        = `Hi {{tenant_name}}, your lease for {{unit_name}} was cancelled. Reason: {{cancellation_reason}}`
 	LEASE_TERMINATED_SMS_BODY       = `Hi {{tenant_name}}, your lease for {{unit_name}} has been terminated. Reason: {{termination_reason}}`
-	LEASE_MOVEOUT_REMINDER_SMS_BODY = `Hi {{tenant_name}}, your lease for {{unit_name}} ends in {{days_remaining}} day(s) on {{move_out_date}}. Please prepare for move-out.`
+	LEASE_MOVEOUT_REMINDER_SMS_BODY = `Hi {{tenant_name}}, your lease for {{unit_name}} ends in {{days_remaining}} day(s) on {{move_out_date}}. Please contact your landlord if you’d like to renew or extend your lease, or prepare for move-out if you plan to leave.`
 	LEASE_COMPLETED_SMS_BODY        = `Hi {{tenant_name}}, your lease for {{unit_name}} has ended. Thank you for staying with us.`
 )
 
