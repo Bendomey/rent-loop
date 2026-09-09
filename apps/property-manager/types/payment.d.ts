@@ -3,6 +3,8 @@ interface Payment {
 	amount: number
 	reference: string
 	payment_method: 'CHECK' | 'MOMO' | 'CARD' | 'BANK_DIRECT' | 'OFFLINE'
+	rail: Nullable<string>
+	provider: Nullable<string>
 	status: 'PENDING' | 'SUCCESSFUL' | 'FAILED'
 	email: string
 	tenant_id: string

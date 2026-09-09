@@ -38,6 +38,8 @@ interface RecordPaymentDialogProps {
 	invoice: Invoice
 	clientId: string
 	propertyId: string
+	/** Amount to record, in minor units. Defaults to the invoice total. */
+	amount?: number
 	beforeConfirm?: () => Promise<void>
 	onSuccess?: () => void
 }
@@ -48,6 +50,7 @@ export function RecordPaymentDialog({
 	invoice,
 	clientId,
 	propertyId,
+	amount = invoice.total_amount,
 	beforeConfirm,
 	onSuccess,
 }: RecordPaymentDialogProps) {
@@ -90,7 +93,7 @@ export function RecordPaymentDialog({
 				property_id: propertyId,
 				invoice_id: invoice.id,
 				body: {
-					amount: invoice.total_amount,
+					amount,
 					payment_account_id: selectedAccountId,
 					provider: selectedAccount.provider ?? 'CASH',
 					reference: reference || undefined,
@@ -114,10 +117,7 @@ export function RecordPaymentDialog({
 					<DialogDescription>
 						Recording payment of{' '}
 						<span className="text-foreground font-medium">
-							{formatAmount(
-								convertPesewasToCedis(invoice.total_amount),
-								invoice.currency,
-							)}
+							{formatAmount(convertPesewasToCedis(amount), invoice.currency)}
 						</span>
 					</DialogDescription>
 				</DialogHeader>

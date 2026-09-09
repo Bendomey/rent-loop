@@ -1,213 +1,68 @@
+import { useLoaderData, useParams } from 'react-router'
+import { InvoiceAnswer } from './answer'
+import { InvoicePayerSection } from './payer-section'
+import { InvoicePaymentsSection } from './payments-section'
+import { InvoiceSheet } from './sheet'
+import { deriveInvoiceState, payerNameOf } from './state'
 import {
-	CircleCheck,
-	CircleDollarSign,
-	CircleX,
-	Pencil,
-	Send,
-} from 'lucide-react'
-import { Link, useLoaderData } from 'react-router'
-import { PropertyFinancialsPaymentLineItemsModule } from './line-items'
-import { PropertyFinancialsPaymentPayerModule } from './payer'
-import { PropertyFinancialsPaymentItemsModule } from './payments'
-import { Badge } from '~/components/ui/badge'
-import { Card, CardContent, CardHeader } from '~/components/ui/card'
-import { Separator } from '~/components/ui/separator'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
-import { TypographyMuted } from '~/components/ui/typography'
-import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
-import {
-	getInvoiceAllowedRailsLabel,
+	getInvoiceContextTypeLabel,
 	getInvoicePayerTypeLabel,
-	getInvoiceStatusLabel,
 } from '~/lib/invoice'
 import type { loader } from '~/routes/_auth.properties.$propertyId.financials.invoices.$invoiceId'
 
 export function PropertyFinancialsPaymentModule() {
-	const { invoice: data, clientUserProperty } = useLoaderData<typeof loader>()
+	const { invoice, clientUserProperty } = useLoaderData<typeof loader>()
+	const params = useParams()
+
+	if (!invoice) {
+		return (
+			<div className="text-muted-foreground m-6 text-sm">
+				Invoice not found.
+			</div>
+		)
+	}
+
+	const payerName = payerNameOf(invoice)
+	const state = deriveInvoiceState(invoice, payerName?.split(' ')[0])
+	const unit = invoice.payer_lease?.unit
+	const unitLabel = unit
+		? [
+				unit.property_block?.name && `${unit.property_block.name} block`,
+				unit.name,
+			]
+				.filter(Boolean)
+				.join(' · ')
+		: undefined
+	const propertyId =
+		params.propertyId ??
+		clientUserProperty?.property_id ??
+		invoice.property_id ??
+		undefined
 
 	return (
-		<div className="m-6 grid grid-cols-1 gap-10 lg:grid-cols-12">
-			<div className="col-span-1 lg:col-span-5 xl:col-span-4">
-				<Card className="shadow-sm">
-					<CardHeader>
-						<Badge
-							variant="outline"
-							className="w-fit gap-1 px-2 py-1 text-xs font-medium"
-						>
-							{data?.status === 'DRAFT' ? (
-								<Pencil className="text-zinc-600" size={14} />
-							) : data?.status === 'ISSUED' ? (
-								<Send className="text-blue-600" size={14} />
-							) : data?.status === 'PAID' ? (
-								<CircleCheck className="fill-green-600 text-white" size={14} />
-							) : data?.status === 'PARTIALLY_PAID' ? (
-								<CircleDollarSign className="text-yellow-600" size={14} />
-							) : (
-								<CircleX className="fill-red-500 text-white" size={14} />
-							)}
-							{getInvoiceStatusLabel(data?.status || 'DRAFT')}
-						</Badge>
-						<div className="pt-2">
-							<h2 className="text-xl font-semibold tracking-tight">
-								Invoice {data?.code}
-							</h2>
-
-							{data?.context_type === 'TENANT_APPLICATION' ? (
-								<Link
-									to={`/properties/${clientUserProperty?.property_id}/occupancy/applications/${data?.context_tenant_application_id}`}
-									className="text-sm text-blue-600 capitalize hover:underline dark:text-blue-500"
-								>
-									{data?.context_type?.replace('_', ' ').toLowerCase()}
-								</Link>
-							) : data?.context_type === 'MAINTENANCE' ? (
-								<Link
-									to={`/properties/${clientUserProperty?.property_id}/activities/maintenance-requests/${data?.context_maintenance_request_id}`}
-									className="text-sm text-blue-600 hover:underline"
-								>
-									{data?.context_type?.replace('_', ' ')}
-								</Link>
-							) : (
-								<p className="text-muted-foreground text-sm">
-									{data?.context_type?.replace('_', ' ')}
-								</p>
-							)}
-						</div>
-					</CardHeader>
-
-					<CardContent className="space-y-8 text-sm">
-						{/* totals */}
-						<div>
-							<div className="space-y-1 pt-4 pb-2">
-								<TypographyMuted className="text-muted-foreground text-xs font-semibold tracking-wide dark:text-white">
-									Payment Summary
-								</TypographyMuted>
-								<Separator />
-							</div>
-							<div className="bg-muted/40 space-y-2 rounded-lg p-4">
-								<div className="text-muted-foreground flex justify-between">
-									<span>Tax</span>
-									<span>
-										{formatAmount(
-											convertPesewasToCedis(data?.taxes || 0),
-											data?.currency,
-										)}
-									</span>
-								</div>
-								<div className="text-muted-foreground flex justify-between">
-									<span>Sub total</span>
-									<span>
-										{formatAmount(
-											convertPesewasToCedis(data?.sub_total || 0),
-											data?.currency,
-										)}
-									</span>
-								</div>
-								<div className="flex justify-between">
-									<span className="text-muted-foreground">Total</span>
-									<span className="font-semibold">
-										{formatAmount(
-											convertPesewasToCedis(data?.total_amount || 0),
-											data?.currency,
-										)}
-									</span>
-								</div>
-							</div>
-						</div>
-
-						{/* metadata */}
-						<div className="grid grid-cols-1 gap-4 text-sm">
-							<div className="space-y-1 pt-2">
-								<TypographyMuted className="text-muted-foreground text-xs font-semibold tracking-wide dark:text-white">
-									Payment Details
-								</TypographyMuted>
-								<Separator />
-							</div>
-							<div className="grid grid-cols-2 gap-6">
-								<div>
-									<TypographyMuted>Allowed Modes</TypographyMuted>
-									<p className="font-medium text-zinc-600">
-										{data?.allowed_payment_rails
-											?.map((rail: Invoice['allowed_payment_rails'][number]) =>
-												getInvoiceAllowedRailsLabel(rail),
-											)
-											.join(', ')}
-									</p>
-								</div>
-
-								<div>
-									<TypographyMuted>Payer Type</TypographyMuted>
-									<p className="font-medium text-zinc-600">
-										{getInvoicePayerTypeLabel(data?.payer_type || 'TENANT')}
-									</p>
-								</div>
-							</div>
-
-							<div className="space-y-1 pt-4">
-								<TypographyMuted className="text-muted-foreground text-xs font-semibold tracking-wide">
-									Dates
-								</TypographyMuted>
-								<Separator />
-							</div>
-							{data?.issued_at ? (
-								<div className="flex justify-between">
-									<TypographyMuted>Issued</TypographyMuted>
-									<p className="font-medium">
-										{new Date(data?.issued_at).toLocaleDateString()}
-									</p>
-								</div>
-							) : null}
-
-							{data?.due_date ? (
-								<div className="flex justify-between">
-									<TypographyMuted>Due</TypographyMuted>
-									<p className="font-medium">
-										{new Date(data?.due_date).toLocaleDateString()}
-									</p>
-								</div>
-							) : null}
-
-							{data?.paid_at ? (
-								<div className="flex justify-between">
-									<TypographyMuted>Paid</TypographyMuted>
-									<p className="font-medium">
-										{new Date(data?.paid_at).toLocaleDateString()}
-									</p>
-								</div>
-							) : null}
-
-							{data?.voided_at ? (
-								<div className="flex justify-between">
-									<TypographyMuted>Voided</TypographyMuted>
-									<p className="font-medium">
-										{new Date(data?.voided_at).toLocaleDateString()}
-									</p>
-								</div>
-							) : null}
-						</div>
-					</CardContent>
-				</Card>
-			</div>
-			<div className="col-span-1 lg:col-span-7 xl:col-span-8">
-				<Tabs defaultValue="line-items" className="w-full">
-					<TabsList>
-						<TabsTrigger value="line-items">Invoice Items</TabsTrigger>
-						<TabsTrigger value="payments">Payments</TabsTrigger>
-						{data?.payer_type === 'TENANT' ||
-						data?.payer_type === 'TENANT_APPLICATION' ? (
-							<TabsTrigger value="payer">Payer Details</TabsTrigger>
-						) : null}
-					</TabsList>
-					<TabsContent value="line-items">
-						{data && <PropertyFinancialsPaymentLineItemsModule data={data} />}
-					</TabsContent>
-					<TabsContent value="payments">
-						{data && <PropertyFinancialsPaymentItemsModule data={data} />}
-					</TabsContent>
-					<TabsContent value="payer">
-						{data && <PropertyFinancialsPaymentPayerModule data={data} />}
-					</TabsContent>
-				</Tabs>
-			</div>
+		<div className="mx-auto max-w-4xl space-y-8 p-4 sm:p-6">
+			<InvoiceAnswer
+				invoice={invoice}
+				state={state}
+				propertyId={propertyId}
+			/>
+			<InvoiceSheet
+				invoice={invoice}
+				state={state}
+				kind={getInvoiceContextTypeLabel(invoice.context_type)}
+				propertyName={
+					invoice.property?.name ?? clientUserProperty?.property?.name
+				}
+				unitLabel={unitLabel}
+				payerName={payerName}
+				payerMeta={[getInvoicePayerTypeLabel(invoice.payer_type), unit?.name]
+					.filter(Boolean)
+					.join(' · ')}
+				payerPhone={invoice.payer_lease?.tenant?.phone ?? undefined}
+				leaseCode={invoice.payer_lease?.code}
+			/>
+			<InvoicePaymentsSection invoice={invoice} propertyId={propertyId} />
+			<InvoicePayerSection invoice={invoice} propertyId={propertyId} />
 		</div>
 	)
 }
