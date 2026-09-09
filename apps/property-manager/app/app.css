@@ -419,5 +419,18 @@
 		padding: 0;
 		-webkit-print-color-adjust: exact;
 		print-color-adjust: exact;
+
+		/* the sheet prints as white paper whatever theme is on screen */
+		--background: #ffffff;
+		--card: #ffffff;
+		--card-foreground: var(--rl-ink);
+		--popover: #ffffff;
+		--foreground: var(--rl-ink);
+		--foreground-soft: var(--rl-ink-soft);
+		--muted: var(--rl-fill);
+		--muted-foreground: var(--rl-muted);
+		--border: var(--rl-hairline);
+		background-color: #ffffff !important;
+		color: var(--rl-ink) !important;
 	}
 }
