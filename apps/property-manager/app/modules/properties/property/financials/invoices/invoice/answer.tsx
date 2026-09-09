@@ -20,11 +20,11 @@ export function InvoiceAnswer({ invoice, state, propertyId }: Props) {
 					{state.headline}
 				</h1>
 			</div>
-			<div className="flex w-full flex-col items-start justify-between gap-2 lg:flex-row lg:items-center">
-				<p className="text-muted-foreground mt-2 leading-relaxed text-pretty">
+			<div className="flex w-full flex-col items-start justify-between gap-2 lg:flex-row lg:flex-wrap lg:items-center">
+				<p className="text-muted-foreground mt-2 leading-relaxed text-pretty lg:max-w-2xl lg:grow lg:basis-[max-content]">
 					{state.detail}
 				</p>
-				<div className="flex flex-wrap gap-2">
+				<div className="flex shrink-0 flex-wrap gap-2">
 					{propertyId && unsettled && (
 						<RecordPaymentButton invoice={invoice} propertyId={propertyId}>
 							<Check />
