@@ -26,6 +26,7 @@ import { useOnboardingTour } from '~/hooks/use-onboarding-tour'
 import { resolveAuthToken } from '~/lib/actions/auth.token.server'
 import { clientContext } from '~/lib/actions/client.context.server'
 import { environmentVariables } from '~/lib/actions/env.server'
+import { WhatsNewModal } from '~/modules'
 
 export async function loader({ request, context }: Route.LoaderArgs) {
 	const baseUrl = environmentVariables().API_ADDRESS
@@ -135,6 +136,7 @@ export default function AuthDashboard({
 		<SidebarProvider>
 			<AppSidebar />
 			<SidebarInset>
+				<WhatsNewModal />
 				<ClientChecklist
 					paymentAccountsCount={loaderData?.paymentAccountsCount ?? 0}
 					propertiesCount={loaderData?.propertiesCount ?? 0}

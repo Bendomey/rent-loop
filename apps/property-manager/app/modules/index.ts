@@ -22,6 +22,7 @@ export * from './settings/customer-support-access'
 export * from './settings/archived-properties'
 
 export * from './changelog'
+export * from './changelog/whats-new-modal'
 
 export * from './settings/general'
 export * from './settings/payment-accounts'

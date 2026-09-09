@@ -17,12 +17,18 @@ export type Release = {
 	cta?: string
 	/** Small grouped changes never count as "new to you" or headline a modal. */
 	minor?: boolean
+	/**
+	 * Earns the one-time "What's new" modal on next sign-in. Reserved for the
+	 * two or three releases a year that change how a manager works.
+	 */
+	headline?: boolean
 }
 
 export const RELEASES: Release[] = [
 	{
 		id: 'lease-change-history',
 		date: '2026-08-24',
+		headline: true,
 		title: 'You can see everything that has changed on a lease',
 		summary:
 			'Every rent rise, room move and early ending is written down with the day you made the change and the day it starts — so you never have to remember what a tenant’s terms used to be.',
