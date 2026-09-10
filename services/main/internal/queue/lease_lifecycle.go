@@ -155,6 +155,17 @@ func handleLeaseMoveOutReminder(deps leaseLifecycleDeps) asynq.HandlerFunc {
 				continue
 			}
 
+			renewed, renewedErr := services.LeaseHasRenewal(ctx, deps.leaseRepo, lease.ID.String())
+			if renewedErr != nil {
+				log.WithError(renewedErr).WithField("lease_id", lease.ID.String()).
+					Error("[Cron] failed to check whether lease was renewed")
+				failCount++
+				continue
+			}
+			if renewed {
+				continue
+			}
+
 			moveOutLoc := lease.MoveOutDate.Location()
 			now := time.Now().In(moveOutLoc)
 			nowDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, moveOutLoc)
