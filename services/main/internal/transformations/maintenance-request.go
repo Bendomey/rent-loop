@@ -93,11 +93,6 @@ func DBMaintenanceRequestToRest(mr *models.MaintenanceRequest) any {
 		activityLogs[i] = DBMaintenanceActivityLogToRest(&mr.ActivityLogs[i])
 	}
 
-	expenses := make([]any, len(mr.Expenses))
-	for i := range mr.Expenses {
-		expenses[i] = DBExpenseToRest(&mr.Expenses[i])
-	}
-
 	assets := make([]any, len(mr.Assets))
 	for i := range mr.Assets {
 		assets[i] = DBMaintenanceRequestAssetToRest(&mr.Assets[i])
@@ -131,7 +126,6 @@ func DBMaintenanceRequestToRest(mr *models.MaintenanceRequest) any {
 		"canceled_at":               mr.CanceledAt,
 		"cancellation_reason":       mr.CancellationReason,
 		"activity_logs":             activityLogs,
-		"expenses":                  expenses,
 		"created_at":                mr.CreatedAt,
 		"updated_at":                mr.UpdatedAt,
 	}
@@ -174,11 +168,6 @@ func DBMaintenanceRequestToTenantRest(mr *models.MaintenanceRequest) any {
 		activityLogs[i] = DBMaintenanceActivityLogToRest(&mr.ActivityLogs[i])
 	}
 
-	expenses := make([]any, len(mr.Expenses))
-	for i := range mr.Expenses {
-		expenses[i] = DBExpenseToRest(&mr.Expenses[i])
-	}
-
 	assets := make([]any, len(mr.Assets))
 	for i := range mr.Assets {
 		assets[i] = DBMaintenanceRequestAssetToRest(&mr.Assets[i])
@@ -199,7 +188,6 @@ func DBMaintenanceRequestToTenantRest(mr *models.MaintenanceRequest) any {
 		"resolved_at":         mr.ResolvedAt,
 		"canceled_at":         mr.CanceledAt,
 		"cancellation_reason": mr.CancellationReason,
-		"expenses":            expenses,
 		"activity_logs":       activityLogs,
 		"created_at":          mr.CreatedAt,
 		"updated_at":          mr.UpdatedAt,
