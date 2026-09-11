@@ -17,9 +17,9 @@ import (
 // deliberately absent from the allowed categories: rent comes from the term
 // itself as a schedule, so a one-off calling itself rent would be billed twice.
 type RenewLeaseFeeBody struct {
-	Category string `json:"category" validate:"required,oneof=SECURITY_DEPOSIT AGENCY_FEE VAT UTILITY DAMAGE_CHARGE EARLY_TERMINATION_FEE OTHER" example:"SECURITY_DEPOSIT"`
-	Name     string `json:"name"     validate:"required"                                                                                         example:"Deposit top-up"`
-	Amount   int64  `json:"amount"   validate:"required,gt=0"                                                                                    example:"15000"`
+	Category string `json:"category" validate:"required,oneof=SECURITY_DEPOSIT AGENCY_FEE VAT UTILITY MAINTENANCE_CHARGE DAMAGE_CHARGE EARLY_TERMINATION_FEE OTHER" example:"SECURITY_DEPOSIT"`
+	Name     string `json:"name"     validate:"required"                                                                                                            example:"Deposit top-up"`
+	Amount   int64  `json:"amount"   validate:"required,gt=0"                                                                                                       example:"15000"`
 }
 
 type RenewLeaseBody struct {

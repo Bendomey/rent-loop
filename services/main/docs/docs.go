@@ -21414,6 +21414,7 @@ const docTemplate = `{
                         "AGENCY_FEE",
                         "VAT",
                         "UTILITY",
+                        "MAINTENANCE_CHARGE",
                         "DAMAGE_CHARGE",
                         "EARLY_TERMINATION_FEE",
                         "OTHER",
@@ -22222,6 +22223,7 @@ const docTemplate = `{
                         "AGENCY_FEE",
                         "VAT",
                         "UTILITY",
+                        "MAINTENANCE_CHARGE",
                         "DAMAGE_CHARGE",
                         "EARLY_TERMINATION_FEE",
                         "OTHER"
@@ -23610,6 +23612,7 @@ const docTemplate = `{
                         "AGENCY_FEE",
                         "VAT",
                         "UTILITY",
+                        "MAINTENANCE_CHARGE",
                         "DAMAGE_CHARGE",
                         "EARLY_TERMINATION_FEE",
                         "OTHER"
@@ -24213,6 +24216,7 @@ const docTemplate = `{
                         "AGENCY_FEE",
                         "VAT",
                         "UTILITY",
+                        "MAINTENANCE_CHARGE",
                         "DAMAGE_CHARGE",
                         "EARLY_TERMINATION_FEE",
                         "OTHER",

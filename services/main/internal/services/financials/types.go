@@ -28,6 +28,7 @@ const (
 	CategoryAgencyFee           = "AGENCY_FEE"
 	CategoryVAT                 = "VAT"
 	CategoryUtility             = "UTILITY"
+	CategoryMaintenanceCharge   = "MAINTENANCE_CHARGE"
 	CategoryDamageCharge        = "DAMAGE_CHARGE"
 	CategoryEarlyTerminationFee = "EARLY_TERMINATION_FEE"
 	CategoryOther               = "OTHER"
