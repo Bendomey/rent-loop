@@ -60,13 +60,12 @@ func NewExpenseService(deps ExpenseServiceDeps) ExpenseService {
 // --- Input types ---
 
 type AddExpenseInput struct {
-	PropertyID                  string
-	ContextType                 string // "MAINTENANCE"
-	ContextMaintenanceRequestID *string
-	Description                 string
-	Amount                      int64
-	Currency                    string
-	ClientUserID                string
+	PropertyID   string
+	ContextType  string // "MAINTENANCE"
+	Description  string
+	Amount       int64
+	Currency     string
+	ClientUserID string
 }
 
 // --- Implementations ---
@@ -92,14 +91,14 @@ func (s *expenseService) AddExpense(ctx context.Context, input AddExpenseInput) 
 	}
 
 	expense := &models.Expense{
-		Code:                        code,
-		PropertyID:                  input.PropertyID,
-		ContextType:                 input.ContextType,
-		ContextMaintenanceRequestID: input.ContextMaintenanceRequestID,
-		Description:                 input.Description,
-		Amount:                      input.Amount,
-		Currency:                    currency,
-		CreatedByClientUserID:       input.ClientUserID,
+		Code:                  code,
+		PropertyID:            input.PropertyID,
+		ContextType:           input.ContextType,
+		Category:              "REPAIRS",
+		Description:           input.Description,
+		Amount:                input.Amount,
+		Currency:              currency,
+		CreatedByClientUserID: input.ClientUserID,
 	}
 
 	if err := s.repo.Create(ctx, expense); err != nil {

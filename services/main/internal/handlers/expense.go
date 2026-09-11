@@ -24,15 +24,14 @@ func NewExpenseHandler(appCtx pkg.AppContext, service services.ExpenseService) E
 // ─── Request Bodies / Query Types ─────────────────────────────────────────────
 type ListExpensesQuery struct {
 	lib.FilterQueryInput
-	ContextType *string `json:"context_type,omitempty" query:"context_type" validate:"omitempty,oneof=LEASE MAINTENANCE" description:"Filter by context type"`
+	ContextType *string `json:"context_type,omitempty" query:"context_type" validate:"omitempty,oneof=MAINTENANCE GENERAL" description:"Filter by context type"`
 }
 
 type AddExpenseBody struct {
-	ContextType                 string  `json:"context_type"                   validate:"required,oneof=MAINTENANCE"`
-	ContextMaintenanceRequestID *string `json:"context_maintenance_request_id" validate:"omitempty,uuid4"`
-	Description                 string  `json:"description"                    validate:"required"`
-	Amount                      int64   `json:"amount"                         validate:"required,gt=0"`
-	Currency                    string  `json:"currency"                       validate:"omitempty"`
+	ContextType string `json:"context_type" validate:"required,oneof=MAINTENANCE"`
+	Description string `json:"description"  validate:"required"`
+	Amount      int64  `json:"amount"       validate:"required,gt=0"`
+	Currency    string `json:"currency"     validate:"omitempty"`
 }
 
 // ─── Handlers ─────────────────────────────────────────────────────────────────
@@ -69,13 +68,12 @@ func (h *ExpenseHandler) AddExpense(w http.ResponseWriter, r *http.Request) {
 	}
 
 	expense, err := h.service.AddExpense(r.Context(), services.AddExpenseInput{
-		PropertyID:                  chi.URLParam(r, "property_id"),
-		ContextType:                 body.ContextType,
-		ContextMaintenanceRequestID: body.ContextMaintenanceRequestID,
-		Description:                 body.Description,
-		Amount:                      body.Amount,
-		Currency:                    body.Currency,
-		ClientUserID:                currentUser.ID,
+		PropertyID:   chi.URLParam(r, "property_id"),
+		ContextType:  body.ContextType,
+		Description:  body.Description,
+		Amount:       body.Amount,
+		Currency:     body.Currency,
+		ClientUserID: currentUser.ID,
 	})
 	if err != nil {
 		HandleErrorResponse(w, err)
@@ -307,8 +305,8 @@ func (h *ExpenseHandler) ListMRExpenses(w http.ResponseWriter, r *http.Request) 
 	propertyID := chi.URLParam(r, "property_id")
 	propertyIDs := []string{propertyID}
 	filters := repository.ListExpensesFilter{
-		PropertyIDs:                 &propertyIDs,
-		ContextMaintenanceRequestID: &mrID,
+		PropertyIDs:          &propertyIDs,
+		MaintenanceRequestID: &mrID,
 	}
 
 	expenses, listErr := h.service.ListExpenses(r.Context(), *filterQuery, filters)

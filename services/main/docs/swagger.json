@@ -21406,6 +21406,7 @@
                         "AGENCY_FEE",
                         "VAT",
                         "UTILITY",
+                        "MAINTENANCE_CHARGE",
                         "DAMAGE_CHARGE",
                         "EARLY_TERMINATION_FEE",
                         "OTHER",
@@ -22214,6 +22215,7 @@
                         "AGENCY_FEE",
                         "VAT",
                         "UTILITY",
+                        "MAINTENANCE_CHARGE",
                         "DAMAGE_CHARGE",
                         "EARLY_TERMINATION_FEE",
                         "OTHER"
@@ -23602,6 +23604,7 @@
                         "AGENCY_FEE",
                         "VAT",
                         "UTILITY",
+                        "MAINTENANCE_CHARGE",
                         "DAMAGE_CHARGE",
                         "EARLY_TERMINATION_FEE",
                         "OTHER"
@@ -24205,6 +24208,7 @@
                         "AGENCY_FEE",
                         "VAT",
                         "UTILITY",
+                        "MAINTENANCE_CHARGE",
                         "DAMAGE_CHARGE",
                         "EARLY_TERMINATION_FEE",
                         "OTHER",

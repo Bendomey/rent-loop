@@ -18,7 +18,7 @@ type ChargeDefinition struct {
 	Lease   *Lease
 
 	Name string `gorm:"not null;"` // "Monthly Rent"
-	// RENT | SECURITY_DEPOSIT | AGENCY_FEE | VAT | UTILITY | DAMAGE_CHARGE
+	// RENT | SECURITY_DEPOSIT | AGENCY_FEE | VAT | UTILITY | MAINTENANCE_CHARGE | DAMAGE_CHARGE
 	// | EARLY_TERMINATION_FEE | OTHER
 	Category string `gorm:"not null;"`
 	Amount   int64  `gorm:"not null;"` // ONE period at the agreed rate. Signed.

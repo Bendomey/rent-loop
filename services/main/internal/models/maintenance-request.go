@@ -59,7 +59,7 @@ type MaintenanceRequest struct {
 	Visibility string `gorm:"not null;default:'TENANT_VISIBLE'"` // TENANT_VISIBLE | INTERNAL_ONLY
 
 	ActivityLogs []MaintenanceRequestActivityLog
-	Expenses     []Expense `gorm:"foreignKey:ContextMaintenanceRequestID"`
+	Financials   []MaintenanceRequestFinancial
 	Comments     []MaintenanceRequestComment
 }
 

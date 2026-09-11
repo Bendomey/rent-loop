@@ -1796,7 +1796,7 @@ func counterpartAccountFor(
 		return accounts.RentalIncomeID
 	case "SECURITY_DEPOSIT":
 		return accounts.SecurityDepositsHeldID
-	case "DAMAGE_CHARGE", "UTILITY":
+	case "MAINTENANCE_CHARGE", "DAMAGE_CHARGE", "UTILITY":
 		return accounts.MaintenanceReimbursementID
 	case "EARLY_TERMINATION_FEE", "AGENCY_FEE", "VAT":
 		return accounts.RentalIncomeID

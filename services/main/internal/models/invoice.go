@@ -37,7 +37,13 @@ type Invoice struct {
 	PayeeTenantID *string
 	PayeeTenant   *Tenant
 
-	ContextType string `gorm:"not null;"` // 'TENANT_APPLICATION' | 'LEASE_RENT' | 'MAINTENANCE' | 'SAAS_FEE' | 'BOOKING_FEE' | 'LEASE_TERMINATION'
+	// 'TENANT_APPLICATION' | 'LEASE_RENT' | 'MAINTENANCE' | 'SAAS_FEE'
+	// | 'BOOKING_FEE' | 'LEASE_TERMINATION' | 'EXPENSE'
+	//
+	// EXPENSE is a bill the landlord RECEIVED, not one they issued: it posts
+	// Dr Maintenance Expense / Cr Accounts Payable on issue and clears the
+	// payable with cash on payment.
+	ContextType string `gorm:"not null;"`
 
 	ContextBookingID *string
 	ContextBooking   *Booking
@@ -47,6 +53,9 @@ type Invoice struct {
 
 	ContextLeaseTerminationID *string
 	ContextLeaseTermination   *LeaseTermination
+
+	ContextExpenseID *string `gorm:"index;"`
+	ContextExpense   *Expense
 
 	// Non-null means this invoice is account-backed: every line must claim a
 	// charge instance, and line items may only be changed through the
@@ -97,7 +106,8 @@ type InvoiceLineItem struct {
 	// behind them:
 	//
 	//	tenant charges  RENT, SECURITY_DEPOSIT, AGENCY_FEE, VAT, UTILITY,
-	//	                DAMAGE_CHARGE, EARLY_TERMINATION_FEE, OTHER
+	//	                MAINTENANCE_CHARGE, DAMAGE_CHARGE,
+	//	                EARLY_TERMINATION_FEE, OTHER
 	//	non-account     MAINTENANCE_FEE, SAAS_FEE, BOOKING_FEE
 	//
 	// Historical rows may still carry INITIAL_DEPOSIT, EXPENSE, DEPOSIT_REFUND

@@ -9,10 +9,11 @@ import (
 )
 
 type ListExpensesFilter struct {
-	PropertyIDs                 *[]string
-	ClientUserID                *string
-	ContextMaintenanceRequestID *string
-	ContextType                 *string
+	PropertyIDs          *[]string
+	ClientUserID         *string
+	ContextType          *string
+	Category             *string
+	MaintenanceRequestID *string
 }
 
 type GetExpenseQuery struct {
@@ -63,7 +64,22 @@ func expenseMaintenanceRequestScope(requestID *string) func(db *gorm.DB) *gorm.D
 		if requestID == nil {
 			return db
 		}
-		return db.Where("expenses.context_maintenance_request_id = ?", *requestID)
+		return db.Where(
+			"expenses.id IN (?)",
+			db.Session(&gorm.Session{NewDB: true}).
+				Model(&models.MaintenanceRequestFinancial{}).
+				Select("expense_id").
+				Where("maintenance_request_id = ? AND expense_id IS NOT NULL", *requestID),
+		)
+	}
+}
+
+func expenseCategoryScope(category *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if category == nil {
+			return db
+		}
+		return db.Where("expenses.category = ?", *category)
 	}
 }
 
@@ -82,7 +98,7 @@ func (r *expenseRepository) Create(ctx context.Context, expense *models.Expense)
 
 func (r *expenseRepository) GetOne(ctx context.Context, query GetExpenseQuery) (*models.Expense, error) {
 	var expense models.Expense
-	db := r.DB.WithContext(ctx).Where("expenses.id = ?", query.ID)
+	db := lib.ResolveDB(ctx, r.DB).WithContext(ctx).Where("expenses.id = ?", query.ID)
 
 	if query.Populate != nil {
 		for _, field := range *query.Populate {
@@ -109,8 +125,9 @@ func (r *expenseRepository) List(
 			SearchScope("expenses", filterQuery.Search),
 			expensePropertyIDsScope(filters.PropertyIDs),
 			expenseClientUserAccessScope(filters.ClientUserID),
-			expenseMaintenanceRequestScope(filters.ContextMaintenanceRequestID),
+			expenseMaintenanceRequestScope(filters.MaintenanceRequestID),
 			expenseContextTypeScope(filters.ContextType),
+			expenseCategoryScope(filters.Category),
 			PaginationScope(filterQuery.Page, filterQuery.PageSize),
 			OrderScope("expenses", filterQuery.OrderBy, filterQuery.Order),
 		)
@@ -141,8 +158,9 @@ func (r *expenseRepository) Count(
 			SearchScope("expenses", filterQuery.Search),
 			expensePropertyIDsScope(filters.PropertyIDs),
 			expenseClientUserAccessScope(filters.ClientUserID),
-			expenseMaintenanceRequestScope(filters.ContextMaintenanceRequestID),
+			expenseMaintenanceRequestScope(filters.MaintenanceRequestID),
 			expenseContextTypeScope(filters.ContextType),
+			expenseCategoryScope(filters.Category),
 		).
 		Count(&count)
 	if result.Error != nil {

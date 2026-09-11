@@ -38,13 +38,13 @@ func NewFinancialAccountHandler(
 // ─── Request Bodies ───────────────────────────────────────────────────────────
 
 type CreateChargeBody struct {
-	Name string `json:"name"                                  validate:"required"                                                                                              example:"Water bill — March"`
+	Name string `json:"name"                                  validate:"required"                                                                                                                 example:"Water bill — March"`
 	// Sign carries direction: a negative amount is a refund of this category.
 	// There are deliberately no refund-specific categories.
-	Category string `json:"category"                              validate:"required,oneof=RENT SECURITY_DEPOSIT AGENCY_FEE VAT UTILITY DAMAGE_CHARGE EARLY_TERMINATION_FEE OTHER" example:"UTILITY"`
-	Amount   int64  `json:"amount"                                validate:"required"                                                                                              example:"10000"`
-	Currency string `json:"currency"                              validate:"required,len=3"                                                                                        example:"GHS"`
-	DueDate  string `json:"due_date"                              validate:"required"                                                                                              example:"2027-03-01T00:00:00Z"`
+	Category string `json:"category"                              validate:"required,oneof=RENT SECURITY_DEPOSIT AGENCY_FEE VAT UTILITY MAINTENANCE_CHARGE DAMAGE_CHARGE EARLY_TERMINATION_FEE OTHER" example:"UTILITY"`
+	Amount   int64  `json:"amount"                                validate:"required"                                                                                                                 example:"10000"`
+	Currency string `json:"currency"                              validate:"required,len=3"                                                                                                           example:"GHS"`
+	DueDate  string `json:"due_date"                              validate:"required"                                                                                                                 example:"2027-03-01T00:00:00Z"`
 	// ReversesChargeInstanceID marks this as a refund of an existing charge.
 	// The refund inherits that charge's category and is capped at what was
 	// actually settled — you cannot refund money never received.
