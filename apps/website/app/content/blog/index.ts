@@ -40,8 +40,22 @@ export const blogPosts: BlogPostEntry[] = [
 			date: '2026-03-22',
 			author: 'Marketing Team',
 			slug: 'understanding-asset-management',
+			coverImage: '/images/blog/understanding-asset-management-og.png',
+			keywords: [
+				'rental property asset management',
+				'property management software in Ghana',
+				'how to organise a rental portfolio',
+				'properties blocks and units',
+				'multi-unit property management',
+				'rental portfolio management software',
+				'apartment complex management software',
+				'hostel management software Ghana',
+				'unit-based pricing property management',
+				'property management for landlords',
+			],
 		},
-		component: () => import('./understanding-asset-management.mdx'),
+		layout: 'custom',
+		component: () => import('./understanding-asset-management.tsx'),
 	},
 	{
 		meta: {
