@@ -21,6 +21,14 @@ export function BlogPostModule() {
 
 	const PostContent = lazy(post.component)
 
+	if (post.layout === 'custom') {
+		return (
+			<Suspense fallback={null}>
+				<PostContent />
+			</Suspense>
+		)
+	}
+
 	return (
 		<div>
 			<TopBar />

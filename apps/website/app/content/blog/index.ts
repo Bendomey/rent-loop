@@ -12,6 +12,9 @@ export interface BlogPostMeta {
 export interface BlogPostEntry {
 	meta: BlogPostMeta
 	component: () => Promise<{ default: ComponentType }>
+	// 'custom' posts render their own full-page layout (chrome included);
+	// 'prose' (default) posts render inside the shared article shell.
+	layout?: 'prose' | 'custom'
 }
 
 export const blogPosts: BlogPostEntry[] = [
@@ -23,8 +26,10 @@ export const blogPosts: BlogPostEntry[] = [
 			date: '2026-03-22',
 			author: 'Marketing Team',
 			slug: 'what-is-rentloop',
+			coverImage: '/images/blog/what-is-rentloop-og.png',
 		},
-		component: () => import('./what-is-rentloop.mdx'),
+		layout: 'custom',
+		component: () => import('./what-is-rentloop.tsx'),
 	},
 	{
 		meta: {
