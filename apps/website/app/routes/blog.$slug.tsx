@@ -40,7 +40,7 @@ export function meta({ loaderData, location }: Route.MetaArgs) {
 		description: loaderData.meta.description,
 		url,
 		origin: loaderData.origin,
-		keywords: pageKeywords.blog,
+		keywords: loaderData.meta.keywords ?? pageKeywords.blog,
 		...(coverImage ? { images: [coverImage] } : {}),
 	})
 

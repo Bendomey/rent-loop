@@ -7,6 +7,7 @@ export interface BlogPostMeta {
 	author: string
 	slug: string
 	coverImage?: string
+	keywords?: string[]
 }
 
 export interface BlogPostEntry {
@@ -41,6 +42,30 @@ export const blogPosts: BlogPostEntry[] = [
 			slug: 'understanding-asset-management',
 		},
 		component: () => import('./understanding-asset-management.mdx'),
+	},
+	{
+		meta: {
+			title:
+				'10 Things to Look for in the Best Property Management App in Ghana',
+			description:
+				'Discover 10 essential features to look for in the best property management app in Ghana, from rent collection and tenant management to maintenance, reporting and digital agreements.',
+			date: '2026-09-15',
+			author: 'Marketing Team',
+			slug: 'best-property-management-app-in-ghana',
+			coverImage: '/images/blog/best-property-management-app-in-ghana-og.png',
+			keywords: [
+				'best property management app in Ghana',
+				'property management software in Ghana',
+				'property management system Ghana',
+				'rental property management software',
+				'rent collection app Ghana',
+				'tenant management software',
+				'property management app',
+				'rental management system Ghana',
+			],
+		},
+		layout: 'custom',
+		component: () => import('./best-property-management-app-in-ghana.tsx'),
 	},
 ]
 
