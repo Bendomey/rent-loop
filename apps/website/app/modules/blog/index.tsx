@@ -37,6 +37,14 @@ export function BlogIndexModule() {
 								className="group flex flex-col rounded-2xl bg-white p-6 ring-1 ring-gray-200 transition-shadow hover:shadow-md hover:ring-rose-200"
 							>
 								<div className="flex-1">
+									{post.meta.coverImage && (
+										<img
+											src={post.meta.coverImage}
+											alt=""
+											loading="lazy"
+											className="mb-4 aspect-[1200/630] w-full rounded-xl object-cover"
+										/>
+									)}
 									<p className="text-xs font-medium tracking-wide text-rose-600 uppercase">
 										{new Date(post.meta.date).toLocaleDateString('en-GB', {
 											day: 'numeric',

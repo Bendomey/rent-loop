@@ -7,11 +7,15 @@ export interface BlogPostMeta {
 	author: string
 	slug: string
 	coverImage?: string
+	keywords?: string[]
 }
 
 export interface BlogPostEntry {
 	meta: BlogPostMeta
 	component: () => Promise<{ default: ComponentType }>
+	// 'custom' posts render their own full-page layout (chrome included);
+	// 'prose' (default) posts render inside the shared article shell.
+	layout?: 'prose' | 'custom'
 }
 
 export const blogPosts: BlogPostEntry[] = [
@@ -23,8 +27,10 @@ export const blogPosts: BlogPostEntry[] = [
 			date: '2026-03-22',
 			author: 'Marketing Team',
 			slug: 'what-is-rentloop',
+			coverImage: '/images/blog/what-is-rentloop-og.png',
 		},
-		component: () => import('./what-is-rentloop.mdx'),
+		layout: 'custom',
+		component: () => import('./what-is-rentloop.tsx'),
 	},
 	{
 		meta: {
@@ -34,8 +40,46 @@ export const blogPosts: BlogPostEntry[] = [
 			date: '2026-03-22',
 			author: 'Marketing Team',
 			slug: 'understanding-asset-management',
+			coverImage: '/images/blog/understanding-asset-management-og.png',
+			keywords: [
+				'rental property asset management',
+				'property management software in Ghana',
+				'how to organise a rental portfolio',
+				'properties blocks and units',
+				'multi-unit property management',
+				'rental portfolio management software',
+				'apartment complex management software',
+				'hostel management software Ghana',
+				'unit-based pricing property management',
+				'property management for landlords',
+			],
 		},
-		component: () => import('./understanding-asset-management.mdx'),
+		layout: 'custom',
+		component: () => import('./understanding-asset-management.tsx'),
+	},
+	{
+		meta: {
+			title:
+				'10 Things to Look for in the Best Property Management App in Ghana',
+			description:
+				'Discover 10 essential features to look for in the best property management app in Ghana, from rent collection and tenant management to maintenance, reporting and digital agreements.',
+			date: '2026-09-15',
+			author: 'Marketing Team',
+			slug: 'best-property-management-app-in-ghana',
+			coverImage: '/images/blog/best-property-management-app-in-ghana-og.png',
+			keywords: [
+				'best property management app in Ghana',
+				'property management software in Ghana',
+				'property management system Ghana',
+				'rental property management software',
+				'rent collection app Ghana',
+				'tenant management software',
+				'property management app',
+				'rental management system Ghana',
+			],
+		},
+		layout: 'custom',
+		component: () => import('./best-property-management-app-in-ghana.tsx'),
 	},
 ]
 

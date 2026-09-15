@@ -27,15 +27,21 @@ export function meta({ loaderData, location }: Route.MetaArgs) {
 		path: location.pathname,
 	})
 
+	// Social crawlers require an absolute og:image URL, so resolve a
+	// site-relative coverImage against the request origin.
+	const coverImage = loaderData.meta.coverImage
+		? loaderData.meta.coverImage.startsWith('http')
+			? loaderData.meta.coverImage
+			: `${loaderData.origin}${loaderData.meta.coverImage}`
+		: undefined
+
 	const meta = getSocialMetas({
 		title: `${loaderData.meta.title} | RentLoop Blog`,
 		description: loaderData.meta.description,
 		url,
 		origin: loaderData.origin,
-		keywords: pageKeywords.blog,
-		...(loaderData.meta.coverImage
-			? { images: [loaderData.meta.coverImage] }
-			: {}),
+		keywords: loaderData.meta.keywords ?? pageKeywords.blog,
+		...(coverImage ? { images: [coverImage] } : {}),
 	})
 
 	const structuredData = [
@@ -46,7 +52,7 @@ export function meta({ loaderData, location }: Route.MetaArgs) {
 			description: loaderData.meta.description,
 			datePublished: loaderData.meta.date,
 			author: loaderData.meta.author,
-			image: loaderData.meta.coverImage,
+			image: coverImage,
 		}),
 		getBreadcrumbSchema(loaderData.origin, [
 			{ name: 'Home', path: '/' },
