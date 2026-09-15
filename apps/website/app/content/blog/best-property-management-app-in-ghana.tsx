@@ -258,7 +258,13 @@ function Num2({ children }: { children: ReactNode }) {
 	)
 }
 
-function P({ children, lead = false }: { children: ReactNode; lead?: boolean }) {
+function P({
+	children,
+	lead = false,
+}: {
+	children: ReactNode
+	lead?: boolean
+}) {
 	return (
 		<p
 			style={{
@@ -365,11 +371,18 @@ function Stat({
 			>
 				{big}
 			</div>
-			<div style={{ fontSize: 17, lineHeight: 1.5, color: BODY, marginTop: 10 }}>
+			<div
+				style={{ fontSize: 17, lineHeight: 1.5, color: BODY, marginTop: 10 }}
+			>
 				{txt}
 			</div>
 			<div
-				style={{ fontFamily: mono, fontSize: 14, color: '#55534e', marginTop: 12 }}
+				style={{
+					fontFamily: mono,
+					fontSize: 14,
+					color: '#55534e',
+					marginTop: 12,
+				}}
 			>
 				{src}
 			</div>
@@ -391,7 +404,13 @@ function TableScroll({ children }: { children: ReactNode }) {
 	)
 }
 
-function ScaledShot({ width, children }: { width: number; children: ReactNode }) {
+function ScaledShot({
+	width,
+	children,
+}: {
+	width: number
+	children: ReactNode
+}) {
 	const boxRef = useRef<HTMLDivElement>(null)
 	const shotRef = useRef<HTMLDivElement>(null)
 
@@ -560,7 +579,8 @@ function HeroCollage() {
 							lineHeight: 1.4,
 						}}
 					>
-						Madam, the bathroom pipe has not been flowing well for three weeks now
+						Madam, the bathroom pipe has not been flowing well for three weeks
+						now
 					</div>
 					<div
 						style={{
@@ -579,7 +599,12 @@ function HeroCollage() {
 
 			<Scrap
 				label="Bank statement · Aug"
-				style={{ left: 356, top: 296, width: 266, transform: 'rotate(-2.5deg)' }}
+				style={{
+					left: 356,
+					top: 296,
+					width: 266,
+					transform: 'rotate(-2.5deg)',
+				}}
 			>
 				<div style={{ marginTop: 10, fontSize: 16.5 }}>
 					{[
@@ -634,7 +659,14 @@ function HeroCollage() {
 					borderColor: CRIMSON,
 				}}
 			>
-				<div style={{ fontSize: 18, lineHeight: 1.45, color: '#fff', fontWeight: 500 }}>
+				<div
+					style={{
+						fontSize: 18,
+						lineHeight: 1.45,
+						color: '#fff',
+						fontWeight: 500,
+					}}
+				>
 					Ask Akosua again about September.
 					<br />
 					<br />
@@ -667,7 +699,9 @@ function HeroCollage() {
 					padding: '28px 30px',
 				}}
 			>
-				<div style={{ ...keyStyle, color: CRIMSON }}>What replaces all of it</div>
+				<div style={{ ...keyStyle, color: CRIMSON }}>
+					What replaces all of it
+				</div>
 				<div
 					style={{
 						fontFamily: serif,
@@ -819,7 +853,9 @@ function MatchedRow({
 				<div style={{ fontSize: 16, fontWeight: 600 }}>{amount}</div>
 				<div style={{ fontSize: 15, color: MUTED, marginTop: 2 }}>{who}</div>
 			</div>
-			<Chip style={{ fontSize: 14, color: statusColor, borderColor: statusBorder }}>
+			<Chip
+				style={{ fontSize: 14, color: statusColor, borderColor: statusBorder }}
+			>
 				{status}
 			</Chip>
 		</div>
@@ -847,10 +883,18 @@ function StatusCard({
 				...(borderColor ? { borderColor } : {}),
 			}}
 		>
-			<div style={{ ...keyStyle, fontSize: 13.5, ...(labelColor ? { color: labelColor } : {}) }}>
+			<div
+				style={{
+					...keyStyle,
+					fontSize: 13.5,
+					...(labelColor ? { color: labelColor } : {}),
+				}}
+			>
 				{label}
 			</div>
-			<div style={{ fontSize: 16, fontWeight: 600, marginTop: 10 }}>{title}</div>
+			<div style={{ fontSize: 16, fontWeight: 600, marginTop: 10 }}>
+				{title}
+			</div>
 			<div style={{ fontSize: 15, color: MUTED, marginTop: 4 }}>{desc}</div>
 		</div>
 	)
@@ -893,12 +937,22 @@ function RecordCell({
 			}}
 		>
 			<div style={{ ...keyStyle, fontSize: 13.5 }}>{label}</div>
-			<div style={{ fontSize: 16.5, fontWeight: 600, marginTop: 6 }}>{value}</div>
+			<div style={{ fontSize: 16.5, fontWeight: 600, marginTop: 6 }}>
+				{value}
+			</div>
 		</div>
 	)
 }
 
-function ConditionChip({ label, color, border }: { label: string; color: string; border: string }) {
+function ConditionChip({
+	label,
+	color,
+	border,
+}: {
+	label: string
+	color: string
+	border: string
+}) {
 	return (
 		<Chip style={{ fontSize: 14, color, borderColor: border }}>
 			<Dot c={color} />
@@ -910,9 +964,14 @@ function ConditionChip({ label, color, border }: { label: string; color: string;
 export default function BestPropertyManagementAppInGhana() {
 	return (
 		<MarketingPage current="blog">
-			<div style={{ maxWidth: 1180, margin: '0 auto' }} className="px-4 md:px-10">
+			<div
+				style={{ maxWidth: 1180, margin: '0 auto' }}
+				className="px-4 md:px-10"
+			>
 				{/* Header */}
-				<div style={{ maxWidth: 700, margin: '0 auto', padding: '56px 0 44px' }}>
+				<div
+					style={{ maxWidth: 700, margin: '0 auto', padding: '56px 0 44px' }}
+				>
 					<div
 						style={{
 							fontFamily: mono,
@@ -947,8 +1006,8 @@ export default function BestPropertyManagementAppInGhana() {
 							maxWidth: 640,
 						}}
 					>
-						From rent collection and tenant records to maintenance, reporting and
-						digital agreements — the features that decide whether software
+						From rent collection and tenant records to maintenance, reporting
+						and digital agreements — the features that decide whether software
 						actually reduces your workload.
 					</p>
 					<div
@@ -985,17 +1044,18 @@ export default function BestPropertyManagementAppInGhana() {
 				{/* Intro */}
 				<div style={{ maxWidth: 700, margin: '0 auto', padding: '52px 0' }}>
 					<P lead>
-						Managing rental properties in Ghana is becoming increasingly complex.
-						A landlord with one property can keep track of tenants, rent and
-						repairs using WhatsApp and a spreadsheet. When the portfolio grows to
-						20, 50 or 100 units, the same approach becomes hard to hold together.
+						Managing rental properties in Ghana is becoming increasingly
+						complex. A landlord with one property can keep track of tenants,
+						rent and repairs using WhatsApp and a spreadsheet. When the
+						portfolio grows to 20, 50 or 100 units, the same approach becomes
+						hard to hold together.
 					</P>
 					<P>
 						One tenant sends a WhatsApp message about a leaking tap. Another
 						transfers rent through Mobile Money. A third pays by bank transfer.
-						Meanwhile an old rental agreement sits in an email inbox, maintenance
-						expenses are in a notebook, and the landlord is reading bank
-						statements to work out who has paid.
+						Meanwhile an old rental agreement sits in an email inbox,
+						maintenance expenses are in a notebook, and the landlord is reading
+						bank statements to work out who has paid.
 					</P>
 					<P>
 						This is where property management software in Ghana makes a real
@@ -1031,8 +1091,9 @@ export default function BestPropertyManagementAppInGhana() {
 					<P>
 						As more properties are developed and more people depend on rental
 						housing, landlords and managers need better ways to organise their
-						operations. So what exactly should you look for when choosing the best
-						property management app in Ghana? Here are ten features that matter.
+						operations. So what exactly should you look for when choosing the
+						best property management app in Ghana? Here are ten features that
+						matter.
 					</P>
 				</div>
 
@@ -1110,11 +1171,33 @@ export default function BestPropertyManagementAppInGhana() {
 								label="After"
 								title="One workspace, one record per unit"
 							>
-								<div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-									<UnitStatusRow c={GREEN} name="Unit B12 · occupied" note="rent paid" border />
-									<UnitStatusRow c={BLUE} name="Unit B13 · vacant" note="free to let" border />
-									<UnitStatusRow c={MICRO} name="Unit B14 · on hold" note="application in" border />
-									<UnitStatusRow c={ORANGE} name="Unit B15 · under repair" note="plumber assigned" border={false} />
+								<div
+									style={{ display: 'flex', flexDirection: 'column', gap: 9 }}
+								>
+									<UnitStatusRow
+										c={GREEN}
+										name="Unit B12 · occupied"
+										note="rent paid"
+										border
+									/>
+									<UnitStatusRow
+										c={BLUE}
+										name="Unit B13 · vacant"
+										note="free to let"
+										border
+									/>
+									<UnitStatusRow
+										c={MICRO}
+										name="Unit B14 · on hold"
+										note="application in"
+										border
+									/>
+									<UnitStatusRow
+										c={ORANGE}
+										name="Unit B15 · under repair"
+										note="plumber assigned"
+										border={false}
+									/>
 								</div>
 							</BeforeAfterList>
 						</div>
@@ -1127,9 +1210,9 @@ export default function BestPropertyManagementAppInGhana() {
 					<H2>Support for the way Ghanaians actually pay</H2>
 					<P>
 						Rent collection is the heart of the job. An app can have excellent
-						features, but if it does not support the payment methods your tenants
-						use, it creates a problem instead of solving one. In Ghana that means
-						Mobile Money and bank transfers first.
+						features, but if it does not support the payment methods your
+						tenants use, it creates a problem instead of solving one. In Ghana
+						that means Mobile Money and bank transfers first.
 					</P>
 					<Stat
 						big="9.70 billion"
@@ -1141,7 +1224,11 @@ export default function BestPropertyManagementAppInGhana() {
 						part of operating a modern rental business.
 					</P>
 				</Column>
-				<Figure caption={'This is what stops you asking a tenant "have you paid?" when the money is already in.'}>
+				<Figure
+					caption={
+						'This is what stops you asking a tenant "have you paid?" when the money is already in.'
+					}
+				>
 					<Stage>
 						<div style={twoGrid}>
 							<div style={{ ...card, padding: '22px 24px' }}>
@@ -1157,23 +1244,50 @@ export default function BestPropertyManagementAppInGhana() {
 									25 tenants × GH₵ 1,500
 								</div>
 								<div style={{ fontSize: 17, color: MUTED }}>
-									GH₵ 37,500 in rent to account for every month — arriving through
-									three different channels.
+									GH₵ 37,500 in rent to account for every month — arriving
+									through three different channels.
 								</div>
 								<div
-									style={{ display: 'flex', flexDirection: 'column', marginTop: 18 }}
+									style={{
+										display: 'flex',
+										flexDirection: 'column',
+										marginTop: 18,
+									}}
 								>
-									<PayChannelRow c={ORANGE} label="Mobile Money" count="14 people" border />
-									<PayChannelRow c={INK} label="Bank transfer" count="8 people" border />
-									<PayChannelRow c={GREEN} label="Cash, recorded by hand" count="3 people" border={false} />
+									<PayChannelRow
+										c={ORANGE}
+										label="Mobile Money"
+										count="14 people"
+										border
+									/>
+									<PayChannelRow
+										c={INK}
+										label="Bank transfer"
+										count="8 people"
+										border
+									/>
+									<PayChannelRow
+										c={GREEN}
+										label="Cash, recorded by hand"
+										count="3 people"
+										border={false}
+									/>
 								</div>
 							</div>
 							<div style={{ ...card, padding: '22px 24px' }}>
 								<div style={keyStyle}>What the app should do</div>
-								<div style={{ fontSize: 17, fontWeight: 600, margin: '10px 0 14px' }}>
+								<div
+									style={{
+										fontSize: 17,
+										fontWeight: 600,
+										margin: '10px 0 14px',
+									}}
+								>
 									Attach every payment to a person, a unit and a bill
 								</div>
-								<div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+								<div
+									style={{ display: 'flex', flexDirection: 'column', gap: 10 }}
+								>
 									<MatchedRow
 										amount="GH₵ 1,500.00 · MTN MoMo"
 										who="Gideon Bempong · Unit B12 · September rent"
@@ -1208,8 +1322,8 @@ export default function BestPropertyManagementAppInGhana() {
 					<P>
 						Instead of writing bills by hand every month, look for software that
 						raises them on their own, following each tenant's agreement. If rent
-						is GH₵ 2,000 monthly, the bill appears on schedule — and extra charges
-						show separately rather than being folded into one number.
+						is GH₵ 2,000 monthly, the bill appears on schedule — and extra
+						charges show separately rather than being folded into one number.
 					</P>
 				</Column>
 				<Figure caption="Nobody has to remember that Unit B12's rent is due on the 5th, or prepare 50 bills on the 1st.">
@@ -1233,7 +1347,13 @@ export default function BestPropertyManagementAppInGhana() {
 								}}
 							>
 								<div>
-									<div style={{ fontFamily: serif, fontSize: 25, letterSpacing: '-.4px' }}>
+									<div
+										style={{
+											fontFamily: serif,
+											fontSize: 25,
+											letterSpacing: '-.4px',
+										}}
+									>
 										September bill
 									</div>
 									<div style={{ fontSize: 15.5, color: MUTED, marginTop: 4 }}>
@@ -1252,25 +1372,66 @@ export default function BestPropertyManagementAppInGhana() {
 									overflow: 'hidden',
 								}}
 							>
-								<table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff' }}>
+								<table
+									style={{
+										width: '100%',
+										borderCollapse: 'collapse',
+										background: '#fff',
+									}}
+								>
 									<tbody>
 										<tr>
 											<td style={tdStyle}>Base rent</td>
-											<td style={{ ...tdStyle, textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 600, whiteSpace: 'nowrap' }}>
+											<td
+												style={{
+													...tdStyle,
+													textAlign: 'right',
+													fontVariantNumeric: 'tabular-nums',
+													fontWeight: 600,
+													whiteSpace: 'nowrap',
+												}}
+											>
 												GH₵ 2,000.00
 											</td>
 										</tr>
 										<tr>
 											<td style={tdStyle}>Utilities</td>
-											<td style={{ ...tdStyle, textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 600, whiteSpace: 'nowrap' }}>
+											<td
+												style={{
+													...tdStyle,
+													textAlign: 'right',
+													fontVariantNumeric: 'tabular-nums',
+													fontWeight: 600,
+													whiteSpace: 'nowrap',
+												}}
+											>
 												GH₵ 150.00
 											</td>
 										</tr>
 										<tr>
-											<td style={{ ...tdStyle, borderBottom: 'none', background: CREAM, fontWeight: 700, borderTop: `1px solid ${HAIR}` }}>
+											<td
+												style={{
+													...tdStyle,
+													borderBottom: 'none',
+													background: CREAM,
+													fontWeight: 700,
+													borderTop: `1px solid ${HAIR}`,
+												}}
+											>
 												Total
 											</td>
-											<td style={{ ...tdStyle, borderBottom: 'none', background: CREAM, fontWeight: 700, borderTop: `1px solid ${HAIR}`, textAlign: 'right', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
+											<td
+												style={{
+													...tdStyle,
+													borderBottom: 'none',
+													background: CREAM,
+													fontWeight: 700,
+													borderTop: `1px solid ${HAIR}`,
+													textAlign: 'right',
+													fontVariantNumeric: 'tabular-nums',
+													whiteSpace: 'nowrap',
+												}}
+											>
 												GH₵ 2,150.00
 											</td>
 										</tr>
@@ -1286,7 +1447,9 @@ export default function BestPropertyManagementAppInGhana() {
 									alignItems: 'center',
 								}}
 							>
-								<Chip style={{ background: INK, color: '#fff', borderColor: INK }}>
+								<Chip
+									style={{ background: INK, color: '#fff', borderColor: INK }}
+								>
 									He paid — record it
 								</Chip>
 								<Chip>Add a one-off charge</Chip>
@@ -1303,10 +1466,10 @@ export default function BestPropertyManagementAppInGhana() {
 					<Num2>Four</Num2>
 					<H2>Proper tenant records</H2>
 					<P>
-						Property management is not only about properties. You need to know who
-						occupies each unit, what agreement they have, what they owe, what they
-						have paid, and whether anything is unresolved. A complete tenant record
-						should hold:
+						Property management is not only about properties. You need to know
+						who occupies each unit, what agreement they have, what they owe,
+						what they have paid, and whether anything is unresolved. A complete
+						tenant record should hold:
 					</P>
 					<PlainList
 						items={[
@@ -1325,8 +1488,8 @@ export default function BestPropertyManagementAppInGhana() {
 						into old threads.
 					</P>
 					<Quote>
-						The aim is not to stop using WhatsApp. It is to make sure the official
-						record of a tenancy does not depend on a chat history.
+						The aim is not to stop using WhatsApp. It is to make sure the
+						official record of a tenancy does not depend on a chat history.
 					</Quote>
 				</Column>
 				<Figure caption="Everything about one tenancy, attached to the tenant and the unit rather than to a phone.">
@@ -1356,14 +1519,26 @@ export default function BestPropertyManagementAppInGhana() {
 									}}
 								/>
 								<div style={{ flex: 1, minWidth: 200 }}>
-									<div style={{ fontFamily: serif, fontSize: 26, letterSpacing: '-.5px' }}>
+									<div
+										style={{
+											fontFamily: serif,
+											fontSize: 26,
+											letterSpacing: '-.5px',
+										}}
+									>
 										Gideon Bempong
 									</div>
 									<div style={{ fontSize: 15.5, color: MUTED, marginTop: 3 }}>
 										Unit B12 · tenant since 1 September 2024 · 024 123 4567
 									</div>
 								</div>
-								<Chip style={{ fontSize: 14, color: GREEN, borderColor: '#1B9E5C44' }}>
+								<Chip
+									style={{
+										fontSize: 14,
+										color: GREEN,
+										borderColor: '#1B9E5C44',
+									}}
+								>
 									<Dot c={GREEN} />
 									Up to date on rent
 								</Chip>
@@ -1378,12 +1553,33 @@ export default function BestPropertyManagementAppInGhana() {
 									overflow: 'hidden',
 								}}
 							>
-								<RecordCell label="Agreement" value="Signed · ends 31 Aug 2027" />
-								<RecordCell label="Paid to date" value="GH₵ 43,000.00" leftBorder />
+								<RecordCell
+									label="Agreement"
+									value="Signed · ends 31 Aug 2027"
+								/>
+								<RecordCell
+									label="Paid to date"
+									value="GH₵ 43,000.00"
+									leftBorder
+								/>
 								<RecordCell label="Still owes" value="GH₵ 0.00" leftBorder />
-								<RecordCell label="Emergency contact" value="Esi Bempong · sister" topBorder />
-								<RecordCell label="Work" value="Teacher · payslip on file" leftBorder topBorder />
-								<RecordCell label="Repairs" value="3 asked for · 3 fixed" leftBorder topBorder />
+								<RecordCell
+									label="Emergency contact"
+									value="Esi Bempong · sister"
+									topBorder
+								/>
+								<RecordCell
+									label="Work"
+									value="Teacher · payslip on file"
+									leftBorder
+									topBorder
+								/>
+								<RecordCell
+									label="Repairs"
+									value="3 asked for · 3 fixed"
+									leftBorder
+									topBorder
+								/>
 							</div>
 						</div>
 					</Stage>
@@ -1394,9 +1590,9 @@ export default function BestPropertyManagementAppInGhana() {
 					<Num2>Five</Num2>
 					<H2>Maintenance that cannot get lost</H2>
 					<P>
-						Maintenance is the clearest reason landlords move off spreadsheets and
-						messaging apps. "The bathroom pipe has not been flowing properly for
-						three weeks" is easy to miss when it is buried under hundreds of
+						Maintenance is the clearest reason landlords move off spreadsheets
+						and messaging apps. "The bathroom pipe has not been flowing properly
+						for three weeks" is easy to miss when it is buried under hundreds of
 						messages. A proper system gives every request a defined path.
 					</P>
 				</Column>
@@ -1409,15 +1605,33 @@ export default function BestPropertyManagementAppInGhana() {
 								gap: 12,
 							}}
 						>
-							<StatusCard label="New" title="Tenant reports it" desc="With photos, a category and a priority" />
-							<StatusCard label="In progress" title="Assigned to someone" desc="Your officer or an outside contractor" />
-							<StatusCard label="In review" title="Work done, being checked" desc="Photo of the finished job, cost logged" />
-							<StatusCard label="Resolved" labelColor={GREEN} title="Tenant confirms" desc="Stays on the unit's history" borderColor="#1B9E5C44" />
+							<StatusCard
+								label="New"
+								title="Tenant reports it"
+								desc="With photos, a category and a priority"
+							/>
+							<StatusCard
+								label="In progress"
+								title="Assigned to someone"
+								desc="Your officer or an outside contractor"
+							/>
+							<StatusCard
+								label="In review"
+								title="Work done, being checked"
+								desc="Photo of the finished job, cost logged"
+							/>
+							<StatusCard
+								label="Resolved"
+								labelColor={GREEN}
+								title="Tenant confirms"
+								desc="Stays on the unit's history"
+								borderColor="#1B9E5C44"
+							/>
 						</div>
 						<div style={{ ...card, marginTop: 16, padding: '22px 24px' }}>
 							<div style={{ fontSize: 17, fontWeight: 600, marginBottom: 6 }}>
-								40 requests in a 100-unit building — the questions a board answers
-								without you searching
+								40 requests in a 100-unit building — the questions a board
+								answers without you searching
 							</div>
 							<div
 								style={{
@@ -1451,18 +1665,18 @@ export default function BestPropertyManagementAppInGhana() {
 					<Num2>Six</Num2>
 					<H2>Digital agreements and signatures</H2>
 					<P>
-						Rental agreements matter, yet much of the market still runs on printed
-						paper. Look for templates you can edit, document uploads, electronic
-						signatures, signed PDFs stored against the tenancy, and tenant access
-						to their own copy.
+						Rental agreements matter, yet much of the market still runs on
+						printed paper. Look for templates you can edit, document uploads,
+						electronic signatures, signed PDFs stored against the tenancy, and
+						tenant access to their own copy.
 					</P>
 					<H3>Filling 20 vacant units</H3>
 					<P>
-						If every tenant needs a printed agreement, a wet signature, a scan and
-						a file, the admin alone becomes a job. With digital agreements you
-						start from an approved template, fill in the details, and send it to be
-						signed. Later, instead of asking which folder holds the agreement for
-						Apartment 14, you open the tenant.
+						If every tenant needs a printed agreement, a wet signature, a scan
+						and a file, the admin alone becomes a job. With digital agreements
+						you start from an approved template, fill in the details, and send
+						it to be signed. Later, instead of asking which folder holds the
+						agreement for Apartment 14, you open the tenant.
 					</P>
 				</Column>
 				<Figure caption="Start from a template, send it, watch it get signed — and never hunt for the copy again.">
@@ -1470,10 +1684,18 @@ export default function BestPropertyManagementAppInGhana() {
 						<div style={twoGrid}>
 							<div style={{ ...card, padding: '24px 26px' }}>
 								<div style={keyStyle}>Template</div>
-								<div style={{ fontSize: 17, fontWeight: 600, margin: '10px 0 14px' }}>
+								<div
+									style={{
+										fontSize: 17,
+										fontWeight: 600,
+										margin: '10px 0 14px',
+									}}
+								>
 									Tenancy agreement · 12 months
 								</div>
-								<div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+								<div
+									style={{ display: 'flex', flexDirection: 'column', gap: 9 }}
+								>
 									{[
 										['100%', CREAMDEEP],
 										['92%', CREAMDEEP],
@@ -1485,18 +1707,36 @@ export default function BestPropertyManagementAppInGhana() {
 									].map(([w, bg], i) => (
 										<div
 											key={i}
-											style={{ height: 10, borderRadius: 3, background: bg, width: w }}
+											style={{
+												height: 10,
+												borderRadius: 3,
+												background: bg,
+												width: w,
+											}}
 										/>
 									))}
 								</div>
 								<div style={{ fontSize: 15, color: MUTED, marginTop: 14 }}>
-									Crimson lines are the details Rentloop fills in from the unit and
-									the tenant.
+									Crimson lines are the details Rentloop fills in from the unit
+									and the tenant.
 								</div>
 							</div>
-							<div style={{ ...card, padding: '24px 26px', display: 'flex', flexDirection: 'column' }}>
+							<div
+								style={{
+									...card,
+									padding: '24px 26px',
+									display: 'flex',
+									flexDirection: 'column',
+								}}
+							>
 								<div style={keyStyle}>Signing</div>
-								<div style={{ display: 'flex', flexDirection: 'column', marginTop: 12 }}>
+								<div
+									style={{
+										display: 'flex',
+										flexDirection: 'column',
+										marginTop: 12,
+									}}
+								>
 									<SignRow text="Sent to Gideon · 28 August" border />
 									<SignRow text="Signed by Gideon · 29 August" border />
 									<SignRow text="Signed by you · 29 August" border={false} />
@@ -1532,13 +1772,19 @@ export default function BestPropertyManagementAppInGhana() {
 					<Num2>Seven</Num2>
 					<H2>Move-in checklists and condition reports</H2>
 					<P>
-						A good app also protects both sides by recording what state a unit was
-						in when the tenant took it.
+						A good app also protects both sides by recording what state a unit
+						was in when the tenant took it.
 					</P>
 				</Column>
 				<Figure caption="The report is shared with the tenant and dated, so both of you hold the same record.">
 					<TableScroll>
-						<table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff' }}>
+						<table
+							style={{
+								width: '100%',
+								borderCollapse: 'collapse',
+								background: '#fff',
+							}}
+						>
 							<thead>
 								<tr>
 									<th style={thStyle}>Item</th>
@@ -1548,19 +1794,72 @@ export default function BestPropertyManagementAppInGhana() {
 							</thead>
 							<tbody>
 								{[
-									['Bathroom sink', <ConditionChip key="c" label="Good" color={GREEN} border="#1B9E5C44" />],
-									['Bedroom wall', <ConditionChip key="c" label="Minor mark" color={ORANGE} border="#E97B2A55" />],
-									['Kitchen cabinet', <ConditionChip key="c" label="Good" color={GREEN} border="#1B9E5C44" />],
-									['Bathroom tap', <ConditionChip key="c" label="Needs attention" color={CRIMSON} border="#C8003A33" />],
+									[
+										'Bathroom sink',
+										<ConditionChip
+											key="c"
+											label="Good"
+											color={GREEN}
+											border="#1B9E5C44"
+										/>,
+									],
+									[
+										'Bedroom wall',
+										<ConditionChip
+											key="c"
+											label="Minor mark"
+											color={ORANGE}
+											border="#E97B2A55"
+										/>,
+									],
+									[
+										'Kitchen cabinet',
+										<ConditionChip
+											key="c"
+											label="Good"
+											color={GREEN}
+											border="#1B9E5C44"
+										/>,
+									],
+									[
+										'Bathroom tap',
+										<ConditionChip
+											key="c"
+											label="Needs attention"
+											color={CRIMSON}
+											border="#C8003A33"
+										/>,
+									],
 								].map(([item, chip], i, arr) => (
 									<tr key={item as string}>
-										<td style={{ ...tdStyle, ...(i === arr.length - 1 ? { borderBottom: 'none' } : {}) }}>
+										<td
+											style={{
+												...tdStyle,
+												...(i === arr.length - 1
+													? { borderBottom: 'none' }
+													: {}),
+											}}
+										>
 											{item}
 										</td>
-										<td style={{ ...tdStyle, ...(i === arr.length - 1 ? { borderBottom: 'none' } : {}) }}>
+										<td
+											style={{
+												...tdStyle,
+												...(i === arr.length - 1
+													? { borderBottom: 'none' }
+													: {}),
+											}}
+										>
 											{chip}
 										</td>
-										<td style={{ ...tdStyle, ...(i === arr.length - 1 ? { borderBottom: 'none' } : {}) }}>
+										<td
+											style={{
+												...tdStyle,
+												...(i === arr.length - 1
+													? { borderBottom: 'none' }
+													: {}),
+											}}
+										>
 											<Placeholder height={40} maxWidth={180}>
 												photo
 											</Placeholder>
@@ -1576,7 +1875,8 @@ export default function BestPropertyManagementAppInGhana() {
 						Say a tenant moves in during January. Two years later they move out
 						and there is a disagreement about whether damage was there before. A
 						dated condition report is the reference point — neither side has to
-						rely on memory. Across dozens of units, it makes handovers consistent.
+						rely on memory. Across dozens of units, it makes handovers
+						consistent.
 					</P>
 				</div>
 
@@ -1592,8 +1892,8 @@ export default function BestPropertyManagementAppInGhana() {
 					</P>
 					<H3>A 100-unit portfolio</H3>
 					<P>
-						85 units occupied, 10 vacant, 5 under maintenance. That is 85 ÷ 100 ={' '}
-						<b>85% occupancy</b>. Shown next to revenue and unit status, you
+						85 units occupied, 10 vacant, 5 under maintenance. That is 85 ÷ 100
+						= <b>85% occupancy</b>. Shown next to revenue and unit status, you
 						immediately know that five units need attention and ten are ready to
 						let. If the portfolio bills GH₵ 180,000 a month, you can compare
 						against previous months and look property by property instead of
@@ -1646,7 +1946,9 @@ export default function BestPropertyManagementAppInGhana() {
 												alignItems: 'center',
 												gap: 12,
 												padding: '13px 0',
-												borderBottom: border ? `1px solid ${HAIRSOFT}` : undefined,
+												borderBottom: border
+													? `1px solid ${HAIRSOFT}`
+													: undefined,
 											}}
 										>
 											<div style={{ flex: 1, fontSize: 16.5 }}>{loc}</div>
@@ -1657,10 +1959,31 @@ export default function BestPropertyManagementAppInGhana() {
 							</div>
 							<div style={{ ...card, padding: '22px 24px' }}>
 								<div style={keyStyle}>Who sees what</div>
-								<div style={{ display: 'flex', flexDirection: 'column', marginTop: 12 }}>
-									<RoleRow tint="rgba(200,0,58,.13)" name="Admin" desc="All three locations, money included" border />
-									<RoleRow tint={CREAMDEEP} name="Manager · Spintex" desc="One property, tenants and rent" border />
-									<RoleRow tint={CREAMDEEP} name="Staff · repairs" desc="Repair tickets only, no financial records" border={false} />
+								<div
+									style={{
+										display: 'flex',
+										flexDirection: 'column',
+										marginTop: 12,
+									}}
+								>
+									<RoleRow
+										tint="rgba(200,0,58,.13)"
+										name="Admin"
+										desc="All three locations, money included"
+										border
+									/>
+									<RoleRow
+										tint={CREAMDEEP}
+										name="Manager · Spintex"
+										desc="One property, tenants and rent"
+										border
+									/>
+									<RoleRow
+										tint={CREAMDEEP}
+										name="Staff · repairs"
+										desc="Repair tickets only, no financial records"
+										border={false}
+									/>
 								</div>
 							</div>
 						</div>
@@ -1673,10 +1996,10 @@ export default function BestPropertyManagementAppInGhana() {
 					<H2>Don't forget the tenant's app</H2>
 					<P>
 						A platform should not only make life easier for the manager. A good
-						tenant app gives residents what they need without calling you — their
-						rent amount, upcoming payments, outstanding bills, payment history,
-						repair requests and updates, agreements, announcements, condition
-						reports and applications.
+						tenant app gives residents what they need without calling you —
+						their rent amount, upcoming payments, outstanding bills, payment
+						history, repair requests and updates, agreements, announcements,
+						condition reports and applications.
 					</P>
 				</Column>
 				<Figure caption="A more transparent tenancy for him, and far fewer repeat questions for you.">
@@ -1731,7 +2054,14 @@ export default function BestPropertyManagementAppInGhana() {
 									<div style={{ fontSize: 14, color: MUTED, marginTop: 14 }}>
 										Unit B12 · East Legon
 									</div>
-									<div style={{ ...card, padding: 14, marginTop: 10, background: CREAM }}>
+									<div
+										style={{
+											...card,
+											padding: 14,
+											marginTop: 10,
+											background: CREAM,
+										}}
+									>
 										<div style={{ fontSize: 14, color: MUTED }}>Next rent</div>
 										<div
 											style={{
@@ -1743,7 +2073,9 @@ export default function BestPropertyManagementAppInGhana() {
 										>
 											GH₵ 2,150.00
 										</div>
-										<div style={{ fontSize: 14, color: MUTED }}>due 5 October 2026</div>
+										<div style={{ fontSize: 14, color: MUTED }}>
+											due 5 October 2026
+										</div>
 									</div>
 									<Chip
 										style={{
@@ -1758,19 +2090,40 @@ export default function BestPropertyManagementAppInGhana() {
 									>
 										Pay with MoMo
 									</Chip>
-									<div style={{ fontSize: 14.5, fontWeight: 600, margin: '18px 0 8px' }}>
+									<div
+										style={{
+											fontSize: 14.5,
+											fontWeight: 600,
+											margin: '18px 0 8px',
+										}}
+									>
 										Your repair request
 									</div>
 									<div style={{ ...card, padding: '13px 14px' }}>
-										<div style={{ fontSize: 15, fontWeight: 600 }}>Bathroom pipe</div>
-										<div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 5 }}>
+										<div style={{ fontSize: 15, fontWeight: 600 }}>
+											Bathroom pipe
+										</div>
+										<div
+											style={{
+												display: 'flex',
+												alignItems: 'center',
+												gap: 8,
+												marginTop: 5,
+											}}
+										>
 											<Dot c={ORANGE} />
 											<span style={{ fontSize: 14, color: MUTED }}>
 												In progress · plumber assigned
 											</span>
 										</div>
 									</div>
-									<div style={{ fontSize: 14.5, fontWeight: 600, margin: '18px 0 8px' }}>
+									<div
+										style={{
+											fontSize: 14.5,
+											fontWeight: 600,
+											margin: '18px 0 8px',
+										}}
+									>
 										Your payments
 									</div>
 									<div
@@ -1806,13 +2159,19 @@ export default function BestPropertyManagementAppInGhana() {
 				<Column>
 					<H2>The ten, at a glance</H2>
 					<P>
-						The right app should solve real operational problems rather than offer
-						a long feature list.
+						The right app should solve real operational problems rather than
+						offer a long feature list.
 					</P>
 				</Column>
 				<Figure>
 					<TableScroll>
-						<table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff' }}>
+						<table
+							style={{
+								width: '100%',
+								borderCollapse: 'collapse',
+								background: '#fff',
+							}}
+						>
 							<thead>
 								<tr>
 									<th style={thStyle}>What to look for</th>
@@ -1821,22 +2180,46 @@ export default function BestPropertyManagementAppInGhana() {
 							</thead>
 							<tbody>
 								{[
-									['Property and unit management', 'Keeps the portfolio organised'],
-									['Mobile Money and bank payments', 'Supports how tenants here actually pay'],
+									[
+										'Property and unit management',
+										'Keeps the portfolio organised',
+									],
+									[
+										'Mobile Money and bank payments',
+										'Supports how tenants here actually pay',
+									],
 									['Automatic bills', 'Removes manual rent admin'],
 									['Tenant records', 'Keeps the tenancy in one place'],
 									['Maintenance tracking', 'Stops requests getting lost'],
 									['Digital agreements', 'Makes paperwork manageable'],
 									['Condition reports', 'Creates a dated record of the unit'],
 									['Reporting', 'Shows revenue and occupancy as they move'],
-									['Role-based access', 'Gives each person the right permissions'],
+									[
+										'Role-based access',
+										'Gives each person the right permissions',
+									],
 									['Tenant app', 'Lets residents serve themselves'],
 								].map(([what, why], i, arr) => (
 									<tr key={what}>
-										<td style={{ ...tdStyle, fontWeight: 600, ...(i === arr.length - 1 ? { borderBottom: 'none' } : {}) }}>
+										<td
+											style={{
+												...tdStyle,
+												fontWeight: 600,
+												...(i === arr.length - 1
+													? { borderBottom: 'none' }
+													: {}),
+											}}
+										>
 											{what}
 										</td>
-										<td style={{ ...tdStyle, ...(i === arr.length - 1 ? { borderBottom: 'none' } : {}) }}>
+										<td
+											style={{
+												...tdStyle,
+												...(i === arr.length - 1
+													? { borderBottom: 'none' }
+													: {}),
+											}}
+										>
 											{why}
 										</td>
 									</tr>
@@ -1863,9 +2246,23 @@ export default function BestPropertyManagementAppInGhana() {
 							gap: 14,
 						}}
 					>
-						<GrowthCard label="Landlord A" units="3 units" text="Three tenants are manageable with phone calls, WhatsApp and a simple spreadsheet." />
-						<GrowthCard label="Landlord B" units="30 units" text="Thirty agreements, thirty payment records, repairs every week and constant messages." />
-						<GrowthCard label="Manager C" labelColor={CRIMSON} units="100 units" text="At GH₵ 1,800 average rent that is GH₵ 180,000 billed monthly — GH₵ 2.16 million a year." borderColor="#C8003A44" />
+						<GrowthCard
+							label="Landlord A"
+							units="3 units"
+							text="Three tenants are manageable with phone calls, WhatsApp and a simple spreadsheet."
+						/>
+						<GrowthCard
+							label="Landlord B"
+							units="30 units"
+							text="Thirty agreements, thirty payment records, repairs every week and constant messages."
+						/>
+						<GrowthCard
+							label="Manager C"
+							labelColor={CRIMSON}
+							units="100 units"
+							text="At GH₵ 1,800 average rent that is GH₵ 180,000 billed monthly — GH₵ 2.16 million a year."
+							borderColor="#C8003A44"
+						/>
 					</Stage>
 				</Figure>
 				<div style={{ maxWidth: 700, margin: '0 auto' }}>
@@ -1880,14 +2277,20 @@ export default function BestPropertyManagementAppInGhana() {
 					<H2>What about pricing?</H2>
 					<P>
 						The cheapest option is not automatically the best, and the most
-						expensive is not necessarily the most suitable. Judge cost against the
-						size of your portfolio and the features you will actually use.
+						expensive is not necessarily the most suitable. Judge cost against
+						the size of your portfolio and the features you will actually use.
 						Rentloop's current plans:
 					</P>
 				</Column>
 				<Figure caption="Plan-cost arithmetic, not a return-on-investment claim.">
 					<TableScroll>
-						<table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff' }}>
+						<table
+							style={{
+								width: '100%',
+								borderCollapse: 'collapse',
+								background: '#fff',
+							}}
+						>
 							<thead>
 								<tr>
 									<th style={thStyle}>Plan</th>
@@ -1899,18 +2302,38 @@ export default function BestPropertyManagementAppInGhana() {
 							<tbody>
 								{[
 									['Free', 'Up to 3 units', 'GHS 0', '—'],
-									['Starter', 'Up to 50 units', 'GHS 149 / month', '≈ GHS 2.98 at 50 units'],
-									['Growth', 'Up to 100 units', 'GHS 299 / month', '≈ GHS 2.99 at 100 units'],
+									[
+										'Starter',
+										'Up to 50 units',
+										'GHS 149 / month',
+										'≈ GHS 2.98 at 50 units',
+									],
+									[
+										'Growth',
+										'Up to 100 units',
+										'GHS 299 / month',
+										'≈ GHS 2.99 at 100 units',
+									],
 									['Enterprise', '100+ units', 'Custom', '—'],
 								].map(([plan, portfolio, price, per], i, arr) => {
 									const last = i === arr.length - 1
-									const cell: CSSProperties = { ...tdStyle, ...(last ? { borderBottom: 'none' } : {}) }
+									const cell: CSSProperties = {
+										...tdStyle,
+										...(last ? { borderBottom: 'none' } : {}),
+									}
 									return (
 										<tr key={plan}>
 											<td style={{ ...cell, fontWeight: 600 }}>{plan}</td>
 											<td style={cell}>{portfolio}</td>
 											<td style={{ ...cell, fontWeight: 600 }}>{price}</td>
-											<td style={{ ...cell, ...(per === '—' ? { color: MUTED } : {}) }}>{per}</td>
+											<td
+												style={{
+													...cell,
+													...(per === '—' ? { color: MUTED } : {}),
+												}}
+											>
+												{per}
+											</td>
 										</tr>
 									)
 								})}
@@ -1920,9 +2343,9 @@ export default function BestPropertyManagementAppInGhana() {
 				</Figure>
 				<div style={{ maxWidth: 700, margin: '0 auto' }}>
 					<P>
-						The more useful question is whether the software removes enough manual
-						work, missed payments, communication gaps and record-keeping problems
-						to justify what it costs.
+						The more useful question is whether the software removes enough
+						manual work, missed payments, communication gaps and record-keeping
+						problems to justify what it costs.
 					</P>
 				</div>
 
@@ -1934,8 +2357,8 @@ export default function BestPropertyManagementAppInGhana() {
 						works here. A platform serving Ghanaian landlords has to account for
 						local payment behaviour, property structures and the way tenants and
 						managers talk to each other — cedi transactions, Mobile Money, bank
-						transfers, cash and offline payments, properties organised into blocks
-						and units.
+						transfers, cash and offline payments, properties organised into
+						blocks and units.
 					</P>
 					<Stat
 						big="81%"
@@ -1943,9 +2366,9 @@ export default function BestPropertyManagementAppInGhana() {
 						src="Bank of Ghana · Payment Systems Oversight Annual Report 2025"
 					/>
 					<P>
-						For a rental business that means an app which connects digital payments
-						to rental records is considerably more useful than one designed around
-						cash and manual bank reconciliation.
+						For a rental business that means an app which connects digital
+						payments to rental records is considerably more useful than one
+						designed around cash and manual bank reconciliation.
 					</P>
 				</Column>
 
@@ -1953,8 +2376,8 @@ export default function BestPropertyManagementAppInGhana() {
 				<Column>
 					<H2>The bigger picture</H2>
 					<P>
-						Ghana's housing market is under real pressure. The housing deficit has
-						been estimated at around 1.8 million units, while the National
+						Ghana's housing market is under real pressure. The housing deficit
+						has been estimated at around 1.8 million units, while the National
 						Homeownership Fund notes that affordability, housing conditions and
 						tenure security remain important challenges. The Ghana Statistical
 						Service reports that 46% of urban households rent — rental housing
@@ -1981,12 +2404,12 @@ export default function BestPropertyManagementAppInGhana() {
 				<Column>
 					<H2>Rentloop, in one place</H2>
 					<P>
-						Rentloop brings owners, managers, staff and tenants onto one platform.
-						For managers: property and unit management, applications, agreements,
-						e-signatures, rent bills, payment matching, expenses, maintenance,
-						announcements, inspections, polls and reporting. For tenants: rent,
-						bills, payments, repair requests, documents, property information,
-						announcements and condition reports in their own app.
+						Rentloop brings owners, managers, staff and tenants onto one
+						platform. For managers: property and unit management, applications,
+						agreements, e-signatures, rent bills, payment matching, expenses,
+						maintenance, announcements, inspections, polls and reporting. For
+						tenants: rent, bills, payments, repair requests, documents, property
+						information, announcements and condition reports in their own app.
 					</P>
 					<P>
 						The platform handles both long-term agreements and short-stay guest
@@ -2053,17 +2476,17 @@ export default function BestPropertyManagementAppInGhana() {
 						))}
 					</ol>
 					<P>
-						If the answer to most of these is yes, you are looking at more than a
-						rent collection tool. For a few units that means better organisation;
-						for hundreds, it means a structured way to run the whole rental
-						business.
+						If the answer to most of these is yes, you are looking at more than
+						a rent collection tool. For a few units that means better
+						organisation; for hundreds, it means a structured way to run the
+						whole rental business.
 					</P>
 					<P>
 						Instead of asking "where is that spreadsheet?", "has this tenant
 						paid?" or "did anyone answer that repair request?", the information
 						should already be where it belongs. Better organisation is not just
-						about saving time — it is about having better control of the property
-						business.
+						about saving time — it is about having better control of the
+						property business.
 					</P>
 				</Column>
 
@@ -2104,7 +2527,7 @@ export default function BestPropertyManagementAppInGhana() {
 					</p>
 					<ExternalLink
 						href={APPLY_URL}
-						className="inline-block rounded-full bg-rl-crimson font-semibold text-white no-underline transition-colors hover:bg-rl-crimson-deep"
+						className="bg-rl-crimson hover:bg-rl-crimson-deep inline-block rounded-full font-semibold text-white no-underline transition-colors"
 						style={{ fontSize: 17, padding: '14px 26px' }}
 					>
 						Start free trial
@@ -2142,7 +2565,9 @@ export default function BestPropertyManagementAppInGhana() {
 									position: 'relative',
 								}}
 							>
-								<span style={{ position: 'absolute', left: 0, color: MICRO }}>—</span>
+								<span style={{ position: 'absolute', left: 0, color: MICRO }}>
+									—
+								</span>
 								{s}
 							</li>
 						))}
@@ -2174,7 +2599,9 @@ function RoleRow({
 				borderBottom: border ? `1px solid ${HAIRSOFT}` : undefined,
 			}}
 		>
-			<div style={{ width: 30, height: 30, borderRadius: '50%', background: tint }} />
+			<div
+				style={{ width: 30, height: 30, borderRadius: '50%', background: tint }}
+			/>
 			<div style={{ flex: 1 }}>
 				<div style={{ fontSize: 16.5, fontWeight: 600 }}>{name}</div>
 				<div style={{ fontSize: 15, color: MUTED }}>{desc}</div>
@@ -2197,8 +2624,18 @@ function GrowthCard({
 	borderColor?: string
 }) {
 	return (
-		<div style={{ ...card, padding: '22px 24px', ...(borderColor ? { borderColor } : {}) }}>
-			<div style={{ ...keyStyle, ...(labelColor ? { color: labelColor } : {}) }}>{label}</div>
+		<div
+			style={{
+				...card,
+				padding: '22px 24px',
+				...(borderColor ? { borderColor } : {}),
+			}}
+		>
+			<div
+				style={{ ...keyStyle, ...(labelColor ? { color: labelColor } : {}) }}
+			>
+				{label}
+			</div>
 			<div
 				style={{
 					fontFamily: serif,

@@ -100,7 +100,13 @@ function Num({ children }: { children: ReactNode }) {
 	)
 }
 
-function Placeholder({ children, height }: { children: ReactNode; height: number }) {
+function Placeholder({
+	children,
+	height,
+}: {
+	children: ReactNode
+	height: number
+}) {
 	return (
 		<div
 			style={{
@@ -272,7 +278,13 @@ function PlainList({ items }: { items: ReactNode[] }) {
 	)
 }
 
-function ScaledShot({ width, children }: { width: number; children: ReactNode }) {
+function ScaledShot({
+	width,
+	children,
+}: {
+	width: number
+	children: ReactNode
+}) {
 	const boxRef = useRef<HTMLDivElement>(null)
 	const shotRef = useRef<HTMLDivElement>(null)
 
@@ -462,7 +474,11 @@ function DashboardShot() {
 				>
 					<div>
 						<div
-							style={{ fontFamily: serif, fontSize: 31, letterSpacing: '-.7px' }}
+							style={{
+								fontFamily: serif,
+								fontSize: 31,
+								letterSpacing: '-.7px',
+							}}
 						>
 							Good morning, Benjamin
 						</div>
@@ -483,7 +499,11 @@ function DashboardShot() {
 					</div>
 					<div style={{ ...card, padding: '20px 22px 8px' }}>
 						<div
-							style={{ fontFamily: serif, fontSize: 22, letterSpacing: '-.3px' }}
+							style={{
+								fontFamily: serif,
+								fontSize: 22,
+								letterSpacing: '-.3px',
+							}}
 						>
 							Who owes you
 						</div>
@@ -569,7 +589,15 @@ function Step({ n, title, desc }: { n: number; title: string; desc: string }) {
 	)
 }
 
-function LeaseStep({ n, title, desc }: { n: number; title: string; desc: string }) {
+function LeaseStep({
+	n,
+	title,
+	desc,
+}: {
+	n: number
+	title: string
+	desc: string
+}) {
 	return (
 		<div
 			style={{
@@ -636,9 +664,7 @@ function OccupancyRow({
 				<span>{name}</span>
 				<span style={{ color: MUTED }}>{count}</span>
 			</div>
-			<div
-				style={{ height: 10, borderRadius: 999, background: CREAMDEEP }}
-			>
+			<div style={{ height: 10, borderRadius: 999, background: CREAMDEEP }}>
 				<div
 					style={{
 						width: `${pct}%`,
@@ -672,7 +698,11 @@ function RentBar({
 			}}
 		>
 			<div
-				style={{ height: owed, background: CRIMSON, borderRadius: '4px 4px 0 0' }}
+				style={{
+					height: owed,
+					background: CRIMSON,
+					borderRadius: '4px 4px 0 0',
+				}}
 			/>
 			<div
 				style={{ height: paid, background: GREEN, borderRadius: '0 0 4px 4px' }}
@@ -723,13 +753,7 @@ function RoleRow({
 	)
 }
 
-function PhonePaymentRow({
-	date,
-	border,
-}: {
-	date: string
-	border: boolean
-}) {
+function PhonePaymentRow({ date, border }: { date: string; border: boolean }) {
 	return (
 		<div
 			style={{
@@ -767,7 +791,9 @@ export default function WhatIsRentloop() {
 				style={{ maxWidth: 1180, margin: '0 auto' }}
 				className="px-4 md:px-10"
 			>
-				<div style={{ maxWidth: 700, margin: '0 auto', padding: '56px 0 44px' }}>
+				<div
+					style={{ maxWidth: 700, margin: '0 auto', padding: '56px 0 44px' }}
+				>
 					<div
 						style={{
 							fontFamily: mono,
@@ -838,9 +864,9 @@ export default function WhatIsRentloop() {
 				<div style={{ maxWidth: 700, margin: '0 auto', padding: '52px 0' }}>
 					<P lead>
 						Managing rental properties in Ghana has long been a fragmented,
-						manual process — spreadsheets for tracking rent, WhatsApp threads for
-						maintenance issues, physical files for lease documents. Rentloop was
-						built to change that.
+						manual process — spreadsheets for tracking rent, WhatsApp threads
+						for maintenance issues, physical files for lease documents. Rentloop
+						was built to change that.
 					</P>
 					<P>
 						Rentloop is an all-in-one property management platform designed
@@ -852,7 +878,9 @@ export default function WhatIsRentloop() {
 
 				<Column>
 					<H2>Who is Rentloop for?</H2>
-					<P>Rentloop works for anyone who manages rental properties in Ghana:</P>
+					<P>
+						Rentloop works for anyone who manages rental properties in Ghana:
+					</P>
 					<PlainList
 						items={[
 							<>
@@ -953,9 +981,7 @@ export default function WhatIsRentloop() {
 
 				<Figure caption="Property → block → unit. Every unit carries its own status, so you always know what is ready to rent.">
 					<Stage>
-						<div
-							style={{ display: 'flex', flexDirection: 'column', gap: 14 }}
-						>
+						<div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 							<div
 								style={{
 									...card,
@@ -1038,7 +1064,9 @@ export default function WhatIsRentloop() {
 				</Figure>
 
 				<div style={{ maxWidth: 700, margin: '0 auto' }}>
-					<P>Rentloop supports all the unit types common in the Ghana market:</P>
+					<P>
+						Rentloop supports all the unit types common in the Ghana market:
+					</P>
 				</div>
 
 				<Figure>
@@ -1068,11 +1096,7 @@ export default function WhatIsRentloop() {
 				<Figure caption="Both paths collect the same things — full name, date of birth, Ghana Card or passport, proof of income or admission, emergency contacts.">
 					<div style={twoGrid}>
 						<Stage style={{ padding: 26 }}>
-							<div
-								style={{ ...monoLabel, color: CRIMSON }}
-							>
-								Path one
-							</div>
+							<div style={{ ...monoLabel, color: CRIMSON }}>Path one</div>
 							<div
 								style={{
 									fontFamily: serif,
@@ -1173,9 +1197,7 @@ export default function WhatIsRentloop() {
 								You fill it in on his behalf, five short steps, in the office or
 								on the phone with him.
 							</p>
-							<div
-								style={{ display: 'flex', flexDirection: 'column', gap: 2 }}
-							>
+							<div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
 								<Step
 									n={1}
 									title="Personal information"
@@ -1274,8 +1296,8 @@ export default function WhatIsRentloop() {
 				<Column>
 					<H2>Rent collection</H2>
 					<P>
-						Rentloop supports flexible rent collection to match how landlords and
-						tenants in Ghana actually operate — how often he pays, in which
+						Rentloop supports flexible rent collection to match how landlords
+						and tenants in Ghana actually operate — how often he pays, in which
 						currency, and by which method.
 					</P>
 				</Column>
@@ -1294,7 +1316,10 @@ export default function WhatIsRentloop() {
 									}}
 								>
 									{['Daily', 'Weekly'].map((f) => (
-										<Chip key={f} style={{ fontSize: 14.5, padding: '8px 14px' }}>
+										<Chip
+											key={f}
+											style={{ fontSize: 14.5, padding: '8px 14px' }}
+										>
 											{f}
 										</Chip>
 									))}
@@ -1310,7 +1335,10 @@ export default function WhatIsRentloop() {
 										Monthly
 									</Chip>
 									{['Quarterly', 'Biannual', 'Annual'].map((f) => (
-										<Chip key={f} style={{ fontSize: 14.5, padding: '8px 14px' }}>
+										<Chip
+											key={f}
+											style={{ fontSize: 14.5, padding: '8px 14px' }}
+										>
 											{f}
 										</Chip>
 									))}
@@ -1326,8 +1354,12 @@ export default function WhatIsRentloop() {
 									>
 										GHS
 									</Chip>
-									<Chip style={{ fontSize: 14.5, padding: '8px 14px' }}>USD</Chip>
-									<Chip style={{ fontSize: 14.5, padding: '8px 14px' }}>EUR</Chip>
+									<Chip style={{ fontSize: 14.5, padding: '8px 14px' }}>
+										USD
+									</Chip>
+									<Chip style={{ fontSize: 14.5, padding: '8px 14px' }}>
+										EUR
+									</Chip>
 								</div>
 							</div>
 							<div style={{ ...card, padding: '20px 22px' }}>
@@ -1383,7 +1415,9 @@ export default function WhatIsRentloop() {
 									justifyContent: 'space-between',
 								}}
 							>
-								<div style={{ fontSize: 17, fontWeight: 600 }}>September rent</div>
+								<div style={{ fontSize: 17, fontWeight: 600 }}>
+									September rent
+								</div>
 								<div style={{ fontSize: 15, color: MUTED }}>
 									GH₵ 26,300.00 of GH₵ 32,700.00 paid
 								</div>
@@ -1498,7 +1532,9 @@ export default function WhatIsRentloop() {
 									margin: '20px 0',
 								}}
 							>
-								<Placeholder height={110}>tenant photo · under sink</Placeholder>
+								<Placeholder height={110}>
+									tenant photo · under sink
+								</Placeholder>
 								<Placeholder height={110}>tenant photo · floor</Placeholder>
 								<Placeholder height={110}>plumber's photo · after</Placeholder>
 							</div>
@@ -1601,9 +1637,7 @@ export default function WhatIsRentloop() {
 								>
 									78%
 								</div>
-								<div
-									style={{ fontSize: 14.5, color: MUTED, marginBottom: 18 }}
-								>
+								<div style={{ fontSize: 14.5, color: MUTED, marginBottom: 18 }}>
 									21 of 27 units let across 3 properties
 								</div>
 								<div
@@ -1666,9 +1700,7 @@ export default function WhatIsRentloop() {
 						}}
 					>
 						<div style={{ ...card, padding: '20px 22px' }}>
-							<div
-								style={{ fontSize: 16, fontWeight: 600, marginBottom: 14 }}
-							>
+							<div style={{ fontSize: 16, fontWeight: 600, marginBottom: 14 }}>
 								Who can do what
 							</div>
 							<RoleRow
@@ -1708,9 +1740,16 @@ export default function WhatIsRentloop() {
 										Room 104 · Serenity villa
 									</div>
 									<div
-										style={{ ...card, padding: 14, marginTop: 10, background: CREAM }}
+										style={{
+											...card,
+											padding: 14,
+											marginTop: 10,
+											background: CREAM,
+										}}
 									>
-										<div style={{ fontSize: 13.5, color: MUTED }}>Next rent</div>
+										<div style={{ fontSize: 13.5, color: MUTED }}>
+											Next rent
+										</div>
 										<div
 											style={{
 												fontFamily: serif,
@@ -1726,7 +1765,11 @@ export default function WhatIsRentloop() {
 										</div>
 									</div>
 									<div
-										style={{ fontSize: 14, fontWeight: 600, margin: '18px 0 8px' }}
+										style={{
+											fontSize: 14,
+											fontWeight: 600,
+											margin: '18px 0 8px',
+										}}
 									>
 										Your payments
 									</div>
@@ -1802,7 +1845,7 @@ export default function WhatIsRentloop() {
 					</p>
 					<ExternalLink
 						href={APPLY_URL}
-						className="inline-block rounded-full bg-rl-crimson font-semibold text-white no-underline transition-colors hover:bg-rl-crimson-deep"
+						className="bg-rl-crimson hover:bg-rl-crimson-deep inline-block rounded-full font-semibold text-white no-underline transition-colors"
 						style={{ fontSize: 17, padding: '14px 26px' }}
 					>
 						Start free trial
