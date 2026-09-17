@@ -15,6 +15,11 @@ import {
 } from '~/components/ui/card'
 import { Separator } from '~/components/ui/separator'
 import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from '~/components/ui/tooltip'
+import {
 	TypographyH4,
 	TypographyMuted,
 	TypographyP,
@@ -86,18 +91,27 @@ export function PropertyTenantsModule() {
 							<Card key={tenant.id} className="shadow-none">
 								<CardHeader className="flex items-start justify-between gap-3">
 									<CardTitle>
-										<Badge
-											variant="outline"
-											className={`px-2 py-1 text-xs ${
-												getTenantOccupancyStatus(tenant) === 'ACTIVE'
-													? 'bg-teal-500 text-white'
-													: 'bg-zinc-400 text-white'
-											}`}
-										>
-											{getTenantOccupancyStatus(tenant) === 'ACTIVE'
-												? 'Active'
-												: 'Inactive'}
-										</Badge>
+										<Tooltip disableHoverableContent>
+											<TooltipTrigger asChild>
+												<Badge
+													variant="outline"
+													className={`px-2 py-1 text-xs ${
+														getTenantOccupancyStatus(tenant) === 'ACTIVE'
+															? 'bg-teal-500 text-white'
+															: 'bg-zinc-400 text-white'
+													}`}
+												>
+													{getTenantOccupancyStatus(tenant) === 'ACTIVE'
+														? 'Active'
+														: 'Inactive'}
+												</Badge>
+											</TooltipTrigger>
+											<TooltipContent>
+												{getTenantOccupancyStatus(tenant) === 'ACTIVE'
+													? 'This tenant has an active lease or booking.'
+													: 'This tenant has no active lease or booking.'}
+											</TooltipContent>
+										</Tooltip>
 									</CardTitle>
 								</CardHeader>
 
