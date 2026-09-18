@@ -1,5 +1,5 @@
 export type ReleaseHighlight = {
-	icon: 'doc' | 'clock' | 'calendar' | 'alert'
+	icon: 'doc' | 'clock' | 'calendar' | 'alert' | 'wrench' | 'wallet'
 	title: string
 	body: string
 }
@@ -25,6 +25,33 @@ export type Release = {
 }
 
 export const RELEASES: Release[] = [
+	{
+		id: 'who-pays-for-repairs',
+		date: '2026-09-18',
+		headline: true,
+		title: 'You can say who pays for a repair',
+		summary:
+			'When a job is done, write down what it cost and who covers it — nobody, the tenant, or you paying a vendor. Everything you owe vendors now sits on one Expenses page.',
+		highlights: [
+			{
+				icon: 'wrench',
+				title: 'One repair, split however it was paid',
+				body: 'A GH₵ 1,000.00 plumbing job can be GH₵ 600.00 you owe the plumber and GH₵ 400.00 charged to the tenant — two lines on the same request, with the total underneath.',
+			},
+			{
+				icon: 'wallet',
+				title: 'Every expense is a bill you owe',
+				body: 'The Expenses page shows what is still owed to vendors. Paid them already? Switch on “Already paid” and it is settled as you record it.',
+			},
+		],
+		bullets: [
+			'A charge to the tenant shows under “Charges to you” on their request in the Rentloop app, and goes on their account like any other charge.',
+			'Costs no longer sit on a lease. A repair’s costs live on its maintenance request; everything else goes on the Expenses page.',
+			'The Rentloop manager app has the same Financials tab on a request.',
+		],
+		where:
+			'Activities › Maintenance Requests › open a request › Financials, and Financials › Expenses',
+	},
 	{
 		id: 'lease-change-history',
 		date: '2026-08-24',

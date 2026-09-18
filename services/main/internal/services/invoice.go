@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -44,6 +45,11 @@ type InvoiceService interface {
 	RemoveLineItem(context context.Context, input RemoveLineItemInput) error
 	GetLineItems(context context.Context, invoiceID string) ([]models.InvoiceLineItem, error)
 	UpdateInvoicePaymentStatus(ctx context.Context, input UpdateInvoicePaymentStatusInput) (*models.Invoice, error)
+	// CreateExpenseInvoice raises the vendor's bill against an expense. It is
+	// called only by ExpenseService, inside the transaction that creates the
+	// expense: an expense with no invoice would post nothing and vanish from
+	// the landlord's books.
+	CreateExpenseInvoice(ctx context.Context, input CreateExpenseInvoiceInput) (*models.Invoice, error)
 	// ComposeFromAccount is the only way an account-backed invoice is created.
 	ComposeFromAccount(ctx context.Context, input ComposeFromAccountInput) (*models.Invoice, error)
 	// ComposeAccountInvoice satisfies financials.InvoiceComposer for the
@@ -121,6 +127,7 @@ type CreateInvoiceInput struct {
 	ContextBookingID            *string
 	ContextMaintenanceRequestID *string
 	ContextLeaseTerminationID   *string
+	ContextExpenseID            *string
 	// FinancialAccountID makes this invoice account-backed. It may only be set
 	// by ComposeFromAccount — see the composed flag below.
 	FinancialAccountID *string
@@ -159,6 +166,100 @@ func (s *invoiceService) assertAccountOpen(ctx context.Context, accountID *strin
 	}
 
 	return financials.AssertAccountOpen(account.Status)
+}
+
+type CreateExpenseInvoiceInput struct {
+	ExpenseID   string
+	PropertyID  string
+	ClientID    *string
+	Category    string
+	VendorName  string
+	Description string
+	Amount      int64
+	Currency    string
+	DueDate     *time.Time
+}
+
+// expenseCategoryMetadataKey carries the expense's own category onto the
+// invoice line, because that is what decides which expense account the entry
+// debits. It has to survive persistence: VoidInvoice rebuilds the entry from
+// the reloaded invoice to reverse it, and a reversal that picked a different
+// account than the issuance would leave both standing.
+const expenseCategoryMetadataKey = "expense_category"
+
+// expenseAccountFor routes an expense to its account. The chart of accounts
+// offers two, so MANAGEMENT gets the management account and everything else
+// lands in maintenance. Insurance, utilities and landscaping are lumped in
+// there with repairs — a finer split needs new accounts in Fincore first.
+func expenseAccountFor(category string, accounts config.IChartOfAccounts) string {
+	if category == "MANAGEMENT" {
+		return accounts.PropertyManagementExpenseID
+	}
+	return accounts.MaintenanceExpenseID
+}
+
+// expenseCategoryFromInvoice reads the category back off the line. An invoice
+// with nothing recorded falls through to maintenance, which is where every
+// expense posted before this routing existed already sits.
+func expenseCategoryFromInvoice(invoice *models.Invoice) string {
+	for i := range invoice.LineItems {
+		if invoice.LineItems[i].Metadata == nil {
+			continue
+		}
+		var metadata map[string]any
+		if err := json.Unmarshal(*invoice.LineItems[i].Metadata, &metadata); err != nil {
+			continue
+		}
+		if category, ok := metadata[expenseCategoryMetadataKey].(string); ok {
+			return category
+		}
+	}
+	return ""
+}
+
+// CreateExpenseInvoice raises the bill the landlord received from a vendor.
+//
+// Non-account-backed by construction: PaymentAllocation requires a charge
+// instance, so an expense invoice could never carry allocations, and the
+// payment path already branches on FinancialAccountID for exactly that reason.
+func (s *invoiceService) CreateExpenseInvoice(
+	ctx context.Context,
+	input CreateExpenseInvoiceInput,
+) (*models.Invoice, error) {
+	if input.Amount <= 0 {
+		return nil, pkg.BadRequestError("ExpenseAmountMustBePositive", nil)
+	}
+
+	currency := input.Currency
+	if currency == "" {
+		currency = "GHS"
+	}
+
+	return s.CreateInvoice(ctx, CreateInvoiceInput{
+		ClientID:         input.ClientID,
+		PropertyID:       &input.PropertyID,
+		PayerType:        "PROPERTY_OWNER",
+		PayerPropertyID:  &input.PropertyID,
+		PayeeType:        "EXTERNAL",
+		ContextType:      "EXPENSE",
+		ContextExpenseID: &input.ExpenseID,
+		TotalAmount:      input.Amount,
+		SubTotal:         input.Amount,
+		Currency:         currency,
+		Status:           "ISSUED",
+		DueDate:          input.DueDate,
+		LineItems: []LineItemInput{
+			{
+				Label:       fmt.Sprintf("%s — %s", input.Description, input.VendorName),
+				Category:    "MAINTENANCE_FEE",
+				Quantity:    1,
+				UnitAmount:  input.Amount,
+				TotalAmount: input.Amount,
+				Currency:    currency,
+				Metadata:    &map[string]any{expenseCategoryMetadataKey: input.Category},
+			},
+		},
+	})
 }
 
 func (s *invoiceService) CreateInvoice(ctx context.Context, input CreateInvoiceInput) (*models.Invoice, error) {
@@ -234,6 +335,7 @@ func (s *invoiceService) CreateInvoice(ctx context.Context, input CreateInvoiceI
 		ContextBookingID:            input.ContextBookingID,
 		ContextMaintenanceRequestID: input.ContextMaintenanceRequestID,
 		ContextLeaseTerminationID:   input.ContextLeaseTerminationID,
+		ContextExpenseID:            input.ContextExpenseID,
 		FinancialAccountID:          input.FinancialAccountID,
 		TotalAmount:                 input.TotalAmount,
 		Taxes:                       input.Taxes,
@@ -1706,8 +1808,37 @@ func buildJournalEntryForInvoice(
 		return buildSaasJournalEntry(invoice, accounts)
 	case "LEASE_TERMINATION":
 		return buildLeaseTerminationJournalEntry(invoice, accounts)
+	case "EXPENSE":
+		return buildExpenseJournalEntry(invoice, accounts)
 	default:
 		return []accounting.CreateJournalEntryLineRequest{}
+	}
+}
+
+// buildExpenseJournalEntry records a bill the landlord received. The debt is
+// created on issue and cleared on payment, which is what makes "what do I owe
+// vendors right now" answerable at all.
+//
+// It never touches Accounts Receivable: nobody owes the landlord anything on
+// an expense invoice.
+func buildExpenseJournalEntry(
+	invoice *models.Invoice,
+	accounts config.IChartOfAccounts,
+) []accounting.CreateJournalEntryLineRequest {
+	note := fmt.Sprintf("Vendor bill %s", invoice.Code)
+	return []accounting.CreateJournalEntryLineRequest{
+		{
+			AccountID: expenseAccountFor(expenseCategoryFromInvoice(invoice), accounts),
+			Debit:     invoice.TotalAmount,
+			Credit:    0,
+			Notes:     lib.StringPointer(note),
+		},
+		{
+			AccountID: accounts.AccountsPayableID,
+			Debit:     0,
+			Credit:    invoice.TotalAmount,
+			Notes:     lib.StringPointer(note),
+		},
 	}
 }
 
@@ -1796,7 +1927,7 @@ func counterpartAccountFor(
 		return accounts.RentalIncomeID
 	case "SECURITY_DEPOSIT":
 		return accounts.SecurityDepositsHeldID
-	case "DAMAGE_CHARGE", "UTILITY":
+	case "MAINTENANCE_CHARGE", "DAMAGE_CHARGE", "UTILITY":
 		return accounts.MaintenanceReimbursementID
 	case "EARLY_TERMINATION_FEE", "AGENCY_FEE", "VAT":
 		return accounts.RentalIncomeID
@@ -1937,6 +2068,24 @@ func buildPaymentJournalLines(
 	switch invoice.ContextType {
 	case "LEASE_TERMINATION":
 		return buildLeaseTerminationPaymentJournalLines(invoice, accounts)
+	case "EXPENSE":
+		// Money leaving the landlord. Without this case the default below
+		// would post Dr Cash / Cr AR for a bill they RECEIVED, recording an
+		// outflow as an inflow.
+		return []accounting.CreateJournalEntryLineRequest{
+			{
+				AccountID: accounts.AccountsPayableID,
+				Debit:     paymentAmount,
+				Credit:    0,
+				Notes:     lib.StringPointer(fmt.Sprintf("Payable cleared for invoice %s", invoice.Code)),
+			},
+			{
+				AccountID: accounts.CashBankAccountID,
+				Debit:     0,
+				Credit:    paymentAmount,
+				Notes:     lib.StringPointer(fmt.Sprintf("Vendor paid for invoice %s", invoice.Code)),
+			},
+		}
 	default:
 		// TENANT_APPLICATION, LEASE_RENT, BOOKING_FEE, SAAS_FEE:
 		// cash received, AR cleared

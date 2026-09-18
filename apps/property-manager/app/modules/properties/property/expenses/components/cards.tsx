@@ -12,6 +12,8 @@ import { useClient } from '~/providers/client-provider'
 
 interface ExpenseRow {
 	'Expenses.totalAmount': string | null
+	'Expenses.outstandingAmount': string | null
+	'Expenses.outstandingCount': string | null
 	'Expenses.maintenanceAmount': string | null
 	'Expenses.count': string | null
 }
@@ -36,6 +38,8 @@ export function PropertyExpenseAnalyticsCards({ propertyId }: Props) {
 		{
 			measures: [
 				'Expenses.totalAmount',
+				'Expenses.outstandingAmount',
+				'Expenses.outstandingCount',
 				'Expenses.maintenanceAmount',
 				'Expenses.count',
 			],
@@ -52,14 +56,26 @@ export function PropertyExpenseAnalyticsCards({ propertyId }: Props) {
 	const isLoading = expensesQuery.isPending
 	const row = expensesQuery.data?.[0]
 	const totalAmount = parseNum(row?.['Expenses.totalAmount'])
+	const outstandingAmount = parseNum(row?.['Expenses.outstandingAmount'])
+	const outstandingCount = parseNum(row?.['Expenses.outstandingCount'])
 	const maintenanceAmount = parseNum(row?.['Expenses.maintenanceAmount'])
 	const count = parseNum(row?.['Expenses.count'])
 
+	// Owed first: it is the only figure here that asks the landlord to do
+	// something, and the reason expenses became payables at all.
 	const cards = [
+		{
+			label: 'Owed to Vendors',
+			value: formatAmount(convertPesewasToCedis(outstandingAmount)),
+			footer:
+				outstandingCount === 1
+					? '1 bill still to pay'
+					: `${outstandingCount.toLocaleString()} bills still to pay`,
+		},
 		{
 			label: 'Total Spent',
 			value: formatAmount(convertPesewasToCedis(totalAmount)),
-			footer: 'All time · all expense types',
+			footer: 'All time · voided excluded',
 		},
 		{
 			label: 'Maintenance Spend',
@@ -74,7 +90,7 @@ export function PropertyExpenseAnalyticsCards({ propertyId }: Props) {
 	]
 
 	return (
-		<div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+		<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
 			{cards.map((card) => (
 				<Card key={card.label} className="shadow-none">
 					<CardHeader>

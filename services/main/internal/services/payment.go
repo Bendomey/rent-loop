@@ -23,6 +23,7 @@ import (
 type PaymentService interface {
 	CreateOfflinePayment(context context.Context, input CreateOfflinePaymentInput) (*models.Payment, error)
 	VerifyOfflinePayment(context context.Context, input VerifyOfflinePaymentInput) (*models.Payment, error)
+	RecordExpensePayment(ctx context.Context, input RecordExpensePaymentInput) (*models.Payment, error)
 }
 
 type paymentService struct {
@@ -61,6 +62,72 @@ func NewPaymentService(deps PaymentServiceDeps) PaymentService {
 		tenantApplicationService: deps.TenantApplicationService,
 		financials:               deps.Financials,
 	}
+}
+
+// RecordExpensePaymentInput settles a bill the landlord paid. There is no
+// submission-then-verification dance here: the landlord is recording their own
+// outgoing payment, so it is successful the moment it is recorded.
+type RecordExpensePaymentInput struct {
+	InvoiceID    string
+	Amount       int64
+	Provider     *string
+	Reference    *string
+	ClientUserID string
+}
+
+// RecordExpensePayment composes the two steps that already exist rather than
+// duplicating the settlement block: VerifyOfflinePayment is what posts the
+// journal entry, and its non-account-backed path already skips allocations.
+func (s *paymentService) RecordExpensePayment(
+	ctx context.Context,
+	input RecordExpensePaymentInput,
+) (*models.Payment, error) {
+	account, accountErr := s.systemOfflinePaymentAccount(ctx)
+	if accountErr != nil {
+		return nil, accountErr
+	}
+
+	provider := "CASH"
+	if input.Provider != nil {
+		provider = *input.Provider
+	}
+
+	payment, createErr := s.CreateOfflinePayment(ctx, CreateOfflinePaymentInput{
+		PaymentAccountID:        account.ID.String(),
+		InvoiceID:               input.InvoiceID,
+		Provider:                provider,
+		Amount:                  input.Amount,
+		Reference:               input.Reference,
+		InitiatedByClientUserID: &input.ClientUserID,
+	})
+	if createErr != nil {
+		return nil, createErr
+	}
+
+	return s.VerifyOfflinePayment(ctx, VerifyOfflinePaymentInput{
+		VerifiedByID: input.ClientUserID,
+		PaymentID:    payment.ID.String(),
+		IsSuccessful: true,
+	})
+}
+
+// systemOfflinePaymentAccount finds the account seeded by
+// SeedSystemOfflinePaymentAccount. A vendor is external and has no payment
+// account of their own, so offline settlement rides the system one.
+func (s *paymentService) systemOfflinePaymentAccount(
+	ctx context.Context,
+) (*models.PaymentAccount, error) {
+	var account models.PaymentAccount
+	err := lib.ResolveDB(ctx, s.appCtx.DB).WithContext(ctx).
+		Where("owner_type = ? AND rail = ? AND status = ?", "SYSTEM", "OFFLINE", "ACTIVE").
+		First(&account).Error
+	if err != nil {
+		return nil, pkg.InternalServerError("SystemOfflinePaymentAccountMissing", &pkg.RentLoopErrorParams{
+			Err:      err,
+			Metadata: map[string]string{"function": "RecordExpensePayment"},
+		})
+	}
+	return &account, nil
 }
 
 type CreateOfflinePaymentInput struct {

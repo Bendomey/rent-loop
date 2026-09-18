@@ -39,7 +39,7 @@ class _MaintenanceDetailScreenState
     extends ConsumerState<MaintenanceDetailScreen> {
   static const _tabHistory = 'history';
   static const _tabComments = 'comments';
-  static const _tabExpenses = 'expenses';
+  static const _tabFinancials = 'financials';
 
   String _tab = _tabHistory;
   bool _submittingStatus = false;
@@ -141,8 +141,8 @@ class _MaintenanceDetailScreenState
           _tabComments => ref.refresh(
             maintenanceRequestCommentsProvider(id, hint).future,
           ),
-          _tabExpenses => ref.refresh(
-            maintenanceRequestExpensesProvider(id, hint).future,
+          _tabFinancials => ref.refresh(
+            maintenanceRequestFinancialsProvider(id, hint).future,
           ),
           _ => ref.refresh(
             maintenanceRequestActivityLogsProvider(id, hint).future,
@@ -252,7 +252,7 @@ class _Body extends StatelessWidget {
           items: const [
             RLSegmentItem(key: 'history', label: 'History'),
             RLSegmentItem(key: 'comments', label: 'Comments'),
-            RLSegmentItem(key: 'expenses', label: 'Expenses'),
+            RLSegmentItem(key: 'financials', label: 'Financials'),
           ],
         ),
         const SizedBox(height: 14),
@@ -261,7 +261,7 @@ class _Body extends StatelessWidget {
             requestId: request.id,
             propertyIdHint: propertyIdHint,
           ),
-          'expenses' => MaintenanceExpensesTab(
+          'financials' => MaintenanceFinancialsTab(
             requestId: request.id,
             propertyIdHint: propertyIdHint,
           ),

@@ -1,6 +1,7 @@
 import 'package:rentloop_go/src/architecture/architecture.dart';
 import 'package:flutter/material.dart';
 import 'package:rentloop_go/src/lib/money.dart';
+import 'package:rentloop_go/src/repository/models/maintenance_request_financial_model.dart';
 import 'package:rentloop_go/src/repository/models/maintenance_request_model.dart';
 import 'package:rentloop_go/src/repository/providers/maintenance_badge_provider.dart';
 import 'package:rentloop_go/src/repository/providers/maintenance_request_provider.dart';
@@ -51,8 +52,12 @@ class _MaintenanceDetailsScreen
       ),
       data: (request) => _DetailsView(
         request: request,
+        leaseId: leaseId,
         onRefresh: () async {
           ref.invalidate(maintenanceRequestProvider(leaseId, widget.requestId));
+          ref.invalidate(
+            maintenanceRequestFinancialsProvider(leaseId, widget.requestId),
+          );
           ref.invalidate(mrStatsProvider);
         },
       ),
@@ -60,10 +65,15 @@ class _MaintenanceDetailsScreen
   }
 }
 
-class _DetailsView extends StatelessWidget {
-  const _DetailsView({required this.request, required this.onRefresh});
+class _DetailsView extends ConsumerWidget {
+  const _DetailsView({
+    required this.request,
+    required this.leaseId,
+    required this.onRefresh,
+  });
 
   final MaintenanceRequestModel request;
+  final String leaseId;
   final Future<void> Function() onRefresh;
 
   List<MaintenanceActivityLogModel> _sortedLogs() {
@@ -83,7 +93,7 @@ class _DetailsView extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final submittedDate = request.createdAt != null
         ? DateTime.tryParse(request.createdAt!)
         : null;
@@ -91,8 +101,15 @@ class _DetailsView extends StatelessWidget {
         ? DateTime.tryParse(request.updatedAt!)
         : null;
     final attachmentUrls = request.attachments ?? [];
-    final expenses = request.expenses ?? <MaintenanceExpenseModel>[];
     final logs = _sortedLogs();
+
+    final chargesAsync = ref.watch(
+      maintenanceRequestFinancialsProvider(leaseId, request.id),
+    );
+    // valueOrNull rather than .value: the latter throws on AsyncError, and a
+    // failed charges fetch must not take the whole request screen down.
+    final charges =
+        chargesAsync.valueOrNull ?? <MaintenanceRequestFinancialModel>[];
 
     return Scaffold(
       appBar: AppBar(
@@ -242,15 +259,28 @@ class _DetailsView extends StatelessWidget {
                   ViewAttachmentsWidget(urls: attachmentUrls),
                   const SizedBox(height: 20),
                 ],
-                if (expenses.isNotEmpty) ...[
+                // Nothing at all when the request cost the tenant nothing,
+                // which is most of them. An empty "Charges to you" heading
+                // reads as a bill that failed to load.
+                if (chargesAsync.isLoading && !chargesAsync.hasValue) ...[
                   Text(
-                    'Expenses',
+                    'Charges to you',
                     style: Theme.of(
                       context,
                     ).textTheme.titleLarge!.copyWith(fontSize: 18),
                   ),
                   const SizedBox(height: 10),
-                  ...expenses.map((e) => _ExpenseCard(expense: e)),
+                  const _ChargesShimmer(),
+                  const SizedBox(height: 20),
+                ] else if (charges.isNotEmpty) ...[
+                  Text(
+                    'Charges to you',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleLarge!.copyWith(fontSize: 18),
+                  ),
+                  const SizedBox(height: 10),
+                  ...charges.map((c) => _ChargeCard(charge: c)),
                   const SizedBox(height: 20),
                 ],
                 Text(
@@ -404,22 +434,52 @@ class _InfoChip extends StatelessWidget {
   }
 }
 
-class _ExpenseCard extends StatelessWidget {
-  const _ExpenseCard({required this.expense});
+class _ChargeCard extends StatelessWidget {
+  const _ChargeCard({required this.charge});
 
-  final MaintenanceExpenseModel expense;
+  final MaintenanceRequestFinancialModel charge;
 
   String _formattedAmount() {
-    if (expense.amount == null) return '—';
-    return MoneyLib.formatPesewas(expense.amount!);
+    if (charge.amount == null) return '—';
+    return MoneyLib.formatPesewas(charge.amount!);
+  }
+
+  ({String label, Color fg, Color bg}) _status() {
+    switch (charge.status) {
+      case 'SETTLED':
+        return (
+          label: 'Paid',
+          fg: Colors.green.shade700,
+          bg: Colors.green.shade50,
+        );
+      case 'PARTIALLY_SETTLED':
+        return (
+          label: 'Part paid',
+          fg: Colors.orange.shade800,
+          bg: Colors.orange.shade50,
+        );
+      case 'INVOICED':
+        return (
+          label: 'On your invoice',
+          fg: Colors.blue.shade700,
+          bg: Colors.blue.shade50,
+        );
+      default:
+        return (
+          label: 'Unpaid',
+          fg: Colors.grey.shade700,
+          bg: Colors.grey.shade100,
+        );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final date = expense.createdAt != null
-        ? (DateTime.tryParse(expense.createdAt!)?.format('MMM dd, yyyy') ??
-              expense.createdAt!)
+    final date = charge.createdAt != null
+        ? (DateTime.tryParse(charge.createdAt!)?.format('MMM dd, yyyy') ??
+              charge.createdAt!)
         : null;
+    final status = _status();
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -435,14 +495,10 @@ class _ExpenseCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.green.shade50,
+              color: status.bg,
               borderRadius: BorderRadius.circular(100),
             ),
-            child: Icon(
-              Icons.receipt_long_rounded,
-              color: Colors.green.shade700,
-              size: 20,
-            ),
+            child: Icon(Icons.receipt_long_rounded, color: status.fg, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -451,107 +507,87 @@ class _ExpenseCard extends StatelessWidget {
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
                       child: Text(
-                        expense.description ?? 'Expense',
-                        style: Theme.of(context).textTheme.labelLarge!.copyWith(
-                          fontWeight: FontWeight.bold,
+                        charge.description ?? 'Charge',
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          fontWeight: FontWeight.w600,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     const SizedBox(width: 8),
                     Text(
                       _formattedAmount(),
-                      style: Theme.of(context).textTheme.labelLarge!.copyWith(
-                        fontWeight: FontWeight.w900,
-                        color: Colors.green.shade700,
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Row(
                   children: [
-                    if (date != null) ...[
-                      Text(
-                        date,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                    ],
-                    if (expense.billableToTenant == true)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 7,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.orange.shade50,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          'Billed to you',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.orange.shade800,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                if (expense.invoices?.isNotEmpty == true) ...[
-                  const SizedBox(height: 8),
-                  GestureDetector(
-                    onTap: () =>
-                        context.push('/payments/${expense.invoices!.first.id}'),
-                    child: Container(
+                    Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
-                        vertical: 4,
+                        vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: Theme.of(
-                          context,
-                        ).primaryColor.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(
-                          color: Theme.of(
-                            context,
-                          ).primaryColor.withValues(alpha: 0.3),
+                        color: status.bg,
+                        borderRadius: BorderRadius.circular(100),
+                      ),
+                      child: Text(
+                        status.label,
+                        style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                          color: status.fg,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.receipt_outlined,
-                            size: 13,
-                            color: Theme.of(context).primaryColor,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            'View Invoice',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: Theme.of(context).primaryColor,
-                            ),
-                          ),
-                        ],
-                      ),
                     ),
-                  ),
-                ],
+                    if (date != null) ...[
+                      const SizedBox(width: 8),
+                      Text(
+                        date,
+                        style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                          color: Colors.grey,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ChargesShimmer extends StatelessWidget {
+  const _ChargesShimmer();
+
+  @override
+  Widget build(BuildContext context) {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey.shade200,
+      highlightColor: Colors.grey.shade100,
+      child: Column(
+        children: List.generate(
+          2,
+          (_) => Container(
+            margin: const EdgeInsets.only(bottom: 10),
+            height: 74,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        ),
       ),
     );
   }

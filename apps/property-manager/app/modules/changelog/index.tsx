@@ -5,6 +5,8 @@ import {
 	Clock,
 	FileText,
 	TriangleAlert,
+	Wallet,
+	Wrench,
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { CHANGELOG_SINCE, RELEASES, type ReleaseHighlight } from './releases'
@@ -22,6 +24,8 @@ export const highlightIcons: Record<ReleaseHighlight['icon'], typeof FileText> =
 		clock: Clock,
 		calendar: CalendarDays,
 		alert: TriangleAlert,
+		wrench: Wrench,
+		wallet: Wallet,
 	}
 
 function relativeTime(dateStr: string) {

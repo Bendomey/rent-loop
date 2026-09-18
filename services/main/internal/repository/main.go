@@ -35,6 +35,7 @@ type Repository struct {
 	AnnouncementRepository                 AnnouncementRepository
 	MaintenanceRequestRepository           MaintenanceRequestRepository
 	ExpenseRepository                      ExpenseRepository
+	MaintenanceRequestFinancialRepository  MaintenanceRequestFinancialRepository
 	AgreementRepository                    AgreementRepository
 	BookingRepository                      BookingRepository
 	UnitDateBlockRepository                UnitDateBlockRepository
@@ -77,6 +78,7 @@ func NewRepository(db *gorm.DB) Repository {
 	announcementRepository := NewAnnouncementRepository(db)
 	maintenanceRequestRepository := NewMaintenanceRequestRepository(db)
 	expenseRepository := NewExpenseRepository(db)
+	maintenanceRequestFinancialRepository := NewMaintenanceRequestFinancialRepository(db)
 	agreementRepository := NewAgreementRepository(db)
 	bookingRepo := NewBookingRepository(db)
 	unitDateBlockRepo := NewUnitDateBlockRepository(db)
@@ -118,6 +120,7 @@ func NewRepository(db *gorm.DB) Repository {
 		AnnouncementRepository:                 announcementRepository,
 		MaintenanceRequestRepository:           maintenanceRequestRepository,
 		ExpenseRepository:                      expenseRepository,
+		MaintenanceRequestFinancialRepository:  maintenanceRequestFinancialRepository,
 		AgreementRepository:                    agreementRepository,
 		BookingRepository:                      bookingRepo,
 		UnitDateBlockRepository:                unitDateBlockRepo,

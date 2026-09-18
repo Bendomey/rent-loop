@@ -23,25 +23,6 @@ definitions:
       reason:
         type: string
     type: object
-  handlers.AddExpenseBody:
-    properties:
-      amount:
-        type: integer
-      context_maintenance_request_id:
-        type: string
-      context_type:
-        enum:
-        - MAINTENANCE
-        type: string
-      currency:
-        type: string
-      description:
-        type: string
-    required:
-    - amount
-    - context_type
-    - description
-    type: object
   handlers.AddLineItemRequest:
     properties:
       category:
@@ -51,6 +32,7 @@ definitions:
         - AGENCY_FEE
         - VAT
         - UTILITY
+        - MAINTENANCE_CHARGE
         - DAMAGE_CHARGE
         - EARLY_TERMINATION_FEE
         - OTHER
@@ -646,6 +628,7 @@ definitions:
         - AGENCY_FEE
         - VAT
         - UTILITY
+        - MAINTENANCE_CHARGE
         - DAMAGE_CHARGE
         - EARLY_TERMINATION_FEE
         - OTHER
@@ -834,6 +817,92 @@ definitions:
     - size
     - title
     - type
+    type: object
+  handlers.CreateExpenseBody:
+    properties:
+      already_paid:
+        type: boolean
+      amount:
+        type: integer
+      category:
+        enum:
+        - REPAIRS
+        - UTILITIES
+        - INSURANCE
+        - LANDSCAPING
+        - SECURITY
+        - MANAGEMENT
+        - OTHER
+        type: string
+      currency:
+        type: string
+      description:
+        type: string
+      due_date:
+        type: string
+      payment_provider:
+        type: string
+      payment_reference:
+        type: string
+      vendor_contact:
+        type: string
+      vendor_name:
+        type: string
+    required:
+    - amount
+    - category
+    - description
+    - vendor_name
+    type: object
+  handlers.CreateFinancialBody:
+    properties:
+      already_paid:
+        type: boolean
+      amount:
+        type: integer
+      charge_category:
+        enum:
+        - MAINTENANCE_CHARGE
+        - DAMAGE_CHARGE
+        - UTILITY
+        - OTHER
+        type: string
+      charge_due_date:
+        type: string
+      currency:
+        type: string
+      description:
+        type: string
+      due_date:
+        type: string
+      expense_category:
+        enum:
+        - REPAIRS
+        - UTILITIES
+        - INSURANCE
+        - LANDSCAPING
+        - SECURITY
+        - MANAGEMENT
+        - OTHER
+        type: string
+      payment_provider:
+        type: string
+      payment_reference:
+        type: string
+      settlement_type:
+        enum:
+        - RECORD_ONLY
+        - TENANT_CHARGE
+        - VENDOR_EXPENSE
+        type: string
+      vendor_contact:
+        type: string
+      vendor_name:
+        type: string
+    required:
+    - amount
+    - description
+    - settlement_type
     type: object
   handlers.CreateInvoiceRequest:
     properties:
@@ -1683,6 +1752,7 @@ definitions:
         - AGENCY_FEE
         - VAT
         - UTILITY
+        - MAINTENANCE_CHARGE
         - DAMAGE_CHARGE
         - EARLY_TERMINATION_FEE
         - OTHER
@@ -2006,6 +2076,59 @@ definitions:
       content:
         type: string
     type: object
+  handlers.UpdateExpenseBody:
+    properties:
+      category:
+        enum:
+        - REPAIRS
+        - UTILITIES
+        - INSURANCE
+        - LANDSCAPING
+        - SECURITY
+        - MANAGEMENT
+        - OTHER
+        type: string
+      description:
+        type: string
+      vendor_contact:
+        type: string
+      vendor_name:
+        type: string
+    type: object
+  handlers.UpdateFinancialBody:
+    properties:
+      charge_category:
+        enum:
+        - MAINTENANCE_CHARGE
+        - DAMAGE_CHARGE
+        - UTILITY
+        - OTHER
+        type: string
+      charge_due_date:
+        type: string
+      description:
+        type: string
+      expense_category:
+        enum:
+        - REPAIRS
+        - UTILITIES
+        - INSURANCE
+        - LANDSCAPING
+        - SECURITY
+        - MANAGEMENT
+        - OTHER
+        type: string
+      settlement_type:
+        enum:
+        - RECORD_ONLY
+        - TENANT_CHARGE
+        - VENDOR_EXPENSE
+        type: string
+      vendor_contact:
+        type: string
+      vendor_name:
+        type: string
+    type: object
   handlers.UpdateInvoiceRequest:
     properties:
       allowed_payment_rails:
@@ -2122,6 +2245,7 @@ definitions:
         - AGENCY_FEE
         - VAT
         - UTILITY
+        - MAINTENANCE_CHARGE
         - DAMAGE_CHARGE
         - EARLY_TERMINATION_FEE
         - OTHER
@@ -2624,6 +2748,20 @@ definitions:
     properties:
       reason:
         example: Entered in error
+        type: string
+    required:
+    - reason
+    type: object
+  handlers.VoidExpenseBody:
+    properties:
+      reason:
+        type: string
+    required:
+    - reason
+    type: object
+  handlers.VoidFinancialBody:
+    properties:
+      reason:
         type: string
     required:
     - reason
@@ -4176,10 +4314,10 @@ definitions:
   transformations.OutputExpense:
     properties:
       amount:
-        type: number
-      code:
+        type: integer
+      category:
         type: string
-      context_maintenance_request_id:
+      code:
         type: string
       context_type:
         type: string
@@ -4193,9 +4331,27 @@ definitions:
         type: string
       id:
         type: string
+      invoice:
+        $ref: '#/definitions/transformations.OutputInvoice'
+      invoice_id:
+        type: string
+      is_editable:
+        type: boolean
+      maintenance_request_id:
+        type: string
       property_id:
         type: string
+      status:
+        type: string
       updated_at:
+        type: string
+      vendor_contact:
+        type: string
+      vendor_name:
+        type: string
+      voided_at:
+        type: string
+      voided_reason:
         type: string
     type: object
   transformations.OutputFinancialAccount:
@@ -4755,6 +4911,37 @@ definitions:
       id:
         type: string
       maintenance_request_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  transformations.OutputMaintenanceRequestFinancial:
+    properties:
+      amount:
+        type: integer
+      charge_instance_id:
+        type: string
+      created_at:
+        type: string
+      created_by_client_user_id:
+        type: string
+      currency:
+        type: string
+      description:
+        type: string
+      expense_id:
+        type: string
+      id:
+        type: string
+      is_editable:
+        type: boolean
+      maintenance_request_id:
+        type: string
+      property_id:
+        type: string
+      settlement_type:
+        type: string
+      status:
         type: string
       updated_at:
         type: string
@@ -7810,8 +7997,19 @@ paths:
         name: property_id
         type: array
       - enum:
-        - LEASE
+        - REPAIRS
+        - UTILITIES
+        - INSURANCE
+        - LANDSCAPING
+        - SECURITY
+        - MANAGEMENT
+        - OTHER
+        in: query
+        name: category
+        type: string
+      - enum:
         - MAINTENANCE
+        - GENERAL
         in: query
         name: context_type
         type: string
@@ -9827,8 +10025,19 @@ paths:
         required: true
         type: string
       - enum:
-        - LEASE
+        - REPAIRS
+        - UTILITIES
+        - INSURANCE
+        - LANDSCAPING
+        - SECURITY
+        - MANAGEMENT
+        - OTHER
+        in: query
+        name: category
+        type: string
+      - enum:
         - MAINTENANCE
+        - GENERAL
         in: query
         name: context_type
         type: string
@@ -9912,9 +10121,16 @@ paths:
     post:
       consumes:
       - application/json
-      description: Create a new expense scoped to a property (context_type determines
-        lease or maintenance) (Admin)
+      description: Record money owed to a vendor for a service provided to the property,
+        and raise the bill for it. Set already_paid to settle it in the same step.
+        Maintenance expenses are created through a maintenance request's financial
+        line, not here (Admin)
       parameters:
+      - description: Client ID
+        in: path
+        name: client_id
+        required: true
+        type: string
       - description: Property ID
         in: path
         name: property_id
@@ -9925,7 +10141,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/handlers.AddExpenseBody'
+          $ref: '#/definitions/handlers.CreateExpenseBody'
       produces:
       - application/json
       responses:
@@ -9936,6 +10152,10 @@ paths:
               data:
                 $ref: '#/definitions/transformations.OutputExpense'
             type: object
+        "400":
+          description: Vendor name missing or amount not positive
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
         "401":
           description: Invalid or absent authentication token
           schema:
@@ -9950,52 +10170,10 @@ paths:
             type: string
       security:
       - BearerAuth: []
-      summary: Add an expense to a property
+      summary: Record a general expense
       tags:
       - Expenses
   /api/v1/admin/clients/{client_id}/properties/{property_id}/expenses/{expense_id}:
-    delete:
-      consumes:
-      - application/json
-      description: Remove an expense record scoped to a property (Admin)
-      parameters:
-      - description: Property ID
-        in: path
-        name: property_id
-        required: true
-        type: string
-      - description: Expense ID
-        in: path
-        name: expense_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Expense deleted successfully
-          schema:
-            properties:
-              data:
-                type: boolean
-            type: object
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Expense not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Delete an expense
-      tags:
-      - Expenses
     get:
       consumes:
       - application/json
@@ -10036,6 +10214,134 @@ paths:
       security:
       - BearerAuth: []
       summary: Get a single expense
+      tags:
+      - Expenses
+    patch:
+      consumes:
+      - application/json
+      description: Change the description or vendor of an expense nobody has paid
+        yet. Amount and category cannot be changed — void and recreate instead, because
+        the journal entry already posted carries the old figure and debits the account
+        the old category chose (Admin)
+      parameters:
+      - description: Client ID
+        in: path
+        name: client_id
+        required: true
+        type: string
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Expense ID
+        in: path
+        name: expense_id
+        required: true
+        type: string
+      - description: Fields to change
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateExpenseBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated expense
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputExpense'
+            type: object
+        "400":
+          description: Expense is settled and frozen
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Expense not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update an unpaid expense
+      tags:
+      - Expenses
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/expenses/{expense_id}/void:
+    patch:
+      consumes:
+      - application/json
+      description: Withdraw an unpaid expense and the bill raised for it. The invoice
+        is voided too, which reverses the journal entry. A paid expense cannot be
+        voided (Admin)
+      parameters:
+      - description: Client ID
+        in: path
+        name: client_id
+        required: true
+        type: string
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Expense ID
+        in: path
+        name: expense_id
+        required: true
+        type: string
+      - description: Reason for voiding
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.VoidExpenseBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Expense voided
+          schema:
+            properties:
+              data:
+                type: boolean
+            type: object
+        "400":
+          description: Expense is settled and frozen
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Expense not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Void an expense
       tags:
       - Expenses
   /api/v1/admin/clients/{client_id}/properties/{property_id}/financial-accounts/{account_id}:
@@ -13651,12 +13957,18 @@ paths:
       summary: Update a comment on a maintenance request
       tags:
       - MaintenanceRequests
-  /api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests/{maintenance_request_id}/expenses:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests/{maintenance_request_id}/financials:
     get:
       consumes:
       - application/json
-      description: List expenses with pagination scoped to a maintenance request (Admin)
+      description: List every costed line on a request, with its derived status and
+        whether it can still be edited (Admin)
       parameters:
+      - description: Client ID
+        in: path
+        name: client_id
+        required: true
+        type: string
       - description: Property ID
         in: path
         name: property_id
@@ -13666,12 +13978,6 @@ paths:
         in: path
         name: maintenance_request_id
         required: true
-        type: string
-      - enum:
-        - LEASE
-        - MAINTENANCE
-        in: query
-        name: context_type
         type: string
       - in: query
         name: end_date
@@ -13717,6 +14023,13 @@ paths:
         minItems: 1
         name: search_fields
         type: array
+      - enum:
+        - RECORD_ONLY
+        - TENANT_CHARGE
+        - VENDOR_EXPENSE
+        in: query
+        name: settlement_type
+        type: string
       - in: query
         name: start_date
         type: string
@@ -13724,7 +14037,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Expenses
+          description: Financial lines
           schema:
             properties:
               data:
@@ -13733,7 +14046,7 @@ paths:
                     $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
                   rows:
                     items:
-                      $ref: '#/definitions/transformations.OutputExpense'
+                      $ref: '#/definitions/transformations.OutputMaintenanceRequestFinancial'
                     type: array
                 type: object
             type: object
@@ -13747,9 +14060,213 @@ paths:
             type: string
       security:
       - BearerAuth: []
-      summary: List expenses for a maintenance request
+      summary: List a maintenance request's financial lines
       tags:
-      - Expenses
+      - MaintenanceRequestFinancials
+    post:
+      consumes:
+      - application/json
+      description: 'Record what part of a request cost and who settles it: nobody
+        (RECORD_ONLY), the tenant on the request''s lease (TENANT_CHARGE, which creates
+        a charge on their financial account), or an external vendor (VENDOR_EXPENSE,
+        which creates an expense and its bill). TENANT_CHARGE is refused when the
+        request has no lease (Admin)'
+      parameters:
+      - description: Client ID
+        in: path
+        name: client_id
+        required: true
+        type: string
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Maintenance Request ID
+        in: path
+        name: maintenance_request_id
+        required: true
+        type: string
+      - description: Financial line details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateFinancialBody'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created financial line
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputMaintenanceRequestFinancial'
+            type: object
+        "400":
+          description: Request has no lease, vendor name missing, or amount not positive
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Maintenance request not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Log a financial line on a maintenance request
+      tags:
+      - MaintenanceRequestFinancials
+  ? /api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests/{maintenance_request_id}/financials/{financial_id}
+  : patch:
+      consumes:
+      - application/json
+      description: Change a line's description, or convert who settles it. Conversion
+        voids the old charge or expense and creates the new one, because a charge
+        and an expense are obligations to different parties. Refused once the line
+        has been billed or paid (Admin)
+      parameters:
+      - description: Client ID
+        in: path
+        name: client_id
+        required: true
+        type: string
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Maintenance Request ID
+        in: path
+        name: maintenance_request_id
+        required: true
+        type: string
+      - description: Financial line ID
+        in: path
+        name: financial_id
+        required: true
+        type: string
+      - description: Fields to change
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateFinancialBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated financial line
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputMaintenanceRequestFinancial'
+            type: object
+        "400":
+          description: Line is billed or settled and frozen
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Financial line not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Edit or convert a financial line
+      tags:
+      - MaintenanceRequestFinancials
+  ? /api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests/{maintenance_request_id}/financials/{financial_id}/void
+  : patch:
+      consumes:
+      - application/json
+      description: Withdraw a line and whatever obligation it created — the tenant's
+        charge, or the vendor's expense and its bill. Refused once the line has been
+        billed or paid (Admin)
+      parameters:
+      - description: Client ID
+        in: path
+        name: client_id
+        required: true
+        type: string
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Maintenance Request ID
+        in: path
+        name: maintenance_request_id
+        required: true
+        type: string
+      - description: Financial line ID
+        in: path
+        name: financial_id
+        required: true
+        type: string
+      - description: Reason for voiding
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.VoidFinancialBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Financial line voided
+          schema:
+            properties:
+              data:
+                type: boolean
+            type: object
+        "400":
+          description: Line is billed or settled and frozen
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Financial line not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Void a financial line
+      tags:
+      - MaintenanceRequestFinancials
   /api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests/{maintenance_request_id}/status:
     patch:
       consumes:
@@ -18322,6 +18839,49 @@ paths:
       summary: Get a single maintenance request (Tenant)
       tags:
       - MaintenanceRequests
+  /api/v1/leases/{lease_id}/maintenance-requests/{maintenance_request_id}/financials:
+    get:
+      consumes:
+      - application/json
+      description: Returns only lines the caller is being charged for. Vendor expenses
+        and record-only lines are excluded in the query, so what the landlord paid
+        a contractor is never exposed (Tenant)
+      parameters:
+      - description: Maintenance Request ID
+        in: path
+        name: maintenance_request_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Charges raised against the caller
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      type: object
+                    type: array
+                type: object
+            type: object
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List the charges a maintenance request raised against you
+      tags:
+      - MaintenanceRequestFinancials
   /api/v1/leases/{lease_id}/maintenance-requests/stats:
     get:
       consumes:

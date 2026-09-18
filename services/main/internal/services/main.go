@@ -7,42 +7,43 @@ import (
 )
 
 type Services struct {
-	NotificationService           NotificationService
-	AuthService                   AuthService
-	AdminService                  AdminService
-	UserService                   UserService
-	RefreshTokenService           RefreshTokenService
-	SessionService                SessionService
-	ClientService                 ClientService
-	ClientApplicationService      ClientApplicationService
-	ClientUserService             ClientUserService
-	PropertyService               PropertyService
-	DocumentService               DocumentService
-	UnitService                   UnitService
-	ClientUserPropertyService     ClientUserPropertyService
-	PropertyBlockService          PropertyBlockService
-	TenantApplicationService      TenantApplicationService
-	TenantService                 TenantService
-	LeaseService                  LeaseService
-	TenantAccountService          TenantAccountService
-	PaymentAccountService         PaymentAccountService
-	AccountingService             AccountingService
-	InvoiceService                InvoiceService
-	PaymentService                PaymentService
-	SigningService                SigningService
-	LeaseChecklistService         LeaseChecklistService
-	LeaseChecklistItemService     LeaseChecklistItemService
-	ChecklistTemplateService      ChecklistTemplateService
-	AnnouncementService           AnnouncementService
-	MaintenanceRequestService     MaintenanceRequestService
-	ExpenseService                ExpenseService
-	AgreementService              AgreementService
-	UnitDateBlockService          UnitDateBlockService
-	BookingService                BookingService
-	ExchangeRateService           ExchangeRateService
-	LeaseTerminationService       LeaseTerminationService
-	LeaseAgreementDocumentService LeaseAgreementDocumentService
-	Financials                    *financials.Financials
+	NotificationService                NotificationService
+	AuthService                        AuthService
+	AdminService                       AdminService
+	UserService                        UserService
+	RefreshTokenService                RefreshTokenService
+	SessionService                     SessionService
+	ClientService                      ClientService
+	ClientApplicationService           ClientApplicationService
+	ClientUserService                  ClientUserService
+	PropertyService                    PropertyService
+	DocumentService                    DocumentService
+	UnitService                        UnitService
+	ClientUserPropertyService          ClientUserPropertyService
+	PropertyBlockService               PropertyBlockService
+	TenantApplicationService           TenantApplicationService
+	TenantService                      TenantService
+	LeaseService                       LeaseService
+	TenantAccountService               TenantAccountService
+	PaymentAccountService              PaymentAccountService
+	AccountingService                  AccountingService
+	InvoiceService                     InvoiceService
+	PaymentService                     PaymentService
+	SigningService                     SigningService
+	LeaseChecklistService              LeaseChecklistService
+	LeaseChecklistItemService          LeaseChecklistItemService
+	ChecklistTemplateService           ChecklistTemplateService
+	AnnouncementService                AnnouncementService
+	MaintenanceRequestService          MaintenanceRequestService
+	ExpenseService                     ExpenseService
+	MaintenanceRequestFinancialService MaintenanceRequestFinancialService
+	AgreementService                   AgreementService
+	UnitDateBlockService               UnitDateBlockService
+	BookingService                     BookingService
+	ExchangeRateService                ExchangeRateService
+	LeaseTerminationService            LeaseTerminationService
+	LeaseAgreementDocumentService      LeaseAgreementDocumentService
+	Financials                         *financials.Financials
 }
 
 type INewServicesParams struct {
@@ -285,11 +286,21 @@ func NewServices(params INewServicesParams) Services {
 	})
 
 	expenseService := NewExpenseService(ExpenseServiceDeps{
-		AppCtx:            params.AppCtx,
-		Repo:              params.Repository.ExpenseRepository,
-		LeaseRepo:         params.Repository.LeaseRepository,
-		MRRepo:            params.Repository.MaintenanceRequestRepository,
-		AccountingService: accountingService,
+		AppCtx:         params.AppCtx,
+		Repo:           params.Repository.ExpenseRepository,
+		LeaseRepo:      params.Repository.LeaseRepository,
+		MRRepo:         params.Repository.MaintenanceRequestRepository,
+		InvoiceService: invoiceService,
+		PaymentService: paymentService,
+	})
+
+	mrFinancialService := NewMaintenanceRequestFinancialService(MaintenanceRequestFinancialServiceDeps{
+		AppCtx:         params.AppCtx,
+		Repo:           params.Repository.MaintenanceRequestFinancialRepository,
+		MRRepo:         params.Repository.MaintenanceRequestRepository,
+		LeaseRepo:      params.Repository.LeaseRepository,
+		ExpenseService: expenseService,
+		Charges:        financialsFacade.Charges,
 	})
 
 	return Services{
@@ -298,37 +309,38 @@ func NewServices(params INewServicesParams) Services {
 		InvoiceService:      invoiceService,
 		Financials:          financialsFacade,
 
-		AuthService:                   authService,
-		AdminService:                  adminService,
-		UserService:                   userService,
-		RefreshTokenService:           refreshTokenService,
-		SessionService:                sessionService,
-		ClientService:                 clientService,
-		ClientApplicationService:      clientApplicationService,
-		ClientUserService:             clientUserService,
-		PaymentAccountService:         paymentAccountService,
-		PropertyService:               propertyService,
-		DocumentService:               documentService,
-		UnitService:                   unitService,
-		ClientUserPropertyService:     clientUserPropertyService,
-		PropertyBlockService:          propertyBlockService,
-		TenantApplicationService:      tenantApplicationService,
-		TenantService:                 tenantService,
-		LeaseService:                  leaseService,
-		TenantAccountService:          tenantAccountService,
-		PaymentService:                paymentService,
-		SigningService:                signingService,
-		LeaseChecklistService:         leaseChecklistService,
-		LeaseChecklistItemService:     leaseChecklistItemService,
-		ChecklistTemplateService:      checklistTemplateService,
-		AnnouncementService:           announcementService,
-		MaintenanceRequestService:     maintenanceRequestService,
-		ExpenseService:                expenseService,
-		AgreementService:              agreementService,
-		UnitDateBlockService:          unitDateBlockService,
-		BookingService:                bookingService,
-		ExchangeRateService:           exchangeRateService,
-		LeaseTerminationService:       leaseTerminationService,
-		LeaseAgreementDocumentService: leaseAgreementDocumentService,
+		AuthService:                        authService,
+		AdminService:                       adminService,
+		UserService:                        userService,
+		RefreshTokenService:                refreshTokenService,
+		SessionService:                     sessionService,
+		ClientService:                      clientService,
+		ClientApplicationService:           clientApplicationService,
+		ClientUserService:                  clientUserService,
+		PaymentAccountService:              paymentAccountService,
+		PropertyService:                    propertyService,
+		DocumentService:                    documentService,
+		UnitService:                        unitService,
+		ClientUserPropertyService:          clientUserPropertyService,
+		PropertyBlockService:               propertyBlockService,
+		TenantApplicationService:           tenantApplicationService,
+		TenantService:                      tenantService,
+		LeaseService:                       leaseService,
+		TenantAccountService:               tenantAccountService,
+		PaymentService:                     paymentService,
+		SigningService:                     signingService,
+		LeaseChecklistService:              leaseChecklistService,
+		LeaseChecklistItemService:          leaseChecklistItemService,
+		ChecklistTemplateService:           checklistTemplateService,
+		AnnouncementService:                announcementService,
+		MaintenanceRequestService:          maintenanceRequestService,
+		ExpenseService:                     expenseService,
+		MaintenanceRequestFinancialService: mrFinancialService,
+		AgreementService:                   agreementService,
+		UnitDateBlockService:               unitDateBlockService,
+		BookingService:                     bookingService,
+		ExchangeRateService:                exchangeRateService,
+		LeaseTerminationService:            leaseTerminationService,
+		LeaseAgreementDocumentService:      leaseAgreementDocumentService,
 	}
 }

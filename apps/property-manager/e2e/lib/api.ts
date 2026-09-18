@@ -224,6 +224,49 @@ export interface Application {
 	code: string
 }
 
+/**
+ * Creates a maintenance request against a unit.
+ *
+ * TENANT_VISIBLE matters: a request only attaches to a lease when it is
+ * tenant-visible AND the unit has one, and that attachment is what makes the
+ * "Tenant" settlement option appear. INTERNAL_ONLY is how a spec reaches a
+ * request with no lease.
+ */
+export async function createMaintenanceRequest(
+	token: string,
+	clientId: string,
+	propertyId: string,
+	opts: {
+		unitId: string
+		title: string
+		visibility?: 'TENANT_VISIBLE' | 'INTERNAL_ONLY'
+	},
+): Promise<{ id: string; code: string }> {
+	const res = await call<{ data: { id: string; code: string }[] | { id: string; code: string } }>(
+		'POST',
+		`${clientPath(clientId)}/properties/${propertyId}/maintenance-requests`,
+		{
+			token,
+			body: {
+				unit_ids: [opts.unitId],
+				block_ids: [],
+				create_separate_requests: false,
+				title: opts.title,
+				description: 'Raised by the e2e suite.',
+				priority: 'MEDIUM',
+				category: 'PLUMBING',
+				visibility: opts.visibility ?? 'TENANT_VISIBLE',
+				attachments: [],
+			},
+		},
+	)
+	// The endpoint returns an array when it fans out across several assets and
+	// a bare object otherwise.
+	const created = Array.isArray(res.data) ? res.data[0] : res.data
+	if (!created) throw new Error('maintenance request creation returned nothing')
+	return created
+}
+
 export async function createApplication(
 	token: string,
 	clientId: string,
@@ -277,11 +320,14 @@ export async function createApplication(
 /**
  * Voids an invoice.
  *
- * Done through the API because the PM UI has no affordance for it on
- * charge-derived invoices: `useVoidInvoice` is wired only into the expenses tab
- * and booking payments, and on the financials invoice list "Void" appears only
- * as a status *filter*. The behaviour under test in c4 is therefore what the
- * screens show once an invoice is voided, not the act of voiding.
+ * Done through the API because the PM UI has no affordance for voiding an
+ * invoice directly: on the financials invoice list "Void" appears only as a
+ * status *filter*, and `useVoidInvoice` now has no caller at all — the
+ * expenses tabs that used it are gone. Voiding a maintenance financial or an
+ * expense withdraws its bill as a side effect instead.
+ *
+ * The behaviour under test in c4 is therefore what the screens show once an
+ * invoice is voided, not the act of voiding.
  */
 export async function voidInvoice(
 	token: string,

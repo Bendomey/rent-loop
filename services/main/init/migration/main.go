@@ -54,6 +54,7 @@ func updateMigration(db *gorm.DB) error {
 		&models.MaintenanceRequestComment{},
 		&models.MaintenanceRequestAsset{},
 		&models.Expense{},
+		&models.MaintenanceRequestFinancial{},
 		&models.Agreement{},
 		&models.AgreementAcceptance{},
 		&models.Booking{},
@@ -136,6 +137,11 @@ func ServiceAutoMigration(db *gorm.DB) error {
 		jobs.AddUserProfilePhotoUrl(),
 		jobs.AddTenantCode(),
 		jobs.AddUnitDateBlockSlotsOccupied(),
+		jobs.ReportLegacyExpenseShape(),
+		jobs.AddMRFSettlementConstraint(),
+		jobs.BackfillMaintenanceRequestFinancials(),
+		jobs.BackfillExpenseContextAndCategory(),
+		jobs.DropExpenseMaintenanceContext(),
 	}
 
 	m = gormigrate.New(db, gormigrate.DefaultOptions, migrations)

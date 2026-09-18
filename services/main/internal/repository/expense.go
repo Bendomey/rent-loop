@@ -6,13 +6,14 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type ListExpensesFilter struct {
-	PropertyIDs                 *[]string
-	ClientUserID                *string
-	ContextMaintenanceRequestID *string
-	ContextType                 *string
+	PropertyIDs  *[]string
+	ClientUserID *string
+	ContextType  *string
+	Category     *string
 }
 
 type GetExpenseQuery struct {
@@ -58,12 +59,12 @@ func expenseClientUserAccessScope(clientUserID *string) func(db *gorm.DB) *gorm.
 	}
 }
 
-func expenseMaintenanceRequestScope(requestID *string) func(db *gorm.DB) *gorm.DB {
+func expenseCategoryScope(category *string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		if requestID == nil {
+		if category == nil {
 			return db
 		}
-		return db.Where("expenses.context_maintenance_request_id = ?", *requestID)
+		return db.Where("expenses.category = ?", *category)
 	}
 }
 
@@ -82,7 +83,7 @@ func (r *expenseRepository) Create(ctx context.Context, expense *models.Expense)
 
 func (r *expenseRepository) GetOne(ctx context.Context, query GetExpenseQuery) (*models.Expense, error) {
 	var expense models.Expense
-	db := r.DB.WithContext(ctx).Where("expenses.id = ?", query.ID)
+	db := lib.ResolveDB(ctx, r.DB).WithContext(ctx).Where("expenses.id = ?", query.ID)
 
 	if query.Populate != nil {
 		for _, field := range *query.Populate {
@@ -109,8 +110,8 @@ func (r *expenseRepository) List(
 			SearchScope("expenses", filterQuery.Search),
 			expensePropertyIDsScope(filters.PropertyIDs),
 			expenseClientUserAccessScope(filters.ClientUserID),
-			expenseMaintenanceRequestScope(filters.ContextMaintenanceRequestID),
 			expenseContextTypeScope(filters.ContextType),
+			expenseCategoryScope(filters.Category),
 			PaginationScope(filterQuery.Page, filterQuery.PageSize),
 			OrderScope("expenses", filterQuery.OrderBy, filterQuery.Order),
 		)
@@ -141,8 +142,8 @@ func (r *expenseRepository) Count(
 			SearchScope("expenses", filterQuery.Search),
 			expensePropertyIDsScope(filters.PropertyIDs),
 			expenseClientUserAccessScope(filters.ClientUserID),
-			expenseMaintenanceRequestScope(filters.ContextMaintenanceRequestID),
 			expenseContextTypeScope(filters.ContextType),
+			expenseCategoryScope(filters.Category),
 		).
 		Count(&count)
 	if result.Error != nil {
@@ -155,6 +156,11 @@ func (r *expenseRepository) Delete(ctx context.Context, id string) error {
 	return r.DB.WithContext(ctx).Where("id = ?", id).Delete(&models.Expense{}).Error
 }
 
+// Update writes the expense's own columns. Associations are omitted because
+// reads preload Invoices, and a plain Save would upsert those invoices as a
+// side effect of changing a description.
 func (r *expenseRepository) Update(ctx context.Context, expense *models.Expense) error {
-	return lib.ResolveDB(ctx, r.DB).WithContext(ctx).Save(expense).Error
+	return lib.ResolveDB(ctx, r.DB).WithContext(ctx).
+		Omit(clause.Associations).
+		Save(expense).Error
 }

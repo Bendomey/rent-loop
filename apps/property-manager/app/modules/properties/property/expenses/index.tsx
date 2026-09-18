@@ -3,6 +3,7 @@ import { Receipt } from 'lucide-react'
 import { useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { PropertyExpenseAnalyticsCards } from './components/cards'
+import { CreateExpenseDialog } from './components/create-expense-dialog'
 import { PropertyExpensesController } from './controller'
 import { useGetPropertyExpenses } from '~/api/expenses'
 import { DataTable, useDataTableSort } from '~/components/datatable'
@@ -12,7 +13,7 @@ import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
 import { formatAmount } from '~/lib/format-amount'
 import { getInvoiceStatusLabel } from '~/lib/invoice'
-import { safeString } from '~/lib/strings'
+import { safeString, toFirstUpperCase } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 
@@ -20,6 +21,20 @@ import { useProperty } from '~/providers/property-provider'
  * Fields the API may order by. `order_by` reaches the backend's ORDER BY
  * clause, so only these — never a raw URL value — are forwarded.
  */
+const EXPENSE_STATUS_LABELS: Record<ExpenseStatus, string> = {
+	OUTSTANDING: 'Outstanding',
+	PARTIALLY_SETTLED: 'Part settled',
+	SETTLED: 'Settled',
+	VOIDED: 'Voided',
+}
+
+const EXPENSE_STATUS_CLASSES: Record<ExpenseStatus, string> = {
+	OUTSTANDING: 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
+	PARTIALLY_SETTLED: 'bg-sky-500/10 text-sky-700 dark:text-sky-400',
+	SETTLED: 'bg-teal-500/10 text-teal-700 dark:text-teal-400',
+	VOIDED: 'bg-destructive/10 text-destructive',
+}
+
 const SORTABLE_FIELDS = [
 	'expenses.code',
 	'expenses.description',
@@ -46,13 +61,17 @@ export function PropertyExpensesModule() {
 		? Number(searchParams.get('pageSize'))
 		: PAGINATION_DEFAULTS.PER_PAGE
 	const contextType = searchParams.get('context_type') as
-		| 'LEASE'
 		| 'MAINTENANCE'
+		| 'GENERAL'
 		| null
+	const category = searchParams.get('category') as ExpenseCategory | null
 
 	const { data, isPending, isRefetching, error, refetch } =
 		useGetPropertyExpenses(safeString(clientUser?.client_id), propertyId, {
-			filters: contextType ? { context_type: contextType } : {},
+			filters: {
+				...(contextType && { context_type: contextType }),
+				...(category && { category }),
+			},
 			pagination: { page, per },
 			sorter,
 			populate: ['Invoices'],
@@ -86,30 +105,63 @@ export function PropertyExpensesModule() {
 				),
 			},
 			{
+				accessorKey: 'vendor_name',
+				header: 'Vendor',
+				cell: ({ row }) =>
+					row.original.vendor_name ? (
+						<span className="truncate text-xs text-zinc-700 dark:text-zinc-300">
+							{row.original.vendor_name}
+						</span>
+					) : (
+						// Migrated rows genuinely have no vendor. Nothing to fix here —
+						// they are already invoiced and paid.
+						<span className="text-muted-foreground truncate text-xs">
+							No vendor recorded
+						</span>
+					),
+			},
+			{
+				accessorKey: 'category',
+				header: 'Category',
+				cell: ({ getValue }) => (
+					<Badge variant="outline" className="px-1.5 py-0 text-[10px]">
+						{toFirstUpperCase(getValue<string>().toLowerCase())}
+					</Badge>
+				),
+			},
+			{
 				accessorKey: 'context_type',
-				header: 'Type',
+				header: 'Context',
 				enableSorting: true,
 				meta: { sortKey: 'expenses.context_type' },
-				cell: ({ row }) => {
-					const isLease =
-						row.original.context_type === 'LEASE' &&
-						row.original.context_lease_id
-					return isLease ? (
+				cell: ({ row }) =>
+					row.original.context_type === 'MAINTENANCE' &&
+					row.original.maintenance_request_id ? (
 						<Link
-							to={`/properties/${propertyId}/occupancy/leases/${row.original.context_lease_id}`}
-							className="text-xs text-blue-600 hover:underline dark:text-blue-500"
-						>
-							Lease
-						</Link>
-					) : (
-						<Link
-							to={`/properties/${propertyId}/activities/maintenance-requests/${row.original.context_maintenance_request_id}`}
+							to={`/properties/${propertyId}/activities/maintenance-requests/${row.original.maintenance_request_id}`}
 							className="text-xs text-blue-600 hover:underline dark:text-blue-500"
 						>
 							Maintenance
 						</Link>
-					)
-				},
+					) : (
+						<span className="truncate text-xs text-zinc-700 dark:text-zinc-300">
+							{row.original.context_type === 'MAINTENANCE'
+								? 'Maintenance'
+								: 'General'}
+						</span>
+					),
+			},
+			{
+				accessorKey: 'status',
+				header: 'Status',
+				cell: ({ row }) => (
+					<Badge
+						variant="outline"
+						className={`px-1.5 py-0 text-[10px] ${EXPENSE_STATUS_CLASSES[row.original.status]}`}
+					>
+						{EXPENSE_STATUS_LABELS[row.original.status]}
+					</Badge>
+				),
 			},
 			{
 				accessorKey: 'amount',
@@ -123,46 +175,31 @@ export function PropertyExpensesModule() {
 				),
 			},
 			{
-				accessorKey: 'invoices',
-				header: 'Invoices',
+				accessorKey: 'invoice_id',
+				header: 'Bill',
 				cell: ({ row }) => {
-					const invoices = row.original.invoices
-					if (!invoices?.length)
+					const invoice = row.original.invoice
+					if (!invoice)
 						return (
 							<Badge
 								variant="outline"
 								className="border-muted-foreground/30 px-1.5 py-0 text-[10px]"
 							>
-								Not invoiced
+								No bill
 							</Badge>
 						)
 					return (
-						<div className="flex flex-wrap gap-1">
-							{invoices.map((inv) => (
-								<Link
-									key={inv.id}
-									to={`/properties/${propertyId}/financials/invoices/${inv.id}`}
-									className="hover:underline"
-								>
-									<Badge
-										variant="outline"
-										className={`px-1.5 py-0 text-[10px] ${
-											inv.status === 'PAID'
-												? 'border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-900/30 dark:text-green-400'
-												: inv.status === 'ISSUED'
-													? 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
-													: inv.status === 'PARTIALLY_PAID'
-														? 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-400'
-														: inv.status === 'VOID'
-															? 'border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-400'
-															: 'border-muted-foreground/30 text-muted-foreground'
-										}`}
-									>
-										{inv.code} · {getInvoiceStatusLabel(inv.status)}
-									</Badge>
-								</Link>
-							))}
-						</div>
+						<Link
+							to={`/properties/${propertyId}/financials/invoices/${invoice.id}`}
+							className="hover:underline"
+						>
+							<Badge
+								variant="outline"
+								className="px-1.5 py-0 text-[10px] text-blue-600 dark:text-blue-500"
+							>
+								{invoice.code} · {getInvoiceStatusLabel(invoice.status)}
+							</Badge>
+						</Link>
 					)
 				},
 			},
@@ -187,11 +224,16 @@ export function PropertyExpensesModule() {
 			<div className="space-y-1">
 				<TypographyH4>Expenses</TypographyH4>
 				<TypographyMuted>
-					All expenses across lease and maintenance contexts for this property.
+					What this property costs to run — money owed to vendors, and money
+					already paid out.
 				</TypographyMuted>
 			</div>
 
 			<PropertyExpenseAnalyticsCards propertyId={propertyId} />
+
+			<div className="flex justify-end">
+				<CreateExpenseDialog propertyId={propertyId} />
+			</div>
 
 			<PropertyExpensesController isLoading={isLoading} refetch={refetch} />
 
@@ -214,7 +256,7 @@ export function PropertyExpensesModule() {
 					empty={{
 						message: 'No expenses found',
 						description:
-							'Expenses will appear here once created from leases or maintenance requests.',
+							'Record what this property costs to run, or log a cost on a maintenance request.',
 					}}
 				/>
 			</div>
