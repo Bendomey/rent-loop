@@ -66,7 +66,7 @@ export const blogPosts: BlogPostEntry[] = [
 			date: '2026-09-15',
 			author: 'Marketing Team',
 			slug: 'best-property-management-app-in-ghana',
-			coverImage: '/images/blog/best-property-management-app-in-ghana-og.png',
+			coverImage: '/images/blog/best-property-management-app-in-ghana-og.jpg',
 			keywords: [
 				'best property management app in Ghana',
 				'property management software in Ghana',
