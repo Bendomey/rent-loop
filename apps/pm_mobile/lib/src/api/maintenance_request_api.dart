@@ -7,7 +7,7 @@ import 'package:rentloop_manager/src/architecture/token_manager/token_manager.da
 import 'package:rentloop_manager/src/lib/maintenance_utils.dart';
 import 'package:rentloop_manager/src/repository/models/maintenance_activity_log_model.dart';
 import 'package:rentloop_manager/src/repository/models/maintenance_comment_model.dart';
-import 'package:rentloop_manager/src/repository/models/maintenance_expense_model.dart';
+import 'package:rentloop_manager/src/repository/models/maintenance_financial_model.dart';
 import 'package:rentloop_manager/src/repository/models/maintenance_request_model.dart';
 import 'package:rentloop_manager/src/repository/models/pagination_meta_model.dart';
 
@@ -172,8 +172,9 @@ class MaintenanceRequestApi extends AbstractApi {
         .toList();
   }
 
-  /// `GET .../maintenance-requests/{requestId}/expenses` — the Expenses tab.
-  Future<List<MaintenanceExpenseModel>> getExpenses({
+  /// `GET .../maintenance-requests/{requestId}/financials` — the Financials
+  /// tab. Returns every costed line, not only the ones paid to a vendor.
+  Future<List<MaintenanceFinancialModel>> getFinancials({
     required String clientId,
     required String propertyId,
     required String requestId,
@@ -183,11 +184,13 @@ class MaintenanceRequestApi extends AbstractApi {
       clientId: clientId,
       propertyId: propertyId,
       requestId: requestId,
-      subPath: 'expenses',
+      subPath: 'financials',
       pageSize: pageSize,
     );
     return rows
-        .map((e) => MaintenanceExpenseModel.fromJson(e as Map<String, dynamic>))
+        .map(
+          (e) => MaintenanceFinancialModel.fromJson(e as Map<String, dynamic>),
+        )
         .toList();
   }
 

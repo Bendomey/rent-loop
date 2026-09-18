@@ -92,6 +92,10 @@ func NewTenantAccountRouter(appCtx pkg.AppContext, handlers handlers.Handlers) f
 				"/v1/leases/{lease_id}/maintenance-requests/{maintenance_request_id}",
 				handlers.MaintenanceRequestHandler.TenantGet,
 			)
+			r.Get(
+				"/v1/leases/{lease_id}/maintenance-requests/{maintenance_request_id}/financials",
+				handlers.MaintenanceRequestFinancialHandler.TenantListFinancials,
+			)
 
 			// tenant invoices
 			// Read-only. The landlord controls issuance, so a tenant can see

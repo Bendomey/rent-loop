@@ -6,7 +6,7 @@ import { toast } from 'sonner'
 import { ActivityTab } from './activity-tab'
 import { AffectedAssetsSummary } from './affected-assets'
 import { CommentsTab } from './comments-tab'
-import { ExpensesTab } from './expenses-tab'
+import { FinancialsTab } from './financials-tab'
 import { MaintenanceRequestSidebar } from './sidebar'
 import { useUpdateMaintenanceRequest } from '~/api/maintenance-requests'
 import { Button } from '~/components/ui/button'
@@ -366,8 +366,8 @@ export function MaintenanceRequestDetailModule() {
 							<TabsTrigger value="comments" className={tabTriggerClass}>
 								Comments
 							</TabsTrigger>
-							<TabsTrigger value="expenses" className={tabTriggerClass}>
-								Expenses
+							<TabsTrigger value="financials" className={tabTriggerClass}>
+								Financials
 							</TabsTrigger>
 						</TabsList>
 						<TabsContent value="history" className="mt-4">
@@ -380,8 +380,12 @@ export function MaintenanceRequestDetailModule() {
 						<TabsContent value="comments" className="mt-4">
 							<CommentsTab requestId={request.id} propertyId={propertyId} />
 						</TabsContent>
-						<TabsContent value="expenses" className="mt-4">
-							<ExpensesTab requestId={request.id} propertyId={propertyId} />
+						<TabsContent value="financials" className="mt-4">
+							<FinancialsTab
+								requestId={request.id}
+								propertyId={propertyId}
+								leaseId={request.lease_id}
+							/>
 						</TabsContent>
 					</Tabs>
 				</div>

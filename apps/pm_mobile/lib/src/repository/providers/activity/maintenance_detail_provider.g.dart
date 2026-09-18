@@ -7,7 +7,7 @@ part of 'maintenance_detail_provider.dart';
 // **************************************************************************
 
 String _$maintenanceRequestPropertyIdHash() =>
-    r'f3120091e12df23f4aeddf1fe754957d81dbfb2b';
+    r'905082bd59336bf5ddc6a7e26044df9714ed826c';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -129,14 +129,20 @@ class MaintenanceRequestPropertyIdFamily extends Family<AsyncValue<String>> {
     String requestId,
     String? propertyIdHint,
   ) {
-    return MaintenanceRequestPropertyIdProvider(requestId, propertyIdHint);
+    return MaintenanceRequestPropertyIdProvider(
+      requestId,
+      propertyIdHint,
+    );
   }
 
   @override
   MaintenanceRequestPropertyIdProvider getProviderOverride(
     covariant MaintenanceRequestPropertyIdProvider provider,
   ) {
-    return call(provider.requestId, provider.propertyIdHint);
+    return call(
+      provider.requestId,
+      provider.propertyIdHint,
+    );
   }
 
   static const Iterable<ProviderOrFamily>? _dependencies = null;
@@ -200,24 +206,27 @@ class MaintenanceRequestPropertyIdProvider
   /// wrong request.
   ///
   /// Copied from [maintenanceRequestPropertyId].
-  MaintenanceRequestPropertyIdProvider(String requestId, String? propertyIdHint)
-    : this._internal(
-        (ref) => maintenanceRequestPropertyId(
-          ref as MaintenanceRequestPropertyIdRef,
-          requestId,
-          propertyIdHint,
-        ),
-        from: maintenanceRequestPropertyIdProvider,
-        name: r'maintenanceRequestPropertyIdProvider',
-        debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-            ? null
-            : _$maintenanceRequestPropertyIdHash,
-        dependencies: MaintenanceRequestPropertyIdFamily._dependencies,
-        allTransitiveDependencies:
-            MaintenanceRequestPropertyIdFamily._allTransitiveDependencies,
-        requestId: requestId,
-        propertyIdHint: propertyIdHint,
-      );
+  MaintenanceRequestPropertyIdProvider(
+    String requestId,
+    String? propertyIdHint,
+  ) : this._internal(
+          (ref) => maintenanceRequestPropertyId(
+            ref as MaintenanceRequestPropertyIdRef,
+            requestId,
+            propertyIdHint,
+          ),
+          from: maintenanceRequestPropertyIdProvider,
+          name: r'maintenanceRequestPropertyIdProvider',
+          debugGetCreateSourceHash:
+              const bool.fromEnvironment('dart.vm.product')
+                  ? null
+                  : _$maintenanceRequestPropertyIdHash,
+          dependencies: MaintenanceRequestPropertyIdFamily._dependencies,
+          allTransitiveDependencies:
+              MaintenanceRequestPropertyIdFamily._allTransitiveDependencies,
+          requestId: requestId,
+          propertyIdHint: propertyIdHint,
+        );
 
   MaintenanceRequestPropertyIdProvider._internal(
     super._createNotifier, {
@@ -321,14 +330,20 @@ class MaintenanceRequestDetailFamily
     String requestId,
     String? propertyIdHint,
   ) {
-    return MaintenanceRequestDetailProvider(requestId, propertyIdHint);
+    return MaintenanceRequestDetailProvider(
+      requestId,
+      propertyIdHint,
+    );
   }
 
   @override
   MaintenanceRequestDetailProvider getProviderOverride(
     covariant MaintenanceRequestDetailProvider provider,
   ) {
-    return call(provider.requestId, provider.propertyIdHint);
+    return call(
+      provider.requestId,
+      provider.propertyIdHint,
+    );
   }
 
   static const Iterable<ProviderOrFamily>? _dependencies = null;
@@ -354,24 +369,27 @@ class MaintenanceRequestDetailProvider
   /// The request itself — hero, attachments, assignments, properties, footer.
   ///
   /// Copied from [maintenanceRequestDetail].
-  MaintenanceRequestDetailProvider(String requestId, String? propertyIdHint)
-    : this._internal(
-        (ref) => maintenanceRequestDetail(
-          ref as MaintenanceRequestDetailRef,
-          requestId,
-          propertyIdHint,
-        ),
-        from: maintenanceRequestDetailProvider,
-        name: r'maintenanceRequestDetailProvider',
-        debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-            ? null
-            : _$maintenanceRequestDetailHash,
-        dependencies: MaintenanceRequestDetailFamily._dependencies,
-        allTransitiveDependencies:
-            MaintenanceRequestDetailFamily._allTransitiveDependencies,
-        requestId: requestId,
-        propertyIdHint: propertyIdHint,
-      );
+  MaintenanceRequestDetailProvider(
+    String requestId,
+    String? propertyIdHint,
+  ) : this._internal(
+          (ref) => maintenanceRequestDetail(
+            ref as MaintenanceRequestDetailRef,
+            requestId,
+            propertyIdHint,
+          ),
+          from: maintenanceRequestDetailProvider,
+          name: r'maintenanceRequestDetailProvider',
+          debugGetCreateSourceHash:
+              const bool.fromEnvironment('dart.vm.product')
+                  ? null
+                  : _$maintenanceRequestDetailHash,
+          dependencies: MaintenanceRequestDetailFamily._dependencies,
+          allTransitiveDependencies:
+              MaintenanceRequestDetailFamily._allTransitiveDependencies,
+          requestId: requestId,
+          propertyIdHint: propertyIdHint,
+        );
 
   MaintenanceRequestDetailProvider._internal(
     super._createNotifier, {
@@ -390,9 +408,8 @@ class MaintenanceRequestDetailProvider
   @override
   Override overrideWith(
     FutureOr<MaintenanceRequestModel> Function(
-      MaintenanceRequestDetailRef provider,
-    )
-    create,
+            MaintenanceRequestDetailRef provider)
+        create,
   ) {
     return ProviderOverride(
       origin: this,
@@ -480,14 +497,20 @@ class MaintenanceRequestActivityLogsFamily
     String requestId,
     String? propertyIdHint,
   ) {
-    return MaintenanceRequestActivityLogsProvider(requestId, propertyIdHint);
+    return MaintenanceRequestActivityLogsProvider(
+      requestId,
+      propertyIdHint,
+    );
   }
 
   @override
   MaintenanceRequestActivityLogsProvider getProviderOverride(
     covariant MaintenanceRequestActivityLogsProvider provider,
   ) {
-    return call(provider.requestId, provider.propertyIdHint);
+    return call(
+      provider.requestId,
+      provider.propertyIdHint,
+    );
   }
 
   static const Iterable<ProviderOrFamily>? _dependencies = null;
@@ -517,22 +540,23 @@ class MaintenanceRequestActivityLogsProvider
     String requestId,
     String? propertyIdHint,
   ) : this._internal(
-        (ref) => maintenanceRequestActivityLogs(
-          ref as MaintenanceRequestActivityLogsRef,
-          requestId,
-          propertyIdHint,
-        ),
-        from: maintenanceRequestActivityLogsProvider,
-        name: r'maintenanceRequestActivityLogsProvider',
-        debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-            ? null
-            : _$maintenanceRequestActivityLogsHash,
-        dependencies: MaintenanceRequestActivityLogsFamily._dependencies,
-        allTransitiveDependencies:
-            MaintenanceRequestActivityLogsFamily._allTransitiveDependencies,
-        requestId: requestId,
-        propertyIdHint: propertyIdHint,
-      );
+          (ref) => maintenanceRequestActivityLogs(
+            ref as MaintenanceRequestActivityLogsRef,
+            requestId,
+            propertyIdHint,
+          ),
+          from: maintenanceRequestActivityLogsProvider,
+          name: r'maintenanceRequestActivityLogsProvider',
+          debugGetCreateSourceHash:
+              const bool.fromEnvironment('dart.vm.product')
+                  ? null
+                  : _$maintenanceRequestActivityLogsHash,
+          dependencies: MaintenanceRequestActivityLogsFamily._dependencies,
+          allTransitiveDependencies:
+              MaintenanceRequestActivityLogsFamily._allTransitiveDependencies,
+          requestId: requestId,
+          propertyIdHint: propertyIdHint,
+        );
 
   MaintenanceRequestActivityLogsProvider._internal(
     super._createNotifier, {
@@ -551,9 +575,8 @@ class MaintenanceRequestActivityLogsProvider
   @override
   Override overrideWith(
     FutureOr<List<MaintenanceActivityLogModel>> Function(
-      MaintenanceRequestActivityLogsRef provider,
-    )
-    create,
+            MaintenanceRequestActivityLogsRef provider)
+        create,
   ) {
     return ProviderOverride(
       origin: this,
@@ -572,7 +595,7 @@ class MaintenanceRequestActivityLogsProvider
 
   @override
   AutoDisposeFutureProviderElement<List<MaintenanceActivityLogModel>>
-  createElement() {
+      createElement() {
     return _MaintenanceRequestActivityLogsProviderElement(this);
   }
 
@@ -641,14 +664,20 @@ class MaintenanceRequestCommentsFamily
     String requestId,
     String? propertyIdHint,
   ) {
-    return MaintenanceRequestCommentsProvider(requestId, propertyIdHint);
+    return MaintenanceRequestCommentsProvider(
+      requestId,
+      propertyIdHint,
+    );
   }
 
   @override
   MaintenanceRequestCommentsProvider getProviderOverride(
     covariant MaintenanceRequestCommentsProvider provider,
   ) {
-    return call(provider.requestId, provider.propertyIdHint);
+    return call(
+      provider.requestId,
+      provider.propertyIdHint,
+    );
   }
 
   static const Iterable<ProviderOrFamily>? _dependencies = null;
@@ -674,24 +703,27 @@ class MaintenanceRequestCommentsProvider
   /// Comments tab.
   ///
   /// Copied from [maintenanceRequestComments].
-  MaintenanceRequestCommentsProvider(String requestId, String? propertyIdHint)
-    : this._internal(
-        (ref) => maintenanceRequestComments(
-          ref as MaintenanceRequestCommentsRef,
-          requestId,
-          propertyIdHint,
-        ),
-        from: maintenanceRequestCommentsProvider,
-        name: r'maintenanceRequestCommentsProvider',
-        debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-            ? null
-            : _$maintenanceRequestCommentsHash,
-        dependencies: MaintenanceRequestCommentsFamily._dependencies,
-        allTransitiveDependencies:
-            MaintenanceRequestCommentsFamily._allTransitiveDependencies,
-        requestId: requestId,
-        propertyIdHint: propertyIdHint,
-      );
+  MaintenanceRequestCommentsProvider(
+    String requestId,
+    String? propertyIdHint,
+  ) : this._internal(
+          (ref) => maintenanceRequestComments(
+            ref as MaintenanceRequestCommentsRef,
+            requestId,
+            propertyIdHint,
+          ),
+          from: maintenanceRequestCommentsProvider,
+          name: r'maintenanceRequestCommentsProvider',
+          debugGetCreateSourceHash:
+              const bool.fromEnvironment('dart.vm.product')
+                  ? null
+                  : _$maintenanceRequestCommentsHash,
+          dependencies: MaintenanceRequestCommentsFamily._dependencies,
+          allTransitiveDependencies:
+              MaintenanceRequestCommentsFamily._allTransitiveDependencies,
+          requestId: requestId,
+          propertyIdHint: propertyIdHint,
+        );
 
   MaintenanceRequestCommentsProvider._internal(
     super._createNotifier, {
@@ -710,9 +742,8 @@ class MaintenanceRequestCommentsProvider
   @override
   Override overrideWith(
     FutureOr<List<MaintenanceCommentModel>> Function(
-      MaintenanceRequestCommentsRef provider,
-    )
-    create,
+            MaintenanceRequestCommentsRef provider)
+        create,
   ) {
     return ProviderOverride(
       origin: this,
@@ -731,7 +762,7 @@ class MaintenanceRequestCommentsProvider
 
   @override
   AutoDisposeFutureProviderElement<List<MaintenanceCommentModel>>
-  createElement() {
+      createElement() {
     return _MaintenanceRequestCommentsProviderElement(this);
   }
 
@@ -774,40 +805,47 @@ class _MaintenanceRequestCommentsProviderElement
       (origin as MaintenanceRequestCommentsProvider).propertyIdHint;
 }
 
-String _$maintenanceRequestExpensesHash() =>
-    r'fa5f971d37c38189e42b6993828137e82f8de30d';
+String _$maintenanceRequestFinancialsHash() =>
+    r'0daa4a6ef47cec5e16abcf7e3ed472dcce3fca9c';
 
-/// Expenses tab.
+/// Financials tab.
 ///
-/// Copied from [maintenanceRequestExpenses].
-@ProviderFor(maintenanceRequestExpenses)
-const maintenanceRequestExpensesProvider = MaintenanceRequestExpensesFamily();
+/// Copied from [maintenanceRequestFinancials].
+@ProviderFor(maintenanceRequestFinancials)
+const maintenanceRequestFinancialsProvider =
+    MaintenanceRequestFinancialsFamily();
 
-/// Expenses tab.
+/// Financials tab.
 ///
-/// Copied from [maintenanceRequestExpenses].
-class MaintenanceRequestExpensesFamily
-    extends Family<AsyncValue<List<MaintenanceExpenseModel>>> {
-  /// Expenses tab.
+/// Copied from [maintenanceRequestFinancials].
+class MaintenanceRequestFinancialsFamily
+    extends Family<AsyncValue<List<MaintenanceFinancialModel>>> {
+  /// Financials tab.
   ///
-  /// Copied from [maintenanceRequestExpenses].
-  const MaintenanceRequestExpensesFamily();
+  /// Copied from [maintenanceRequestFinancials].
+  const MaintenanceRequestFinancialsFamily();
 
-  /// Expenses tab.
+  /// Financials tab.
   ///
-  /// Copied from [maintenanceRequestExpenses].
-  MaintenanceRequestExpensesProvider call(
+  /// Copied from [maintenanceRequestFinancials].
+  MaintenanceRequestFinancialsProvider call(
     String requestId,
     String? propertyIdHint,
   ) {
-    return MaintenanceRequestExpensesProvider(requestId, propertyIdHint);
+    return MaintenanceRequestFinancialsProvider(
+      requestId,
+      propertyIdHint,
+    );
   }
 
   @override
-  MaintenanceRequestExpensesProvider getProviderOverride(
-    covariant MaintenanceRequestExpensesProvider provider,
+  MaintenanceRequestFinancialsProvider getProviderOverride(
+    covariant MaintenanceRequestFinancialsProvider provider,
   ) {
-    return call(provider.requestId, provider.propertyIdHint);
+    return call(
+      provider.requestId,
+      provider.propertyIdHint,
+    );
   }
 
   static const Iterable<ProviderOrFamily>? _dependencies = null;
@@ -822,37 +860,40 @@ class MaintenanceRequestExpensesFamily
       _allTransitiveDependencies;
 
   @override
-  String? get name => r'maintenanceRequestExpensesProvider';
+  String? get name => r'maintenanceRequestFinancialsProvider';
 }
 
-/// Expenses tab.
+/// Financials tab.
 ///
-/// Copied from [maintenanceRequestExpenses].
-class MaintenanceRequestExpensesProvider
-    extends AutoDisposeFutureProvider<List<MaintenanceExpenseModel>> {
-  /// Expenses tab.
+/// Copied from [maintenanceRequestFinancials].
+class MaintenanceRequestFinancialsProvider
+    extends AutoDisposeFutureProvider<List<MaintenanceFinancialModel>> {
+  /// Financials tab.
   ///
-  /// Copied from [maintenanceRequestExpenses].
-  MaintenanceRequestExpensesProvider(String requestId, String? propertyIdHint)
-    : this._internal(
-        (ref) => maintenanceRequestExpenses(
-          ref as MaintenanceRequestExpensesRef,
-          requestId,
-          propertyIdHint,
-        ),
-        from: maintenanceRequestExpensesProvider,
-        name: r'maintenanceRequestExpensesProvider',
-        debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-            ? null
-            : _$maintenanceRequestExpensesHash,
-        dependencies: MaintenanceRequestExpensesFamily._dependencies,
-        allTransitiveDependencies:
-            MaintenanceRequestExpensesFamily._allTransitiveDependencies,
-        requestId: requestId,
-        propertyIdHint: propertyIdHint,
-      );
+  /// Copied from [maintenanceRequestFinancials].
+  MaintenanceRequestFinancialsProvider(
+    String requestId,
+    String? propertyIdHint,
+  ) : this._internal(
+          (ref) => maintenanceRequestFinancials(
+            ref as MaintenanceRequestFinancialsRef,
+            requestId,
+            propertyIdHint,
+          ),
+          from: maintenanceRequestFinancialsProvider,
+          name: r'maintenanceRequestFinancialsProvider',
+          debugGetCreateSourceHash:
+              const bool.fromEnvironment('dart.vm.product')
+                  ? null
+                  : _$maintenanceRequestFinancialsHash,
+          dependencies: MaintenanceRequestFinancialsFamily._dependencies,
+          allTransitiveDependencies:
+              MaintenanceRequestFinancialsFamily._allTransitiveDependencies,
+          requestId: requestId,
+          propertyIdHint: propertyIdHint,
+        );
 
-  MaintenanceRequestExpensesProvider._internal(
+  MaintenanceRequestFinancialsProvider._internal(
     super._createNotifier, {
     required super.name,
     required super.dependencies,
@@ -868,15 +909,14 @@ class MaintenanceRequestExpensesProvider
 
   @override
   Override overrideWith(
-    FutureOr<List<MaintenanceExpenseModel>> Function(
-      MaintenanceRequestExpensesRef provider,
-    )
-    create,
+    FutureOr<List<MaintenanceFinancialModel>> Function(
+            MaintenanceRequestFinancialsRef provider)
+        create,
   ) {
     return ProviderOverride(
       origin: this,
-      override: MaintenanceRequestExpensesProvider._internal(
-        (ref) => create(ref as MaintenanceRequestExpensesRef),
+      override: MaintenanceRequestFinancialsProvider._internal(
+        (ref) => create(ref as MaintenanceRequestFinancialsRef),
         from: from,
         name: null,
         dependencies: null,
@@ -889,14 +929,14 @@ class MaintenanceRequestExpensesProvider
   }
 
   @override
-  AutoDisposeFutureProviderElement<List<MaintenanceExpenseModel>>
-  createElement() {
-    return _MaintenanceRequestExpensesProviderElement(this);
+  AutoDisposeFutureProviderElement<List<MaintenanceFinancialModel>>
+      createElement() {
+    return _MaintenanceRequestFinancialsProviderElement(this);
   }
 
   @override
   bool operator ==(Object other) {
-    return other is MaintenanceRequestExpensesProvider &&
+    return other is MaintenanceRequestFinancialsProvider &&
         other.requestId == requestId &&
         other.propertyIdHint == propertyIdHint;
   }
@@ -911,8 +951,8 @@ class MaintenanceRequestExpensesProvider
   }
 }
 
-mixin MaintenanceRequestExpensesRef
-    on AutoDisposeFutureProviderRef<List<MaintenanceExpenseModel>> {
+mixin MaintenanceRequestFinancialsRef
+    on AutoDisposeFutureProviderRef<List<MaintenanceFinancialModel>> {
   /// The parameter `requestId` of this provider.
   String get requestId;
 
@@ -920,18 +960,17 @@ mixin MaintenanceRequestExpensesRef
   String? get propertyIdHint;
 }
 
-class _MaintenanceRequestExpensesProviderElement
-    extends AutoDisposeFutureProviderElement<List<MaintenanceExpenseModel>>
-    with MaintenanceRequestExpensesRef {
-  _MaintenanceRequestExpensesProviderElement(super.provider);
+class _MaintenanceRequestFinancialsProviderElement
+    extends AutoDisposeFutureProviderElement<List<MaintenanceFinancialModel>>
+    with MaintenanceRequestFinancialsRef {
+  _MaintenanceRequestFinancialsProviderElement(super.provider);
 
   @override
   String get requestId =>
-      (origin as MaintenanceRequestExpensesProvider).requestId;
+      (origin as MaintenanceRequestFinancialsProvider).requestId;
   @override
   String? get propertyIdHint =>
-      (origin as MaintenanceRequestExpensesProvider).propertyIdHint;
+      (origin as MaintenanceRequestFinancialsProvider).propertyIdHint;
 }
-
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

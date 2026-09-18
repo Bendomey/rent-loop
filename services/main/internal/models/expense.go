@@ -47,4 +47,9 @@ type Expense struct {
 	CreatedByClientUser   ClientUser
 
 	Invoices []Invoice `gorm:"foreignKey:ContextExpenseID"`
+
+	// The line this expense was created from, when it came from a maintenance
+	// request. Read-only here: the line owns the relationship, this is only how
+	// a caller reaches the request without a second foreign key to keep in sync.
+	Financials []MaintenanceRequestFinancial `gorm:"foreignKey:ExpenseID"`
 }

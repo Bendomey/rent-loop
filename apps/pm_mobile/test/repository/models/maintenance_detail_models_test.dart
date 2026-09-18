@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rentloop_manager/src/repository/models/maintenance_activity_log_model.dart';
 import 'package:rentloop_manager/src/repository/models/maintenance_comment_model.dart';
-import 'package:rentloop_manager/src/repository/models/maintenance_expense_model.dart';
+import 'package:rentloop_manager/src/repository/models/maintenance_financial_model.dart';
 import 'package:rentloop_manager/src/repository/models/maintenance_request_model.dart';
 
 void main() {
@@ -173,20 +173,47 @@ void main() {
     });
   });
 
-  group('MaintenanceExpenseModel', () {
-    test('parses a major-unit amount with its currency', () {
-      final expense = MaintenanceExpenseModel.fromJson({
-        'id': 'e1',
-        'code': 'EXP-2603-000001',
+  group('MaintenanceFinancialModel', () {
+    // The amount is pesewas, not major units. The model this replaced assumed
+    // otherwise and rendered every figure a hundred times too large.
+    test('parses a pesewa amount with its currency', () {
+      final financial = MaintenanceFinancialModel.fromJson({
+        'id': 'f1',
         'description': 'Labour and materials',
-        'amount': 250.75,
+        'amount': 25075,
         'currency': 'GHS',
+        'settlement_type': 'VENDOR_EXPENSE',
+        'status': 'OUTSTANDING',
+        'is_editable': true,
         'created_at': '2026-03-16T12:00:00Z',
       });
 
-      expect(expense.amount, 250.75);
-      expect(expense.currency, 'GHS');
-      expect(expense.code, 'EXP-2603-000001');
+      expect(financial.amount, 25075);
+      expect(financial.currency, 'GHS');
+      expect(financial.settlementType, 'VENDOR_EXPENSE');
+      expect(financial.isEditable, isTrue);
+    });
+
+    test('labels each settlement type for the tab', () {
+      MaintenanceFinancialModel build(String type, String status) =>
+          MaintenanceFinancialModel.fromJson({
+            'id': 'f1',
+            'description': 'x',
+            'amount': 100,
+            'currency': 'GHS',
+            'settlement_type': type,
+            'status': status,
+            'is_editable': false,
+          });
+
+      expect(build('RECORD_ONLY', 'RECORDED').settlementLabel, 'No one pays');
+      expect(build('TENANT_CHARGE', 'OUTSTANDING').settlementLabel, 'Tenant');
+      expect(build('VENDOR_EXPENSE', 'SETTLED').settlementLabel, 'Vendor');
+      expect(build('RECORD_ONLY', 'RECORDED').statusLabel, 'Recorded');
+      expect(
+        build('TENANT_CHARGE', 'PARTIALLY_SETTLED').statusLabel,
+        'Part settled',
+      );
     });
   });
 }

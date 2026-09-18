@@ -211,12 +211,14 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 						// property-scoped expenses
 						r.Route("/expenses", func(r chi.Router) {
 							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
-								Post("/", handlers.ExpenseHandler.AddExpense)
+								Post("/", handlers.ExpenseHandler.CreateExpense)
 							r.Get("/", handlers.ExpenseHandler.ListPropertyExpenses)
 							r.Route("/{expense_id}", func(r chi.Router) {
 								r.Get("/", handlers.ExpenseHandler.GetExpense)
 								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
-									Delete("/", handlers.ExpenseHandler.DeleteExpense)
+									Patch("/", handlers.ExpenseHandler.UpdateExpense)
+								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+									Patch("/void", handlers.ExpenseHandler.VoidExpense)
 							})
 						})
 
@@ -379,8 +381,16 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 										r.Delete("/", handlers.MaintenanceRequestHandler.DeleteComment)
 									})
 								})
-								r.Route("/expenses", func(r chi.Router) {
-									r.Get("/", handlers.ExpenseHandler.ListMRExpenses)
+								r.Route("/financials", func(r chi.Router) {
+									r.Get("/", handlers.MaintenanceRequestFinancialHandler.ListFinancials)
+									r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+										Post("/", handlers.MaintenanceRequestFinancialHandler.CreateFinancial)
+									r.Route("/{financial_id}", func(r chi.Router) {
+										r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+											Patch("/", handlers.MaintenanceRequestFinancialHandler.UpdateFinancial)
+										r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+											Patch("/void", handlers.MaintenanceRequestFinancialHandler.VoidFinancial)
+									})
 								})
 							})
 						})

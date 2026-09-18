@@ -6,14 +6,14 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type ListExpensesFilter struct {
-	PropertyIDs          *[]string
-	ClientUserID         *string
-	ContextType          *string
-	Category             *string
-	MaintenanceRequestID *string
+	PropertyIDs  *[]string
+	ClientUserID *string
+	ContextType  *string
+	Category     *string
 }
 
 type GetExpenseQuery struct {
@@ -55,21 +55,6 @@ func expenseClientUserAccessScope(clientUserID *string) func(db *gorm.DB) *gorm.
 		return db.Where(
 			"expenses.property_id IN (?)",
 			accessiblePropertyIDsSubQuery(db, *clientUserID),
-		)
-	}
-}
-
-func expenseMaintenanceRequestScope(requestID *string) func(db *gorm.DB) *gorm.DB {
-	return func(db *gorm.DB) *gorm.DB {
-		if requestID == nil {
-			return db
-		}
-		return db.Where(
-			"expenses.id IN (?)",
-			db.Session(&gorm.Session{NewDB: true}).
-				Model(&models.MaintenanceRequestFinancial{}).
-				Select("expense_id").
-				Where("maintenance_request_id = ? AND expense_id IS NOT NULL", *requestID),
 		)
 	}
 }
@@ -125,7 +110,6 @@ func (r *expenseRepository) List(
 			SearchScope("expenses", filterQuery.Search),
 			expensePropertyIDsScope(filters.PropertyIDs),
 			expenseClientUserAccessScope(filters.ClientUserID),
-			expenseMaintenanceRequestScope(filters.MaintenanceRequestID),
 			expenseContextTypeScope(filters.ContextType),
 			expenseCategoryScope(filters.Category),
 			PaginationScope(filterQuery.Page, filterQuery.PageSize),
@@ -158,7 +142,6 @@ func (r *expenseRepository) Count(
 			SearchScope("expenses", filterQuery.Search),
 			expensePropertyIDsScope(filters.PropertyIDs),
 			expenseClientUserAccessScope(filters.ClientUserID),
-			expenseMaintenanceRequestScope(filters.MaintenanceRequestID),
 			expenseContextTypeScope(filters.ContextType),
 			expenseCategoryScope(filters.Category),
 		).
@@ -173,6 +156,11 @@ func (r *expenseRepository) Delete(ctx context.Context, id string) error {
 	return r.DB.WithContext(ctx).Where("id = ?", id).Delete(&models.Expense{}).Error
 }
 
+// Update writes the expense's own columns. Associations are omitted because
+// reads preload Invoices, and a plain Save would upsert those invoices as a
+// side effect of changing a description.
 func (r *expenseRepository) Update(ctx context.Context, expense *models.Expense) error {
-	return lib.ResolveDB(ctx, r.DB).WithContext(ctx).Save(expense).Error
+	return lib.ResolveDB(ctx, r.DB).WithContext(ctx).
+		Omit(clause.Associations).
+		Save(expense).Error
 }

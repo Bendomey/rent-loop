@@ -14,6 +14,10 @@ import (
 // exactly that reason. Marking them outstanding would tell the landlord they
 // owe vendors for cash already spent.
 //
+// Soft-deleted rows are normalised too. Skipping them would leave a dead
+// context_type of LEASE on a row that is still there, so restoring it would
+// produce a record the model has no value for.
+//
 // LEASE-context rows carried a lease but no request and were the old "bill the
 // tenant" path. They become GENERAL expenses with the lease code kept in the
 // description, because no column survives to hold it. Fabricating charge
@@ -29,8 +33,7 @@ func BackfillExpenseContextAndCategory() *gormigrate.Migration {
 			// category a landlord deliberately chose.
 			if err := db.Exec(`
 				UPDATE expenses SET category = 'REPAIRS'
-				WHERE deleted_at IS NULL
-				  AND context_maintenance_request_id IS NOT NULL
+				WHERE context_maintenance_request_id IS NOT NULL
 			`).Error; err != nil {
 				return err
 			}
@@ -50,7 +53,6 @@ func BackfillExpenseContextAndCategory() *gormigrate.Migration {
 						' (originally recorded against lease ' || l.code || ')'
 					FROM leases l
 					WHERE l.id = e.context_lease_id
-					  AND e.deleted_at IS NULL
 					  AND e.context_lease_id IS NOT NULL
 					  AND e.description NOT LIKE '%originally recorded against lease%'
 				`).Error; err != nil {
@@ -64,7 +66,6 @@ func BackfillExpenseContextAndCategory() *gormigrate.Migration {
 					WHEN context_maintenance_request_id IS NOT NULL THEN 'MAINTENANCE'
 					ELSE 'GENERAL'
 				END
-				WHERE deleted_at IS NULL
 			`).Error
 		},
 		Rollback: func(db *gorm.DB) error { return nil },

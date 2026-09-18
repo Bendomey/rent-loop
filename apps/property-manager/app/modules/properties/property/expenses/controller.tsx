@@ -1,4 +1,4 @@
-import { RotateCw, ToggleLeft } from 'lucide-react'
+import { RotateCw, Tag, ToggleLeft } from 'lucide-react'
 import { useMemo } from 'react'
 import { FilterSet } from '~/components/filter-set'
 import { Button } from '~/components/ui/button'
@@ -20,13 +20,33 @@ export const PropertyExpensesController = ({
 				label: 'Type',
 				value: {
 					options: [
-						{ label: 'Lease', value: 'LEASE' },
 						{ label: 'Maintenance', value: 'MAINTENANCE' },
+						{ label: 'General', value: 'GENERAL' },
 					],
 					urlParam: 'context_type',
 					defaultValues: [],
 				},
 				Icon: ToggleLeft,
+			},
+			{
+				id: 2,
+				type: 'selector',
+				selectType: 'single',
+				label: 'Category',
+				value: {
+					options: [
+						{ label: 'Repairs', value: 'REPAIRS' },
+						{ label: 'Utilities', value: 'UTILITIES' },
+						{ label: 'Insurance', value: 'INSURANCE' },
+						{ label: 'Landscaping', value: 'LANDSCAPING' },
+						{ label: 'Security', value: 'SECURITY' },
+						{ label: 'Management', value: 'MANAGEMENT' },
+						{ label: 'Other', value: 'OTHER' },
+					],
+					urlParam: 'category',
+					defaultValues: [],
+				},
+				Icon: Tag,
 			},
 		],
 		[],

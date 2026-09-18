@@ -179,5 +179,176 @@ class _MaintenanceRequestProviderElement
   @override
   String get id => (origin as MaintenanceRequestProvider).id;
 }
+
+String _$maintenanceRequestFinancialsHash() =>
+    r'21ff9cbccff8ef67229a93908be7e85dead7f585';
+
+/// Charges raised against the tenant by one maintenance request.
+///
+/// Copied from [maintenanceRequestFinancials].
+@ProviderFor(maintenanceRequestFinancials)
+const maintenanceRequestFinancialsProvider =
+    MaintenanceRequestFinancialsFamily();
+
+/// Charges raised against the tenant by one maintenance request.
+///
+/// Copied from [maintenanceRequestFinancials].
+class MaintenanceRequestFinancialsFamily
+    extends Family<AsyncValue<List<MaintenanceRequestFinancialModel>>> {
+  /// Charges raised against the tenant by one maintenance request.
+  ///
+  /// Copied from [maintenanceRequestFinancials].
+  const MaintenanceRequestFinancialsFamily();
+
+  /// Charges raised against the tenant by one maintenance request.
+  ///
+  /// Copied from [maintenanceRequestFinancials].
+  MaintenanceRequestFinancialsProvider call(
+    String leaseId,
+    String requestId,
+  ) {
+    return MaintenanceRequestFinancialsProvider(
+      leaseId,
+      requestId,
+    );
+  }
+
+  @override
+  MaintenanceRequestFinancialsProvider getProviderOverride(
+    covariant MaintenanceRequestFinancialsProvider provider,
+  ) {
+    return call(
+      provider.leaseId,
+      provider.requestId,
+    );
+  }
+
+  static const Iterable<ProviderOrFamily>? _dependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get dependencies => _dependencies;
+
+  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
+      _allTransitiveDependencies;
+
+  @override
+  String? get name => r'maintenanceRequestFinancialsProvider';
+}
+
+/// Charges raised against the tenant by one maintenance request.
+///
+/// Copied from [maintenanceRequestFinancials].
+class MaintenanceRequestFinancialsProvider
+    extends AutoDisposeFutureProvider<List<MaintenanceRequestFinancialModel>> {
+  /// Charges raised against the tenant by one maintenance request.
+  ///
+  /// Copied from [maintenanceRequestFinancials].
+  MaintenanceRequestFinancialsProvider(
+    String leaseId,
+    String requestId,
+  ) : this._internal(
+          (ref) => maintenanceRequestFinancials(
+            ref as MaintenanceRequestFinancialsRef,
+            leaseId,
+            requestId,
+          ),
+          from: maintenanceRequestFinancialsProvider,
+          name: r'maintenanceRequestFinancialsProvider',
+          debugGetCreateSourceHash:
+              const bool.fromEnvironment('dart.vm.product')
+                  ? null
+                  : _$maintenanceRequestFinancialsHash,
+          dependencies: MaintenanceRequestFinancialsFamily._dependencies,
+          allTransitiveDependencies:
+              MaintenanceRequestFinancialsFamily._allTransitiveDependencies,
+          leaseId: leaseId,
+          requestId: requestId,
+        );
+
+  MaintenanceRequestFinancialsProvider._internal(
+    super._createNotifier, {
+    required super.name,
+    required super.dependencies,
+    required super.allTransitiveDependencies,
+    required super.debugGetCreateSourceHash,
+    required super.from,
+    required this.leaseId,
+    required this.requestId,
+  }) : super.internal();
+
+  final String leaseId;
+  final String requestId;
+
+  @override
+  Override overrideWith(
+    FutureOr<List<MaintenanceRequestFinancialModel>> Function(
+            MaintenanceRequestFinancialsRef provider)
+        create,
+  ) {
+    return ProviderOverride(
+      origin: this,
+      override: MaintenanceRequestFinancialsProvider._internal(
+        (ref) => create(ref as MaintenanceRequestFinancialsRef),
+        from: from,
+        name: null,
+        dependencies: null,
+        allTransitiveDependencies: null,
+        debugGetCreateSourceHash: null,
+        leaseId: leaseId,
+        requestId: requestId,
+      ),
+    );
+  }
+
+  @override
+  AutoDisposeFutureProviderElement<List<MaintenanceRequestFinancialModel>>
+      createElement() {
+    return _MaintenanceRequestFinancialsProviderElement(this);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is MaintenanceRequestFinancialsProvider &&
+        other.leaseId == leaseId &&
+        other.requestId == requestId;
+  }
+
+  @override
+  int get hashCode {
+    var hash = _SystemHash.combine(0, runtimeType.hashCode);
+    hash = _SystemHash.combine(hash, leaseId.hashCode);
+    hash = _SystemHash.combine(hash, requestId.hashCode);
+
+    return _SystemHash.finish(hash);
+  }
+}
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+mixin MaintenanceRequestFinancialsRef
+    on AutoDisposeFutureProviderRef<List<MaintenanceRequestFinancialModel>> {
+  /// The parameter `leaseId` of this provider.
+  String get leaseId;
+
+  /// The parameter `requestId` of this provider.
+  String get requestId;
+}
+
+class _MaintenanceRequestFinancialsProviderElement
+    extends AutoDisposeFutureProviderElement<
+        List<MaintenanceRequestFinancialModel>>
+    with MaintenanceRequestFinancialsRef {
+  _MaintenanceRequestFinancialsProviderElement(super.provider);
+
+  @override
+  String get leaseId =>
+      (origin as MaintenanceRequestFinancialsProvider).leaseId;
+  @override
+  String get requestId =>
+      (origin as MaintenanceRequestFinancialsProvider).requestId;
+}
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

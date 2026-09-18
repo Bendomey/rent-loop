@@ -8,24 +8,26 @@ import (
 )
 
 type OutputExpense struct {
-	ID                    string    `json:"id"`
-	Code                  string    `json:"code"`
-	ContextType           string    `json:"context_type"`
-	PropertyID            string    `json:"property_id"`
-	Category              string    `json:"category"`
-	VendorName            *string   `json:"vendor_name,omitempty"`
-	VendorContact         *string   `json:"vendor_contact,omitempty"`
-	Description           string    `json:"description"`
-	Amount                int64     `json:"amount"`
-	Currency              string    `json:"currency"`
-	Status                string    `json:"status"`
-	IsEditable            bool      `json:"is_editable"`
-	InvoiceID             *string   `json:"invoice_id,omitempty"`
-	VoidedAt              *string   `json:"voided_at,omitempty"`
-	VoidedReason          *string   `json:"voided_reason,omitempty"`
-	CreatedByClientUserID string    `json:"created_by_client_user_id"`
-	CreatedAt             time.Time `json:"created_at"`
-	UpdatedAt             time.Time `json:"updated_at"`
+	ID                    string         `json:"id"`
+	Code                  string         `json:"code"`
+	ContextType           string         `json:"context_type"`
+	MaintenanceRequestID  *string        `json:"maintenance_request_id,omitempty"`
+	PropertyID            string         `json:"property_id"`
+	Category              string         `json:"category"`
+	VendorName            *string        `json:"vendor_name,omitempty"`
+	VendorContact         *string        `json:"vendor_contact,omitempty"`
+	Description           string         `json:"description"`
+	Amount                int64          `json:"amount"`
+	Currency              string         `json:"currency"`
+	Status                string         `json:"status"`
+	IsEditable            bool           `json:"is_editable"`
+	InvoiceID             *string        `json:"invoice_id,omitempty"`
+	Invoice               *OutputInvoice `json:"invoice,omitempty"`
+	VoidedAt              *string        `json:"voided_at,omitempty"`
+	VoidedReason          *string        `json:"voided_reason,omitempty"`
+	CreatedByClientUserID string         `json:"created_by_client_user_id"`
+	CreatedAt             time.Time      `json:"created_at"`
+	UpdatedAt             time.Time      `json:"updated_at"`
 }
 
 // DBExpenseToRest transforms an Expense model to REST.
@@ -37,10 +39,21 @@ func DBExpenseToRest(e *models.Expense) any {
 	view := expenses.ExpenseStatusView(e)
 
 	var invoiceID *string
+	var invoice *models.Invoice
 	for i := range e.Invoices {
 		if e.Invoices[i].Status != "VOID" {
-			id := e.Invoices[i].ID.String()
+			invoice = &e.Invoices[i]
+			id := invoice.ID.String()
 			invoiceID = &id
+			break
+		}
+	}
+
+	// Derived, never stored: the financial line owns the request link.
+	var maintenanceRequestID *string
+	for i := range e.Financials {
+		if e.Financials[i].MaintenanceRequestID != "" {
+			maintenanceRequestID = &e.Financials[i].MaintenanceRequestID
 			break
 		}
 	}
@@ -55,6 +68,7 @@ func DBExpenseToRest(e *models.Expense) any {
 		"id":                        e.ID.String(),
 		"code":                      e.Code,
 		"context_type":              e.ContextType,
+		"maintenance_request_id":    maintenanceRequestID,
 		"property_id":               e.PropertyID,
 		"category":                  e.Category,
 		"vendor_name":               e.VendorName,
@@ -65,6 +79,7 @@ func DBExpenseToRest(e *models.Expense) any {
 		"status":                    expenses.DeriveExpenseStatus(view),
 		"is_editable":               expenses.IsExpenseClean(view),
 		"invoice_id":                invoiceID,
+		"invoice":                   DBInvoiceToRest(invoice),
 		"voided_at":                 voidedAt,
 		"voided_reason":             e.VoidedReason,
 		"created_by_client_user_id": e.CreatedByClientUserID,

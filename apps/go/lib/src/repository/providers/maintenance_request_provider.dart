@@ -1,5 +1,6 @@
 import 'package:rentloop_go/src/api/maintenance.dart';
 import 'package:rentloop_go/src/architecture/architecture.dart';
+import 'package:rentloop_go/src/repository/models/maintenance_request_financial_model.dart';
 import 'package:rentloop_go/src/repository/models/maintenance_request_model.dart';
 
 part 'maintenance_request_provider.g.dart';
@@ -11,4 +12,16 @@ Future<MaintenanceRequestModel> maintenanceRequest(
   String id,
 ) async {
   return ref.read(maintenanceApiProvider).getMaintenanceRequest(leaseId, id);
+}
+
+/// Charges raised against the tenant by one maintenance request.
+@riverpod
+Future<List<MaintenanceRequestFinancialModel>> maintenanceRequestFinancials(
+  MaintenanceRequestFinancialsRef ref,
+  String leaseId,
+  String requestId,
+) async {
+  return ref
+      .read(maintenanceApiProvider)
+      .getMaintenanceRequestFinancials(leaseId, requestId);
 }

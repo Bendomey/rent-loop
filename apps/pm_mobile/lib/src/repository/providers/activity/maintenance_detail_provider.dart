@@ -4,7 +4,7 @@ import 'package:rentloop_manager/src/api/maintenance_request_api.dart';
 import 'package:rentloop_manager/src/architecture/current_workspace/current_workspace_notifier.dart';
 import 'package:rentloop_manager/src/repository/models/maintenance_activity_log_model.dart';
 import 'package:rentloop_manager/src/repository/models/maintenance_comment_model.dart';
-import 'package:rentloop_manager/src/repository/models/maintenance_expense_model.dart';
+import 'package:rentloop_manager/src/repository/models/maintenance_financial_model.dart';
 import 'package:rentloop_manager/src/repository/models/maintenance_request_model.dart';
 
 part 'maintenance_detail_provider.g.dart';
@@ -127,10 +127,10 @@ Future<List<MaintenanceCommentModel>> maintenanceRequestComments(
       );
 }
 
-/// Expenses tab.
+/// Financials tab.
 @riverpod
-Future<List<MaintenanceExpenseModel>> maintenanceRequestExpenses(
-  MaintenanceRequestExpensesRef ref,
+Future<List<MaintenanceFinancialModel>> maintenanceRequestFinancials(
+  MaintenanceRequestFinancialsRef ref,
   String requestId,
   String? propertyIdHint,
 ) async {
@@ -143,7 +143,7 @@ Future<List<MaintenanceExpenseModel>> maintenanceRequestExpenses(
   );
   return ref
       .read(maintenanceRequestApiProvider)
-      .getExpenses(
+      .getFinancials(
         clientId: clientId,
         propertyId: propertyId,
         requestId: requestId,

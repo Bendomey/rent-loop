@@ -3397,8 +3397,22 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
-                            "LEASE",
-                            "MAINTENANCE"
+                            "REPAIRS",
+                            "UTILITIES",
+                            "INSURANCE",
+                            "LANDSCAPING",
+                            "SECURITY",
+                            "MANAGEMENT",
+                            "OTHER"
+                        ],
+                        "type": "string",
+                        "name": "category",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "MAINTENANCE",
+                            "GENERAL"
                         ],
                         "type": "string",
                         "name": "context_type",
@@ -6718,8 +6732,22 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
-                            "LEASE",
-                            "MAINTENANCE"
+                            "REPAIRS",
+                            "UTILITIES",
+                            "INSURANCE",
+                            "LANDSCAPING",
+                            "SECURITY",
+                            "MANAGEMENT",
+                            "OTHER"
+                        ],
+                        "type": "string",
+                        "name": "category",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "MAINTENANCE",
+                            "GENERAL"
                         ],
                         "type": "string",
                         "name": "context_type",
@@ -6841,7 +6869,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Create a new expense scoped to a property (context_type determines lease or maintenance) (Admin)",
+                "description": "Record money owed to a vendor for a service provided to the property, and raise the bill for it. Set already_paid to settle it in the same step. Maintenance expenses are created through a maintenance request's financial line, not here (Admin)",
                 "consumes": [
                     "application/json"
                 ],
@@ -6851,8 +6879,15 @@ const docTemplate = `{
                 "tags": [
                     "Expenses"
                 ],
-                "summary": "Add an expense to a property",
+                "summary": "Record a general expense",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "Property ID",
@@ -6866,7 +6901,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.AddExpenseBody"
+                            "$ref": "#/definitions/handlers.CreateExpenseBody"
                         }
                     }
                 ],
@@ -6880,6 +6915,12 @@ const docTemplate = `{
                                     "$ref": "#/definitions/transformations.OutputExpense"
                                 }
                             }
+                        }
+                    },
+                    "400": {
+                        "description": "Vendor name missing or amount not positive",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
                         }
                     },
                     "401": {
@@ -6969,13 +7010,13 @@ const docTemplate = `{
                     }
                 }
             },
-            "delete": {
+            "patch": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Remove an expense record scoped to a property (Admin)",
+                "description": "Change the description or vendor of an expense nobody has paid yet. Amount and category cannot be changed — void and recreate instead, because the journal entry already posted carries the old figure and debits the account the old category chose (Admin)",
                 "consumes": [
                     "application/json"
                 ],
@@ -6985,8 +7026,15 @@ const docTemplate = `{
                 "tags": [
                     "Expenses"
                 ],
-                "summary": "Delete an expense",
+                "summary": "Update an unpaid expense",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "Property ID",
@@ -7000,18 +7048,33 @@ const docTemplate = `{
                         "name": "expense_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "Fields to change",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateExpenseBody"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Expense deleted successfully",
+                        "description": "Updated expense",
                         "schema": {
                             "type": "object",
                             "properties": {
                                 "data": {
-                                    "type": "boolean"
+                                    "$ref": "#/definitions/transformations.OutputExpense"
                                 }
                             }
+                        }
+                    },
+                    "400": {
+                        "description": "Expense is settled and frozen",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
                         }
                     },
                     "401": {
@@ -7022,6 +7085,107 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Expense not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/expenses/{expense_id}/void": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Withdraw an unpaid expense and the bill raised for it. The invoice is voided too, which reverses the journal entry. A paid expense cannot be voided (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Expenses"
+                ],
+                "summary": "Void an expense",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Expense ID",
+                        "name": "expense_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Reason for voiding",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.VoidExpenseBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Expense voided",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Expense is settled and frozen",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Expense not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -12523,14 +12687,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests/{maintenance_request_id}/expenses": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests/{maintenance_request_id}/financials": {
             "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "List expenses with pagination scoped to a maintenance request (Admin)",
+                "description": "List every costed line on a request, with its derived status and whether it can still be edited (Admin)",
                 "consumes": [
                     "application/json"
                 ],
@@ -12538,10 +12702,17 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Expenses"
+                    "MaintenanceRequestFinancials"
                 ],
-                "summary": "List expenses for a maintenance request",
+                "summary": "List a maintenance request's financial lines",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "Property ID",
@@ -12555,15 +12726,6 @@ const docTemplate = `{
                         "name": "maintenance_request_id",
                         "in": "path",
                         "required": true
-                    },
-                    {
-                        "enum": [
-                            "LEASE",
-                            "MAINTENANCE"
-                        ],
-                        "type": "string",
-                        "name": "context_type",
-                        "in": "query"
                     },
                     {
                         "type": "string",
@@ -12633,6 +12795,16 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "enum": [
+                            "RECORD_ONLY",
+                            "TENANT_CHARGE",
+                            "VENDOR_EXPENSE"
+                        ],
+                        "type": "string",
+                        "name": "settlement_type",
+                        "in": "query"
+                    },
+                    {
                         "type": "string",
                         "name": "start_date",
                         "in": "query"
@@ -12640,7 +12812,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Expenses",
+                        "description": "Financial lines",
                         "schema": {
                             "type": "object",
                             "properties": {
@@ -12653,7 +12825,7 @@ const docTemplate = `{
                                         "rows": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/transformations.OutputExpense"
+                                                "$ref": "#/definitions/transformations.OutputMaintenanceRequestFinancial"
                                             }
                                         }
                                     }
@@ -12665,6 +12837,303 @@ const docTemplate = `{
                         "description": "Invalid or absent authentication token",
                         "schema": {
                             "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Record what part of a request cost and who settles it: nobody (RECORD_ONLY), the tenant on the request's lease (TENANT_CHARGE, which creates a charge on their financial account), or an external vendor (VENDOR_EXPENSE, which creates an expense and its bill). TENANT_CHARGE is refused when the request has no lease (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "MaintenanceRequestFinancials"
+                ],
+                "summary": "Log a financial line on a maintenance request",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Maintenance Request ID",
+                        "name": "maintenance_request_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Financial line details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreateFinancialBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created financial line",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputMaintenanceRequestFinancial"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Request has no lease, vendor name missing, or amount not positive",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Maintenance request not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests/{maintenance_request_id}/financials/{financial_id}": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Change a line's description, or convert who settles it. Conversion voids the old charge or expense and creates the new one, because a charge and an expense are obligations to different parties. Refused once the line has been billed or paid (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "MaintenanceRequestFinancials"
+                ],
+                "summary": "Edit or convert a financial line",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Maintenance Request ID",
+                        "name": "maintenance_request_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Financial line ID",
+                        "name": "financial_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Fields to change",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateFinancialBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Updated financial line",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputMaintenanceRequestFinancial"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Line is billed or settled and frozen",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Financial line not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests/{maintenance_request_id}/financials/{financial_id}/void": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Withdraw a line and whatever obligation it created — the tenant's charge, or the vendor's expense and its bill. Refused once the line has been billed or paid (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "MaintenanceRequestFinancials"
+                ],
+                "summary": "Void a financial line",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Maintenance Request ID",
+                        "name": "maintenance_request_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Financial line ID",
+                        "name": "financial_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Reason for voiding",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.VoidFinancialBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Financial line voided",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Line is billed or settled and frozen",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Financial line not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
                         }
                     },
                     "500": {
@@ -19397,6 +19866,71 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/leases/{lease_id}/maintenance-requests/{maintenance_request_id}/financials": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns only lines the caller is being charged for. Vendor expenses and record-only lines are excluded in the query, so what the landlord paid a contractor is never exposed (Tenant)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "MaintenanceRequestFinancials"
+                ],
+                "summary": "List the charges a maintenance request raised against you",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Maintenance Request ID",
+                        "name": "maintenance_request_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Charges raised against the caller",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/leases/{lease_id}/payment-accounts": {
             "get": {
                 "security": [
@@ -21367,34 +21901,6 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.AddExpenseBody": {
-            "type": "object",
-            "required": [
-                "amount",
-                "context_type",
-                "description"
-            ],
-            "properties": {
-                "amount": {
-                    "type": "integer"
-                },
-                "context_maintenance_request_id": {
-                    "type": "string"
-                },
-                "context_type": {
-                    "type": "string",
-                    "enum": [
-                        "MAINTENANCE"
-                    ]
-                },
-                "currency": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                }
-            }
-        },
         "handlers.AddLineItemRequest": {
             "type": "object",
             "required": [
@@ -22468,6 +22974,125 @@ const docTemplate = `{
                         "DOCUMENT"
                     ],
                     "example": "DOCUMENT"
+                }
+            }
+        },
+        "handlers.CreateExpenseBody": {
+            "type": "object",
+            "required": [
+                "amount",
+                "category",
+                "description",
+                "vendor_name"
+            ],
+            "properties": {
+                "already_paid": {
+                    "type": "boolean"
+                },
+                "amount": {
+                    "type": "integer"
+                },
+                "category": {
+                    "type": "string",
+                    "enum": [
+                        "REPAIRS",
+                        "UTILITIES",
+                        "INSURANCE",
+                        "LANDSCAPING",
+                        "SECURITY",
+                        "MANAGEMENT",
+                        "OTHER"
+                    ]
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "due_date": {
+                    "type": "string"
+                },
+                "payment_provider": {
+                    "type": "string"
+                },
+                "payment_reference": {
+                    "type": "string"
+                },
+                "vendor_contact": {
+                    "type": "string"
+                },
+                "vendor_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.CreateFinancialBody": {
+            "type": "object",
+            "required": [
+                "amount",
+                "description",
+                "settlement_type"
+            ],
+            "properties": {
+                "already_paid": {
+                    "type": "boolean"
+                },
+                "amount": {
+                    "type": "integer"
+                },
+                "charge_category": {
+                    "type": "string",
+                    "enum": [
+                        "MAINTENANCE_CHARGE",
+                        "DAMAGE_CHARGE",
+                        "UTILITY",
+                        "OTHER"
+                    ]
+                },
+                "charge_due_date": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "due_date": {
+                    "type": "string"
+                },
+                "expense_category": {
+                    "type": "string",
+                    "enum": [
+                        "REPAIRS",
+                        "UTILITIES",
+                        "INSURANCE",
+                        "LANDSCAPING",
+                        "SECURITY",
+                        "MANAGEMENT",
+                        "OTHER"
+                    ]
+                },
+                "payment_provider": {
+                    "type": "string"
+                },
+                "payment_reference": {
+                    "type": "string"
+                },
+                "settlement_type": {
+                    "type": "string",
+                    "enum": [
+                        "RECORD_ONLY",
+                        "TENANT_CHARGE",
+                        "VENDOR_EXPENSE"
+                    ]
+                },
+                "vendor_contact": {
+                    "type": "string"
+                },
+                "vendor_name": {
+                    "type": "string"
                 }
             }
         },
@@ -24053,6 +24678,78 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.UpdateExpenseBody": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string",
+                    "enum": [
+                        "REPAIRS",
+                        "UTILITIES",
+                        "INSURANCE",
+                        "LANDSCAPING",
+                        "SECURITY",
+                        "MANAGEMENT",
+                        "OTHER"
+                    ]
+                },
+                "description": {
+                    "type": "string"
+                },
+                "vendor_contact": {
+                    "type": "string"
+                },
+                "vendor_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.UpdateFinancialBody": {
+            "type": "object",
+            "properties": {
+                "charge_category": {
+                    "type": "string",
+                    "enum": [
+                        "MAINTENANCE_CHARGE",
+                        "DAMAGE_CHARGE",
+                        "UTILITY",
+                        "OTHER"
+                    ]
+                },
+                "charge_due_date": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "expense_category": {
+                    "type": "string",
+                    "enum": [
+                        "REPAIRS",
+                        "UTILITIES",
+                        "INSURANCE",
+                        "LANDSCAPING",
+                        "SECURITY",
+                        "MANAGEMENT",
+                        "OTHER"
+                    ]
+                },
+                "settlement_type": {
+                    "type": "string",
+                    "enum": [
+                        "RECORD_ONLY",
+                        "TENANT_CHARGE",
+                        "VENDOR_EXPENSE"
+                    ]
+                },
+                "vendor_contact": {
+                    "type": "string"
+                },
+                "vendor_name": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.UpdateInvoiceRequest": {
             "type": "object",
             "properties": {
@@ -24903,6 +25600,28 @@ const docTemplate = `{
                 "reason": {
                     "type": "string",
                     "example": "Entered in error"
+                }
+            }
+        },
+        "handlers.VoidExpenseBody": {
+            "type": "object",
+            "required": [
+                "reason"
+            ],
+            "properties": {
+                "reason": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.VoidFinancialBody": {
+            "type": "object",
+            "required": [
+                "reason"
+            ],
+            "properties": {
+                "reason": {
+                    "type": "string"
                 }
             }
         },
@@ -27057,12 +27776,12 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "amount": {
-                    "type": "number"
+                    "type": "integer"
                 },
-                "code": {
+                "category": {
                     "type": "string"
                 },
-                "context_maintenance_request_id": {
+                "code": {
                     "type": "string"
                 },
                 "context_type": {
@@ -27083,10 +27802,37 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "invoice": {
+                    "$ref": "#/definitions/transformations.OutputInvoice"
+                },
+                "invoice_id": {
+                    "type": "string"
+                },
+                "is_editable": {
+                    "type": "boolean"
+                },
+                "maintenance_request_id": {
+                    "type": "string"
+                },
                 "property_id": {
                     "type": "string"
                 },
+                "status": {
+                    "type": "string"
+                },
                 "updated_at": {
+                    "type": "string"
+                },
+                "vendor_contact": {
+                    "type": "string"
+                },
+                "vendor_name": {
+                    "type": "string"
+                },
+                "voided_at": {
+                    "type": "string"
+                },
+                "voided_reason": {
                     "type": "string"
                 }
             }
@@ -27866,6 +28612,53 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "maintenance_request_id": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "transformations.OutputMaintenanceRequestFinancial": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "integer"
+                },
+                "charge_instance_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by_client_user_id": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "expense_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_editable": {
+                    "type": "boolean"
+                },
+                "maintenance_request_id": {
+                    "type": "string"
+                },
+                "property_id": {
+                    "type": "string"
+                },
+                "settlement_type": {
+                    "type": "string"
+                },
+                "status": {
                     "type": "string"
                 },
                 "updated_at": {

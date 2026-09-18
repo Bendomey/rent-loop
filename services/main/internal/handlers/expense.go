@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
@@ -24,41 +25,87 @@ func NewExpenseHandler(appCtx pkg.AppContext, service services.ExpenseService) E
 // ─── Request Bodies / Query Types ─────────────────────────────────────────────
 type ListExpensesQuery struct {
 	lib.FilterQueryInput
-	ContextType *string `json:"context_type,omitempty" query:"context_type" validate:"omitempty,oneof=MAINTENANCE GENERAL" description:"Filter by context type"`
+	ContextType *string `json:"context_type,omitempty" query:"context_type" validate:"omitempty,oneof=MAINTENANCE GENERAL"                                               description:"Filter by context type"`
+	Category    *string `json:"category,omitempty"     query:"category"     validate:"omitempty,oneof=REPAIRS UTILITIES INSURANCE LANDSCAPING SECURITY MANAGEMENT OTHER" description:"Filter by category"`
 }
 
-type AddExpenseBody struct {
-	ContextType string `json:"context_type" validate:"required,oneof=MAINTENANCE"`
-	Description string `json:"description"  validate:"required"`
-	Amount      int64  `json:"amount"       validate:"required,gt=0"`
-	Currency    string `json:"currency"     validate:"omitempty"`
+// CreateExpenseBody has no context_type: a maintenance expense is created
+// through the maintenance request's financial line, never directly here.
+type CreateExpenseBody struct {
+	Category         string  `json:"category"          validate:"required,oneof=REPAIRS UTILITIES INSURANCE LANDSCAPING SECURITY MANAGEMENT OTHER"`
+	VendorName       string  `json:"vendor_name"       validate:"required"`
+	VendorContact    *string `json:"vendor_contact"    validate:"omitempty"`
+	Description      string  `json:"description"       validate:"required"`
+	Amount           int64   `json:"amount"            validate:"required,gt=0"`
+	Currency         string  `json:"currency"          validate:"omitempty"`
+	DueDate          *string `json:"due_date"          validate:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
+	AlreadyPaid      bool    `json:"already_paid"`
+	PaymentProvider  *string `json:"payment_provider"  validate:"omitempty"`
+	PaymentReference *string `json:"payment_reference" validate:"omitempty"`
+}
+
+type UpdateExpenseBody struct {
+	Description   *string `json:"description,omitempty"`
+	Category      *string `json:"category,omitempty"       validate:"omitempty,oneof=REPAIRS UTILITIES INSURANCE LANDSCAPING SECURITY MANAGEMENT OTHER"`
+	VendorName    *string `json:"vendor_name,omitempty"`
+	VendorContact *string `json:"vendor_contact,omitempty"`
+}
+
+type VoidExpenseBody struct {
+	Reason string `json:"reason" validate:"required"`
+}
+
+// optionalQueryParam returns nil for an absent or empty parameter, so an
+// unset filter stays unset rather than matching the empty string.
+func optionalQueryParam(r *http.Request, key string) *string {
+	value := r.URL.Query().Get(key)
+	if value == "" {
+		return nil
+	}
+	return &value
+}
+
+// parseOptionalRFC3339 turns an optional timestamp string into a time. The
+// validator has already rejected a malformed value, so an unparseable string
+// here can only be an absent one.
+func parseOptionalRFC3339(value *string) *time.Time {
+	if value == nil || *value == "" {
+		return nil
+	}
+	parsed, err := time.Parse(time.RFC3339, *value)
+	if err != nil {
+		return nil
+	}
+	return &parsed
 }
 
 // ─── Handlers ─────────────────────────────────────────────────────────────────
 
-// AddExpense godoc
+// CreateExpense godoc
 //
-//	@Summary		Add an expense to a property
-//	@Description	Create a new expense scoped to a property (context_type determines lease or maintenance) (Admin)
+//	@Summary		Record a general expense
+//	@Description	Record money owed to a vendor for a service provided to the property, and raise the bill for it. Set already_paid to settle it in the same step. Maintenance expenses are created through a maintenance request's financial line, not here (Admin)
 //	@Tags			Expenses
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
+//	@Param			client_id	path		string										true	"Client ID"
 //	@Param			property_id	path		string										true	"Property ID"
-//	@Param			body		body		AddExpenseBody								true	"Expense details"
+//	@Param			body		body		CreateExpenseBody							true	"Expense details"
 //	@Success		201			{object}	object{data=transformations.OutputExpense}	"Created expense"
+//	@Failure		400			{object}	lib.HTTPError								"Vendor name missing or amount not positive"
 //	@Failure		401			{object}	string										"Invalid or absent authentication token"
 //	@Failure		422			{object}	lib.HTTPError								"Validation error"
 //	@Failure		500			{object}	string										"An unexpected error occurred"
 //	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/expenses [post]
-func (h *ExpenseHandler) AddExpense(w http.ResponseWriter, r *http.Request) {
+func (h *ExpenseHandler) CreateExpense(w http.ResponseWriter, r *http.Request) {
 	currentUser, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
-	var body AddExpenseBody
+	var body CreateExpenseBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
 		return
@@ -67,13 +114,22 @@ func (h *ExpenseHandler) AddExpense(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	expense, err := h.service.AddExpense(r.Context(), services.AddExpenseInput{
-		PropertyID:   chi.URLParam(r, "property_id"),
-		ContextType:  body.ContextType,
-		Description:  body.Description,
-		Amount:       body.Amount,
-		Currency:     body.Currency,
-		ClientUserID: currentUser.ID,
+	clientID := chi.URLParam(r, "client_id")
+	expense, err := h.service.CreateExpense(r.Context(), services.CreateExpenseInput{
+		PropertyID:       chi.URLParam(r, "property_id"),
+		ClientID:         &clientID,
+		ContextType:      "GENERAL",
+		Category:         body.Category,
+		VendorName:       body.VendorName,
+		VendorContact:    body.VendorContact,
+		Description:      body.Description,
+		Amount:           body.Amount,
+		Currency:         body.Currency,
+		DueDate:          parseOptionalRFC3339(body.DueDate),
+		ClientUserID:     currentUser.ID,
+		AlreadyPaid:      body.AlreadyPaid,
+		PaymentProvider:  body.PaymentProvider,
+		PaymentReference: body.PaymentReference,
 	})
 	if err != nil {
 		HandleErrorResponse(w, err)
@@ -119,29 +175,100 @@ func (h *ExpenseHandler) GetExpense(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// DeleteExpense godoc
+// UpdateExpense godoc
 //
-//	@Summary		Delete an expense
-//	@Description	Remove an expense record scoped to a property (Admin)
+//	@Summary		Update an unpaid expense
+//	@Description	Change the description or vendor of an expense nobody has paid yet. Amount and category cannot be changed — void and recreate instead, because the journal entry already posted carries the old figure and debits the account the old category chose (Admin)
 //	@Tags			Expenses
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			property_id	path		string				true	"Property ID"
-//	@Param			expense_id	path		string				true	"Expense ID"
-//	@Success		200			{object}	object{data=bool}	"Expense deleted successfully"
-//	@Failure		401			{object}	string				"Invalid or absent authentication token"
-//	@Failure		404			{object}	lib.HTTPError		"Expense not found"
-//	@Failure		500			{object}	string				"An unexpected error occurred"
-//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/expenses/{expense_id} [delete]
-func (h *ExpenseHandler) DeleteExpense(w http.ResponseWriter, r *http.Request) {
+//	@Param			client_id	path		string										true	"Client ID"
+//	@Param			property_id	path		string										true	"Property ID"
+//	@Param			expense_id	path		string										true	"Expense ID"
+//	@Param			body		body		UpdateExpenseBody							true	"Fields to change"
+//	@Success		200			{object}	object{data=transformations.OutputExpense}	"Updated expense"
+//	@Failure		400			{object}	lib.HTTPError								"Expense is settled and frozen"
+//	@Failure		401			{object}	string										"Invalid or absent authentication token"
+//	@Failure		404			{object}	lib.HTTPError								"Expense not found"
+//	@Failure		422			{object}	lib.HTTPError								"Validation error"
+//	@Failure		500			{object}	string										"An unexpected error occurred"
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/expenses/{expense_id} [patch]
+func (h *ExpenseHandler) UpdateExpense(w http.ResponseWriter, r *http.Request) {
 	_, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
-	if err := h.service.DeleteExpense(r.Context(), chi.URLParam(r, "expense_id")); err != nil {
+	var body UpdateExpenseBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+	if !lib.ValidateRequest(h.appCtx.Validator, body, w) {
+		return
+	}
+
+	expense, err := h.service.UpdateExpense(r.Context(), services.UpdateExpenseInput{
+		ExpenseID:     chi.URLParam(r, "expense_id"),
+		Description:   body.Description,
+		Category:      body.Category,
+		VendorName:    body.VendorName,
+		VendorContact: body.VendorContact,
+	})
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBExpenseToRest(expense),
+	})
+}
+
+// VoidExpense godoc
+//
+//	@Summary		Void an expense
+//	@Description	Withdraw an unpaid expense and the bill raised for it. The invoice is voided too, which reverses the journal entry. A paid expense cannot be voided (Admin)
+//	@Tags			Expenses
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			client_id	path		string				true	"Client ID"
+//	@Param			property_id	path		string				true	"Property ID"
+//	@Param			expense_id	path		string				true	"Expense ID"
+//	@Param			body		body		VoidExpenseBody		true	"Reason for voiding"
+//	@Success		200			{object}	object{data=bool}	"Expense voided"
+//	@Failure		400			{object}	lib.HTTPError		"Expense is settled and frozen"
+//	@Failure		401			{object}	string				"Invalid or absent authentication token"
+//	@Failure		404			{object}	lib.HTTPError		"Expense not found"
+//	@Failure		422			{object}	lib.HTTPError		"Validation error"
+//	@Failure		500			{object}	string				"An unexpected error occurred"
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/expenses/{expense_id}/void [patch]
+func (h *ExpenseHandler) VoidExpense(w http.ResponseWriter, r *http.Request) {
+	currentUser, ok := lib.ClientUserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var body VoidExpenseBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+	if !lib.ValidateRequest(h.appCtx.Validator, body, w) {
+		return
+	}
+
+	err := h.service.VoidExpense(
+		r.Context(),
+		chi.URLParam(r, "expense_id"),
+		body.Reason,
+		&currentUser.ID,
+	)
+	if err != nil {
 		HandleErrorResponse(w, err)
 		return
 	}
@@ -170,11 +297,6 @@ func (h *ExpenseHandler) ListPropertyExpenses(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	var listQuery ListExpensesQuery
-	if !lib.ValidateRequest(h.appCtx.Validator, listQuery, w) {
-		return
-	}
-
 	filterQuery, err := lib.GenerateQuery(r.URL.Query())
 	if err != nil {
 		HandleErrorResponse(w, err)
@@ -185,6 +307,8 @@ func (h *ExpenseHandler) ListPropertyExpenses(w http.ResponseWriter, r *http.Req
 	propertyIDs := []string{propertyID}
 	filters := repository.ListExpensesFilter{
 		PropertyIDs: &propertyIDs,
+		ContextType: optionalQueryParam(r, "context_type"),
+		Category:    optionalQueryParam(r, "category"),
 	}
 
 	expenses, listErr := h.service.ListExpenses(r.Context(), *filterQuery, filters)
@@ -228,11 +352,6 @@ func (h *ExpenseHandler) ListExpensesAcrossProperties(w http.ResponseWriter, r *
 		return
 	}
 
-	var listQuery ListExpensesQuery
-	if !lib.ValidateRequest(h.appCtx.Validator, listQuery, w) {
-		return
-	}
-
 	filterQuery, err := lib.GenerateQuery(r.URL.Query())
 	if err != nil {
 		HandleErrorResponse(w, err)
@@ -247,66 +366,8 @@ func (h *ExpenseHandler) ListExpensesAcrossProperties(w http.ResponseWriter, r *
 	filters := repository.ListExpensesFilter{
 		PropertyIDs:  propertyIDs,
 		ClientUserID: &currentUserID,
-	}
-
-	expenses, listErr := h.service.ListExpenses(r.Context(), *filterQuery, filters)
-	count, countErr := h.service.CountExpenses(r.Context(), *filterQuery, filters)
-	if listErr != nil {
-		HandleErrorResponse(w, listErr)
-		return
-	}
-	if countErr != nil {
-		HandleErrorResponse(w, countErr)
-		return
-	}
-
-	rows := make([]any, len(expenses))
-	for i := range expenses {
-		rows[i] = transformations.DBExpenseToRest(&expenses[i])
-	}
-
-	json.NewEncoder(w).Encode(lib.ReturnListResponse(filterQuery, rows, count))
-}
-
-// ListMRExpenses godoc
-//
-//	@Summary		List expenses for a maintenance request
-//	@Description	List expenses with pagination scoped to a maintenance request (Admin)
-//	@Tags			Expenses
-//	@Accept			json
-//	@Produce		json
-//	@Security		BearerAuth
-//	@Param			property_id				path		string																								true	"Property ID"
-//	@Param			maintenance_request_id	path		string																								true	"Maintenance Request ID"
-//	@Param			q						query		ListExpensesQuery																					false	"Query parameters"
-//	@Success		200						{object}	object{data=object{rows=[]transformations.OutputExpense,meta=lib.HTTPReturnPaginatedMetaResponse}}	"Expenses"
-//	@Failure		401						{object}	string																								"Invalid or absent authentication token"
-//	@Failure		500						{object}	string																								"An unexpected error occurred"
-//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests/{maintenance_request_id}/expenses [get]
-func (h *ExpenseHandler) ListMRExpenses(w http.ResponseWriter, r *http.Request) {
-	_, ok := lib.ClientUserFromContext(r.Context())
-	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	var listQuery ListExpensesQuery
-	if !lib.ValidateRequest(h.appCtx.Validator, listQuery, w) {
-		return
-	}
-
-	filterQuery, err := lib.GenerateQuery(r.URL.Query())
-	if err != nil {
-		HandleErrorResponse(w, err)
-		return
-	}
-
-	mrID := chi.URLParam(r, "maintenance_request_id")
-	propertyID := chi.URLParam(r, "property_id")
-	propertyIDs := []string{propertyID}
-	filters := repository.ListExpensesFilter{
-		PropertyIDs:          &propertyIDs,
-		MaintenanceRequestID: &mrID,
+		ContextType:  optionalQueryParam(r, "context_type"),
+		Category:     optionalQueryParam(r, "category"),
 	}
 
 	expenses, listErr := h.service.ListExpenses(r.Context(), *filterQuery, filters)

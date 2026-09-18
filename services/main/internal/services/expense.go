@@ -5,18 +5,19 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Bendomey/rent-loop/services/main/internal/clients/accounting"
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
+	"github.com/Bendomey/rent-loop/services/main/internal/services/expenses"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 	gonanoid "github.com/matoous/go-nanoid"
-	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
 type ExpenseService interface {
-	AddExpense(ctx context.Context, input AddExpenseInput) (*models.Expense, error)
+	CreateExpense(ctx context.Context, input CreateExpenseInput) (*models.Expense, error)
+	UpdateExpense(ctx context.Context, input UpdateExpenseInput) (*models.Expense, error)
+	VoidExpense(ctx context.Context, expenseID, reason string, voidedBy *string) error
 	GetExpense(ctx context.Context, id string) (*models.Expense, error)
 	ListExpenses(
 		ctx context.Context,
@@ -28,55 +29,92 @@ type ExpenseService interface {
 		filterQuery lib.FilterQuery,
 		filters repository.ListExpensesFilter,
 	) (int64, error)
-	DeleteExpense(ctx context.Context, expenseID string) error
 }
 
 type expenseService struct {
-	appCtx            pkg.AppContext
-	repo              repository.ExpenseRepository
-	leaseRepo         repository.LeaseRepository
-	mrRepo            repository.MaintenanceRequestRepository
-	accountingService AccountingService
+	appCtx         pkg.AppContext
+	repo           repository.ExpenseRepository
+	leaseRepo      repository.LeaseRepository
+	mrRepo         repository.MaintenanceRequestRepository
+	invoiceService InvoiceService
+	paymentService PaymentService
 }
 
 type ExpenseServiceDeps struct {
-	AppCtx            pkg.AppContext
-	Repo              repository.ExpenseRepository
-	LeaseRepo         repository.LeaseRepository
-	MRRepo            repository.MaintenanceRequestRepository
-	AccountingService AccountingService
+	AppCtx         pkg.AppContext
+	Repo           repository.ExpenseRepository
+	LeaseRepo      repository.LeaseRepository
+	MRRepo         repository.MaintenanceRequestRepository
+	InvoiceService InvoiceService
+	PaymentService PaymentService
 }
 
 func NewExpenseService(deps ExpenseServiceDeps) ExpenseService {
 	return &expenseService{
-		appCtx:            deps.AppCtx,
-		repo:              deps.Repo,
-		leaseRepo:         deps.LeaseRepo,
-		mrRepo:            deps.MRRepo,
-		accountingService: deps.AccountingService,
+		appCtx:         deps.AppCtx,
+		repo:           deps.Repo,
+		leaseRepo:      deps.LeaseRepo,
+		mrRepo:         deps.MRRepo,
+		invoiceService: deps.InvoiceService,
+		paymentService: deps.PaymentService,
 	}
 }
 
 // --- Input types ---
 
-type AddExpenseInput struct {
-	PropertyID   string
-	ContextType  string // "MAINTENANCE"
-	Description  string
-	Amount       int64
-	Currency     string
-	ClientUserID string
+type CreateExpenseInput struct {
+	PropertyID    string
+	ClientID      *string
+	ContextType   string // GENERAL from a handler; MAINTENANCE only from the MRF service
+	Category      string
+	VendorName    string
+	VendorContact *string
+	Description   string
+	Amount        int64
+	Currency      string
+	DueDate       *time.Time
+	ClientUserID  string
+
+	// AlreadyPaid folds "I paid this last week" into one step: the offline
+	// payment is recorded in the same transaction, so the expense lands
+	// settled and both journal entries post together. Most general expenses
+	// are entered after the money has left.
+	AlreadyPaid      bool
+	PaymentProvider  *string
+	PaymentReference *string
+}
+
+type UpdateExpenseInput struct {
+	ExpenseID     string
+	Description   *string
+	Category      *string
+	VendorName    *string
+	VendorContact *string
+	Amount        *int64
 }
 
 // --- Implementations ---
 
-func (s *expenseService) AddExpense(ctx context.Context, input AddExpenseInput) (*models.Expense, error) {
+// CreateExpense records a debt to a vendor and raises the bill for it in one
+// transaction. The invoice is not optional: it is the only thing that posts to
+// the ledger, so an expense without one would leave the cost off the books.
+func (s *expenseService) CreateExpense(
+	ctx context.Context,
+	input CreateExpenseInput,
+) (*models.Expense, error) {
+	if input.Amount <= 0 {
+		return nil, pkg.BadRequestError("ExpenseAmountMustBePositive", nil)
+	}
+	if input.VendorName == "" {
+		return nil, pkg.BadRequestError("VendorNameRequired", nil)
+	}
+
 	nanoID, err := gonanoid.Generate("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890", 6)
 	if err != nil {
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
 			Err: err,
 			Metadata: map[string]string{
-				"function": "AddExpense",
+				"function": "CreateExpense",
 				"action":   "generating expense code",
 			},
 		})
@@ -90,80 +128,209 @@ func (s *expenseService) AddExpense(ctx context.Context, input AddExpenseInput) 
 		currency = "GHS"
 	}
 
+	outerTx, hasOuterTx := lib.TransactionFromContext(ctx)
+	hasOuterTx = hasOuterTx && outerTx != nil
+	transaction := outerTx
+	if !hasOuterTx {
+		transaction = s.appCtx.DB.Begin()
+	}
+	transCtx := lib.WithTransaction(ctx, transaction)
+
+	rollback := func() {
+		if !hasOuterTx {
+			transaction.Rollback()
+		}
+	}
+
+	vendorName := input.VendorName
 	expense := &models.Expense{
 		Code:                  code,
-		PropertyID:            input.PropertyID,
 		ContextType:           input.ContextType,
-		Category:              "REPAIRS",
+		PropertyID:            input.PropertyID,
+		Category:              input.Category,
+		VendorName:            &vendorName,
+		VendorContact:         input.VendorContact,
 		Description:           input.Description,
 		Amount:                input.Amount,
 		Currency:              currency,
 		CreatedByClientUserID: input.ClientUserID,
 	}
 
-	if err := s.repo.Create(ctx, expense); err != nil {
-		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
+	if createErr := s.repo.Create(transCtx, expense); createErr != nil {
+		rollback()
+		return nil, pkg.InternalServerError(createErr.Error(), &pkg.RentLoopErrorParams{
+			Err: createErr,
 			Metadata: map[string]string{
-				"function": "AddExpense",
+				"function": "CreateExpense",
 				"action":   "creating expense",
 			},
 		})
 	}
 
-	// Expenses used to reach Fincore by generating an invoice. Now that they
-	// bill nobody, they must post themselves — otherwise they would vanish
-	// from the landlord's books entirely and silently.
-	if postErr := s.postExpenseJournalEntry(ctx, expense); postErr != nil {
-		log.WithError(postErr).WithField("expense_code", expense.Code).
-			Error("failed to post expense journal entry")
+	invoice, invoiceErr := s.invoiceService.CreateExpenseInvoice(transCtx, CreateExpenseInvoiceInput{
+		ExpenseID:   expense.ID.String(),
+		PropertyID:  input.PropertyID,
+		ClientID:    input.ClientID,
+		Category:    input.Category,
+		VendorName:  vendorName,
+		Description: input.Description,
+		Amount:      input.Amount,
+		Currency:    currency,
+		DueDate:     input.DueDate,
+	})
+	if invoiceErr != nil {
+		rollback()
+		return nil, invoiceErr
 	}
 
-	return expense, nil
+	if input.AlreadyPaid {
+		_, payErr := s.paymentService.RecordExpensePayment(transCtx, RecordExpensePaymentInput{
+			InvoiceID:    invoice.ID.String(),
+			Amount:       input.Amount,
+			Provider:     input.PaymentProvider,
+			Reference:    input.PaymentReference,
+			ClientUserID: input.ClientUserID,
+		})
+		if payErr != nil {
+			rollback()
+			return nil, payErr
+		}
+	}
+
+	if !hasOuterTx {
+		if commitErr := transaction.Commit().Error; commitErr != nil {
+			return nil, pkg.InternalServerError(commitErr.Error(), &pkg.RentLoopErrorParams{
+				Err: commitErr,
+				Metadata: map[string]string{
+					"function": "CreateExpense",
+					"action":   "committing",
+				},
+			})
+		}
+	}
+
+	return s.GetExpense(ctx, expense.ID.String())
 }
 
-// postExpenseJournalEntry records the cost directly:
+// UpdateExpense changes the descriptive fields of a bill nobody has paid yet.
 //
-//	Dr Maintenance Expense / Cr Cash
-//
-// An Expense is money leaving the landlord, so it never touches Accounts
-// Receivable. Recharging a tenant for the same underlying event is a separate
-// DAMAGE_CHARGE on their financial account, and deliberately not derived from
-// this record — the landlord may recharge more, less, or nothing.
-func (s *expenseService) postExpenseJournalEntry(ctx context.Context, expense *models.Expense) error {
-	accounts := s.appCtx.Config.ChartOfAccounts
-	transactionDate := time.Now().Format(time.RFC3339)
+// Amount and category are deliberately not among them. Both decide what the
+// already-posted journal entry says — the amount is its value, the category
+// picks which expense account it debits — so changing either here would leave
+// the expense and the ledger disagreeing. Voiding and recreating is the honest
+// correction, and it is one action either way.
+func (s *expenseService) UpdateExpense(
+	ctx context.Context,
+	input UpdateExpenseInput,
+) (*models.Expense, error) {
+	expense, err := s.GetExpense(ctx, input.ExpenseID)
+	if err != nil {
+		return nil, err
+	}
 
-	_, err := s.accountingService.RecordInvoiceCreated(ctx, accounting.CreateJournalEntryRequest{
-		Status:          string(accounting.JournalEntryStatusPosted),
-		Reference:       expense.Code,
-		TransactionDate: &transactionDate,
-		Metadata: map[string]any{
-			"expense_id":   expense.ID.String(),
-			"expense_code": expense.Code,
-			"property_id":  expense.PropertyID,
-			"context_type": expense.ContextType,
-		},
-		Lines: []accounting.CreateJournalEntryLineRequest{
-			{
-				AccountID: accounts.MaintenanceExpenseID,
-				Debit:     expense.Amount,
-				Credit:    0,
-				Notes:     lib.StringPointer(expense.Description),
+	if !expenses.IsExpenseClean(expenses.ExpenseStatusView(expense)) {
+		return nil, pkg.BadRequestError("ExpenseIsSettledAndFrozen", nil)
+	}
+
+	if input.Amount != nil {
+		return nil, pkg.BadRequestError("VoidAndRecreateToChangeAmount", nil)
+	}
+
+	if input.Category != nil && *input.Category != expense.Category {
+		return nil, pkg.BadRequestError("VoidAndRecreateToChangeCategory", nil)
+	}
+
+	if input.Description != nil {
+		expense.Description = *input.Description
+	}
+	if input.VendorName != nil {
+		expense.VendorName = input.VendorName
+	}
+	if input.VendorContact != nil {
+		expense.VendorContact = input.VendorContact
+	}
+
+	if saveErr := s.repo.Update(ctx, expense); saveErr != nil {
+		return nil, pkg.InternalServerError(saveErr.Error(), &pkg.RentLoopErrorParams{
+			Err: saveErr,
+			Metadata: map[string]string{
+				"function": "UpdateExpense",
+				"action":   "saving expense",
 			},
-			{
-				AccountID: accounts.CashBankAccountID,
-				Debit:     0,
-				Credit:    expense.Amount,
-				Notes:     lib.StringPointer(expense.Description),
+		})
+	}
+
+	return s.GetExpense(ctx, input.ExpenseID)
+}
+
+// VoidExpense withdraws a bill and the debt it created. Voiding the invoice is
+// what reverses the journal entry, so the two must move together.
+func (s *expenseService) VoidExpense(
+	ctx context.Context,
+	expenseID, reason string,
+	voidedBy *string,
+) error {
+	expense, err := s.GetExpense(ctx, expenseID)
+	if err != nil {
+		return err
+	}
+
+	if !expenses.IsExpenseClean(expenses.ExpenseStatusView(expense)) {
+		return pkg.BadRequestError("ExpenseIsSettledAndFrozen", nil)
+	}
+
+	outerTx, hasOuterTx := lib.TransactionFromContext(ctx)
+	hasOuterTx = hasOuterTx && outerTx != nil
+	transaction := outerTx
+	if !hasOuterTx {
+		transaction = s.appCtx.DB.Begin()
+	}
+	transCtx := lib.WithTransaction(ctx, transaction)
+
+	rollback := func() {
+		if !hasOuterTx {
+			transaction.Rollback()
+		}
+	}
+
+	for i := range expense.Invoices {
+		if expense.Invoices[i].Status == "VOID" {
+			continue
+		}
+		_, voidErr := s.invoiceService.VoidInvoice(transCtx, VoidInvoiceInput{
+			InvoiceID:            expense.Invoices[i].ID.String(),
+			VoidedReason:         &reason,
+			VoidedByClientUserID: voidedBy,
+		})
+		if voidErr != nil {
+			rollback()
+			return voidErr
+		}
+	}
+
+	now := time.Now()
+	expense.VoidedAt = &now
+	expense.VoidedReason = &reason
+
+	if saveErr := s.repo.Update(transCtx, expense); saveErr != nil {
+		rollback()
+		return pkg.InternalServerError(saveErr.Error(), &pkg.RentLoopErrorParams{
+			Err: saveErr,
+			Metadata: map[string]string{
+				"function": "VoidExpense",
+				"action":   "saving expense",
 			},
-		},
-	})
-	return err
+		})
+	}
+
+	if !hasOuterTx {
+		return transaction.Commit().Error
+	}
+	return nil
 }
 
 func (s *expenseService) GetExpense(ctx context.Context, id string) (*models.Expense, error) {
-	populate := []string{"Invoices"}
+	populate := []string{"Invoices", "Financials"}
 	expense, err := s.repo.GetOne(ctx, repository.GetExpenseQuery{
 		ID:       id,
 		Populate: &populate,
@@ -188,7 +355,7 @@ func (s *expenseService) ListExpenses(
 	filterQuery lib.FilterQuery,
 	filters repository.ListExpensesFilter,
 ) ([]models.Expense, error) {
-	expenses, err := s.repo.List(ctx, filterQuery, filters)
+	results, err := s.repo.List(ctx, filterQuery, filters)
 	if err != nil {
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
 			Err: err,
@@ -198,7 +365,7 @@ func (s *expenseService) ListExpenses(
 			},
 		})
 	}
-	return *expenses, nil
+	return *results, nil
 }
 
 func (s *expenseService) CountExpenses(
@@ -217,17 +384,4 @@ func (s *expenseService) CountExpenses(
 		})
 	}
 	return count, nil
-}
-
-func (s *expenseService) DeleteExpense(ctx context.Context, expenseID string) error {
-	if err := s.repo.Delete(ctx, expenseID); err != nil {
-		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
-			Metadata: map[string]string{
-				"function": "DeleteExpense",
-				"action":   "deleting expense",
-			},
-		})
-	}
-	return nil
 }

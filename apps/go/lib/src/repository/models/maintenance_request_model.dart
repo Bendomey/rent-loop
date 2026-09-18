@@ -1,49 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
-import 'invoice_model.dart';
 
 part 'maintenance_request_model.g.dart';
-
-int? _amountFromJson(dynamic value) {
-  if (value == null) return null;
-  if (value is int) return value;
-  if (value is double) return value.round();
-  return null;
-}
-
-@JsonSerializable(explicitToJson: true)
-class MaintenanceExpenseModel {
-  final String id;
-  @JsonKey(fromJson: _amountFromJson)
-  final int? amount;
-  final String? currency;
-  final String? description;
-  @JsonKey(name: 'billable_to_tenant')
-  final bool? billableToTenant;
-  @JsonKey(name: 'paid_by')
-  final String? paidBy;
-  @JsonKey(name: 'context_type')
-  final String? contextType;
-  @JsonKey(name: 'created_at')
-  final String? createdAt;
-  final List<InvoiceModel>? invoices;
-
-  MaintenanceExpenseModel({
-    required this.id,
-    this.amount,
-    this.currency,
-    this.description,
-    this.billableToTenant,
-    this.paidBy,
-    this.contextType,
-    this.createdAt,
-    this.invoices,
-  });
-
-  factory MaintenanceExpenseModel.fromJson(Map<String, dynamic> json) =>
-      _$MaintenanceExpenseModelFromJson(json);
-
-  Map<String, dynamic> toJson() => _$MaintenanceExpenseModelToJson(this);
-}
 
 @JsonSerializable()
 class MaintenanceActivityLogModel {
@@ -100,7 +57,6 @@ class MaintenanceRequestModel {
   final String? cancellationReason;
   @JsonKey(name: 'activity_logs')
   final List<MaintenanceActivityLogModel>? activityLogs;
-  final List<MaintenanceExpenseModel>? expenses;
 
   MaintenanceRequestModel({
     required this.id,
@@ -119,7 +75,6 @@ class MaintenanceRequestModel {
     this.canceledAt,
     this.cancellationReason,
     this.activityLogs,
-    this.expenses,
   });
 
   /// Returns the latest activity log sorted by createdAt descending.

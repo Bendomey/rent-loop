@@ -8,7 +8,7 @@ import 'package:rentloop_manager/src/lib/maintenance_utils.dart';
 import 'package:rentloop_manager/src/lib/money.dart';
 import 'package:rentloop_manager/src/repository/models/maintenance_activity_log_model.dart';
 import 'package:rentloop_manager/src/repository/models/maintenance_comment_model.dart';
-import 'package:rentloop_manager/src/repository/models/maintenance_expense_model.dart';
+import 'package:rentloop_manager/src/repository/models/maintenance_financial_model.dart';
 import 'package:rentloop_manager/src/repository/models/maintenance_request_model.dart';
 import 'package:rentloop_manager/src/repository/providers/activity/maintenance_detail_provider.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
@@ -540,10 +540,10 @@ class _CommentCard extends StatelessWidget {
   }
 }
 
-// ── Expenses ──────────────────────────────────────────────────────────────────
+// ── Financials ────────────────────────────────────────────────────────────────
 
-class MaintenanceExpensesTab extends ConsumerWidget {
-  const MaintenanceExpensesTab({
+class MaintenanceFinancialsTab extends ConsumerWidget {
+  const MaintenanceFinancialsTab({
     super.key,
     required this.requestId,
     required this.propertyIdHint,
@@ -554,68 +554,75 @@ class MaintenanceExpensesTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final provider = maintenanceRequestExpensesProvider(
+    final provider = maintenanceRequestFinancialsProvider(
       requestId,
       propertyIdHint,
     );
-    final expensesAsync = ref.watch(provider);
+    final financialsAsync = ref.watch(provider);
 
-    if (!expensesAsync.hasValue && expensesAsync.isLoading) {
+    if (!financialsAsync.hasValue && financialsAsync.isLoading) {
       return const _TabSkeleton(rows: 2);
     }
-    if (expensesAsync.hasError && !expensesAsync.hasValue) {
+    if (financialsAsync.hasError && !financialsAsync.hasValue) {
       return RLSectionError(
-        title: "Couldn't load expenses",
+        title: "Couldn't load financials",
         compact: true,
         onRetry: () => ref.invalidate(provider),
       );
     }
 
-    final expenses = expensesAsync.valueOrNull ?? const [];
+    final financials = financialsAsync.valueOrNull ?? const [];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         RLBtn(
-          label: 'Add expense',
+          label: 'Log financial',
           kind: RLBtnKind.light,
           icon: Icons.add_rounded,
           full: true,
           onPressed: () async {
             await Haptics.vibrate(HapticsType.selection);
-            if (context.mounted) _notYet(ref, 'Adding expenses');
+            if (context.mounted) _notYet(ref, 'Logging financials');
           },
         ),
         const SizedBox(height: 12),
-        if (expenses.isEmpty)
-          const _TabEmpty(message: 'No expenses recorded.')
+        if (financials.isEmpty)
+          const _TabEmpty(message: 'No financials recorded.')
         else
-          _ExpenseList(expenses: expenses),
+          _FinancialList(financials: financials),
       ],
     );
   }
 }
 
-class _ExpenseList extends StatelessWidget {
-  const _ExpenseList({required this.expenses});
+class _FinancialList extends StatelessWidget {
+  const _FinancialList({required this.financials});
 
-  final List<MaintenanceExpenseModel> expenses;
+  final List<MaintenanceFinancialModel> financials;
 
   @override
   Widget build(BuildContext context) {
-    // Expenses on one request share a currency in practice; the first row's
+    // Lines on one request share a currency in practice; the first row's
     // code labels the total rather than assuming a hardcoded currency.
-    final currency = expenses.first.currency;
-    final total = expenses.fold<num>(0, (sum, e) => sum + e.amount);
+    final currency = financials.first.currency;
+    // Voided lines are excluded: a withdrawn cost is not part of what the
+    // request cost.
+    final total = financials
+        .where((f) => f.status != 'VOIDED')
+        .fold<num>(0, (sum, f) => sum + f.amount);
 
     return RLCard(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         children: [
-          for (var i = 0; i < expenses.length; i++)
+          for (var i = 0; i < financials.length; i++)
             // The last row drops its divider — the Total's own top border
             // already separates it, and both would read as a double rule.
-            _ExpenseRow(expense: expenses[i], last: i == expenses.length - 1),
+            _FinancialRow(
+              financial: financials[i],
+              last: i == financials.length - 1,
+            ),
           Container(
             padding: const EdgeInsets.symmetric(vertical: 13),
             decoration: const BoxDecoration(
@@ -652,11 +659,15 @@ class _ExpenseList extends StatelessWidget {
   }
 }
 
-class _ExpenseRow extends StatelessWidget {
-  const _ExpenseRow({required this.expense, required this.last});
+class _FinancialRow extends StatelessWidget {
+  const _FinancialRow({required this.financial, required this.last});
 
-  final MaintenanceExpenseModel expense;
+  final MaintenanceFinancialModel financial;
   final bool last;
+
+  /// Voided lines read as struck-through rather than hidden: a landlord
+  /// looking for a cost they remember logging should find it, marked.
+  bool get _voided => financial.status == 'VOIDED';
 
   @override
   Widget build(BuildContext context) {
@@ -675,34 +686,35 @@ class _ExpenseRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  expense.description,
-                  style: const TextStyle(
+                  financial.description,
+                  style: TextStyle(
                     fontFamily: RLTokens.fontSans,
                     fontSize: 14,
                     fontWeight: RLTokens.semibold,
-                    color: RLTokens.ink,
+                    color: _voided ? RLTokens.micro : RLTokens.ink,
+                    decoration: _voided ? TextDecoration.lineThrough : null,
                   ),
                 ),
-                const SizedBox(height: 3),
-                Text(
-                  '${expense.code} · ${_timestamp(expense.createdAt)}',
-                  style: const TextStyle(
-                    fontFamily: RLTokens.fontMono,
-                    fontSize: 10.5,
-                    color: RLTokens.micro,
-                  ),
+                const SizedBox(height: 5),
+                Row(
+                  children: [
+                    _Pill(label: financial.settlementLabel),
+                    const SizedBox(width: 6),
+                    _Pill(label: financial.statusLabel),
+                  ],
                 ),
               ],
             ),
           ),
           const SizedBox(width: 12),
           Text(
-            _money(expense.amount, expense.currency),
-            style: const TextStyle(
+            _money(financial.amount, financial.currency),
+            style: TextStyle(
               fontFamily: RLTokens.fontSans,
               fontSize: 14,
               fontWeight: RLTokens.semibold,
-              color: RLTokens.ink,
+              color: _voided ? RLTokens.micro : RLTokens.ink,
+              decoration: _voided ? TextDecoration.lineThrough : null,
             ),
           ),
         ],
@@ -711,12 +723,38 @@ class _ExpenseRow extends StatelessWidget {
   }
 }
 
-/// Expense amounts arrive in major units already (unlike invoice/payment
-/// figures, which are integer pesewas), and are shown to the pesewa rather
-/// than rounded — a repair bill's decimals matter.
+class _Pill extends StatelessWidget {
+  const _Pill({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      decoration: BoxDecoration(
+        color: RLTokens.hairlineSoft,
+        borderRadius: BorderRadius.circular(100),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontFamily: RLTokens.fontSans,
+          fontSize: 10.5,
+          fontWeight: RLTokens.semibold,
+          color: RLTokens.micro,
+        ),
+      ),
+    );
+  }
+}
+
+/// Amounts are integer pesewas, like every other figure the API returns, and
+/// are shown to the pesewa rather than rounded — a repair bill's decimals
+/// matter.
 String _money(num amount, String currency) {
   final symbol = currencySymbol(currency);
-  return '$symbol ${NumberFormat('#,##0.00').format(amount)}';
+  return '$symbol ${NumberFormat('#,##0.00').format(pesewasToCedis(amount.toInt()))}';
 }
 
 // ── Shared tab states ─────────────────────────────────────────────────────────

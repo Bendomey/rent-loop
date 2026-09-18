@@ -1,10 +1,17 @@
 /**
- * D1 — the property invoice list shows issued invoices and hides voided ones.
+ * D1 — the property invoice list resolves invoices to their property.
  *
  * This is the failure the financials migration runbook warned about most
  * loudly: if invoices stop resolving to a property, the PM's list silently
  * returns empty — no error, just missing money. It was verified by hand once
  * during the rehearsal; this case makes it a standing guard.
+ *
+ * A voided invoice stays in the list, marked Cancelled, rather than
+ * disappearing: the list filters by status only when asked to, and "Void" is
+ * one of the status filters a PM can pick. Hiding it would leave a landlord
+ * unable to answer "what happened to that bill?" — the case therefore asserts
+ * it is still findable and correctly marked, which an earlier version of this
+ * spec had backwards.
  *
  * Both invoices are created by this run and looked up by their own codes, so
  * the assertions never depend on what else the property holds.
@@ -22,7 +29,7 @@ import { expect, test } from '../lib/test'
 
 const BILL_TIMEOUT = 45_000
 
-test('the property invoice list shows issued invoices and hides voided ones', async ({
+test('the property invoice list shows issued invoices and marks voided ones', async ({
 	page,
 }) => {
 	const s = readRunState()
@@ -90,6 +97,9 @@ test('the property invoice list shows issued invoices and hides voided ones', as
 		timeout: 20_000,
 	})
 
+	// The voided one is still listed, and says so.
 	await search.fill(doomed.code)
-	await expect(page.getByText(doomed.code)).toHaveCount(0, { timeout: 20_000 })
+	const doomedRow = page.getByRole('row').filter({ hasText: doomed.code })
+	await expect(doomedRow).toHaveCount(1, { timeout: 20_000 })
+	await expect(doomedRow).toContainText('Cancelled')
 })

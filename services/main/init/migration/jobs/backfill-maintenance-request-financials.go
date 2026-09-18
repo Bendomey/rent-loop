@@ -6,7 +6,17 @@ import (
 )
 
 // BackfillMaintenanceRequestFinancials gives every legacy maintenance expense
-// the line it never had. Those rows were always landlord-to-vendor costs; the
+// the line it never had.
+//
+// Soft-deleted expenses get a line too, carrying the same deleted_at. The
+// next job drops expenses.context_maintenance_request_id, so a deleted row
+// skipped here would lose its link to the request for good and come back
+// orphaned if it were ever restored.
+//
+// gen_random_uuid rather than uuid_generate_v4: the latter comes from
+// uuid-ossp, which Supabase installs into the extensions schema, so an
+// unqualified call resolves only if the connection's search_path happens to
+// include it. The DSN sets no search_path. gen_random_uuid is in pg_catalog. Those rows were always landlord-to-vendor costs; the
 // old model simply had nowhere to record what they belonged to beyond a
 // foreign key that is about to be dropped.
 func BackfillMaintenanceRequestFinancials() *gormigrate.Migration {
@@ -15,24 +25,23 @@ func BackfillMaintenanceRequestFinancials() *gormigrate.Migration {
 		Migrate: func(db *gorm.DB) error {
 			return db.Exec(`
 				INSERT INTO maintenance_request_financials (
-					id, created_at, updated_at,
+					id, created_at, updated_at, deleted_at,
 					maintenance_request_id, property_id,
 					description, amount, currency,
 					settlement_type, expense_id,
 					created_by_client_user_id
 				)
 				SELECT
-					uuid_generate_v4(), e.created_at, e.updated_at,
+					gen_random_uuid(), e.created_at, e.updated_at, e.deleted_at,
 					e.context_maintenance_request_id, e.property_id,
 					e.description, e.amount, e.currency,
 					'VENDOR_EXPENSE', e.id,
 					e.created_by_client_user_id
 				FROM expenses e
-				WHERE e.deleted_at IS NULL
-				  AND e.context_maintenance_request_id IS NOT NULL
+				WHERE e.context_maintenance_request_id IS NOT NULL
 				  AND NOT EXISTS (
 					SELECT 1 FROM maintenance_request_financials f
-					WHERE f.expense_id = e.id AND f.deleted_at IS NULL
+					WHERE f.expense_id = e.id
 				  )
 			`).Error
 		},

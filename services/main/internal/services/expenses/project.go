@@ -20,3 +20,32 @@ func ExpenseStatusView(e *models.Expense) ExpenseView {
 	}
 	return view
 }
+
+// FinancialStatusView projects a financial line and whichever link it carries
+// onto the derivation input. It lives here for the same reason
+// ExpenseStatusView does: the service and the serialiser must not be able to
+// answer "is this editable?" differently.
+//
+// ChargeInstance and Expense (with Expense.Invoices) must be preloaded, or a
+// settled line reads as outstanding.
+func FinancialStatusView(f *models.MaintenanceRequestFinancial) FinancialView {
+	view := FinancialView{
+		SettlementType: f.SettlementType,
+		Amount:         f.Amount,
+	}
+
+	if f.ChargeInstance != nil {
+		view.Charge = &ChargeLinkView{
+			InvoicedAmount: f.ChargeInstance.InvoicedAmount,
+			SettledAmount:  f.ChargeInstance.SettledAmount,
+			VoidedAt:       f.ChargeInstance.VoidedAt,
+		}
+	}
+
+	if f.Expense != nil {
+		expenseView := ExpenseStatusView(f.Expense)
+		view.Expense = &expenseView
+	}
+
+	return view
+}

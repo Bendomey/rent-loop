@@ -6,39 +6,40 @@ import (
 )
 
 type Handlers struct {
-	NotificationHandler           NotificationHandler
-	AuthHandler                   AuthHandler
-	AdminHandler                  AdminHandler
-	UserHandler                   UserHandler
-	SessionHandler                SessionHandler
-	AnalyticsHandler              AnalyticsHandler
-	ClientApplicationHandler      ClientApplicationHandler
-	ClientHandler                 ClientHandler
-	ClientUserHandler             ClientUserHandler
-	PropertyHandler               PropertyHandler
-	ClientUserPropertyHandler     ClientUserPropertyHandler
-	DocumentHandler               DocumentHandler
-	PropertyBlockHandler          PropertyBlockHandler
-	UnitHandler                   UnitHandler
-	TenantApplicationHandler      TenantApplicationHandler
-	TenantHandler                 TenantHandler
-	TenantAccountHandler          TenantAccountHandler
-	LeaseHandler                  LeaseHandler
-	PaymentAccountHandler         PaymentAccountHandler
-	InvoiceHandler                InvoiceHandler
-	PaymentHandler                PaymentHandler
-	SigningHandler                SigningHandler
-	LeaseChecklistHandler         LeaseChecklistHandler
-	ChecklistTemplateHandler      ChecklistTemplateHandler
-	AnnouncementHandler           AnnouncementHandler
-	MaintenanceRequestHandler     MaintenanceRequestHandler
-	ExpenseHandler                ExpenseHandler
-	FinancialAccountHandler       FinancialAccountHandler
-	DevHandler                    DevHandler
-	AgreementHandler              AgreementHandler
-	BookingHandler                BookingHandler
-	LeaseTerminationHandler       LeaseTerminationHandler
-	LeaseAgreementDocumentHandler LeaseAgreementDocumentHandler
+	NotificationHandler                NotificationHandler
+	AuthHandler                        AuthHandler
+	AdminHandler                       AdminHandler
+	UserHandler                        UserHandler
+	SessionHandler                     SessionHandler
+	AnalyticsHandler                   AnalyticsHandler
+	ClientApplicationHandler           ClientApplicationHandler
+	ClientHandler                      ClientHandler
+	ClientUserHandler                  ClientUserHandler
+	PropertyHandler                    PropertyHandler
+	ClientUserPropertyHandler          ClientUserPropertyHandler
+	DocumentHandler                    DocumentHandler
+	PropertyBlockHandler               PropertyBlockHandler
+	UnitHandler                        UnitHandler
+	TenantApplicationHandler           TenantApplicationHandler
+	TenantHandler                      TenantHandler
+	TenantAccountHandler               TenantAccountHandler
+	LeaseHandler                       LeaseHandler
+	PaymentAccountHandler              PaymentAccountHandler
+	InvoiceHandler                     InvoiceHandler
+	PaymentHandler                     PaymentHandler
+	SigningHandler                     SigningHandler
+	LeaseChecklistHandler              LeaseChecklistHandler
+	ChecklistTemplateHandler           ChecklistTemplateHandler
+	AnnouncementHandler                AnnouncementHandler
+	MaintenanceRequestHandler          MaintenanceRequestHandler
+	ExpenseHandler                     ExpenseHandler
+	MaintenanceRequestFinancialHandler MaintenanceRequestFinancialHandler
+	FinancialAccountHandler            FinancialAccountHandler
+	DevHandler                         DevHandler
+	AgreementHandler                   AgreementHandler
+	BookingHandler                     BookingHandler
+	LeaseTerminationHandler            LeaseTerminationHandler
+	LeaseAgreementDocumentHandler      LeaseAgreementDocumentHandler
 }
 
 func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
@@ -81,6 +82,11 @@ func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
 		services.TenantAccountService,
 	)
 	expenseHandler := NewExpenseHandler(appCtx, services.ExpenseService)
+	maintenanceRequestFinancialHandler := NewMaintenanceRequestFinancialHandler(
+		appCtx,
+		services.MaintenanceRequestFinancialService,
+		services.TenantAccountService,
+	)
 	financialAccountHandler := NewFinancialAccountHandler(
 		appCtx,
 		services.Financials,
@@ -98,38 +104,39 @@ func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
 	leaseAgreementDocumentHandler := NewLeaseAgreementDocumentHandler(appCtx, services.LeaseAgreementDocumentService)
 
 	return Handlers{
-		NotificationHandler:           notificationHandler,
-		AuthHandler:                   authHandler,
-		AnalyticsHandler:              analyticsHandler,
-		ClientApplicationHandler:      clientApplicationHandler,
-		ClientHandler:                 clientHandler,
-		AdminHandler:                  adminHandler,
-		UserHandler:                   userHandler,
-		SessionHandler:                sessionHandler,
-		ClientUserHandler:             clientUserHandler,
-		PropertyHandler:               propertyHandler,
-		ClientUserPropertyHandler:     clientUserPropertyHandler,
-		DocumentHandler:               documentHandler,
-		PropertyBlockHandler:          propertyBlockHandler,
-		UnitHandler:                   unitHandler,
-		TenantApplicationHandler:      tenantApplicationHandler,
-		TenantHandler:                 tenantHandler,
-		TenantAccountHandler:          tenantAccountHandler,
-		LeaseHandler:                  leaseHandler,
-		PaymentAccountHandler:         paymentAccountHandler,
-		InvoiceHandler:                invoiceHandler,
-		PaymentHandler:                paymentHandler,
-		SigningHandler:                signingHandler,
-		LeaseChecklistHandler:         leaseChecklistHandler,
-		ChecklistTemplateHandler:      checklistTemplateHandler,
-		AnnouncementHandler:           announcementHandler,
-		MaintenanceRequestHandler:     maintenanceRequestHandler,
-		ExpenseHandler:                expenseHandler,
-		FinancialAccountHandler:       financialAccountHandler,
-		DevHandler:                    devHandler,
-		AgreementHandler:              agreementHandler,
-		BookingHandler:                bookingHandler,
-		LeaseTerminationHandler:       leaseTerminationHandler,
-		LeaseAgreementDocumentHandler: leaseAgreementDocumentHandler,
+		NotificationHandler:                notificationHandler,
+		AuthHandler:                        authHandler,
+		AnalyticsHandler:                   analyticsHandler,
+		ClientApplicationHandler:           clientApplicationHandler,
+		ClientHandler:                      clientHandler,
+		AdminHandler:                       adminHandler,
+		UserHandler:                        userHandler,
+		SessionHandler:                     sessionHandler,
+		ClientUserHandler:                  clientUserHandler,
+		PropertyHandler:                    propertyHandler,
+		ClientUserPropertyHandler:          clientUserPropertyHandler,
+		DocumentHandler:                    documentHandler,
+		PropertyBlockHandler:               propertyBlockHandler,
+		UnitHandler:                        unitHandler,
+		TenantApplicationHandler:           tenantApplicationHandler,
+		TenantHandler:                      tenantHandler,
+		TenantAccountHandler:               tenantAccountHandler,
+		LeaseHandler:                       leaseHandler,
+		PaymentAccountHandler:              paymentAccountHandler,
+		InvoiceHandler:                     invoiceHandler,
+		PaymentHandler:                     paymentHandler,
+		SigningHandler:                     signingHandler,
+		LeaseChecklistHandler:              leaseChecklistHandler,
+		ChecklistTemplateHandler:           checklistTemplateHandler,
+		AnnouncementHandler:                announcementHandler,
+		MaintenanceRequestHandler:          maintenanceRequestHandler,
+		ExpenseHandler:                     expenseHandler,
+		MaintenanceRequestFinancialHandler: maintenanceRequestFinancialHandler,
+		FinancialAccountHandler:            financialAccountHandler,
+		DevHandler:                         devHandler,
+		AgreementHandler:                   agreementHandler,
+		BookingHandler:                     bookingHandler,
+		LeaseTerminationHandler:            leaseTerminationHandler,
+		LeaseAgreementDocumentHandler:      leaseAgreementDocumentHandler,
 	}
 }

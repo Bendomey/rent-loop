@@ -6,36 +6,6 @@ part of 'maintenance_request_model.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-MaintenanceExpenseModel _$MaintenanceExpenseModelFromJson(
-        Map<String, dynamic> json) =>
-    MaintenanceExpenseModel(
-      id: json['id'] as String,
-      amount: _amountFromJson(json['amount']),
-      currency: json['currency'] as String?,
-      description: json['description'] as String?,
-      billableToTenant: json['billable_to_tenant'] as bool?,
-      paidBy: json['paid_by'] as String?,
-      contextType: json['context_type'] as String?,
-      createdAt: json['created_at'] as String?,
-      invoices: (json['invoices'] as List<dynamic>?)
-          ?.map((e) => InvoiceModel.fromJson(e as Map<String, dynamic>))
-          .toList(),
-    );
-
-Map<String, dynamic> _$MaintenanceExpenseModelToJson(
-        MaintenanceExpenseModel instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'amount': instance.amount,
-      'currency': instance.currency,
-      'description': instance.description,
-      'billable_to_tenant': instance.billableToTenant,
-      'paid_by': instance.paidBy,
-      'context_type': instance.contextType,
-      'created_at': instance.createdAt,
-      'invoices': instance.invoices?.map((e) => e.toJson()).toList(),
-    };
-
 MaintenanceActivityLogModel _$MaintenanceActivityLogModelFromJson(
         Map<String, dynamic> json) =>
     MaintenanceActivityLogModel(
@@ -84,10 +54,6 @@ MaintenanceRequestModel _$MaintenanceRequestModelFromJson(
           ?.map((e) =>
               MaintenanceActivityLogModel.fromJson(e as Map<String, dynamic>))
           .toList(),
-      expenses: (json['expenses'] as List<dynamic>?)
-          ?.map((e) =>
-              MaintenanceExpenseModel.fromJson(e as Map<String, dynamic>))
-          .toList(),
     );
 
 Map<String, dynamic> _$MaintenanceRequestModelToJson(
@@ -109,5 +75,4 @@ Map<String, dynamic> _$MaintenanceRequestModelToJson(
       'canceled_at': instance.canceledAt,
       'cancellation_reason': instance.cancellationReason,
       'activity_logs': instance.activityLogs,
-      'expenses': instance.expenses,
     };

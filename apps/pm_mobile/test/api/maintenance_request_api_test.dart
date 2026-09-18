@@ -68,51 +68,70 @@ void main() {
       );
     });
 
-    test('expenses request no relations', () async {
+    test('financials request no relations', () async {
       final api = _RecordingApi();
-      await api.getExpenses(
+      await api.getFinancials(
         clientId: _args.clientId,
         propertyId: _args.propertyId,
         requestId: _args.requestId,
       );
 
-      // Deliberate: the web portal populates `Invoices` here, but the mobile
-      // expenses tab shows only amount/description/date, so requesting them
-      // would be dead payload.
+      // Deliberate: the tab renders description, settlement, status and
+      // amount, all of which the line carries itself, so populating the
+      // charge or expense behind it would be dead payload.
       expect(api.paths.single, isNot(contains('populate=')));
     });
 
-    test('the single request populates assets, assignees and creators', () async {
-      final api = _RecordingApi()
-        ..nextBody = {
-          'data': {
-            'id': 'r1',
-            'code': 'ABC',
-            'title': 'T',
-            'category': 'OTHER',
-            'priority': 'LOW',
-            'status': 'NEW',
-            'property_id': 'p1',
-          },
-        };
-      await api.getMaintenanceRequest(
+    test('financials hits the financials sub-resource, not expenses', () async {
+      final api = _RecordingApi();
+      await api.getFinancials(
         clientId: _args.clientId,
         propertyId: _args.propertyId,
         requestId: _args.requestId,
       );
 
-      final path = api.paths.single;
-      for (final relation in [
-        'Assets',
-        'Assets.Unit',
-        'Assets.PropertyBlock',
-        'AssignedWorker.User',
-        'AssignedManager.User',
-        'CreatedByTenant',
-        'CreatedByClientUser.User',
-      ]) {
-        expect(path, contains(relation), reason: 'missing populate=$relation');
-      }
+      expect(api.paths.single, contains('/financials?'));
+      expect(api.paths.single, isNot(contains('/expenses')));
     });
+
+    test(
+      'the single request populates assets, assignees and creators',
+      () async {
+        final api = _RecordingApi()
+          ..nextBody = {
+            'data': {
+              'id': 'r1',
+              'code': 'ABC',
+              'title': 'T',
+              'category': 'OTHER',
+              'priority': 'LOW',
+              'status': 'NEW',
+              'property_id': 'p1',
+            },
+          };
+        await api.getMaintenanceRequest(
+          clientId: _args.clientId,
+          propertyId: _args.propertyId,
+          requestId: _args.requestId,
+        );
+
+        final path = api.paths.single;
+        for (final relation in [
+          'Assets',
+          'Assets.Unit',
+          'Assets.PropertyBlock',
+          'AssignedWorker.User',
+          'AssignedManager.User',
+          'CreatedByTenant',
+          'CreatedByClientUser.User',
+        ]) {
+          expect(
+            path,
+            contains(relation),
+            reason: 'missing populate=$relation',
+          );
+        }
+      },
+    );
   });
 }

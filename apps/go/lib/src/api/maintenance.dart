@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:rentloop_go/src/api/root.dart';
 import 'package:rentloop_go/src/architecture/architecture.dart';
+import 'package:rentloop_go/src/repository/models/maintenance_request_financial_model.dart';
 import 'package:rentloop_go/src/repository/models/maintenance_request_model.dart';
 
 part 'maintenance.g.dart';
@@ -127,12 +128,34 @@ class MaintenanceApi extends AbstractApi {
     final response = await execute(
       method: 'GET',
       path:
-          '/api/v1/leases/$leaseId/maintenance-requests/$id?populate=ActivityLogs,Expenses,Expenses.Invoices',
+          '/api/v1/leases/$leaseId/maintenance-requests/$id?populate=ActivityLogs',
     );
     final json = jsonDecode(response.body) as Map<String, dynamic>;
     return MaintenanceRequestModel.fromJson(
       json['data'] as Map<String, dynamic>,
     );
+  }
+
+  /// The charges this request raised against the caller.
+  ///
+  /// Only TENANT_CHARGE lines on the caller's own account come back — the
+  /// filtering happens in the query server-side, not in the response shape.
+  Future<List<MaintenanceRequestFinancialModel>>
+  getMaintenanceRequestFinancials(String leaseId, String requestId) async {
+    final response = await execute(
+      method: 'GET',
+      path:
+          '/api/v1/leases/$leaseId/maintenance-requests/$requestId/financials?page_size=100',
+    );
+    final json = jsonDecode(response.body) as Map<String, dynamic>;
+    final data = json['data'] as Map<String, dynamic>;
+    return (data['rows'] as List<dynamic>)
+        .map(
+          (e) => MaintenanceRequestFinancialModel.fromJson(
+            e as Map<String, dynamic>,
+          ),
+        )
+        .toList();
   }
 
   Future<Map<String, int>> getMaintenanceRequestStats(String leaseId) async {
