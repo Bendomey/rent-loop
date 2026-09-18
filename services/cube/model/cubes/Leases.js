@@ -29,6 +29,15 @@ cube(`Leases`, {
       filters: [{ sql: `${CUBE}.status = 'Lease.Status.Active'` }],
     },
 
+    // A renewed lease stays Active until its own term ends, so its renewal can
+    // be Active alongside it — counting leases would count that tenant twice.
+    activeTenantCount: {
+      sql: `tenant_id`,
+      type: `countDistinct`,
+      title: `Active Tenants`,
+      filters: [{ sql: `${CUBE}.status = 'Lease.Status.Active'` }],
+    },
+
     pendingCount: {
       type: `count`,
       title: `Pending Leases`,

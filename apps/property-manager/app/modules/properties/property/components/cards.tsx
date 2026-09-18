@@ -18,7 +18,7 @@ interface TotalsRow {
 }
 
 interface LeaseRow {
-	'Leases.activeCount': string | null
+	'Leases.activeTenantCount': string | null
 }
 
 interface TenantApplicationRow {
@@ -68,12 +68,12 @@ export function PropertySectionCards({ propertyId }: Props) {
 		},
 	)
 
-	// Active lease count — powers All Tenants
+	// Distinct tenants on an active lease — powers All Tenants
 	const leaseQuery = useCubeQuery<LeaseRow>(
 		token,
-		['prop-active-leases', propertyId],
+		['prop-active-tenants', propertyId],
 		{
-			measures: ['Leases.activeCount'],
+			measures: ['Leases.activeTenantCount'],
 			filters: [leaseFilter],
 		},
 	)
@@ -124,7 +124,9 @@ export function PropertySectionCards({ propertyId }: Props) {
 	const totalsRow = totalsQuery.data?.[0]
 	const totalRevenue = parseNum(totalsRow?.['Invoices.paidAmount'])
 
-	const activeTenants = parseNum(leaseQuery.data?.[0]?.['Leases.activeCount'])
+	const activeTenants = parseNum(
+		leaseQuery.data?.[0]?.['Leases.activeTenantCount'],
+	)
 
 	const pendingApplications = parseNum(
 		applicationsQuery.data?.[0]?.['TenantApplications.inProgressCount'],
@@ -176,7 +178,7 @@ export function PropertySectionCards({ propertyId }: Props) {
 					</CardTitle>
 				</CardHeader>
 				<CardFooter className="text-muted-foreground text-xs">
-					Currently active leases
+					Tenants on an active lease
 				</CardFooter>
 			</Card>
 
