@@ -25,9 +25,7 @@ type Expense struct {
 
 	// REPAIRS | UTILITIES | INSURANCE | LANDSCAPING | SECURITY | MANAGEMENT | OTHER
 	//
-	// The default exists for AutoMigrate, which runs before the migration jobs
-	// and cannot add a NOT NULL column to a populated table without one.
-	// BackfillExpenseContextAndCategory then corrects the maintenance rows.
+	// The default let AutoMigrate add this NOT NULL column to a populated table.
 	Category string `gorm:"not null;index;default:'OTHER'"`
 
 	// Nullable in the database, required by the create validator. Rows

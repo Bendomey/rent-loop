@@ -79,20 +79,6 @@ interface MaintenanceRequestActivityLog {
 	updated_at: string
 }
 
-interface MaintenanceExpense {
-	id: string
-	code: string
-	context_type: string
-	context_maintenance_request_id: string
-	description: string
-	amount: number
-	currency: string
-	invoices: Invoice[]
-	created_by_client_user_id: string
-	created_at: string
-	updated_at: string
-}
-
 interface MaintenanceRequestComment {
 	id: string
 	maintenance_request_id: string
@@ -118,10 +104,6 @@ interface FetchMaintenanceRequestFilter {
 interface FetchMaintenanceRequestActivityLogFilter {
 	action?: MaintenanceRequestActivityLog['action']
 	performed_by_client_user_id?: string
-}
-
-interface FetchMaintenanceExpenseFilter {
-	// intentionally empty — filters to be added as needed
 }
 
 interface FetchMaintenanceRequestCommentFilter {

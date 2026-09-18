@@ -288,8 +288,6 @@ func NewServices(params INewServicesParams) Services {
 	expenseService := NewExpenseService(ExpenseServiceDeps{
 		AppCtx:         params.AppCtx,
 		Repo:           params.Repository.ExpenseRepository,
-		LeaseRepo:      params.Repository.LeaseRepository,
-		MRRepo:         params.Repository.MaintenanceRequestRepository,
 		InvoiceService: invoiceService,
 		PaymentService: paymentService,
 	})
