@@ -34,8 +34,6 @@ type ExpenseService interface {
 type expenseService struct {
 	appCtx         pkg.AppContext
 	repo           repository.ExpenseRepository
-	leaseRepo      repository.LeaseRepository
-	mrRepo         repository.MaintenanceRequestRepository
 	invoiceService InvoiceService
 	paymentService PaymentService
 }
@@ -43,8 +41,6 @@ type expenseService struct {
 type ExpenseServiceDeps struct {
 	AppCtx         pkg.AppContext
 	Repo           repository.ExpenseRepository
-	LeaseRepo      repository.LeaseRepository
-	MRRepo         repository.MaintenanceRequestRepository
 	InvoiceService InvoiceService
 	PaymentService PaymentService
 }
@@ -53,8 +49,6 @@ func NewExpenseService(deps ExpenseServiceDeps) ExpenseService {
 	return &expenseService{
 		appCtx:         deps.AppCtx,
 		repo:           deps.Repo,
-		leaseRepo:      deps.LeaseRepo,
-		mrRepo:         deps.MRRepo,
 		invoiceService: deps.InvoiceService,
 		paymentService: deps.PaymentService,
 	}

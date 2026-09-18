@@ -30,19 +30,6 @@ type MaintenanceRequestRepository interface {
 		filterQuery lib.FilterQuery,
 		filters ListMaintenanceRequestActivityLogsFilter,
 	) (int64, error)
-	CreateExpense(ctx context.Context, expense *models.Expense) error
-	ListExpenses(
-		ctx context.Context,
-		filterQuery lib.FilterQuery,
-		filters ListMaintenanceExpensesFilter,
-	) (*[]models.Expense, error)
-	CountExpenses(
-		ctx context.Context,
-		filterQuery lib.FilterQuery,
-		filters ListMaintenanceExpensesFilter,
-	) (int64, error)
-	DeleteExpense(ctx context.Context, expenseID string) error
-	UpdateExpense(ctx context.Context, expense *models.Expense) error
 	CreateComment(ctx context.Context, comment *models.MaintenanceRequestComment) error
 	GetComment(ctx context.Context, id string) (*models.MaintenanceRequestComment, error)
 	ListComments(
@@ -92,10 +79,6 @@ type ListMaintenanceRequestActivityLogsFilter struct {
 	MaintenanceRequestID    string
 	Action                  *string
 	PerformedByClientUserID *string
-}
-
-type ListMaintenanceExpensesFilter struct {
-	MaintenanceRequestID string
 }
 
 type ListMaintenanceRequestCommentsFilter struct {
@@ -252,60 +235,6 @@ func (r *maintenanceRequestRepository) CountActivityLogs(
 		return 0, result.Error
 	}
 	return count, nil
-}
-
-func (r *maintenanceRequestRepository) CreateExpense(ctx context.Context, expense *models.Expense) error {
-	return lib.ResolveDB(ctx, r.DB).WithContext(ctx).Create(expense).Error
-}
-
-func (r *maintenanceRequestRepository) ListExpenses(
-	ctx context.Context,
-	filterQuery lib.FilterQuery,
-	filters ListMaintenanceExpensesFilter,
-) (*[]models.Expense, error) {
-	var expenses []models.Expense
-	result := lib.ResolveDB(ctx, r.DB).WithContext(ctx).
-		Scopes(
-			DateRangeScope("expenses", filterQuery.DateRange),
-			SearchScope("expenses", filterQuery.Search),
-			expenseRequestScope(filters.MaintenanceRequestID),
-			PaginationScope(filterQuery.Page, filterQuery.PageSize),
-			OrderScope("expenses", filterQuery.OrderBy, filterQuery.Order),
-		).
-		Preload("Invoices").
-		Find(&expenses)
-	if result.Error != nil {
-		return nil, result.Error
-	}
-	return &expenses, nil
-}
-
-func (r *maintenanceRequestRepository) CountExpenses(
-	ctx context.Context,
-	filterQuery lib.FilterQuery,
-	filters ListMaintenanceExpensesFilter,
-) (int64, error) {
-	var count int64
-	result := lib.ResolveDB(ctx, r.DB).WithContext(ctx).
-		Model(&models.Expense{}).
-		Scopes(
-			DateRangeScope("expenses", filterQuery.DateRange),
-			SearchScope("expenses", filterQuery.Search),
-			expenseRequestScope(filters.MaintenanceRequestID),
-		).
-		Count(&count)
-	if result.Error != nil {
-		return 0, result.Error
-	}
-	return count, nil
-}
-
-func (r *maintenanceRequestRepository) DeleteExpense(ctx context.Context, expenseID string) error {
-	return r.DB.WithContext(ctx).Where("id = ?", expenseID).Delete(&models.Expense{}).Error
-}
-
-func (r *maintenanceRequestRepository) UpdateExpense(ctx context.Context, expense *models.Expense) error {
-	return lib.ResolveDB(ctx, r.DB).WithContext(ctx).Save(expense).Error
 }
 
 func (r *maintenanceRequestRepository) CreateComment(
@@ -560,34 +489,6 @@ func mrActivityLogPerformedByScope(clientUserID *string) func(db *gorm.DB) *gorm
 			return db
 		}
 		return db.Where("maintenance_request_activity_logs.performed_by_client_user_id = ?", *clientUserID)
-	}
-}
-
-func expenseRequestScope(maintenanceRequestID string) func(db *gorm.DB) *gorm.DB {
-	return func(db *gorm.DB) *gorm.DB {
-		return db.Where(
-			"expenses.context_type = ? AND expenses.context_maintenance_request_id = ?",
-			"MAINTENANCE",
-			maintenanceRequestID,
-		)
-	}
-}
-
-func expensePaidByScope(paidBy *string) func(db *gorm.DB) *gorm.DB {
-	return func(db *gorm.DB) *gorm.DB {
-		if paidBy == nil {
-			return db
-		}
-		return db.Where("expenses.paid_by = ?", *paidBy)
-	}
-}
-
-func expenseBillableScope(billable *bool) func(db *gorm.DB) *gorm.DB {
-	return func(db *gorm.DB) *gorm.DB {
-		if billable == nil {
-			return db
-		}
-		return db.Where("expenses.billable_to_tenant = ?", *billable)
 	}
 }
 
