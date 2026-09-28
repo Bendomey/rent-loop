@@ -156,9 +156,7 @@ export function ChecklistModal({
 				property_id: propertyId,
 				checklist_id: checklist.id,
 				item_id: item.id,
-				description: item.description,
 				status,
-				notes: item.notes,
 			})
 		} catch (err) {
 			toast.error(err instanceof Error ? err.message : 'Failed to update status')

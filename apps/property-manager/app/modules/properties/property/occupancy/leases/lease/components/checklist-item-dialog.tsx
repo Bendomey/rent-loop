@@ -125,7 +125,6 @@ export function ChecklistItemDialog({
 					checklist_id: checklistId,
 					item_id: item.id,
 					description: values.description ?? item.description,
-					status: item.status,
 					notes: values.notes || null,
 				})
 				toast.success('Item updated')
