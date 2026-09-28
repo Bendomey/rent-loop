@@ -136,6 +136,18 @@ export function getChecklistStatusClass(status: LeaseChecklistStatus): string {
 	}
 }
 
+export const ITEM_STATUSES: {
+	value: LeaseChecklistItemStatus
+	label: string
+}[] = [
+	{ value: 'PENDING', label: 'Pending' },
+	{ value: 'FUNCTIONAL', label: 'Functional' },
+	{ value: 'DAMAGED', label: 'Damaged' },
+	{ value: 'NEEDS_REPAIR', label: 'Needs Repair' },
+	{ value: 'MISSING', label: 'Missing' },
+	{ value: 'NOT_PRESENT', label: 'Not Present' },
+]
+
 export function getItemStatusLabel(status: LeaseChecklistItemStatus): string {
 	switch (status) {
 		case 'PENDING':
