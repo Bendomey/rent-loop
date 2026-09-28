@@ -75,7 +75,13 @@ export function CommentsTab({ requestId, propertyId }: CommentsTabProps) {
 
 	const invalidate = () =>
 		void queryClient.invalidateQueries({
-			queryKey: [QUERY_KEYS.MAINTENANCE_REQUESTS, requestId, 'comments'],
+			queryKey: [
+				QUERY_KEYS.MAINTENANCE_REQUESTS,
+				clientId,
+				propertyId,
+				requestId,
+				'comments',
+			],
 		})
 
 	const handleSubmit = (e: React.FormEvent) => {
