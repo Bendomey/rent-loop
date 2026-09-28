@@ -99,17 +99,34 @@ func (s *authService) SendCode(ctx context.Context, input SendCodeInput) error {
 		})
 	}
 
-	pipe := s.appCtx.RDB.TxPipeline()
+	storeReference := func() error {
+		pipe := s.appCtx.RDB.TxPipeline()
 
-	if slices.Contains(input.Channel, "EMAIL") && input.Email != nil {
-		pipe.Set(ctx, *input.Email, response.Reference, 10*time.Minute)
+		if slices.Contains(input.Channel, "EMAIL") && input.Email != nil {
+			pipe.Set(ctx, *input.Email, response.Reference, 10*time.Minute)
+		}
+
+		if slices.Contains(input.Channel, "SMS") && input.Phone != nil {
+			pipe.Set(ctx, *input.Phone, response.Reference, 10*time.Minute)
+		}
+
+		_, err := pipe.Exec(ctx)
+		return err
 	}
 
-	if slices.Contains(input.Channel, "SMS") && input.Phone != nil {
-		pipe.Set(ctx, *input.Phone, response.Reference, 10*time.Minute)
+	// Gatekeeper has already dispatched the code by this point, so a lone
+	// transient Redis error here must not surface as a hard failure: the
+	// tenant already has a code in hand, and this write is the only thing
+	// standing between them and being able to verify it.
+	var setErr error
+	for attempt := 0; attempt < 3; attempt++ {
+		if attempt > 0 {
+			time.Sleep(time.Duration(attempt) * 150 * time.Millisecond)
+		}
+		if setErr = storeReference(); setErr == nil {
+			break
+		}
 	}
-
-	_, setErr := pipe.Exec(ctx)
 	if setErr != nil {
 		return pkg.InternalServerError(setErr.Error(), &pkg.RentLoopErrorParams{
 			Err: setErr,

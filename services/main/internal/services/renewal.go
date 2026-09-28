@@ -226,7 +226,7 @@ func (s *leaseService) RenewLease(ctx context.Context, input RenewLeaseInput) (*
 		TenantApplicationId:       parent.TenantApplicationId,
 		RentFee:                   rentFee,
 		RentFeeCurrency:           parent.RentFeeCurrency,
-		PaymentFrequency:          parent.PaymentFrequency,
+		PaymentFrequency:          &unit.PaymentFrequency,
 		MoveInDate:                input.MoveInDate,
 		StayDuration:              input.StayDuration,
 		StayDurationFrequency:     input.StayDurationFrequency,
