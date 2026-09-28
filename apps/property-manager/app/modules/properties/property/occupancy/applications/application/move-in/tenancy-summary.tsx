@@ -3,7 +3,11 @@ import { Button } from '~/components/ui/button'
 import { Card, CardContent } from '~/components/ui/card'
 import { Spinner } from '~/components/ui/spinner'
 import { type Pronouns, verb } from '~/lib/pronouns'
-import { graceDays, type PaymentFrequency, type SchedulePeriod } from '~/lib/schedule'
+import {
+	graceDays,
+	type PaymentFrequency,
+	type SchedulePeriod,
+} from '~/lib/schedule'
 import { cn } from '~/lib/utils'
 
 /**
@@ -108,8 +112,8 @@ export function TenancySummary({
 						))}
 						{grace > 0 && (
 							<p className="text-muted-foreground mt-3 text-xs leading-relaxed">
-								Each due date is {grace} day{grace === 1 ? '' : 's'} after its rent
-								period starts — a grace window before it counts as late.
+								Each due date is {grace} day{grace === 1 ? '' : 's'} after its
+								rent period starts — a grace window before it counts as late.
 							</p>
 						)}
 					</CardContent>

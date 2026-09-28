@@ -14,6 +14,7 @@ import { overdueTotal } from './financials/account'
 import { renewBlockedReason } from './renewal/can-renew'
 import { buildChain } from './renewal/chain'
 import { LeaseChain } from './renewal/lease-chain'
+import { useGetFinancialAccount } from '~/api/financial-accounts'
 import { useGetInvoices } from '~/api/invoices'
 import { useGetTenantLeases } from '~/api/leases'
 import { useHasPropertyPermissions } from '~/components/permissions/use-has-role'
@@ -93,6 +94,19 @@ export function LeaseDetailModule() {
 	const overdue = overdueTotal(
 		(invoicePage?.rows ?? []).filter((invoice) => invoice.status !== 'VOID'),
 	)
+
+	// Deposits are raised as a charge during the application's financial setup,
+	// not stored on the application itself — tenant_application.security_deposit_fee
+	// is a legacy field that setup no longer writes to. The live figure lives on
+	// the account's charges, the same place the Financials tab reads it from.
+	const { data: accountSummary } = useGetFinancialAccount(
+		clientId,
+		propertyId,
+		accountId,
+	)
+	const securityDeposit = (accountSummary?.charges ?? [])
+		.filter((charge) => charge.category === 'SECURITY_DEPOSIT')
+		.reduce((sum, charge) => sum + charge.amount, 0)
 
 	if (!lease) {
 		return (
@@ -316,11 +330,9 @@ export function LeaseDetailModule() {
 												<DetailField
 													label="Security Deposit"
 													value={
-														application.security_deposit_fee
+														securityDeposit > 0
 															? formatAmount(
-																	convertPesewasToCedis(
-																		application.security_deposit_fee,
-																	),
+																	convertPesewasToCedis(securityDeposit),
 																	application.rent_fee_currency,
 																)
 															: '-'
