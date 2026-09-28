@@ -111,7 +111,7 @@ export function AddDocumentModal({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="h-[80vh] overflow-auto sm:max-w-3xl md:h-auto">
+			<DialogContent className="flex max-h-[85vh] flex-col overflow-hidden sm:max-w-3xl">
 				<DialogHeader>
 					<DialogTitle>
 						{attachedDoc ? 'Change Document' : 'Add Document'}
@@ -121,8 +121,12 @@ export function AddDocumentModal({
 					</DialogDescription>
 				</DialogHeader>
 
-				<Tabs value={mode} onValueChange={(value) => setMode(value as DocMode)}>
-					<TabsList>
+				<Tabs
+					value={mode}
+					onValueChange={(value) => setMode(value as DocMode)}
+					className="min-h-0 flex-1"
+				>
+					<TabsList className="shrink-0">
 						<TabsTrigger value="manual">
 							<Upload className="size-4" />
 							Manual Upload
@@ -133,7 +137,7 @@ export function AddDocumentModal({
 						</TabsTrigger>
 					</TabsList>
 
-					<TabsContent value="manual">
+					<TabsContent value="manual" className="overflow-y-auto">
 						<div className="space-y-3 pt-2">
 							<Alert>
 								<Info className="size-4" />
@@ -159,7 +163,7 @@ export function AddDocumentModal({
 						</div>
 					</TabsContent>
 
-					<TabsContent value="online">
+					<TabsContent value="online" className="overflow-y-auto">
 						<div className="space-y-3 pt-2">
 							<Alert>
 								<Info className="size-4" />
