@@ -1,5 +1,6 @@
 import {
 	CheckCircle2Icon,
+	Loader2Icon,
 	PencilIcon,
 	PlusIcon,
 	SendIcon,
@@ -12,6 +13,7 @@ import { ChecklistItemDialog } from './checklist-item-dialog'
 import {
 	useDeleteLeaseChecklistItem,
 	useSubmitLeaseChecklist,
+	useUpdateLeaseChecklistItem,
 } from '~/api/lease-checklists'
 import {
 	AlertDialog,
@@ -31,6 +33,13 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from '~/components/ui/dialog'
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '~/components/ui/select'
 import { Separator } from '~/components/ui/separator'
 import { TypographyMuted } from '~/components/ui/typography'
 import { localizedDayjs } from '~/lib/date'
@@ -41,6 +50,7 @@ import {
 	getItemStatusClass,
 	getItemStatusLabel,
 	isChecklistEditable,
+	ITEM_STATUSES,
 } from '~/lib/lease-checklist.utils'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
@@ -86,10 +96,12 @@ export function ChecklistModal({
 	>()
 	const [deleteItemId, setDeleteItemId] = useState<string | null>(null)
 	const [submitConfirmOpen, setSubmitConfirmOpen] = useState(false)
+	const [updatingItemId, setUpdatingItemId] = useState<string | null>(null)
 
 	const { clientUser } = useClient()
 	const submitMutation = useSubmitLeaseChecklist()
 	const deleteItemMutation = useDeleteLeaseChecklistItem()
+	const updateItemMutation = useUpdateLeaseChecklistItem()
 
 	const editable = isChecklistEditable(checklist.status)
 	const canEditItems = canEdit && editable
@@ -128,6 +140,30 @@ export function ChecklistModal({
 			setDeleteItemId(null)
 		} catch (err) {
 			toast.error(err instanceof Error ? err.message : 'Failed to remove item')
+		}
+	}
+
+	async function handleStatusChange(
+		item: LeaseChecklistItem,
+		status: LeaseChecklistItemStatus,
+	) {
+		if (status === item.status) return
+		setUpdatingItemId(item.id)
+		try {
+			await updateItemMutation.mutateAsync({
+				client_id: safeString(clientUser?.client_id),
+				lease_id: leaseId,
+				property_id: propertyId,
+				checklist_id: checklist.id,
+				item_id: item.id,
+				description: item.description,
+				status,
+				notes: item.notes,
+			})
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : 'Failed to update status')
+		} finally {
+			setUpdatingItemId(null)
 		}
 	}
 
@@ -210,11 +246,42 @@ export function ChecklistModal({
 															)}
 														</div>
 														<div className="flex shrink-0 items-center gap-2">
-															<Badge
-																className={`text-xs ${getItemStatusClass(item.status)}`}
-															>
-																{getItemStatusLabel(item.status)}
-															</Badge>
+															{canEditItems ? (
+																<Select
+																	value={item.status}
+																	onValueChange={(value) =>
+																		void handleStatusChange(
+																			item,
+																			value as LeaseChecklistItemStatus,
+																		)
+																	}
+																	disabled={updatingItemId === item.id}
+																>
+																	<SelectTrigger
+																		size="sm"
+																		className={`gap-1 border-none px-2 text-xs [&_svg]:text-white! ${getItemStatusClass(item.status)}`}
+																	>
+																		{updatingItemId === item.id ? (
+																			<Loader2Icon className="size-3 animate-spin" />
+																		) : (
+																			<SelectValue />
+																		)}
+																	</SelectTrigger>
+																	<SelectContent>
+																		{ITEM_STATUSES.map((s) => (
+																			<SelectItem key={s.value} value={s.value}>
+																				{s.label}
+																			</SelectItem>
+																		))}
+																	</SelectContent>
+																</Select>
+															) : (
+																<Badge
+																	className={`text-xs ${getItemStatusClass(item.status)}`}
+																>
+																	{getItemStatusLabel(item.status)}
+																</Badge>
+															)}
 															{canEditItems && (
 																<>
 																	<Button

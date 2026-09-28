@@ -32,29 +32,44 @@ import {
 	SelectValue,
 } from '~/components/ui/select'
 import { Textarea } from '~/components/ui/textarea'
+import { ITEM_STATUSES } from '~/lib/lease-checklist.utils'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
 
-const ITEM_STATUSES: { value: LeaseChecklistItemStatus; label: string }[] = [
-	{ value: 'PENDING', label: 'Pending' },
-	{ value: 'FUNCTIONAL', label: 'Functional' },
-	{ value: 'DAMAGED', label: 'Damaged' },
-	{ value: 'NEEDS_REPAIR', label: 'Needs Repair' },
-	{ value: 'MISSING', label: 'Missing' },
-	{ value: 'NOT_PRESENT', label: 'Not Present' },
-]
-
 const schema = z.object({
-	description: z.string().min(1, 'Description is required'),
-	status: z.enum([
-		'FUNCTIONAL',
-		'DAMAGED',
-		'NEEDS_REPAIR',
-		'MISSING',
-		'NOT_PRESENT',
-	]),
+	description: z.string().optional(),
+	status: z
+		.enum([
+			'PENDING',
+			'FUNCTIONAL',
+			'DAMAGED',
+			'NEEDS_REPAIR',
+			'MISSING',
+			'NOT_PRESENT',
+		])
+		.optional(),
 	notes: z.string().optional(),
 })
+
+function getSchema(isEdit: boolean) {
+	return schema.superRefine((values, ctx) => {
+		if (!values.description?.trim()) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				path: ['description'],
+				message: 'Description is required',
+			})
+		}
+		if (isEdit) return
+		if (!values.status || values.status === 'PENDING') {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				path: ['status'],
+				message: 'Condition is required',
+			})
+		}
+	})
+}
 
 type FormValues = z.infer<typeof schema>
 
@@ -82,10 +97,10 @@ export function ChecklistItemDialog({
 	const isPending = createMutation.isPending || updateMutation.isPending
 
 	const form = useForm<FormValues>({
-		resolver: zodResolver(schema),
+		resolver: zodResolver(getSchema(isEdit)),
 		defaultValues: {
 			description: item?.description ?? '',
-			status: (item?.status as FormValues['status']) ?? 'FUNCTIONAL',
+			status: item?.status ?? 'FUNCTIONAL',
 			notes: item?.notes ?? '',
 		},
 	})
@@ -94,7 +109,7 @@ export function ChecklistItemDialog({
 		if (opened) {
 			form.reset({
 				description: item?.description ?? '',
-				status: (item?.status as FormValues['status']) ?? 'FUNCTIONAL',
+				status: item?.status ?? 'FUNCTIONAL',
 				notes: item?.notes ?? '',
 			})
 		}
@@ -109,8 +124,8 @@ export function ChecklistItemDialog({
 					property_id: propertyId,
 					checklist_id: checklistId,
 					item_id: item.id,
-					description: values.description,
-					status: values.status,
+					description: values.description ?? item.description,
+					status: item.status,
 					notes: values.notes || null,
 				})
 				toast.success('Item updated')
@@ -120,8 +135,8 @@ export function ChecklistItemDialog({
 					lease_id: leaseId,
 					property_id: propertyId,
 					checklist_id: checklistId,
-					description: values.description,
-					status: values.status,
+					description: values.description ?? '',
+					status: values.status ?? 'FUNCTIONAL',
 					notes: values.notes,
 				})
 				toast.success('Item added')
@@ -156,30 +171,32 @@ export function ChecklistItemDialog({
 								</FormItem>
 							)}
 						/>
-						<FormField
-							control={form.control}
-							name="status"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Condition</FormLabel>
-									<Select onValueChange={field.onChange} value={field.value}>
-										<FormControl>
-											<SelectTrigger>
-												<SelectValue placeholder="Select condition" />
-											</SelectTrigger>
-										</FormControl>
-										<SelectContent>
-											{ITEM_STATUSES.map((s) => (
-												<SelectItem key={s.value} value={s.value}>
-													{s.label}
-												</SelectItem>
-											))}
-										</SelectContent>
-									</Select>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
+						{!isEdit && (
+							<FormField
+								control={form.control}
+								name="status"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Condition</FormLabel>
+										<Select onValueChange={field.onChange} value={field.value}>
+											<FormControl>
+												<SelectTrigger>
+													<SelectValue placeholder="Select condition" />
+												</SelectTrigger>
+											</FormControl>
+											<SelectContent>
+												{ITEM_STATUSES.map((s) => (
+													<SelectItem key={s.value} value={s.value}>
+														{s.label}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+						)}
 						<FormField
 							control={form.control}
 							name="notes"
