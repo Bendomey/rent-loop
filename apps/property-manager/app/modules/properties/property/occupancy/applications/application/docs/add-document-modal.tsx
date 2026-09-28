@@ -124,9 +124,9 @@ export function AddDocumentModal({
 				<Tabs
 					value={mode}
 					onValueChange={(value) => setMode(value as DocMode)}
-					className="min-h-0 flex-1 overflow-y-auto"
+					className="min-h-0 flex-1"
 				>
-					<TabsList>
+					<TabsList className="shrink-0">
 						<TabsTrigger value="manual">
 							<Upload className="size-4" />
 							Manual Upload
@@ -137,7 +137,7 @@ export function AddDocumentModal({
 						</TabsTrigger>
 					</TabsList>
 
-					<TabsContent value="manual">
+					<TabsContent value="manual" className="overflow-y-auto">
 						<div className="space-y-3 pt-2">
 							<Alert>
 								<Info className="size-4" />
@@ -163,7 +163,7 @@ export function AddDocumentModal({
 						</div>
 					</TabsContent>
 
-					<TabsContent value="online">
+					<TabsContent value="online" className="overflow-y-auto">
 						<div className="space-y-3 pt-2">
 							<Alert>
 								<Info className="size-4" />
