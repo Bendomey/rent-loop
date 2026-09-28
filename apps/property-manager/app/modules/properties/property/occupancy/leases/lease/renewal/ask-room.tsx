@@ -4,6 +4,7 @@ import { Question } from './parts'
 import { PickRoomModal } from './pick-room-modal'
 import { useGetPropertyUnits } from '~/api/units'
 import { Button } from '~/components/ui/button'
+import type { PaymentFrequency } from '~/lib/schedule'
 import { cn } from '~/lib/utils'
 
 /**
@@ -26,6 +27,7 @@ export function AskRoom({
 	currency,
 	parentEnd,
 	onRentSuggestion,
+	onFrequencyChange,
 }: {
 	clientId: string
 	propertyId: string
@@ -37,6 +39,8 @@ export function AskRoom({
 	parentEnd: Nullable<Date>
 	/** A different room comes with its own listed rent. */
 	onRentSuggestion: (rentMinor: number) => void
+	/** ...and its own billing cycle — a daily-priced room quoted as monthly. */
+	onFrequencyChange: (frequency: PaymentFrequency) => void
 }) {
 	const [picking, setPicking] = useState(false)
 	const changed = unitId !== currentUnitId
@@ -116,6 +120,7 @@ export function AskRoom({
 				onPick={(unit) => {
 					onUnitChange(unit.id)
 					onRentSuggestion(unit.rent_fee)
+					onFrequencyChange(unit.payment_frequency)
 				}}
 			/>
 		</>

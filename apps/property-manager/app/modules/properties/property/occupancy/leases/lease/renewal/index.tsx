@@ -118,7 +118,9 @@ export function LeaseRenewalModule() {
 	const clientId = safeString(clientUser?.client_id)
 	const renew = useRenewLease()
 
-	const frequency = (lease?.payment_frequency ?? 'MONTHLY') as PaymentFrequency
+	const [frequency, setFrequency] = useState<PaymentFrequency>(
+		(lease?.payment_frequency ?? 'MONTHLY') as PaymentFrequency,
+	)
 	const termFrequency = (lease?.stay_duration_frequency ??
 		lease?.payment_frequency ??
 		'MONTHLY') as PaymentFrequency
@@ -685,6 +687,7 @@ export function LeaseRenewalModule() {
 									currency={currency}
 									parentEnd={parentLastDay}
 									onRentSuggestion={(minor) => setRent(String(minor / 100))}
+									onFrequencyChange={setFrequency}
 								/>
 								<Question
 									q="What’s the rent for the new term?"
