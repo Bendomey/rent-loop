@@ -175,7 +175,7 @@ export function Step1() {
 								disabled={isSendingOtp}
 								size="lg"
 								variant="default"
-								className="w-full bg-rose-600 hover:bg-rose-700 md:w-auto"
+								className="bg-brand-500 hover:bg-brand-600 w-full md:w-auto"
 							>
 								{isSendingOtp ? <Spinner /> : null} Next{' '}
 								<ArrowRight className="ml-2 h-4 w-4" />

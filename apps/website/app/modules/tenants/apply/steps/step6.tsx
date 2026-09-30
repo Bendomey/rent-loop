@@ -27,7 +27,7 @@ const renderPreviewField = (
 					size="sm"
 					variant="ghost"
 					onClick={setOpenAddress}
-					className="text-rose-600 hover:text-rose-700"
+					className="text-brand-500 hover:text-brand-600"
 				>
 					Edit Address
 					<Pencil className="h-4 w-4" />
@@ -68,7 +68,7 @@ const PreviewCard = ({
 					size="sm"
 					variant="ghost"
 					onClick={onEdit}
-					className="text-rose-600 hover:text-rose-700"
+					className="text-brand-500 hover:text-brand-600"
 				>
 					<Pencil className="h-4 w-4" />
 				</Button>
@@ -282,11 +282,11 @@ export function Step6() {
 
 				<div className="">
 					By clicking submit, you agree to our{' '}
-					<a className="underline hover:text-rose-700" href="/terms">
+					<a className="hover:text-brand-600 underline" href="/terms">
 						Terms of Service
 					</a>{' '}
 					and{' '}
-					<a className="underline hover:text-rose-700" href="/privacy-policy">
+					<a className="hover:text-brand-600 underline" href="/privacy-policy">
 						Privacy Policy
 					</a>
 					.
@@ -322,7 +322,7 @@ export function Step6() {
 						disabled={isSubmitting}
 						size="lg"
 						variant="default"
-						className="w-full bg-rose-600 hover:bg-rose-700 md:w-auto"
+						className="bg-brand-500 hover:bg-brand-600 w-full md:w-auto"
 					>
 						{isSubmitting ? (
 							<>

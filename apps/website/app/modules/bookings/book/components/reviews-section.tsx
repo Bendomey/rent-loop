@@ -65,7 +65,7 @@ function Avatar({ name }: { name: string }) {
 		.join('')
 		.toUpperCase()
 	return (
-		<div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-rose-100 text-xs font-semibold text-rose-700">
+		<div className="bg-brand-100 text-brand-600 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold">
 			{initials}
 		</div>
 	)

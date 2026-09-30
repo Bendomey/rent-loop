@@ -4,23 +4,20 @@ import { ExternalLink } from '~/components/layout/ExternalLink'
 import { MarketingPage } from '~/components/marketing'
 import { PROPERTY_MANAGER_APP_URL } from '~/lib/constants'
 
-const INK = '#111110'
-const MUTED = 'rgba(17,17,16,.58)'
-const MICRO = 'rgba(17,17,16,.34)'
-const HAIR = 'rgba(17,17,16,.11)'
-const HAIRSOFT = 'rgba(17,17,16,.06)'
-const CREAM = '#F5F4F1'
-const CREAMDEEP = '#EDEAE3'
-const CRIMSON = '#C8003A'
+const INK = '#171717'
+const MUTED = '#525252'
+const MICRO = '#a3a3a3'
+const HAIR = '#e5e5e5'
+const HAIRSOFT = '#f5f5f5'
+const CREAM = '#f5f5f5'
+const CREAMDEEP = '#e5e5e5'
+const CRIMSON = '#c8003a'
 const GREEN = '#1B9E5C'
 const BLUE = '#2E6CF6'
 const ORANGE = '#E97B2A'
-const BODY = '#2c2b28'
+const BODY = '#404040'
 
 const APPLY_URL = `${PROPERTY_MANAGER_APP_URL}/apply`
-
-const serif = "'DM Serif Display', Georgia, serif"
-const mono = "'JetBrains Mono', ui-monospace, monospace"
 
 const card: CSSProperties = {
 	background: '#fff',
@@ -111,15 +108,14 @@ function Placeholder({
 		<div
 			style={{
 				background:
-					'repeating-linear-gradient(45deg,rgba(17,17,16,.05) 0 6px,transparent 6px 12px)',
+					'repeating-linear-gradient(45deg,rgba(23,23,23,.05) 0 6px,transparent 6px 12px)',
 				border: `1px dashed ${HAIR}`,
 				borderRadius: 10,
 				display: 'flex',
 				alignItems: 'center',
 				justifyContent: 'center',
-				fontFamily: mono,
 				fontSize: 14,
-				color: '#55534e',
+				color: '#525252',
 				textAlign: 'center',
 				padding: 10,
 				height,
@@ -158,10 +154,9 @@ function Figure({
 			{caption && (
 				<div
 					style={{
-						fontFamily: mono,
 						fontSize: 14,
 						lineHeight: 1.55,
-						color: '#55534e',
+						color: '#525252',
 						marginTop: 14,
 						textAlign: 'center',
 					}}
@@ -201,11 +196,10 @@ function H2({ children }: { children: ReactNode }) {
 	return (
 		<h2
 			style={{
-				fontFamily: serif,
 				fontSize: 'clamp(30px,3.4vw,40px)',
 				lineHeight: 1.12,
 				letterSpacing: '-.8px',
-				fontWeight: 400,
+				fontWeight: 500,
 				margin: '0 0 20px',
 				color: INK,
 			}}
@@ -342,7 +336,7 @@ function DashboardShot() {
 			<div style={{ fontSize: 14, color: MUTED }}>{label}</div>
 			<div
 				style={{
-					fontFamily: serif,
+					fontWeight: 500,
 					fontSize: 29,
 					letterSpacing: '-.6px',
 					marginTop: 4,
@@ -399,7 +393,7 @@ function DashboardShot() {
 				display: 'flex',
 				height: 600,
 				boxShadow:
-					'0 26px 60px -30px rgba(17,17,16,.35),0 2px 6px rgba(17,17,16,.05)',
+					'0 26px 60px -30px rgba(23,23,23,.35),0 2px 6px rgba(23,23,23,.05)',
 				overflow: 'hidden',
 			}}
 		>
@@ -419,11 +413,8 @@ function DashboardShot() {
 				</div>
 				<div
 					style={{
-						fontFamily: mono,
 						fontSize: 14,
-						letterSpacing: '.09em',
-						textTransform: 'uppercase',
-						color: '#55534e',
+						color: '#525252',
 						margin: '0 6px 8px',
 					}}
 				>
@@ -475,7 +466,7 @@ function DashboardShot() {
 					<div>
 						<div
 							style={{
-								fontFamily: serif,
+								fontWeight: 500,
 								fontSize: 31,
 								letterSpacing: '-.7px',
 							}}
@@ -500,7 +491,7 @@ function DashboardShot() {
 					<div style={{ ...card, padding: '20px 22px 8px' }}>
 						<div
 							style={{
-								fontFamily: serif,
+								fontWeight: 500,
 								fontSize: 22,
 								letterSpacing: '-.3px',
 							}}
@@ -777,11 +768,8 @@ const twoGrid: CSSProperties = {
 }
 
 const monoLabel: CSSProperties = {
-	fontFamily: mono,
 	fontSize: 14,
-	letterSpacing: '.09em',
-	textTransform: 'uppercase',
-	color: '#55534e',
+	color: '#525252',
 }
 
 export default function WhatIsRentloop() {
@@ -796,23 +784,19 @@ export default function WhatIsRentloop() {
 				>
 					<div
 						style={{
-							fontFamily: mono,
 							fontSize: 14,
 							fontWeight: 500,
-							letterSpacing: '.12em',
-							textTransform: 'uppercase',
-							color: CRIMSON,
+							color: MUTED,
 						}}
 					>
 						Blog · Product
 					</div>
 					<h1
 						style={{
-							fontFamily: serif,
 							fontSize: 'clamp(44px,6vw,76px)',
 							lineHeight: 1.02,
 							letterSpacing: '-1.5px',
-							fontWeight: 400,
+							fontWeight: 500,
 							margin: '18px 0 0',
 							textWrap: 'balance',
 						}}
@@ -1099,7 +1083,7 @@ export default function WhatIsRentloop() {
 							<div style={{ ...monoLabel, color: CRIMSON }}>Path one</div>
 							<div
 								style={{
-									fontFamily: serif,
+									fontWeight: 500,
 									fontSize: 26,
 									letterSpacing: '-.4px',
 									margin: '8px 0 6px',
@@ -1123,7 +1107,6 @@ export default function WhatIsRentloop() {
 							>
 								<span
 									style={{
-										fontFamily: mono,
 										fontSize: 13,
 										color: MUTED,
 										overflow: 'hidden',
@@ -1185,7 +1168,7 @@ export default function WhatIsRentloop() {
 							<div style={{ ...monoLabel, color: CRIMSON }}>Path two</div>
 							<div
 								style={{
-									fontFamily: serif,
+									fontWeight: 500,
 									fontSize: 26,
 									letterSpacing: '-.4px',
 									margin: '8px 0 6px',
@@ -1468,7 +1451,7 @@ export default function WhatIsRentloop() {
 							style={{
 								...card,
 								padding: '24px 26px',
-								boxShadow: '0 20px 44px -28px rgba(17,17,16,.3)',
+								boxShadow: '0 20px 44px -28px rgba(23,23,23,.3)',
 							}}
 						>
 							<div
@@ -1505,7 +1488,7 @@ export default function WhatIsRentloop() {
 							</div>
 							<div
 								style={{
-									fontFamily: serif,
+									fontWeight: 500,
 									fontSize: 27,
 									letterSpacing: '-.5px',
 									margin: '16px 0 8px',
@@ -1629,7 +1612,7 @@ export default function WhatIsRentloop() {
 								<div style={{ fontSize: 16, fontWeight: 600 }}>Occupancy</div>
 								<div
 									style={{
-										fontFamily: serif,
+										fontWeight: 500,
 										fontSize: 44,
 										letterSpacing: '-1px',
 										margin: '6px 0 2px',
@@ -1726,14 +1709,14 @@ export default function WhatIsRentloop() {
 							<div
 								style={{
 									width: 290,
-									border: '9px solid #0A0A0A',
+									border: '9px solid #171717',
 									borderRadius: 38,
 									background: '#fff',
 									overflow: 'hidden',
-									boxShadow: '0 26px 54px -30px rgba(17,17,16,.5)',
+									boxShadow: '0 26px 54px -30px rgba(23,23,23,.5)',
 								}}
 							>
-								<div style={{ background: '#0A0A0A', height: 24 }} />
+								<div style={{ background: '#171717', height: 24 }} />
 								<div style={{ padding: '18px 16px' }}>
 									<Logo size={18} />
 									<div style={{ fontSize: 14, color: MUTED, marginTop: 14 }}>
@@ -1752,7 +1735,7 @@ export default function WhatIsRentloop() {
 										</div>
 										<div
 											style={{
-												fontFamily: serif,
+												fontWeight: 500,
 												fontSize: 25,
 												letterSpacing: '-.5px',
 												marginTop: 2,
@@ -1812,7 +1795,7 @@ export default function WhatIsRentloop() {
 
 				<div
 					style={{
-						background: '#0A0A0A',
+						background: '#171717',
 						color: '#fff',
 						borderRadius: 22,
 						padding: 'clamp(34px,5vw,60px)',
@@ -1823,9 +1806,8 @@ export default function WhatIsRentloop() {
 				>
 					<h3
 						style={{
-							fontFamily: serif,
 							fontSize: 'clamp(30px,4vw,44px)',
-							fontWeight: 400,
+							fontWeight: 500,
 							letterSpacing: '-.8px',
 							lineHeight: 1.1,
 						}}
@@ -1845,7 +1827,7 @@ export default function WhatIsRentloop() {
 					</p>
 					<ExternalLink
 						href={APPLY_URL}
-						className="bg-rl-crimson hover:bg-rl-crimson-deep inline-block rounded-full font-semibold text-white no-underline transition-colors"
+						className="bg-brand-500 hover:bg-brand-600 inline-block rounded-full font-semibold text-white no-underline transition-colors"
 						style={{ fontSize: 17, padding: '14px 26px' }}
 					>
 						Start free trial

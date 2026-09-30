@@ -37,7 +37,7 @@ interface Props {
 }
 
 const inputClass =
-	'w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-rose-500'
+	'w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-brand-500'
 
 function Label({
 	children,

@@ -569,7 +569,7 @@ function EditForm({ application, onClose, onSaved }: EditFormProps) {
 					<button
 						type="submit"
 						disabled={isSubmitting}
-						className="w-full rounded-lg bg-rose-600 px-5 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+						className="bg-brand-500 w-full rounded-lg px-5 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
 					>
 						{isSubmitting ? 'Saving…' : 'Save Changes'}
 					</button>
@@ -651,7 +651,7 @@ export function ApplicationDetailsCard({
 								setEditing(true)
 								setOpen(false)
 							}}
-							className="flex items-center gap-1 text-xs font-medium text-rose-600 transition-colors hover:text-rose-500"
+							className="text-brand-500 hover:text-brand-500 flex items-center gap-1 text-xs font-medium transition-colors"
 							aria-label="Edit personal details"
 						>
 							<Pencil className="h-3 w-3" /> Edit
@@ -676,7 +676,7 @@ export function ApplicationDetailsCard({
 				{!editing && (
 					<button
 						onClick={() => setOpen((o) => !o)}
-						className="mt-4 flex items-center gap-1 text-xs font-medium text-rose-600 transition-colors hover:text-rose-500"
+						className="text-brand-500 hover:text-brand-500 mt-4 flex items-center gap-1 text-xs font-medium transition-colors"
 					>
 						{open ? 'Show less' : 'View more'}
 						<ChevronDown

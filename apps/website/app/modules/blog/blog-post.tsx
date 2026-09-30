@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect } from 'react'
-import { useParams } from 'react-router'
-import { MarketingFooter, MarketingNav, TopBar } from '~/components/marketing'
+import { Link, useParams } from 'react-router'
+import { formatPostDate } from './index'
+import { Container, MarketingPage } from '~/components/marketing'
 import { getBlogPostBySlug } from '~/content/blog'
 
 function ScrollToHash() {
@@ -30,54 +31,44 @@ export function BlogPostModule() {
 	}
 
 	return (
-		<div>
-			<TopBar />
-			<MarketingNav current="blog" />
-
-			<div className="pt-12 pb-24">
-				<div className="mx-auto max-w-3xl px-6 lg:px-8">
-					{/* Post header */}
-					<div className="mb-10">
-						<p className="text-base/7 font-semibold text-rose-600">Blog</p>
-						<h1 className="mt-2 text-4xl font-semibold tracking-tight text-gray-950 sm:text-5xl">
+		<MarketingPage current="blog">
+			<Container className="py-20 sm:py-32">
+				<article className="mx-auto max-w-3xl">
+					<Link to="/blog" className="text-sm font-semibold text-gray-900">
+						<span aria-hidden="true">←</span> All posts
+					</Link>
+					<header className="mt-8 border-b border-gray-200 pb-10">
+						<h1 className="text-4xl font-medium tracking-tight text-gray-900">
 							{post.meta.title}
 						</h1>
-						<div className="mt-4 flex items-center gap-x-4 text-sm text-gray-500">
-							<span>
-								{new Date(post.meta.date).toLocaleDateString('en-GB', {
-									day: 'numeric',
-									month: 'long',
-									year: 'numeric',
-								})}
-							</span>
+						<div className="mt-4 flex items-center gap-x-3 text-sm text-gray-500">
+							<time dateTime={post.meta.date}>
+								{formatPostDate(post.meta.date)}
+							</time>
 							<span aria-hidden="true">·</span>
 							<span>{post.meta.author}</span>
 						</div>
-						<p className="mt-4 text-lg text-gray-500">
+						<p className="mt-6 text-lg text-gray-600">
 							{post.meta.description}
 						</p>
-						<div className="mt-6 border-t border-gray-100" />
-					</div>
+					</header>
 
-					{/* MDX content */}
 					<Suspense
 						fallback={
-							<div className="animate-pulse space-y-4">
+							<div className="mt-10 animate-pulse space-y-4">
 								{Array.from({ length: 6 }).map((_, i) => (
 									<div key={i} className="h-4 rounded bg-gray-100" />
 								))}
 							</div>
 						}
 					>
-						<div className="prose prose-gray prose-headings:font-semibold prose-a:text-rl-crimson prose-a:no-underline hover:prose-a:underline max-w-none">
+						<div className="prose prose-gray prose-headings:font-semibold prose-headings:tracking-tight prose-h2:font-medium prose-a:text-brand-500 prose-a:no-underline hover:prose-a:underline mt-10 max-w-none">
 							<PostContent />
 							<ScrollToHash />
 						</div>
 					</Suspense>
-				</div>
-			</div>
-
-			<MarketingFooter />
-		</div>
+				</article>
+			</Container>
+		</MarketingPage>
 	)
 }

@@ -33,7 +33,7 @@ export function ApplicationChecklist({ progress }: Props) {
 					<div
 						className={cn(
 							'h-full rounded-full transition-all',
-							percentage === 100 ? 'bg-green-500' : 'bg-rose-500',
+							percentage === 100 ? 'bg-green-500' : 'bg-brand-500',
 						)}
 						style={{ width: `${percentage}%` }}
 					/>

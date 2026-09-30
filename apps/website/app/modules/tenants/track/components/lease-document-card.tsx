@@ -104,7 +104,7 @@ export function LeaseDocumentCard({ status, signingUrl, documentUrl }: Props) {
 					rel="noopener noreferrer"
 					className="mt-4 block"
 				>
-					<Button className="w-full gap-2 bg-rose-600 hover:bg-rose-500">
+					<Button className="bg-brand-500 hover:bg-brand-500 w-full gap-2">
 						<PenLine className="h-4 w-4" />
 						Sign Document
 						<ExternalLink className="h-3 w-3" />

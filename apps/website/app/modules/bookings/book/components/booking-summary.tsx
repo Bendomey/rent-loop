@@ -80,7 +80,7 @@ export function BookingSummary({
 			<button
 				onClick={onSubmit}
 				disabled={!canSubmit || submitting}
-				className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-rose-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
+				className="bg-brand-500 hover:bg-brand-600 mt-6 flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
 			>
 				{submitting ? (
 					<>

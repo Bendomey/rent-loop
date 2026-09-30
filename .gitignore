@@ -32,3 +32,5 @@ firebase_test_cases.yaml
 # Financials E2E harness output (see services/main/scripts/e2e/, also ignored).
 # Regenerate with `cd services/main/scripts/e2e && ./run-all.sh`.
 docs/runbooks/e2e-financials-RESULTS.md
+
+brag-output/

@@ -511,7 +511,7 @@ export function ImageUpload({
 								aria-label="Loading"
 								className="absolute z-20 flex h-full w-full items-center justify-center"
 							>
-								<Spinner className="size-20 text-rose-600" />
+								<Spinner className="text-brand-500 size-20" />
 							</div>
 						) : null}
 					</div>

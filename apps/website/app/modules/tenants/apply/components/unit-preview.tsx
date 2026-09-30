@@ -107,7 +107,7 @@ export function UnitPreview({ unit }: { unit?: PropertyUnit }) {
 				{/* Rent Information */}
 				<div className="space-y-4 rounded-lg border border-zinc-100 bg-zinc-50 p-5">
 					<TypographyH3 className="flex items-center gap-2 text-base font-semibold text-zinc-900">
-						<Wallet className="h-4 w-4 text-rose-600" />
+						<Wallet className="text-brand-500 h-4 w-4" />
 						Rent Information
 					</TypographyH3>
 					<div className="space-y-3 text-sm">
@@ -139,7 +139,7 @@ export function UnitPreview({ unit }: { unit?: PropertyUnit }) {
 				{/* Property Info */}
 				<div className="space-y-4 rounded-lg border border-zinc-100 bg-zinc-50 p-5">
 					<TypographyH3 className="flex items-center gap-2 text-base font-semibold text-zinc-900">
-						<Building2 className="h-4 w-4 text-rose-600" />
+						<Building2 className="text-brand-500 h-4 w-4" />
 						Property Info
 					</TypographyH3>
 					<div className="space-y-3 text-sm">
@@ -182,7 +182,7 @@ export function UnitPreview({ unit }: { unit?: PropertyUnit }) {
 								key={key}
 								className="flex items-start gap-3 rounded-lg bg-white p-3"
 							>
-								<div className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-rose-600" />
+								<div className="bg-brand-500 mt-1 h-2 w-2 flex-shrink-0 rounded-full" />
 								<div className="flex-1 text-sm">
 									<p className="font-medium text-zinc-900 capitalize">
 										{key.replace(/_/g, ' ')}

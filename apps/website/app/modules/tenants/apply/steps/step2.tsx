@@ -222,7 +222,7 @@ export function Step2() {
 						disabled={!canResend || isSendingOtp}
 						variant="ghost"
 						size="sm"
-						className="text-rose-600 hover:bg-transparent hover:underline disabled:opacity-50"
+						className="text-brand-500 hover:bg-transparent hover:underline disabled:opacity-50"
 						onClick={resend}
 					>
 						{isSendingOtp ? <Spinner /> : null}
@@ -244,7 +244,7 @@ export function Step2() {
 							onClick={() => {
 								void navigator.clipboard.writeText('*713*882#')
 							}}
-							className="flex items-center gap-2 rounded-lg bg-rose-50 px-4 py-2 text-rose-600 transition-colors hover:bg-rose-100"
+							className="bg-brand-50 text-brand-500 hover:bg-brand-100 flex items-center gap-2 rounded-lg px-4 py-2 transition-colors"
 						>
 							<span className="text-base font-extrabold tracking-widest">
 								*713*882#
@@ -288,7 +288,7 @@ export function Step2() {
 						variant="default"
 						onClick={verifyAndLookUpTenant}
 						disabled={!isOtpComplete || isLoading}
-						className="w-full bg-rose-600 hover:bg-rose-700 md:w-auto"
+						className="bg-brand-500 hover:bg-brand-600 w-full md:w-auto"
 					>
 						{isLoading ? <Spinner /> : null}
 						Verify code

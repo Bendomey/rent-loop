@@ -163,7 +163,7 @@ export function PaymentInfo({ invoice }: Props) {
 					{!showPayForm ? (
 						<Button
 							onClick={() => setShowPayForm(true)}
-							className="w-full bg-rose-600 hover:bg-rose-500"
+							className="bg-brand-500 hover:bg-brand-500 w-full"
 							size="sm"
 						>
 							Pay Now
@@ -214,7 +214,7 @@ export function PaymentInfo({ invoice }: Props) {
 									type="submit"
 									size="sm"
 									disabled={isSubmitting || !provider}
-									className="flex-1 bg-rose-600 hover:bg-rose-500"
+									className="bg-brand-500 hover:bg-brand-500 flex-1"
 								>
 									{isSubmitting ? (
 										<>

@@ -15,9 +15,9 @@ export function meta({ loaderData, location }: Route.MetaArgs) {
 	const meta = getSocialMetas({
 		url,
 		origin: loaderData.origin,
-		title: 'Pay Rent with Mobile Money & Track Maintenance | Rentloop',
+		title: 'Pay Rent Online & Track Maintenance | Rentloop',
 		description:
-			'Pay rent with MTN, Telecel or AirtelTigo Mobile Money, get an instant receipt, submit maintenance requests and find your tenancy agreement — all in one app.',
+			'Pay rent online, get an instant receipt, submit maintenance requests and find your tenancy agreement — all in one app.',
 		keywords: pageKeywords.tenants,
 	})
 

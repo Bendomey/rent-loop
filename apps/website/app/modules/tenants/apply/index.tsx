@@ -36,7 +36,7 @@ export function TenantApply({ isValidUrl }: { isValidUrl: boolean }) {
 						<div className="pt-4">
 							<Link
 								to="/login"
-								className="inline-block rounded-lg bg-rose-600 px-6 py-2 font-medium text-white transition-colors hover:bg-rose-700"
+								className="bg-brand-500 hover:bg-brand-600 inline-block rounded-lg px-6 py-2 font-medium text-white transition-colors"
 							>
 								Back to Home
 							</Link>
@@ -53,7 +53,7 @@ export function TenantApply({ isValidUrl }: { isValidUrl: boolean }) {
 				<Link to="/">
 					<TypographyH3 className="text-center capitalize">
 						Welcome to{' '}
-						<span className="font-extrabold text-rose-700">
+						<span className="text-brand-600 font-extrabold">
 							{APP_NAME.slice(0, 4)}{' '}
 						</span>
 						<span className="font-extrabold">{APP_NAME.slice(4)}</span>
@@ -65,7 +65,7 @@ export function TenantApply({ isValidUrl }: { isValidUrl: boolean }) {
 				</TypographyMuted>
 			</div>
 			<div
-				className="bg-rose-600"
+				className="bg-brand-500"
 				style={{ height: '3px', width: `${(stepCount / STEP) * 100}%` }}
 			/>
 			<div className="flex min-h-[82vh] items-center justify-center">

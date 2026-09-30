@@ -61,7 +61,7 @@ export function BookingDetails({ booking }: Props) {
 			<header className="border-b bg-white">
 				<div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-4">
 					<Link to="/" className="flex items-end">
-						<span className="text-xl font-extrabold text-rose-700">
+						<span className="text-brand-600 text-xl font-extrabold">
 							{APP_NAME.slice(0, 4)}
 						</span>
 						<span className="text-xl font-extrabold">{APP_NAME.slice(4)}</span>
@@ -111,7 +111,7 @@ export function BookingDetails({ booking }: Props) {
 						<div className="relative flex items-center justify-between">
 							<div className="absolute top-3 right-0 left-0 h-0.5 bg-zinc-200" />
 							<div
-								className="absolute top-3 left-0 h-0.5 bg-rose-500 transition-all"
+								className="bg-brand-500 absolute top-3 left-0 h-0.5 transition-all"
 								style={{
 									width: `${(Math.max(0, currentStepIndex) / (STATUS_STEPS.length - 1)) * 100}%`,
 								}}
@@ -127,7 +127,7 @@ export function BookingDetails({ booking }: Props) {
 											className={[
 												'flex h-6 w-6 items-center justify-center rounded-full border-2 text-xs font-bold',
 												done
-													? 'border-rose-500 bg-rose-500 text-white'
+													? 'border-brand-500 bg-brand-500 text-white'
 													: 'border-zinc-300 bg-white text-zinc-400',
 											].join(' ')}
 										>
@@ -136,7 +136,7 @@ export function BookingDetails({ booking }: Props) {
 										<span
 											className={[
 												'text-xs',
-												done ? 'font-medium text-rose-600' : 'text-zinc-400',
+												done ? 'text-brand-500 font-medium' : 'text-zinc-400',
 											].join(' ')}
 										>
 											{STATUS_LABELS[step]}
@@ -289,7 +289,7 @@ export function BookingDetails({ booking }: Props) {
 						</h3>
 						<a
 							href={`mailto:${booking.unit.property.contact_email}`}
-							className="text-sm text-rose-600 underline"
+							className="text-brand-500 text-sm underline"
 						>
 							{booking.unit.property.contact_email}
 						</a>

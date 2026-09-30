@@ -3,24 +3,21 @@ import { ExternalLink } from '~/components/layout/ExternalLink'
 import { MarketingPage } from '~/components/marketing'
 import { PROPERTY_MANAGER_APP_URL } from '~/lib/constants'
 
-const INK = '#111110'
-const MUTED = 'rgba(17,17,16,.58)'
-const MICRO = 'rgba(17,17,16,.34)'
-const HAIR = 'rgba(17,17,16,.11)'
-const HAIRSOFT = 'rgba(17,17,16,.06)'
-const CREAM = '#F5F4F1'
-const CREAMDEEP = '#EDEAE3'
-const CRIMSON = '#C8003A'
+const INK = '#171717'
+const MUTED = '#525252'
+const MICRO = '#a3a3a3'
+const HAIR = '#e5e5e5'
+const HAIRSOFT = '#f5f5f5'
+const CREAM = '#f5f5f5'
+const CREAMDEEP = '#e5e5e5'
+const CRIMSON = '#c8003a'
 const GREEN = '#1B9E5C'
 const BLUE = '#2E6CF6'
 const ORANGE = '#E97B2A'
-const BLACK = '#0A0A0A'
-const BODY = '#2c2b28'
+const BLACK = '#171717'
+const BODY = '#404040'
 
 const APPLY_URL = `${PROPERTY_MANAGER_APP_URL}/apply`
-
-const serif = "'DM Serif Display', Georgia, serif"
-const mono = "'JetBrains Mono', ui-monospace, monospace"
 
 const card: CSSProperties = {
 	background: '#fff',
@@ -29,11 +26,8 @@ const card: CSSProperties = {
 }
 
 const keyStyle: CSSProperties = {
-	fontFamily: mono,
 	fontSize: 14,
-	letterSpacing: '.09em',
-	textTransform: 'uppercase',
-	color: '#55534e',
+	color: '#525252',
 }
 
 const twoGrid: CSSProperties = {
@@ -43,11 +37,8 @@ const twoGrid: CSSProperties = {
 }
 
 const thStyle: CSSProperties = {
-	fontFamily: mono,
 	fontSize: 13.5,
-	letterSpacing: '.07em',
-	textTransform: 'uppercase',
-	color: '#55534e',
+	color: '#525252',
 	textAlign: 'left',
 	padding: '14px 18px',
 	borderBottom: `1px solid ${HAIR}`,
@@ -122,15 +113,14 @@ function Placeholder({
 		<div
 			style={{
 				background:
-					'repeating-linear-gradient(45deg,rgba(17,17,16,.05) 0 6px,transparent 6px 12px)',
+					'repeating-linear-gradient(45deg,rgba(23,23,23,.05) 0 6px,transparent 6px 12px)',
 				border: `1px dashed ${HAIR}`,
 				borderRadius: 10,
 				display: 'flex',
 				alignItems: 'center',
 				justifyContent: 'center',
-				fontFamily: mono,
 				fontSize: 14,
-				color: '#55534e',
+				color: '#525252',
 				textAlign: 'center',
 				padding: 10,
 				height,
@@ -165,10 +155,9 @@ function Figure({
 			{caption && (
 				<div
 					style={{
-						fontFamily: mono,
 						fontSize: 14,
 						lineHeight: 1.55,
-						color: '#55534e',
+						color: '#525252',
 						marginTop: 14,
 						textAlign: 'center',
 					}}
@@ -209,11 +198,10 @@ function H2({ children }: { children: ReactNode }) {
 	return (
 		<h2
 			style={{
-				fontFamily: serif,
 				fontSize: 'clamp(29px,3.2vw,38px)',
 				lineHeight: 1.13,
 				letterSpacing: '-.8px',
-				fontWeight: 400,
+				fontWeight: 500,
 				margin: '0 0 20px',
 				color: INK,
 			}}
@@ -243,12 +231,9 @@ function Num2({ children }: { children: ReactNode }) {
 	return (
 		<div
 			style={{
-				fontFamily: mono,
 				fontSize: 14,
 				fontWeight: 700,
-				letterSpacing: '.09em',
 				color: CRIMSON,
-				textTransform: 'uppercase',
 				marginBottom: 12,
 			}}
 		>
@@ -282,7 +267,7 @@ function Quote({ children }: { children: ReactNode }) {
 	return (
 		<div
 			style={{
-				fontFamily: serif,
+				fontWeight: 500,
 				fontSize: 26,
 				lineHeight: 1.35,
 				letterSpacing: '-.5px',
@@ -362,7 +347,7 @@ function Stat({
 		>
 			<div
 				style={{
-					fontFamily: serif,
+					fontWeight: 500,
 					fontSize: 'clamp(32px,4.4vw,46px)',
 					letterSpacing: '-1px',
 					lineHeight: 1.05,
@@ -377,9 +362,8 @@ function Stat({
 			</div>
 			<div
 				style={{
-					fontFamily: mono,
 					fontSize: 14,
-					color: '#55534e',
+					color: '#525252',
 					marginTop: 12,
 				}}
 			>
@@ -630,23 +614,19 @@ export default function BestPropertyManagementAppInGhana() {
 				>
 					<div
 						style={{
-							fontFamily: mono,
 							fontSize: 14,
 							fontWeight: 500,
-							letterSpacing: '.11em',
-							textTransform: 'uppercase',
-							color: CRIMSON,
+							color: MUTED,
 						}}
 					>
 						Blog · Buyer's guide
 					</div>
 					<h1
 						style={{
-							fontFamily: serif,
 							fontSize: 'clamp(40px,5.2vw,68px)',
 							lineHeight: 1.04,
 							letterSpacing: '-1.4px',
-							fontWeight: 400,
+							fontWeight: 500,
 							margin: '18px 0 0',
 							textWrap: 'balance',
 						}}
@@ -795,7 +775,7 @@ export default function BestPropertyManagementAppInGhana() {
 										fontSize: 16,
 										fontWeight: 600,
 										...(label === 'Unit'
-											? { borderColor: '#C8003A44', color: CRIMSON }
+											? { borderColor: '#c8003a44', color: CRIMSON }
 											: {}),
 									}}
 								>
@@ -895,7 +875,7 @@ export default function BestPropertyManagementAppInGhana() {
 								<div style={keyStyle}>The scenario</div>
 								<div
 									style={{
-										fontFamily: serif,
+										fontWeight: 500,
 										fontSize: 26,
 										letterSpacing: '-.5px',
 										margin: '10px 0 4px',
@@ -967,7 +947,7 @@ export default function BestPropertyManagementAppInGhana() {
 										who="Part payment · needs you to confirm"
 										status="Check it"
 										statusColor={CRIMSON}
-										statusBorder="#C8003A33"
+										statusBorder="#c8003a33"
 									/>
 								</div>
 							</div>
@@ -992,7 +972,7 @@ export default function BestPropertyManagementAppInGhana() {
 							style={{
 								...card,
 								padding: '26px 28px',
-								boxShadow: '0 20px 44px -28px rgba(17,17,16,.3)',
+								boxShadow: '0 20px 44px -28px rgba(23,23,23,.3)',
 								maxWidth: 620,
 								margin: '0 auto',
 							}}
@@ -1009,7 +989,7 @@ export default function BestPropertyManagementAppInGhana() {
 								<div>
 									<div
 										style={{
-											fontFamily: serif,
+											fontWeight: 500,
 											fontSize: 25,
 											letterSpacing: '-.4px',
 										}}
@@ -1158,7 +1138,7 @@ export default function BestPropertyManagementAppInGhana() {
 							style={{
 								...card,
 								padding: '24px 26px',
-								boxShadow: '0 20px 44px -28px rgba(17,17,16,.3)',
+								boxShadow: '0 20px 44px -28px rgba(23,23,23,.3)',
 							}}
 						>
 							<div
@@ -1181,7 +1161,7 @@ export default function BestPropertyManagementAppInGhana() {
 								<div style={{ flex: 1, minWidth: 200 }}>
 									<div
 										style={{
-											fontFamily: serif,
+											fontWeight: 500,
 											fontSize: 26,
 											letterSpacing: '-.5px',
 										}}
@@ -1487,7 +1467,7 @@ export default function BestPropertyManagementAppInGhana() {
 											key="c"
 											label="Needs attention"
 											color={CRIMSON}
-											border="#C8003A33"
+											border="#c8003a33"
 										/>,
 									],
 								].map(([item, chip], i, arr) => (
@@ -1585,7 +1565,7 @@ export default function BestPropertyManagementAppInGhana() {
 								<div style={keyStyle}>The company</div>
 								<div
 									style={{
-										fontFamily: serif,
+										fontWeight: 500,
 										fontSize: 26,
 										letterSpacing: '-.5px',
 										margin: '10px 0 14px',
@@ -1701,14 +1681,14 @@ export default function BestPropertyManagementAppInGhana() {
 							<div
 								style={{
 									width: 300,
-									border: '9px solid #0A0A0A',
+									border: '9px solid #171717',
 									borderRadius: 38,
 									background: '#fff',
 									overflow: 'hidden',
-									boxShadow: '0 26px 54px -30px rgba(17,17,16,.5)',
+									boxShadow: '0 26px 54px -30px rgba(23,23,23,.5)',
 								}}
 							>
-								<div style={{ background: '#0A0A0A', height: 24 }} />
+								<div style={{ background: '#171717', height: 24 }} />
 								<div style={{ padding: '18px 16px' }}>
 									<Logo />
 									<div style={{ fontSize: 14, color: MUTED, marginTop: 14 }}>
@@ -1725,7 +1705,7 @@ export default function BestPropertyManagementAppInGhana() {
 										<div style={{ fontSize: 14, color: MUTED }}>Next rent</div>
 										<div
 											style={{
-												fontFamily: serif,
+												fontWeight: 500,
 												fontSize: 25,
 												letterSpacing: '-.5px',
 												marginTop: 2,
@@ -1921,7 +1901,7 @@ export default function BestPropertyManagementAppInGhana() {
 							labelColor={CRIMSON}
 							units="100 units"
 							text="At GH₵ 1,800 average rent that is GH₵ 180,000 billed monthly — GH₵ 2.16 million a year."
-							borderColor="#C8003A44"
+							borderColor="#c8003a44"
 						/>
 					</Stage>
 				</Figure>
@@ -2121,7 +2101,6 @@ export default function BestPropertyManagementAppInGhana() {
 							>
 								<span
 									style={{
-										fontFamily: mono,
 										fontSize: 14,
 										fontWeight: 700,
 										color: CRIMSON,
@@ -2164,9 +2143,8 @@ export default function BestPropertyManagementAppInGhana() {
 				>
 					<h3
 						style={{
-							fontFamily: serif,
 							fontSize: 'clamp(30px,4vw,44px)',
-							fontWeight: 400,
+							fontWeight: 500,
 							letterSpacing: '-.8px',
 							lineHeight: 1.1,
 							margin: 0,
@@ -2187,7 +2165,7 @@ export default function BestPropertyManagementAppInGhana() {
 					</p>
 					<ExternalLink
 						href={APPLY_URL}
-						className="bg-rl-crimson hover:bg-rl-crimson-deep inline-block rounded-full font-semibold text-white no-underline transition-colors"
+						className="bg-brand-500 hover:bg-brand-600 inline-block rounded-full font-semibold text-white no-underline transition-colors"
 						style={{ fontSize: 17, padding: '14px 26px' }}
 					>
 						Start free trial
@@ -2298,7 +2276,7 @@ function GrowthCard({
 			</div>
 			<div
 				style={{
-					fontFamily: serif,
+					fontWeight: 500,
 					fontSize: 34,
 					letterSpacing: '-.8px',
 					margin: '8px 0 8px',

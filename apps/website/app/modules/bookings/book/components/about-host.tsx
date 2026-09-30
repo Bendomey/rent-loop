@@ -12,7 +12,7 @@ function Avatar({ name }: { name: string }) {
 		.join('')
 		.toUpperCase()
 	return (
-		<div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-rose-100 text-xl font-bold text-rose-700">
+		<div className="bg-brand-100 text-brand-600 flex h-16 w-16 shrink-0 items-center justify-center rounded-full text-xl font-bold">
 			{initials}
 		</div>
 	)
@@ -51,7 +51,7 @@ export function AboutHost({ property }: Props) {
 				</p>
 
 				<div className="flex items-center gap-1.5 text-xs text-zinc-500">
-					<ShieldCheck className="h-4 w-4 text-rose-500" />
+					<ShieldCheck className="text-brand-500 h-4 w-4" />
 					Identity verified
 				</div>
 
