@@ -4,24 +4,21 @@ import { ExternalLink } from '~/components/layout/ExternalLink'
 import { MarketingPage } from '~/components/marketing'
 import { PROPERTY_MANAGER_APP_URL } from '~/lib/constants'
 
-const INK = '#111110'
-const MUTED = 'rgba(17,17,16,.58)'
-const MICRO = 'rgba(17,17,16,.34)'
-const HAIR = 'rgba(17,17,16,.11)'
-const HAIRSOFT = 'rgba(17,17,16,.06)'
-const CREAM = '#F5F4F1'
-const CREAMDEEP = '#EDEAE3'
-const CRIMSON = '#C8003A'
+const INK = '#171717'
+const MUTED = '#525252'
+const MICRO = '#a3a3a3'
+const HAIR = '#e5e5e5'
+const HAIRSOFT = '#f5f5f5'
+const CREAM = '#f5f5f5'
+const CREAMDEEP = '#e5e5e5'
+const CRIMSON = '#c8003a'
 const GREEN = '#1B9E5C'
 const BLUE = '#2E6CF6'
 const ORANGE = '#E97B2A'
-const BLACK = '#0A0A0A'
-const BODY = '#2c2b28'
+const BLACK = '#171717'
+const BODY = '#404040'
 
 const APPLY_URL = `${PROPERTY_MANAGER_APP_URL}/apply`
-
-const serif = "'DM Serif Display', Georgia, serif"
-const mono = "'JetBrains Mono', ui-monospace, monospace"
 
 const card: CSSProperties = {
 	background: '#fff',
@@ -30,11 +27,8 @@ const card: CSSProperties = {
 }
 
 const keyStyle: CSSProperties = {
-	fontFamily: mono,
 	fontSize: 14,
-	letterSpacing: '.09em',
-	textTransform: 'uppercase',
-	color: '#55534e',
+	color: '#525252',
 }
 
 const twoGrid: CSSProperties = {
@@ -104,15 +98,14 @@ function Placeholder({
 		<div
 			style={{
 				background:
-					'repeating-linear-gradient(45deg,rgba(17,17,16,.05) 0 6px,transparent 6px 12px)',
+					'repeating-linear-gradient(45deg,rgba(23,23,23,.05) 0 6px,transparent 6px 12px)',
 				border: `1px dashed ${HAIR}`,
 				borderRadius: 10,
 				display: 'flex',
 				alignItems: 'center',
 				justifyContent: 'center',
-				fontFamily: mono,
 				fontSize: 14,
-				color: '#55534e',
+				color: '#525252',
 				textAlign: 'center',
 				padding: 10,
 				height,
@@ -146,10 +139,9 @@ function Figure({
 			{caption && (
 				<div
 					style={{
-						fontFamily: mono,
 						fontSize: 14,
 						lineHeight: 1.55,
-						color: '#55534e',
+						color: '#525252',
 						marginTop: 14,
 						textAlign: 'center',
 					}}
@@ -191,11 +183,10 @@ function H2({ children }: { children: ReactNode }) {
 	return (
 		<h2
 			style={{
-				fontFamily: serif,
 				fontSize: 'clamp(30px,3.4vw,40px)',
 				lineHeight: 1.12,
 				letterSpacing: '-.8px',
-				fontWeight: 400,
+				fontWeight: 500,
 				margin: '0 0 20px',
 				color: INK,
 			}}
@@ -404,7 +395,7 @@ function HeroDashboard() {
 				display: 'flex',
 				height: 610,
 				boxShadow:
-					'0 26px 60px -30px rgba(17,17,16,.35),0 2px 6px rgba(17,17,16,.05)',
+					'0 26px 60px -30px rgba(23,23,23,.35),0 2px 6px rgba(23,23,23,.05)',
 				overflow: 'hidden',
 			}}
 		>
@@ -493,7 +484,7 @@ function HeroDashboard() {
 						<div>
 							<div
 								style={{
-									fontFamily: serif,
+									fontWeight: 500,
 									fontSize: 31,
 									letterSpacing: '-.7px',
 								}}
@@ -591,7 +582,7 @@ function LevelCard({
 				gap: 14,
 				alignItems: 'center',
 				marginLeft: indent,
-				...(crimson ? { borderColor: '#C8003A44' } : {}),
+				...(crimson ? { borderColor: '#c8003a44' } : {}),
 			}}
 		>
 			<span
@@ -662,7 +653,7 @@ function PropertyTypeCard({
 			<div style={{ ...keyStyle, color: CRIMSON }}>{type}</div>
 			<div
 				style={{
-					fontFamily: serif,
+					fontWeight: 500,
 					fontSize: 27,
 					letterSpacing: '-.4px',
 					margin: '8px 0 6px',
@@ -753,7 +744,7 @@ function PortfolioCard({
 			<div style={keyStyle}>{label}</div>
 			<div
 				style={{
-					fontFamily: serif,
+					fontWeight: 500,
 					fontSize: 24,
 					letterSpacing: '-.4px',
 					margin: '10px 0 8px',
@@ -768,11 +759,8 @@ function PortfolioCard({
 }
 
 const thStyle: CSSProperties = {
-	fontFamily: mono,
 	fontSize: 13.5,
-	letterSpacing: '.07em',
-	textTransform: 'uppercase',
-	color: '#55534e',
+	color: '#525252',
 	textAlign: 'left',
 	padding: '14px 16px',
 	borderBottom: `1px solid ${HAIR}`,
@@ -817,23 +805,19 @@ export default function UnderstandingAssetManagement() {
 				>
 					<div
 						style={{
-							fontFamily: mono,
 							fontSize: 14,
 							fontWeight: 500,
-							letterSpacing: '.11em',
-							textTransform: 'uppercase',
-							color: CRIMSON,
+							color: MUTED,
 						}}
 					>
 						Blog · How it works
 					</div>
 					<h1
 						style={{
-							fontFamily: serif,
 							fontSize: 'clamp(42px,5.6vw,72px)',
 							lineHeight: 1.03,
 							letterSpacing: '-1.5px',
-							fontWeight: 400,
+							fontWeight: 500,
 							margin: '18px 0 0',
 							textWrap: 'balance',
 						}}
@@ -918,7 +902,7 @@ export default function UnderstandingAssetManagement() {
 								chipStyle={{
 									background: 'rgba(200,0,58,.07)',
 									color: CRIMSON,
-									borderColor: '#C8003A33',
+									borderColor: '#c8003a33',
 								}}
 								indent="clamp(0px,8vw,96px)"
 								crimson
@@ -1157,7 +1141,7 @@ export default function UnderstandingAssetManagement() {
 							style={{
 								...card,
 								padding: '24px 26px',
-								boxShadow: '0 20px 44px -28px rgba(17,17,16,.3)',
+								boxShadow: '0 20px 44px -28px rgba(23,23,23,.3)',
 							}}
 						>
 							<div
@@ -1171,7 +1155,7 @@ export default function UnderstandingAssetManagement() {
 							>
 								<div
 									style={{
-										fontFamily: serif,
+										fontWeight: 500,
 										fontSize: 25,
 										letterSpacing: '-.4px',
 									}}
@@ -1494,9 +1478,8 @@ export default function UnderstandingAssetManagement() {
 				>
 					<h3
 						style={{
-							fontFamily: serif,
 							fontSize: 'clamp(30px,4vw,44px)',
-							fontWeight: 400,
+							fontWeight: 500,
 							letterSpacing: '-.8px',
 							lineHeight: 1.1,
 							margin: 0,
@@ -1517,7 +1500,7 @@ export default function UnderstandingAssetManagement() {
 					</p>
 					<ExternalLink
 						href={APPLY_URL}
-						className="bg-rl-crimson hover:bg-rl-crimson-deep inline-block rounded-full font-semibold text-white no-underline transition-colors"
+						className="bg-brand-500 hover:bg-brand-600 inline-block rounded-full font-semibold text-white no-underline transition-colors"
 						style={{ fontSize: 17, padding: '14px 26px' }}
 					>
 						Create your account

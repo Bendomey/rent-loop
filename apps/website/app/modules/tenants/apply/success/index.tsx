@@ -21,7 +21,7 @@ export function TenantApplySuccessModule() {
 						<p className="text-lg text-zinc-600">
 							Welcome to{' '}
 							<span className="text-center capitalize">
-								<span className="font-extrabold text-rose-700">
+								<span className="text-brand-600 font-extrabold">
 									{APP_NAME.slice(0, 4)}{' '}
 								</span>
 								<span className="font-extrabold">{APP_NAME.slice(4)}</span>

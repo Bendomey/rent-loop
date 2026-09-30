@@ -43,7 +43,7 @@ export function TrackingDashboard({ application, code }: Props) {
 			<header className="border-b bg-white">
 				<div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-4">
 					<div className="flex flex-row items-end">
-						<span className="text-2xl font-extrabold text-rose-700">
+						<span className="text-brand-600 text-2xl font-extrabold">
 							{APP_NAME.slice(0, 4)}
 						</span>
 						<span className="text-2xl font-extrabold">{APP_NAME.slice(4)}</span>

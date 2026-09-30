@@ -24,7 +24,7 @@ export function meta({ loaderData, location }: Route.MetaArgs) {
 	const meta = getSocialMetas({
 		title: 'Pricing — Property Management Software | Rentloop',
 		description:
-			'Start free with up to 3 units, then choose Starter or Growth from GHS 149/month. Billed monthly or yearly in cedis, with Mobile Money, bank transfer and card accepted.',
+			'Start free with up to 3 units, then choose Starter or Growth as your portfolio grows. Billed monthly or yearly, and you can change plans anytime.',
 		url,
 		origin: loaderData.origin,
 		keywords: pageKeywords.pricing,

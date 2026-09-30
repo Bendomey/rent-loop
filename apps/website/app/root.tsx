@@ -33,11 +33,15 @@ export const links: Route.LinksFunction = () => [
 	},
 	{
 		rel: 'stylesheet',
-		href: 'https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Shantell+Sans:ital,wght@0,300..800;1,300..800&display=swap',
+		href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap',
 	},
 	{
 		rel: 'stylesheet',
-		href: 'https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,400..700&family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap',
+		href: 'https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400..700&family=DM+Serif+Display&family=JetBrains+Mono:wght@400..700&family=Shantell+Sans:wght@400..600&display=swap',
+	},
+	{
+		rel: 'stylesheet',
+		href: 'https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=add,add_task,alarm,apartment,arrow_back_ios_new,arrow_forward,build,calendar_today,check_circle,chevron_left,chevron_right,credit_card,description,engineering,filter_list,home,keyboard_arrow_down,lightbulb,more_horiz,notifications,open_in_new,payments,pie_chart,receipt_long,refresh,schedule,search,swap_horiz,tune,warning&display=block',
 	},
 	{ rel: 'manifest', href: '/manifest.webmanifest' },
 	{ rel: 'icon', href: '/favicon.ico' },
@@ -57,7 +61,7 @@ export async function loader() {
 
 export function Layout({ children }: { children: React.ReactNode }) {
 	return (
-		<html lang="en" className="scroll-smooth">
+		<html lang="en" className="scroll-smooth bg-white antialiased">
 			<head>
 				<meta charSet="utf-8" />
 				<meta name="viewport" content="width=device-width, initial-scale=1" />

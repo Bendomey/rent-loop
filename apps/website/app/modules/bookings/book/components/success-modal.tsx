@@ -70,7 +70,7 @@ export function SuccessModal({ trackingCode, onClose }: Props) {
 
 					<Link
 						to={`/bookings/track/${trackingCode}`}
-						className="mt-4 block w-full rounded-lg bg-rose-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-rose-700"
+						className="bg-brand-500 hover:bg-brand-600 mt-4 block w-full rounded-lg py-2.5 text-sm font-semibold text-white transition-colors"
 					>
 						Track booking status →
 					</Link>

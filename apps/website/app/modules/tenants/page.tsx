@@ -1,775 +1,447 @@
+import {
+	ArrowsRightLeftIcon,
+	BanknotesIcon,
+	BuildingOfficeIcon,
+	ClipboardDocumentCheckIcon,
+	ClipboardDocumentListIcon,
+	DevicePhoneMobileIcon,
+	DocumentTextIcon,
+	HomeIcon,
+	MegaphoneIcon,
+	ShieldCheckIcon,
+	UserCircleIcon,
+	WrenchScrewdriverIcon,
+} from '@heroicons/react/24/outline'
+import clsx from 'clsx'
 import { useState } from 'react'
 import { Link } from 'react-router'
 import {
-	AnchorNav,
-	AppStoreBadge,
-	BodyText,
-	CTAButton,
-	Em,
-	Eyebrow,
+	AppStoreLink,
+	BackgroundIllustration,
+	Button,
+	CallToAction,
+	CheckIcon,
+	CircleBackground,
+	Container,
+	FeatureCard,
+	FeatureGrid,
+	IconBadge,
 	MarketingPage,
-	Placeholder,
-	PlayStoreBadge,
-	RL,
-	SectionHeader,
-	SubHead,
+	PhoneFrame,
+	PlayStoreLink,
+	SectionIntro,
+	TenantHomeScreen,
+	TenantInvoiceScreen,
+	TenantMaintenanceScreen,
+	TenantPaymentsScreen,
 } from '~/components/marketing'
 
-// ── Hero · Phone trio ─────────────────────────────────────────
 function Hero() {
 	return (
-		<div className="mx-auto max-w-[1280px] px-4 pt-8 pb-14 md:px-14 md:pt-10 md:pb-20">
-			<div className="flex flex-col items-start gap-8 md:flex-row md:gap-12">
-				<div className="flex-1 pt-4 md:pt-10">
-					<Eyebrow>For tenants</Eyebrow>
-					<div className="mt-5">
-						<h1 className="font-rl-serif text-rl-ink m-0 text-[42px] leading-[1.05] font-normal tracking-[-1.0px] md:text-[80px] md:leading-[1.02] md:tracking-[-1.8px]">
-							Your rental,
-							<br />
-							in <Em>your pocket.</Em>
+		<div className="overflow-hidden py-20 sm:py-32 lg:pb-32 xl:pb-36">
+			<Container>
+				<div className="lg:grid lg:grid-cols-12 lg:gap-x-8 lg:gap-y-20">
+					<div className="relative z-10 mx-auto max-w-2xl lg:col-span-7 lg:max-w-none lg:pt-6 xl:col-span-6">
+						<h1 className="text-4xl font-medium tracking-tight text-gray-900">
+							Your rental, in your pocket.
 						</h1>
-					</div>
-					<BodyText size={17.5} color={RL.muted} maxWidth={480}>
-						<div className="mt-6 leading-[1.6]">
-							Pay rent, raise maintenance issues, find your move-in checklist —
-							all on the app your landlord (hopefully) gave you. No more digging
-							through WhatsApp for receipts.
+						<p className="mt-6 text-lg text-gray-600">
+							Pay rent, raise maintenance issues and find your move-in checklist
+							in the app your landlord gave you. No more digging through
+							WhatsApp for receipts.
+						</p>
+						<div className="mt-8 flex flex-wrap gap-x-6 gap-y-4">
+							<PlayStoreLink />
+							<AppStoreLink />
 						</div>
-					</BodyText>
-					<div className="mt-8 flex flex-wrap gap-3">
-						<AppStoreBadge />
-						<PlayStoreBadge />
 					</div>
-					<div className="font-rl-sans text-rl-muted-soft mt-[22px] flex flex-wrap gap-[22px] text-[13.5px]">
-						<span>✓ Free for tenants</span>
-						<span>✓ Phone-number login</span>
-						<span>✓ No password to forget</span>
+					<div className="relative mt-10 sm:mt-20 lg:col-span-5 lg:row-span-2 lg:mt-0 xl:col-span-6">
+						<BackgroundIllustration className="absolute top-4 left-1/2 h-[1026px] w-[1026px] -translate-x-1/3 mask-[linear-gradient(to_bottom,white_20%,transparent_75%)] stroke-gray-300/70 sm:top-16 sm:-translate-x-1/2 lg:-top-16 lg:ml-12 xl:-top-14 xl:ml-0" />
+						<div className="-mx-4 h-[448px] mask-[linear-gradient(to_bottom,white_60%,transparent)] px-9 sm:mx-0 lg:absolute lg:-inset-x-10 lg:-top-10 lg:-bottom-20 lg:h-auto lg:px-0 lg:pt-10 xl:-bottom-32">
+							<PhoneFrame className="mx-auto max-w-[366px]" light>
+								<TenantHomeScreen />
+							</PhoneFrame>
+						</div>
 					</div>
-				</div>
-
-				{/* Phone trio — hidden on mobile to keep hero clean */}
-				<div
-					className="relative hidden h-[660px] items-start justify-center pt-[30px] md:flex"
-					style={{ flex: 1.1 }}
-				>
-					{[
-						{
-							x: -170,
-							y: 60,
-							rot: -8,
-							label: 'HOME',
-							sub: 'rent · stats · activity',
-							radius: 30,
-							w: 220,
-							h: 450,
-						},
-						{
-							x: 0,
-							y: 0,
-							rot: 0,
-							label: 'PAY RENT',
-							sub: 'invoice list · pay flow',
-							radius: 32,
-							w: 240,
-							h: 490,
-						},
-						{
-							x: 170,
-							y: 60,
-							rot: 8,
-							label: 'MAINTENANCE',
-							sub: 'submit · timeline',
-							radius: 30,
-							w: 220,
-							h: 450,
-						},
-					].map((p, i) => (
-						<div
-							key={i}
-							style={{
-								position: 'absolute',
-								left: `calc(50% + ${p.x}px - ${p.w / 2}px)`,
-								top: p.y,
-								width: p.w,
-								height: p.h,
-								background: RL.ink,
-								borderRadius: i === 1 ? 42 : 38,
-								padding: 8,
-								transform: `rotate(${p.rot}deg)`,
-								boxShadow:
-									'0 30px 60px -20px rgba(0,0,0,0.35), 0 0 0 1px rgba(0,0,0,0.04)',
-								zIndex: i === 1 ? 2 : 1,
-							}}
+					<div className="relative -mt-4 lg:col-span-7 lg:mt-0 xl:col-span-6">
+						<ul
+							role="list"
+							className="mx-auto flex max-w-2xl flex-wrap justify-center gap-x-8 gap-y-4 text-sm text-gray-700 lg:mx-0 lg:justify-start"
 						>
-							<div
-								style={{
-									width: '100%',
-									height: '100%',
-									borderRadius: p.radius,
-									overflow: 'hidden',
-								}}
-							>
-								<img
-									src={
-										i === 0
-											? '/images/tenant-payment.webp'
-											: i === 1
-												? '/images/tenant-app.webp'
-												: '/images/tenant-request.webp'
-									}
-									alt=""
-									style={{
-										width: '100%',
-										height: '100%',
-										objectFit: 'cover',
-										objectPosition: 'top',
-									}}
-								/>
-							</div>
-						</div>
-					))}
+							{[
+								'Free for tenants',
+								'Phone-number login',
+								'No password to forget',
+							].map((item) => (
+								<li key={item} className="flex items-center gap-2">
+									<CheckIcon className="text-brand-500 h-6 w-6 flex-none" />
+									{item}
+								</li>
+							))}
+						</ul>
+					</div>
 				</div>
-			</div>
+			</Container>
 		</div>
 	)
 }
 
-// ── Inside overview ───────────────────────────────────────────
-function InsideOverview() {
-	const items = [
-		{
-			t: 'Phone-number login',
-			s: "Enter your number, get an OTP, you're in. No password to forget, no email to mistype.",
-		},
-		{
-			t: 'Rental at a glance',
-			s: 'Rent, status, move-in date, next payment — all on the home screen. Tap for the details.',
-		},
-		{
-			t: 'Pay & track invoices',
-			s: "See what's due, what you've paid, and the line items behind every invoice in cedis.",
-		},
-		{
-			t: 'Submit maintenance',
-			s: 'Snap photos, describe the issue, watch it move from New to Resolved.',
-		},
-		{
-			t: 'Your paperwork, organized',
-			s: 'Rental agreement, ID, condition reports, announcements — all in one tap, never in your inbox.',
-		},
-		{
-			t: 'Multiple rentals',
-			s: 'Got two places? Switch between them from a single login.',
-		},
-	]
+const features = [
+	{
+		name: 'Pay rent',
+		description:
+			'See your outstanding balance, what’s due next and every invoice you’ve already paid, all in one list.',
+		icon: BanknotesIcon,
+		screen: TenantPaymentsScreen,
+	},
+	{
+		name: 'Maintenance requests',
+		description:
+			'Snap a photo, describe the issue and watch it move from New to Resolved. Every status change and comment is logged, and updates arrive as notifications.',
+		icon: WrenchScrewdriverIcon,
+		screen: TenantMaintenanceScreen,
+	},
+	{
+		name: 'Itemised invoices',
+		description:
+			'Open any invoice to see the line items, what you’ve paid so far and when the rest is due. Log a bank transfer or cash payment and your manager confirms it.',
+		icon: DocumentTextIcon,
+		screen: TenantInvoiceScreen,
+	},
+]
+
+function FeaturesDesktop() {
+	const [selectedIndex, setSelectedIndex] = useState(0)
+	const SelectedScreen = features[selectedIndex]!.screen
+
+	function onKeyDown(event: React.KeyboardEvent) {
+		const step =
+			event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0
+		if (!step) return
+		event.preventDefault()
+		const next = (selectedIndex + step + features.length) % features.length
+		setSelectedIndex(next)
+		document.getElementById(`tenant-feature-tab-${next}`)?.focus()
+	}
+
 	return (
-		<div
-			id="inside"
-			className="mx-auto max-w-[1280px] scroll-mt-20 px-4 pt-14 pb-10 md:px-14 md:pt-[88px] md:pb-14"
-		>
-			<SectionHeader
-				eyebrow="Already on rentloop"
-				title={
-					<>
-						What's <Em>inside</Em> the app.
-					</>
-				}
-				body="If your landlord uses Rentloop, here's everything waiting for you when you install."
-				align="center"
-				maxWidth={620}
-			/>
-			<div className="mt-10 grid grid-cols-1 gap-[18px] sm:grid-cols-2 md:mt-12 md:grid-cols-3">
-				{items.map((it, i) => (
+		<div className="grid grid-cols-12 items-center gap-8 lg:gap-16 xl:gap-24">
+			<div
+				role="tablist"
+				aria-orientation="vertical"
+				onKeyDown={onKeyDown}
+				className="relative z-10 order-last col-span-6 space-y-6"
+			>
+				{features.map((feature, featureIndex) => (
 					<div
-						key={i}
-						className="border-rl-hairline rounded-[18px] border bg-white px-[26px] py-6"
+						key={feature.name}
+						className={clsx(
+							'relative rounded-2xl transition-colors',
+							featureIndex === selectedIndex
+								? 'bg-gray-800'
+								: 'hover:bg-gray-800/30',
+						)}
 					>
-						<div className="font-rl-mono text-rl-crimson mb-3 text-[11px] tracking-[1px]">
-							{String(i + 1).padStart(2, '0')}
+						<div className="relative z-10 p-8">
+							<IconBadge icon={feature.icon} dark />
+							<h3 className="mt-6 text-lg font-semibold text-white">
+								<button
+									type="button"
+									role="tab"
+									id={`tenant-feature-tab-${featureIndex}`}
+									aria-selected={featureIndex === selectedIndex}
+									aria-controls="tenant-feature-panel"
+									tabIndex={featureIndex === selectedIndex ? 0 : -1}
+									onClick={() => setSelectedIndex(featureIndex)}
+									className="text-left focus:outline-none"
+								>
+									<span className="absolute inset-0 rounded-2xl" />
+									{feature.name}
+								</button>
+							</h3>
+							<p className="mt-2 text-sm text-gray-400">
+								{feature.description}
+							</p>
 						</div>
-						<div className="font-rl-serif text-rl-ink mb-2 text-[22px] tracking-[-0.3px]">
-							{it.t}
-						</div>
-						<BodyText size={14} color={RL.muted} lh={1.55}>
-							{it.s}
-						</BodyText>
 					</div>
 				))}
 			</div>
+			<div className="relative col-span-6">
+				<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+					<CircleBackground color="#c8003a" className="animate-spin-slower" />
+				</div>
+				<PhoneFrame className="z-10 mx-auto w-full max-w-[366px]" light>
+					<div
+						role="tabpanel"
+						id="tenant-feature-panel"
+						aria-labelledby={`tenant-feature-tab-${selectedIndex}`}
+						className="col-start-1 row-start-1 flex"
+					>
+						<SelectedScreen />
+					</div>
+				</PhoneFrame>
+			</div>
 		</div>
 	)
 }
 
-// ── Tenant section (phone + text, alternating) ─────────────────
-interface TenantBullet {
-	t: string
-	s: string
-}
-interface SecondaryPhone {
-	side: 'left' | 'right'
-	label: string
-	sub: string
-	image?: string
-}
-
-function TenantSection({
-	id,
-	eyebrow,
-	title,
-	body,
-	bullets,
-	phoneLabel,
-	phoneSub,
-	phoneImage,
-	flip = false,
-	secondaryPhones,
-}: {
-	id: string
-	eyebrow: string
-	title: React.ReactNode
-	body: string
-	bullets?: TenantBullet[]
-	phoneLabel: string
-	phoneSub: string
-	phoneImage?: string
-	flip?: boolean
-	secondaryPhones?: SecondaryPhone[]
-}) {
-	const phoneEl = (
-		<div className="relative flex min-h-[400px] flex-1 justify-center md:min-h-[580px]">
-			<div className="bg-rl-ink relative z-[2] h-[440px] w-[220px] rounded-[42px] p-2 shadow-[0_30px_60px_-20px_rgba(0,0,0,0.30),0_0_0_1px_rgba(0,0,0,0.04)] md:h-[530px] md:w-[260px]">
-				<div className="h-full w-full overflow-hidden rounded-[34px]">
-					{phoneImage ? (
-						<img
-							src={phoneImage}
-							alt=""
-							className="h-full w-full object-cover object-top"
-						/>
-					) : (
-						<Placeholder
-							height="100%"
-							label={phoneLabel}
-							sub={phoneSub}
-							radius={34}
-						/>
-					)}
-				</div>
-			</div>
-			{/* Secondary phones hidden on mobile to avoid overflow */}
-			{secondaryPhones?.map((p, i) => (
+function FeaturesMobile() {
+	return (
+		<div className="space-y-6">
+			{features.map((feature, featureIndex) => (
 				<div
-					key={i}
-					className="hidden md:block"
-					style={{
-						position: 'absolute',
-						left: p.side === 'left' ? 'calc(50% - 220px)' : 'auto',
-						right: p.side === 'right' ? 'calc(50% - 220px)' : 'auto',
-						top: 40,
-						width: 200,
-						height: 420,
-						background: RL.ink,
-						borderRadius: 32,
-						padding: 7,
-						transform: `rotate(${p.side === 'left' ? -6 : 6}deg)`,
-						boxShadow: '0 20px 40px -16px rgba(0,0,0,0.25)',
-						zIndex: 1,
-					}}
+					key={feature.name}
+					className="relative overflow-hidden rounded-2xl bg-gray-800 px-5 py-6"
 				>
-					<div
-						style={{
-							width: '100%',
-							height: '100%',
-							borderRadius: 25,
-							overflow: 'hidden',
-						}}
-					>
-						{p.image ? (
-							<img
-								src={p.image}
-								alt=""
-								style={{
-									width: '100%',
-									height: '100%',
-									objectFit: 'cover',
-									objectPosition: 'top',
-								}}
-							/>
-						) : (
-							<Placeholder
-								height="100%"
-								label={p.label}
-								sub={p.sub}
-								radius={25}
-							/>
-						)}
+					<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+						<CircleBackground
+							color="#c8003a"
+							className={featureIndex % 2 === 1 ? 'rotate-180' : undefined}
+						/>
+					</div>
+					<PhoneFrame className="relative mx-auto w-full max-w-[366px]" light>
+						<feature.screen />
+					</PhoneFrame>
+					<div className="absolute inset-x-0 bottom-0 bg-gray-800/95 p-6 backdrop-blur-sm sm:p-10">
+						<IconBadge icon={feature.icon} dark />
+						<h3 className="mt-6 text-sm font-semibold text-white sm:text-lg">
+							{feature.name}
+						</h3>
+						<p className="mt-2 text-sm text-gray-400">{feature.description}</p>
 					</div>
 				</div>
 			))}
 		</div>
 	)
+}
 
-	const textEl = (
-		<div className="flex max-w-[480px] flex-1 flex-col justify-center gap-[18px]">
-			<Eyebrow>{eyebrow}</Eyebrow>
-			<SubHead size={44} ls={-1.0}>
-				{title}
-			</SubHead>
-			<BodyText size={16.5} color={RL.muted} lh={1.6}>
-				{body}
-			</BodyText>
-			{bullets && (
-				<ul className="mt-[6px] flex list-none flex-col gap-3 p-0">
-					{bullets.map((b, i) => (
-						<li
-							key={i}
-							className="font-rl-sans text-rl-ink-soft flex items-start gap-[14px] text-[14.5px] leading-[1.5]"
-						>
-							<span className="bg-rl-crimson-tint text-rl-crimson font-rl-mono flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-[6px] text-[11px] font-semibold">
-								{String(i + 1).padStart(2, '0')}
-							</span>
-							<span>
-								<strong className="text-rl-ink font-semibold">{b.t}.</strong>{' '}
-								{b.s}
-							</span>
-						</li>
+function PrimaryFeatures() {
+	return (
+		<section
+			id="features"
+			aria-labelledby="tenant-features-title"
+			className="bg-gray-900 py-20 sm:py-32"
+		>
+			<Container>
+				<SectionIntro
+					id="tenant-features-title"
+					dark
+					title="Everything you open the app for."
+					description="If your landlord uses Rentloop, here’s what’s waiting for you when you install."
+				/>
+			</Container>
+			<Container className="mt-16 md:hidden">
+				<FeaturesMobile />
+			</Container>
+			<Container className="hidden md:mt-20 md:block">
+				<FeaturesDesktop />
+			</Container>
+		</section>
+	)
+}
+
+const moreFeatures = [
+	{
+		name: 'Phone-number login',
+		description:
+			'Enter your number, get a one-time code and you’re in. No password to forget, no email to mistype.',
+		icon: DevicePhoneMobileIcon,
+	},
+	{
+		name: 'Rental at a glance',
+		description:
+			'Rent, status, move-in date and your next payment on the home screen, with pay, report and view one tap away.',
+		icon: HomeIcon,
+	},
+	{
+		name: 'Multiple rentals',
+		description: 'Got two places? Switch between them from a single login.',
+		icon: ArrowsRightLeftIcon,
+	},
+	{
+		name: 'Announcements',
+		description:
+			'From rent reminders to the water tanker schedule, with the full history to scroll back through.',
+		icon: MegaphoneIcon,
+	},
+	{
+		name: 'Your profile',
+		description:
+			'Personal info, ID, employment and emergency contact, kept up to date in one place.',
+		icon: UserCircleIcon,
+	},
+	{
+		name: 'Unit details',
+		description:
+			'Photos of your place, the feature list and the house rules, handy for guests.',
+		icon: BuildingOfficeIcon,
+	},
+	{
+		name: 'Condition reports and disputes',
+		description:
+			'Review the move-in checklist your landlord shared, and raise a dispute if something is off.',
+		icon: ClipboardDocumentCheckIcon,
+	},
+	{
+		name: 'Application status',
+		description:
+			'Applied for a place? Follow your application through each stage in real time.',
+		icon: ClipboardDocumentListIcon,
+	},
+	{
+		name: 'Account safety',
+		description:
+			'Log out of a lost phone, or delete your account whenever you want. Your data, your call.',
+		icon: ShieldCheckIcon,
+	},
+]
+
+function MoreFeatures() {
+	return (
+		<section
+			id="more"
+			aria-labelledby="tenant-more-title"
+			className="py-20 sm:py-32"
+		>
+			<Container>
+				<SectionIntro
+					id="tenant-more-title"
+					align="center"
+					title="The rest of your rental life."
+					description="Everything else lives behind the More tab. Yes, even deleting your account."
+				/>
+				<FeatureGrid>
+					{moreFeatures.map((feature) => (
+						<FeatureCard
+							key={feature.name}
+							icon={<IconBadge icon={feature.icon} />}
+							name={feature.name}
+							description={feature.description}
+						/>
 					))}
-				</ul>
-			)}
-		</div>
-	)
-
-	return (
-		<div
-			id={id}
-			className="mx-auto flex max-w-[1280px] scroll-mt-20 flex-col gap-10 px-4 py-10 md:flex-row md:gap-16 md:px-14 md:py-16"
-		>
-			{flip ? (
-				<>
-					{phoneEl}
-					{textEl}
-				</>
-			) : (
-				<>
-					{textEl}
-					{phoneEl}
-				</>
-			)}
-		</div>
+				</FeatureGrid>
+			</Container>
+		</section>
 	)
 }
 
-// ── Account grid ──────────────────────────────────────────────
-function AccountGrid() {
-	const items = [
-		{
-			t: 'Edit your full profile',
-			s: 'Personal info, ID, employment, emergency contact — kept up to date in one place.',
-			icon: '◆',
-		},
-		{
-			t: 'View rental details',
-			s: 'Dates, terms, monthly rent, frequency — and download the signed PDF whenever you need it.',
-			icon: '✦',
-		},
-		{
-			t: 'All your announcements',
-			s: 'From rent reminders to the Saturday water tanker schedule, scrollable history.',
-			icon: '◐',
-		},
-		{
-			t: 'Unit details',
-			s: 'Photos of your place, the feature list, and the house rules. Helpful for guests and arguments.',
-			icon: '⌂',
-		},
-		{
-			t: 'Condition reports + disputes',
-			s: 'Review the move-in checklist your landlord shared. Raise a dispute if something is off.',
-			icon: '✓',
-		},
-		{
-			t: 'Application status',
-			s: 'If you applied for a place, watch your application move through the stages in real time.',
-			icon: '◯',
-		},
-		{
-			t: 'Refer a friend',
-			s: 'Tell another tenant. We help more landlords come on, which means less spreadsheet pain for everyone.',
-			icon: '★',
-		},
-		{
-			t: 'Account safety',
-			s: 'Logout from a stolen phone. Delete your account when you want to. Your data, your call.',
-			icon: '◑',
-		},
-	]
-	return (
-		<div
-			id="account"
-			className="mx-auto max-w-[1280px] scroll-mt-20 px-4 pt-14 pb-14 md:px-14 md:pt-[88px] md:pb-20"
-		>
-			<SectionHeader
-				eyebrow="More & account"
-				title={
-					<>
-						The rest of <Em>your</Em> rental life.
-					</>
-				}
-				body="Everything else lives behind the More tab. Yes, even the part where you can delete your account."
-				align="center"
-				maxWidth={640}
-			/>
-			<div className="mt-10 grid grid-cols-2 gap-4 md:mt-12 md:grid-cols-4">
-				{items.map((it, i) => (
-					<div
-						key={i}
-						className="border-rl-hairline flex flex-col gap-3 rounded-2xl border bg-white p-5 md:p-6"
-					>
-						<div className="bg-rl-crimson-tint text-rl-crimson font-rl-serif flex h-10 w-10 items-center justify-center rounded-[10px] text-[20px]">
-							{it.icon}
-						</div>
-						<div className="font-rl-serif text-rl-ink text-[17px] tracking-[-0.2px] md:text-[19px]">
-							{it.t}
-						</div>
-						<BodyText size={13.5} color={RL.muted} lh={1.5}>
-							{it.s}
-						</BodyText>
-					</div>
-				))}
-			</div>
-		</div>
-	)
-}
+const pitch =
+	'Hi, I found this rental platform that handles rent collection, maintenance and rental agreements in one place. The first 3 units are free. Want me to send the demo? Their site has a section for managers: rentloopapp.com/managers'
 
-// ── Auth callout ──────────────────────────────────────────────
-function AuthCallout() {
-	return (
-		<div className="px-4 pb-14 md:px-14 md:pb-[88px]">
-			<div className="border-rl-hairline mx-auto flex max-w-[1280px] flex-col items-start gap-8 rounded-[20px] border bg-white px-6 py-8 md:flex-row md:items-center md:justify-between md:gap-12 md:px-12 md:py-10">
-				<div className="max-w-[540px]">
-					<Eyebrow>Login</Eyebrow>
-					<div className="mt-3">
-						<SubHead size={36} ls={-0.6}>
-							Sign in with your <Em>phone number.</Em>
-						</SubHead>
-					</div>
-					<BodyText size={15.5} color={RL.muted}>
-						<div className="mt-3">
-							Enter your number. Get a one-time code. You're in. No passwords to
-							forget, no email to mistype. It's how renting should have always
-							worked.
-						</div>
-					</BodyText>
-				</div>
-				<div className="bg-rl-cream border-rl-hairline-soft flex w-full flex-col gap-[10px] rounded-[14px] border p-[22px] md:w-auto md:min-w-[320px]">
-					<div className="font-rl-sans text-rl-muted text-[12px] font-semibold tracking-[0.4px]">
-						PHONE NUMBER
-					</div>
-					<div className="border-rl-hairline font-rl-mono text-rl-ink flex items-center gap-[10px] rounded-[10px] border bg-white px-4 py-[14px] text-[15.5px]">
-						<span className="text-rl-muted">🇬🇭 +233</span>
-						<span className="text-rl-ink tracking-[1px]">54 123 4567</span>
-						<span className="text-rl-green ml-auto text-[12px]">✓</span>
-					</div>
-					<CTAButton kind="primary">Send me an OTP →</CTAButton>
-				</div>
-			</div>
-		</div>
-	)
-}
+const pitchPoints = [
+	{
+		name: 'No more “did you get it?”',
+		description:
+			'Every receipt in one place, with a paper trail you both share.',
+	},
+	{
+		name: 'A real maintenance ticket',
+		description: 'Not a WhatsApp message that scrolls away by Thursday.',
+	},
+	{
+		name: 'Gentle rent reminders',
+		description: 'Push notifications instead of guilt-trip phone calls.',
+	},
+	{
+		name: 'Free for up to 3 units',
+		description: 'Your landlord pays nothing until they go past 3 units.',
+	},
+]
 
-// ── Rally section ─────────────────────────────────────────────
-function Rally() {
+function LandlordPitch() {
 	const [copied, setCopied] = useState(false)
 
-	const pitch = `Hi — I found this rental platform that handles rent collection, maintenance, and rental agreements in one place. The first 3 units are free. Want me to send the demo? Their site has a section for managers: rentloopapp.com/managers`
-
-	const pitchPoints = [
-		{
-			t: 'No more "did you get it?"',
-			s: 'Every receipt is in one place, with a paper trail you both share.',
-		},
-		{
-			t: 'A real maintenance ticket',
-			s: 'Not a WhatsApp message that scrolls away by Thursday.',
-		},
-		{
-			t: 'Gentle rent reminders',
-			s: 'Push notifications instead of guilt-trip phone calls.',
-		},
-		{
-			t: 'Free for up to 3 units',
-			s: 'For your landlord. They pay nothing until they go past 3 units.',
-		},
-	]
-
-	function handleCopy() {
+	function copyPitch() {
 		void navigator.clipboard.writeText(pitch).then(() => {
 			setCopied(true)
 			setTimeout(() => setCopied(false), 2000)
 		})
 	}
 
-	const waUrl = `https://wa.me/?text=${encodeURIComponent(pitch)}`
-	const mailUrl = `mailto:?subject=Check out this rental platform&body=${encodeURIComponent(pitch)}`
-
 	return (
-		<div
-			id="rally"
-			className="bg-rl-black relative mx-auto mt-6 max-w-[1280px] scroll-mt-[60px] overflow-hidden rounded-3xl px-4 py-14 text-white md:mt-10 md:px-14 md:py-[88px]"
+		<section
+			id="landlord"
+			aria-labelledby="tenant-landlord-title"
+			className="border-t border-gray-200 py-20 sm:py-32"
 		>
-			<div
-				className="pointer-events-none absolute rounded-full"
-				style={{
-					top: -180,
-					right: -160,
-					width: 480,
-					height: 480,
-					background: `radial-gradient(circle, ${RL.crimson}33 0%, transparent 60%)`,
-				}}
-			/>
-			<div
-				className="pointer-events-none absolute rounded-full"
-				style={{
-					bottom: -180,
-					left: -160,
-					width: 480,
-					height: 480,
-					background: `radial-gradient(circle, ${RL.crimsonLight}22 0%, transparent 60%)`,
-				}}
-			/>
-
-			<div className="relative mx-auto max-w-[720px] text-center">
-				<div className="font-rl-sans text-rl-crimson-light text-[12.5px] font-semibold tracking-[1.2px] uppercase">
-					Landlord still on WhatsApp?
-				</div>
-				<div className="mt-[22px]">
-					<h2 className="font-rl-serif m-0 text-center text-[38px] leading-[1.04] font-normal tracking-[-1.0px] text-white md:text-[72px] md:tracking-[-1.6px]">
-						<Em color={RL.crimsonLight}>Send them</Em> this page.
-					</h2>
-				</div>
-				<BodyText
-					size={17.5}
-					color="rgba(255,255,255,0.65)"
-					align="center"
-					maxWidth={580}
-				>
-					<div className="mx-auto mt-[22px]">
-						Tenants don't pick the rent platform — landlords do. So we made a
-						kit to help you make the case. Every receipt in one place. A real
-						maintenance ticket. Rent reminders that aren't a guilt trip.
+			<Container>
+				<div className="lg:grid lg:grid-cols-12 lg:gap-x-8">
+					<div className="lg:col-span-6">
+						<SectionIntro
+							id="tenant-landlord-title"
+							title="Landlord still on WhatsApp? Send them this page."
+							description="Tenants don’t pick the rent platform, landlords do. So here’s everything you need to make the case."
+						/>
+						<ul role="list" className="mt-10 max-w-2xl space-y-6">
+							{pitchPoints.map((point) => (
+								<li key={point.name} className="flex gap-3">
+									<CheckIcon className="text-brand-500 h-6 w-6 flex-none" />
+									<p className="text-sm text-gray-700">
+										<span className="font-semibold text-gray-900">
+											{point.name}.
+										</span>{' '}
+										{point.description}
+									</p>
+								</li>
+							))}
+						</ul>
 					</div>
-				</BodyText>
-			</div>
-
-			{/* Pitch points */}
-			<div className="relative mx-auto mt-10 grid max-w-[1100px] grid-cols-1 gap-4 sm:grid-cols-2 md:mt-14 md:grid-cols-4">
-				{pitchPoints.map((p, i) => (
-					<div
-						key={i}
-						className="rounded-2xl border border-white/10 bg-white/[0.04] px-[22px] pt-[22px] pb-6"
-					>
-						<div className="font-rl-mono text-rl-crimson-light mb-3 text-[11px] tracking-[1px]">
-							{String(i + 1).padStart(2, '0')}
+					<div className="mt-16 max-w-2xl lg:col-span-6 lg:mt-0">
+						<div className="rounded-2xl border border-gray-200 p-8">
+							<h3 className="font-semibold text-gray-900">
+								The pitch, ready to send
+							</h3>
+							<p className="mt-4 text-sm text-gray-700">{pitch}</p>
+							<div className="mt-8 flex flex-wrap gap-3">
+								<Button
+									href={`https://wa.me/?text=${encodeURIComponent(pitch)}`}
+								>
+									Send via WhatsApp
+								</Button>
+								<Button variant="outline" onClick={copyPitch}>
+									{copied ? 'Copied' : 'Copy the pitch'}
+								</Button>
+								<Button
+									variant="outline"
+									href={`mailto:?subject=${encodeURIComponent('Check out this rental platform')}&body=${encodeURIComponent(pitch)}`}
+								>
+									Email it instead
+								</Button>
+							</div>
 						</div>
-						<div className="font-rl-serif mb-[10px] text-[22px] leading-[1.15] text-white">
-							{p.t}
-						</div>
-						<BodyText size={13.5} color="rgba(255,255,255,0.6)" lh={1.5}>
-							{p.s}
-						</BodyText>
-					</div>
-				))}
-			</div>
-
-			{/* WhatsApp pitch template */}
-			<div className="relative mx-auto mt-10 max-w-[720px] rounded-[20px] border border-white/10 bg-white/[0.04] px-6 py-6 md:mt-14 md:px-9 md:py-8">
-				<div className="font-rl-mono mb-4 flex items-center gap-[10px] text-[11px] tracking-[1px] text-white/45 uppercase">
-					<span className="inline-block h-2 w-2 rounded-full bg-[#25D366]" />
-					The pitch · copy & paste
-				</div>
-				<div className="font-rl-serif mb-6 text-[18px] leading-[1.5] text-white/[0.92] italic md:text-[22px]">
-					"{pitch}"
-				</div>
-				<div className="flex flex-wrap gap-3">
-					<a
-						href={waUrl}
-						className="font-rl-sans inline-flex cursor-pointer items-center gap-2 rounded-[11px] bg-[#25D366] px-[22px] py-[13px] text-[14.5px] font-semibold text-[#0a0a0a] no-underline"
-					>
-						<span className="text-base">✉</span>
-						Send via WhatsApp
-					</a>
-					<CTAButton kind="light" onClick={handleCopy}>
-						{copied ? '✓ Copied!' : 'Copy the pitch'}
-					</CTAButton>
-					<a
-						href={mailUrl}
-						className="font-rl-sans inline-flex cursor-pointer items-center rounded-[11px] border-[1.5px] border-white/25 bg-transparent px-[22px] py-[13px] text-[14.5px] font-semibold text-white no-underline"
-					>
-						Email it instead
-					</a>
-				</div>
-			</div>
-
-			{/* Cross-link to managers */}
-			<div className="mt-10 flex flex-col flex-wrap gap-6 border-t border-white/[0.08] pt-8 md:mt-14 md:flex-row md:items-center md:justify-between">
-				<div className="max-w-[480px]">
-					<div className="font-rl-serif text-[24px] leading-[1.2] tracking-[-0.4px] text-white md:text-[28px]">
-						Want to read the manager pitch yourself?
-					</div>
-					<div className="font-rl-sans mt-[6px] text-[14.5px] text-white/60">
-						Same product, viewed from the dashboard side. Makes the conversation
-						easier.
+						<p className="mt-6 text-sm text-gray-600">
+							Want to read the manager pitch yourself?{' '}
+							<Link
+								to="/managers"
+								className="hover:text-brand-600 font-semibold text-gray-900"
+							>
+								See the manager page <span aria-hidden="true">→</span>
+							</Link>
+						</p>
 					</div>
 				</div>
-				<Link to="/managers" className="no-underline">
-					<CTAButton kind="primary" size="lg">
-						See the manager page →
-					</CTAButton>
-				</Link>
-			</div>
-		</div>
+			</Container>
+		</section>
 	)
 }
-
-const anchorLinks = [
-	{ id: 'inside', t: "What's in the app" },
-	{ id: 'home', t: 'Home' },
-	{ id: 'payments', t: 'Payments' },
-	{ id: 'maintenance', t: 'Maintenance' },
-	{ id: 'account', t: 'Account' },
-	{ id: 'rally', t: 'Not on rentloop yet?' },
-]
 
 export function TenantsPage() {
 	return (
 		<MarketingPage current="tenants">
 			<Hero />
-			<AnchorNav links={anchorLinks} label="Jump to" />
-			<InsideOverview />
-			<TenantSection
-				id="home"
-				eyebrow="Home dashboard"
-				title={
+			<PrimaryFeatures />
+			<MoreFeatures />
+			<LandlordPitch />
+			<CallToAction
+				title="Get the Rentloop app"
+				description="Free for tenants. Sign in with your phone number and a one-time code, no password needed."
+				actions={
 					<>
-						The first screen <Em>knows</Em> what you came for.
+						<PlayStoreLink color="white" />
+						<AppStoreLink color="white" />
 					</>
 				}
-				body="Open the app, see what you owe, what's just been paid, and what's happening at your place — without scrolling for it."
-				bullets={[
-					{
-						t: 'Rental overview',
-						s: 'Rent amount, status, move-in date, frequency — visible from the home screen',
-					},
-					{
-						t: 'Upcoming payment card',
-						s: 'How much is due, when, and a one-tap path to pay it',
-					},
-					{
-						t: 'Payment & maintenance stats',
-						s: 'A clean summary of your activity to date',
-					},
-					{
-						t: 'Quick actions',
-						s: 'Pay rent, report an issue, view your rental — the three things you actually open the app for',
-					},
-					{
-						t: 'Announcements & checklist',
-						s: 'Latest building announcement + your condition report, both on-screen',
-					},
-					{
-						t: 'Multiple rentals',
-						s: 'Switch between rentals from a single login',
-					},
-				]}
-				phoneLabel="HOME"
-				phoneSub="rental · payment · activity"
-				phoneImage="/images/tenant-app.webp"
-				secondaryPhones={[
-					{
-						side: 'left',
-						label: 'ANNOUNCEMENTS',
-						sub: 'building updates',
-						image: '/images/tenant-announcement.webp',
-					},
-				]}
 			/>
-			<TenantSection
-				id="payments"
-				eyebrow="Payments"
-				title={
-					<>
-						Every <Em>cedi</Em>, paid & filed.
-					</>
-				}
-				body="A clean list of what's outstanding and what's done. Pay in the app, or log a bank transfer manually — Rentloop tracks both."
-				bullets={[
-					{
-						t: 'View invoices',
-						s: 'Outstanding and paid, sorted by date, filterable by month or property',
-					},
-					{
-						t: 'Invoice detail',
-						s: 'Full line items — base rent, utilities, deposits — so you can check the math',
-					},
-					{
-						t: 'Record an offline payment',
-						s: 'Bank transfer? Cash? Log it with a reference. Your manager confirms on their end',
-					},
-					{
-						t: 'Balance summary',
-						s: "Always know what you owe vs. what you've overpaid. No more guessing",
-					},
-				]}
-				phoneLabel="PAY RENT"
-				phoneSub="invoice list · pay flow"
-				phoneImage="/images/tenant-payment.webp"
-				flip
-				secondaryPhones={[
-					{
-						side: 'right',
-						label: 'INVOICE',
-						sub: 'line items detail',
-						image: '/images/tenant-single-payment.webp',
-					},
-				]}
-			/>
-			<TenantSection
-				id="maintenance"
-				eyebrow="Maintenance"
-				title={
-					<>
-						From <Em>leaky tap</Em> to "all fixed."
-					</>
-				}
-				body="Submit a request with a photo, watch it move through the board your manager is using. Status updates land as notifications, not whispered promises."
-				bullets={[
-					{
-						t: 'See all requests',
-						s: "Filter by status, priority, and category. Everything you've ever asked for, in one place",
-					},
-					{
-						t: 'Create a new request',
-						s: "Snap a photo, pick the room, write a sentence — that's the whole flow",
-					},
-					{
-						t: 'Activity timeline',
-						s: 'Every status change, every comment, every photo from the contractor — logged',
-					},
-				]}
-				phoneLabel="MAINTENANCE"
-				phoneSub="request list · new request"
-				phoneImage="/images/maintenance-requests.webp"
-				secondaryPhones={[
-					{
-						side: 'left',
-						label: 'TIMELINE',
-						sub: 'request activity log',
-						image: '/images/tenant-single-maintenance.webp',
-					},
-				]}
-			/>
-			<AccountGrid />
-			<AuthCallout />
-			<Rally />
 		</MarketingPage>
 	)
 }

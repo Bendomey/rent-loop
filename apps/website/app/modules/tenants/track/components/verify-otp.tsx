@@ -104,7 +104,7 @@ export function VerifyOtp({ code, fetcher }: Props) {
 				{/* Branding */}
 				<div className="flex justify-center">
 					<div className="flex flex-row items-end">
-						<span className="text-4xl font-extrabold text-rose-700">
+						<span className="text-brand-600 text-4xl font-extrabold">
 							{APP_NAME.slice(0, 4)}
 						</span>
 						<span className="text-4xl font-extrabold">{APP_NAME.slice(4)}</span>
@@ -113,8 +113,8 @@ export function VerifyOtp({ code, fetcher }: Props) {
 
 				{/* Icon */}
 				<div className="flex justify-center">
-					<div className="rounded-full bg-rose-50 p-4">
-						<ShieldCheck className="h-10 w-10 text-rose-600" />
+					<div className="bg-brand-50 rounded-full p-4">
+						<ShieldCheck className="text-brand-500 h-10 w-10" />
 					</div>
 				</div>
 
@@ -135,7 +135,7 @@ export function VerifyOtp({ code, fetcher }: Props) {
 						<Button
 							onClick={handleSendCode}
 							disabled={isSending}
-							className="w-full bg-rose-600 hover:bg-rose-500"
+							className="bg-brand-500 hover:bg-brand-500 w-full"
 							size="lg"
 						>
 							{isSending ? (
@@ -197,7 +197,7 @@ export function VerifyOtp({ code, fetcher }: Props) {
 									type="button"
 									onClick={handleSendCode}
 									disabled={isSending}
-									className="font-medium text-rose-600 hover:text-rose-500"
+									className="text-brand-500 hover:text-brand-500 font-medium"
 								>
 									Resend Code
 								</button>

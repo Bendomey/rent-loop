@@ -87,7 +87,7 @@ export function Step0() {
 						disabled={isUnitOccupied}
 						size="lg"
 						variant="default"
-						className="w-full bg-rose-600 hover:bg-rose-700 md:w-auto"
+						className="bg-brand-500 hover:bg-brand-600 w-full md:w-auto"
 					>
 						{isUnitOccupied ? (
 							<span>Unit Unavailable</span>

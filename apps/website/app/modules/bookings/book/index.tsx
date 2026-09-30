@@ -129,7 +129,7 @@ export function BookModule({ unit }: Props) {
 			<header className="border-b bg-white">
 				<div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
 					<Link to="/" className="flex items-end">
-						<span className="text-xl font-extrabold text-rose-700">
+						<span className="text-brand-600 text-xl font-extrabold">
 							{APP_NAME.slice(0, 4)}
 						</span>
 						<span className="text-xl font-extrabold">{APP_NAME.slice(4)}</span>
@@ -198,7 +198,7 @@ export function BookModule({ unit }: Props) {
 															{Icon ? (
 																<Icon className="h-5 w-5 shrink-0 text-zinc-500" />
 															) : (
-																<div className="h-2 w-2 shrink-0 rounded-full bg-rose-500" />
+																<div className="bg-brand-500 h-2 w-2 shrink-0 rounded-full" />
 															)}
 															<div className="min-w-0">
 																<p className="truncate text-sm font-medium text-zinc-900 capitalize">

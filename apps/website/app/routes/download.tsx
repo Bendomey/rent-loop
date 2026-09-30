@@ -18,7 +18,7 @@ export function meta({ loaderData, location }: Route.MetaArgs) {
 	const meta = getSocialMetas({
 		title: 'Download the Rentloop Tenant App — Android & iOS',
 		description:
-			'Get the free Rentloop app for Android and iOS. Pay rent with Mobile Money, keep every receipt, track maintenance requests and stay in touch with your landlord.',
+			'Get the free Rentloop app for Android and iOS. Pay rent online, keep every receipt, track maintenance requests and stay in touch with your landlord.',
 		url,
 		origin: loaderData.origin,
 		keywords: pageKeywords.download,

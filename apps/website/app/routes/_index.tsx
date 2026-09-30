@@ -26,7 +26,7 @@ export function meta({ loaderData, location }: Route.MetaArgs) {
 		origin: loaderData.origin,
 		title: 'Property Management Software | Rentloop',
 		description:
-			'Manage properties, tenants, rent and maintenance in one place. Built for landlords and property managers — collect rent in cedis via Mobile Money or bank transfer.',
+			'Manage properties, tenants, rent and maintenance in one place. Property management software for landlords and property managers, with a tenant app for rent payments and maintenance requests.',
 		keywords: pageKeywords.home,
 	})
 

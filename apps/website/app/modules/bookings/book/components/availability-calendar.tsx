@@ -176,9 +176,9 @@ function MonthRangePicker({
 								past
 									? 'cursor-not-allowed text-zinc-300'
 									: start || end || pending
-										? 'bg-rose-500 text-white'
+										? 'bg-brand-500 text-white'
 										: inRange
-											? 'bg-rose-50 text-rose-700'
+											? 'bg-brand-50 text-brand-600'
 											: 'border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50',
 							].join(' ')}
 						>

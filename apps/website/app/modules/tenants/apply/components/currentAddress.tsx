@@ -62,7 +62,7 @@ export function CurrentAddress() {
 			<AlertDialogContent>
 				<AlertDialogHeader>
 					<AlertDialogTitle className="flex items-center gap-3 text-left">
-						<span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-rose-50 text-rose-600 sm:h-9 sm:w-9">
+						<span className="bg-brand-50 text-brand-500 flex h-7 w-7 shrink-0 items-center justify-center rounded-full sm:h-9 sm:w-9">
 							<MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
 						</span>
 						<div>
@@ -96,7 +96,7 @@ export function CurrentAddress() {
 												<Input
 													type="text"
 													placeholder="e.g., East Legon, Accra"
-													className="mt-1.5 h-10 placeholder:text-sm placeholder:text-zinc-400 focus-visible:ring-rose-500"
+													className="focus-visible:ring-brand-500 mt-1.5 h-10 placeholder:text-sm placeholder:text-zinc-400"
 													{...field}
 												/>
 											</FormControl>
@@ -118,7 +118,7 @@ export function CurrentAddress() {
 									<Button
 										size="default"
 										variant="default"
-										className="w-full bg-rose-600 hover:bg-rose-700 md:w-auto"
+										className="bg-brand-500 hover:bg-brand-600 w-full md:w-auto"
 									>
 										Continue
 										<ArrowRight className="h-4 w-4" />

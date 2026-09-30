@@ -11,55 +11,102 @@
 		'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
 		'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
-	/* ── Rentloop marketing design tokens ── */
-	--font-rl-serif: 'DM Serif Display', Georgia, serif;
-	--font-rl-sans: 'DM Sans', system-ui, sans-serif;
-	--font-rl-mono: 'JetBrains Mono', ui-monospace, monospace;
+	--text-*: initial;
+	--text-xs: 0.75rem;
+	--text-xs--line-height: 1rem;
+	--text-sm: 0.875rem;
+	--text-sm--line-height: 1.5rem;
+	--text-base: 1rem;
+	--text-base--line-height: 1.5rem;
+	--text-lg: 1.125rem;
+	--text-lg--line-height: 2rem;
+	--text-xl: 1.25rem;
+	--text-xl--line-height: 1.75rem;
+	--text-2xl: 1.5rem;
+	--text-2xl--line-height: 2rem;
+	--text-3xl: 2rem;
+	--text-3xl--line-height: 3rem;
+	--text-4xl: 2.5rem;
+	--text-4xl--line-height: 3rem;
+	--text-5xl: 3rem;
+	--text-5xl--line-height: 1;
+	--text-6xl: 3.75rem;
+	--text-6xl--line-height: 1;
+	--text-7xl: 4.5rem;
+	--text-7xl--line-height: 1;
+	--text-8xl: 6rem;
+	--text-8xl--line-height: 1;
+	--text-9xl: 8rem;
+	--text-9xl--line-height: 1;
 
-	--color-rl-cream: #f5f4f1;
-	--color-rl-cream-deep: #ebe8e1;
-	--color-rl-cream-warm: #f0ede5;
-	--color-rl-ink: #111110;
-	--color-rl-ink-soft: #3a3935;
-	--color-rl-muted: rgba(17, 17, 16, 0.55);
-	--color-rl-muted-soft: rgba(17, 17, 16, 0.42);
-	--color-rl-muted-micro: rgba(17, 17, 16, 0.28);
-	--color-rl-hairline: rgba(17, 17, 16, 0.1);
-	--color-rl-hairline-soft: rgba(17, 17, 16, 0.06);
-	--color-rl-crimson: #c8003a;
-	--color-rl-crimson-deep: #a30030;
-	--color-rl-crimson-tint: rgba(200, 0, 58, 0.07);
-	--color-rl-crimson-tint2: rgba(200, 0, 58, 0.13);
-	--color-rl-crimson-light: #ff6f8e;
-	--color-rl-black: #0a0a0a;
-	--color-rl-green: #1b9e5c;
+	--font-app-sans: 'DM Sans', 'Inter', system-ui, sans-serif;
+	--font-app-serif: 'DM Serif Display', Georgia, serif;
+	--font-app-mono: 'JetBrains Mono', ui-monospace, monospace;
+	--font-app-hand: 'Shantell Sans', 'Comic Neue', cursive;
+
+	--color-gray-50: oklch(0.985 0 0);
+	--color-gray-100: oklch(0.97 0 0);
+	--color-gray-200: oklch(0.922 0 0);
+	--color-gray-300: oklch(0.87 0 0);
+	--color-gray-400: oklch(0.708 0 0);
+	--color-gray-500: oklch(0.556 0 0);
+	--color-gray-600: oklch(0.439 0 0);
+	--color-gray-700: oklch(0.371 0 0);
+	--color-gray-800: oklch(0.269 0 0);
+	--color-gray-900: oklch(0.205 0 0);
+	--color-gray-950: oklch(0.145 0 0);
+
+	--color-brand-50: #fff1f4;
+	--color-brand-100: #ffe1e8;
+	--color-brand-200: #ffc2d0;
+	--color-brand-300: #ff94ac;
+	--color-brand-400: #ff6f8e;
+	--color-brand-500: #c8003a;
+	--color-brand-600: #a30030;
+	--color-brand-700: #800026;
+
+	--animate-fade-in: fade-in 0.5s linear forwards;
+	--animate-spin-slow: spin 4s linear infinite;
+	--animate-spin-slower: spin 6s linear infinite;
+	--animate-spin-reverse: spin-reverse 1s linear infinite;
+	--animate-spin-reverse-slow: spin-reverse 4s linear infinite;
+	--animate-spin-reverse-slower: spin-reverse 6s linear infinite;
+	--animate-draw: draw 1s ease-out forwards;
+
+	--radius-5xl: 2.5rem;
+
+	--container-2xl: 40rem;
+
+	@keyframes fade-in {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
+	}
+	@keyframes spin-reverse {
+		to {
+			transform: rotate(-360deg);
+		}
+	}
+	@keyframes draw {
+		to {
+			stroke-dashoffset: 0;
+		}
+	}
 }
 
 html,
 body {
-	@apply bg-rose-50/20;
+	background-color: #fff;
 	color-scheme: light;
-}
-
-/* Anchor nav hover — used by sticky marketing navs */
-.rl-anchor-link:hover {
-	background: #fff;
-}
-
-/* Marketing CTA hover */
-.rl-cta-primary:hover {
-	opacity: 0.92;
-	transform: translateY(-1px);
 }
 
 @theme inline {
 	--radius-sm: calc(var(--radius) - 4px);
 	--radius-md: calc(var(--radius) - 2px);
 	--radius-lg: var(--radius);
-	--radius-xl: calc(var(--radius) + 4px);
-	--radius-2xl: calc(var(--radius) + 8px);
-	--radius-3xl: calc(var(--radius) + 12px);
-	--radius-4xl: calc(var(--radius) + 16px);
 	--color-background: var(--background);
 	--color-foreground: var(--foreground);
 	--color-card: var(--card);
@@ -94,7 +141,7 @@ body {
 }
 
 :root {
-	--radius: 0.625rem;
+	--radius: 0.5rem;
 	--background: oklch(1 0 0);
 	--foreground: oklch(0.141 0.005 285.823);
 	--card: oklch(1 0 0);

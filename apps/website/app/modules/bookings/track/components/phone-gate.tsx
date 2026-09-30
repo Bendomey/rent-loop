@@ -22,7 +22,7 @@ export function PhoneGate({ onVerify, error, loading }: Props) {
 		<div className="flex min-h-dvh items-center justify-center bg-zinc-50 px-4">
 			<div className="w-full max-w-sm">
 				<div className="mb-6 text-center">
-					<span className="text-3xl font-extrabold text-rose-700">
+					<span className="text-brand-600 text-3xl font-extrabold">
 						{APP_NAME.slice(0, 4)}
 					</span>
 					<span className="text-3xl font-extrabold">{APP_NAME.slice(4)}</span>
@@ -54,7 +54,7 @@ export function PhoneGate({ onVerify, error, loading }: Props) {
 						<button
 							type="submit"
 							disabled={phone.trim().length < 7 || loading}
-							className="w-full rounded-lg bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
+							className="bg-brand-500 hover:bg-brand-600 w-full rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
 						>
 							{loading ? 'Finding...' : 'Find my booking'}
 						</button>
