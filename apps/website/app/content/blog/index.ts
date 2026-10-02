@@ -81,6 +81,31 @@ export const blogPosts: BlogPostEntry[] = [
 		layout: 'custom',
 		component: () => import('./best-property-management-app-in-ghana.tsx'),
 	},
+	{
+		meta: {
+			title: 'Top 5 Property Management Apps in Ghana for Landlords in 2026',
+			description:
+				'Compare the top property management apps in Ghana for 2026 — Rentloop, PadiRent, FixerRent, RentGhana and TenantCloud — and learn how to choose the right one for your rentals.',
+			date: '2026-10-02',
+			author: 'Marketing Team',
+			slug: 'property-management-apps-in-ghana',
+			coverImage: '/images/blog/property-management-apps-in-ghana-og.jpg',
+			keywords: [
+				'property management apps in Ghana',
+				'top property management apps Ghana 2026',
+				'best property management software Ghana',
+				'landlord app Ghana',
+				'rent management app Ghana',
+				'rent collection app Ghana',
+				'Mobile Money rent payment',
+				'tenant management software Ghana',
+				'Rentloop vs PadiRent',
+				'property management for landlords in Accra',
+			],
+		},
+		layout: 'custom',
+		component: () => import('./property-management-apps-in-ghana.tsx'),
+	},
 ]
 
 export const getBlogPostBySlug = (slug: string) =>
