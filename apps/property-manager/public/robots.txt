@@ -1,2 +1,8 @@
 User-agent: *
+Allow: /apply$
+Allow: /login$
+Allow: /assets/
+Allow: /icons/
+Allow: /favicon.ico
+Allow: /logo.png
 Disallow: /
