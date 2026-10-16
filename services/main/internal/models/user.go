@@ -15,6 +15,9 @@ type User struct {
 	PhoneNumber     string `gorm:"not null"`
 	Password        string `gorm:"not null"`
 	ProfilePhotoUrl *string
+	// Set when the account is created with a system-generated password, so the
+	// owner must replace it before reaching any client data.
+	MustChangePassword bool `gorm:"not null;default:false"`
 
 	ClientUsers []ClientUser
 }

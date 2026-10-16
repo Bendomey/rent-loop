@@ -111,10 +111,11 @@ func (s *clientUserService) CreateClientUser(
 		plainPassword = password
 
 		newUser := models.User{
-			Name:        input.Name,
-			Email:       input.Email,
-			PhoneNumber: input.Phone,
-			Password:    password,
+			Name:               input.Name,
+			Email:              input.Email,
+			PhoneNumber:        input.Phone,
+			Password:           password,
+			MustChangePassword: true,
 		}
 		if err := s.userRepo.Create(ctx, &newUser); err != nil {
 			return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
