@@ -187,7 +187,7 @@ export function PropertyTenantApplicationDocs() {
 	})()
 
 	return (
-		<div className="m-5 mx-auto w-full max-w-7xl">
+		<div className="mx-auto w-full max-w-7xl p-5">
 			<StepPageHeader
 				title={title}
 				subtitle={subtitle}
