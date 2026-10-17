@@ -65,35 +65,19 @@ func ValidateClientMembershipMiddleware(appCtx pkg.AppContext) func(http.Handler
 
 			clientID := chi.URLParam(r, "client_id")
 
-			var clientUser struct {
-				models.ClientUser
-				PasswordChangedAt *time.Time
-			}
+			var clientUser models.ClientUser
 			result := appCtx.DB.
-				Model(&models.ClientUser{}).
-				Select(
-					"client_users.id",
-					"client_users.client_id",
-					"client_users.role",
-					"client_users.status",
-					"users.password_changed_at",
-				).
+				Select("client_users.id", "client_users.client_id", "client_users.role", "client_users.status").
 				Joins("JOIN users ON users.id = client_users.user_id").
 				Where("client_users.client_id = ? AND users.id = ? AND client_users.deleted_at IS NULL", clientID, userCtx.ID).
-				Limit(1).
-				Scan(&clientUser)
-			if result.Error != nil || result.RowsAffected == 0 {
+				First(&clientUser)
+			if result.Error != nil {
 				http.Error(w, "AuthorizationFailed", http.StatusUnauthorized)
 				return
 			}
 
 			if clientUser.Status != "ClientUser.Status.Active" {
 				http.Error(w, "Forbidden", http.StatusForbidden)
-				return
-			}
-
-			if clientUser.PasswordChangedAt == nil {
-				http.Error(w, "PasswordChangeRequired", http.StatusForbidden)
 				return
 			}
 
