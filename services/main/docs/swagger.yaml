@@ -5653,6 +5653,9 @@ definitions:
       name:
         example: John Doe
         type: string
+      password_changed_at:
+        example: "2023-01-01T00:00:00Z"
+        type: string
       phone_number:
         example: "+233281234569"
         type: string

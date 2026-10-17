@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react'
+import { Link } from 'react-router'
 import { useCubeQuery, useGetAnalyticsToken } from '~/api/analytics'
 import { Badge } from '~/components/ui/badge'
 import {
@@ -146,10 +148,13 @@ export function PropertySectionCards({ propertyId }: Props) {
 	)
 	const openRequests = newRequests + inProgress + inReview
 
+	const baseUrl = `/properties/${propertyId}`
+
 	return (
-		<div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs sm:grid-cols-2">
-			{/* Total Rental Income */}
-			<Card className="hover:from-primary/10 @container/card gap-3 py-4 transition-all duration-300 ease-out hover:-translate-y-[2px] hover:scale-[1.02] hover:shadow-lg">
+		<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+			<StatCard
+				to={`${baseUrl}/financials/invoices?filters=status&status=PAID`}
+			>
 				<CardHeader>
 					<CardDescription>Total Rental Income</CardDescription>
 					<CardTitle className="text-3xl font-semibold tabular-nums @[250px]/card:text-4xl">
@@ -163,10 +168,11 @@ export function PropertySectionCards({ propertyId }: Props) {
 				<CardFooter className="text-muted-foreground text-xs">
 					All-time paid invoices
 				</CardFooter>
-			</Card>
+			</StatCard>
 
-			{/* All Tenants */}
-			<Card className="hover:from-primary/10 @container/card gap-3 py-4 transition-all duration-300 ease-out hover:-translate-y-[2px] hover:scale-[1.02] hover:shadow-lg">
+			<StatCard
+				to={`${baseUrl}/occupancy/tenants?filters=status&status=ACTIVE`}
+			>
 				<CardHeader>
 					<CardDescription>All Tenants</CardDescription>
 					<CardTitle className="text-3xl font-semibold tabular-nums @[250px]/card:text-4xl">
@@ -180,10 +186,9 @@ export function PropertySectionCards({ propertyId }: Props) {
 				<CardFooter className="text-muted-foreground text-xs">
 					Tenants on an active lease
 				</CardFooter>
-			</Card>
+			</StatCard>
 
-			{/* Maintenance Requests */}
-			<Card className="hover:from-primary/10 @container/card gap-3 py-4 transition-all duration-300 ease-out hover:-translate-y-[2px] hover:scale-[1.02] hover:shadow-lg">
+			<StatCard to={`${baseUrl}/activities/maintenance-requests`}>
 				<CardHeader>
 					<CardDescription>Maintenance Requests</CardDescription>
 					<CardTitle className="text-3xl font-semibold tabular-nums @[250px]/card:text-4xl">
@@ -210,10 +215,11 @@ export function PropertySectionCards({ propertyId }: Props) {
 						`${newRequests} new · ${inProgress} in progress · ${inReview} in review`
 					)}
 				</CardFooter>
-			</Card>
+			</StatCard>
 
-			{/* Pending Tenant Applications */}
-			<Card className="hover:from-primary/10 @container/card gap-3 py-4 transition-all duration-300 ease-out hover:-translate-y-[2px] hover:scale-[1.02] hover:shadow-lg">
+			<StatCard
+				to={`${baseUrl}/occupancy/applications?filters=status&status=TenantApplication.Status.InProgress`}
+			>
 				<CardHeader>
 					<CardDescription>Pending Tenant Applications</CardDescription>
 					<CardTitle className="text-3xl font-semibold tabular-nums @[250px]/card:text-4xl">
@@ -227,7 +233,20 @@ export function PropertySectionCards({ propertyId }: Props) {
 				<CardFooter className="text-muted-foreground text-xs">
 					Awaiting review
 				</CardFooter>
-			</Card>
+			</StatCard>
 		</div>
+	)
+}
+
+function StatCard({ to, children }: { to: string; children: ReactNode }) {
+	return (
+		<Link
+			to={to}
+			className="group focus-visible:ring-ring/50 rounded-xl outline-none focus-visible:ring-[3px]"
+		>
+			<Card className="from-primary/5 to-card dark:bg-card group-hover:from-primary/10 @container/card h-full gap-3 bg-gradient-to-t py-4 shadow-xs transition-all duration-300 ease-out group-hover:-translate-y-[2px] group-hover:scale-[1.02] group-hover:shadow-lg">
+				{children}
+			</Card>
+		</Link>
 	)
 }
