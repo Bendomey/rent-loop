@@ -29617,6 +29617,10 @@ const docTemplate = `{
                     "type": "string",
                     "example": "John Doe"
                 },
+                "password_changed_at": {
+                    "type": "string",
+                    "example": "2023-01-01T00:00:00Z"
+                },
                 "phone_number": {
                     "type": "string",
                     "example": "+233281234569"

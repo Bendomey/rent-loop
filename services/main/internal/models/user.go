@@ -17,7 +17,7 @@ type User struct {
 	Password        string `gorm:"not null"`
 	ProfilePhotoUrl *string
 	// Nil until the user sets a password of their own. Accounts are created with a
-	// system-generated password, so nil blocks access to client data until then.
+	// system-generated password, so nil means they are still using it.
 	PasswordChangedAt *time.Time
 
 	ClientUsers []ClientUser
