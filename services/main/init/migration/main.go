@@ -102,6 +102,7 @@ func ServiceAutoMigration(db *gorm.DB) error {
 		jobs.AddNotificationTables(),
 		jobs.AddMaintenanceRequestAssets(),
 		jobs.AddMRFSettlementConstraint(),
+		jobs.AddUserPasswordChangedAt(),
 	}
 
 	m = gormigrate.New(db, gormigrate.DefaultOptions, migrations)
