@@ -349,11 +349,10 @@ func (s *clientApplicationService) ApproveClientApplication(
 	}
 
 	ownerUser := models.User{
-		Name:               clientApplication.ContactName,
-		PhoneNumber:        clientApplication.ContactPhoneNumber,
-		Email:              clientApplication.ContactEmail,
-		Password:           password,
-		MustChangePassword: true,
+		Name:        clientApplication.ContactName,
+		PhoneNumber: clientApplication.ContactPhoneNumber,
+		Email:       clientApplication.ContactEmail,
+		Password:    password,
 	}
 
 	ownerUserCreated, err := s.userService.InsertUser(transCtx, &ownerUser)

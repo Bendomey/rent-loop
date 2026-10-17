@@ -254,7 +254,8 @@ func (s *userService) UpdatePassword(ctx context.Context, input UpdateUserPasswo
 		})
 	}
 	user.Password = hashed
-	user.MustChangePassword = false
+	now := time.Now()
+	user.PasswordChangedAt = &now
 
 	if err := s.repo.Update(ctx, user); err != nil {
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
@@ -351,7 +352,8 @@ func (s *userService) ResetPassword(ctx context.Context, input ResetUserPassword
 		})
 	}
 	user.Password = hashed
-	user.MustChangePassword = false
+	now := time.Now()
+	user.PasswordChangedAt = &now
 
 	if err := s.repo.Update(ctx, user); err != nil {
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{

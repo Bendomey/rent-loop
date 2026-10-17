@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"time"
 
 	"github.com/Bendomey/goutilities/pkg/hashpassword"
 	"github.com/getsentry/raven-go"
@@ -15,9 +16,9 @@ type User struct {
 	PhoneNumber     string `gorm:"not null"`
 	Password        string `gorm:"not null"`
 	ProfilePhotoUrl *string
-	// Set when the account is created with a system-generated password, so the
-	// owner must replace it before reaching any client data.
-	MustChangePassword bool `gorm:"not null;default:false"`
+	// Nil until the user sets a password of their own. Accounts are created with a
+	// system-generated password, so nil blocks access to client data until then.
+	PasswordChangedAt *time.Time
 
 	ClientUsers []ClientUser
 }

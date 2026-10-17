@@ -8,15 +8,15 @@ import (
 )
 
 type OutputUser struct {
-	ID                 string             `json:"id"                          example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
-	Name               string             `json:"name"                        example:"John Doe"`
-	Email              string             `json:"email"                       example:"john@example.com"`
-	PhoneNumber        string             `json:"phone_number"                example:"+233281234569"`
-	ProfilePhotoUrl    *string            `json:"profile_photo_url,omitempty" example:"https://example.com/photo.jpg"`
-	MustChangePassword bool               `json:"must_change_password"        example:"false"`
-	ClientUsers        []OutputClientUser `json:"client_users"`
-	CreatedAt          time.Time          `json:"created_at"                  example:"2023-01-01T00:00:00Z"`
-	UpdatedAt          time.Time          `json:"updated_at"                  example:"2023-01-01T00:00:00Z"`
+	ID                string             `json:"id"                          example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
+	Name              string             `json:"name"                        example:"John Doe"`
+	Email             string             `json:"email"                       example:"john@example.com"`
+	PhoneNumber       string             `json:"phone_number"                example:"+233281234569"`
+	ProfilePhotoUrl   *string            `json:"profile_photo_url,omitempty" example:"https://example.com/photo.jpg"`
+	PasswordChangedAt *time.Time         `json:"password_changed_at"         example:"2023-01-01T00:00:00Z"`
+	ClientUsers       []OutputClientUser `json:"client_users"`
+	CreatedAt         time.Time          `json:"created_at"                  example:"2023-01-01T00:00:00Z"`
+	UpdatedAt         time.Time          `json:"updated_at"                  example:"2023-01-01T00:00:00Z"`
 }
 
 // TokenPair is the service-layer input to the token transformations. ExpiresIn
@@ -55,15 +55,15 @@ func DBUserToRest(u *models.User) interface{} {
 	}
 
 	return map[string]interface{}{
-		"id":                   u.ID.String(),
-		"name":                 u.Name,
-		"email":                u.Email,
-		"phone_number":         u.PhoneNumber,
-		"profile_photo_url":    u.ProfilePhotoUrl,
-		"must_change_password": u.MustChangePassword,
-		"created_at":           u.CreatedAt,
-		"updated_at":           u.UpdatedAt,
-		"client_users":         clientUsers,
+		"id":                  u.ID.String(),
+		"name":                u.Name,
+		"email":               u.Email,
+		"phone_number":        u.PhoneNumber,
+		"profile_photo_url":   u.ProfilePhotoUrl,
+		"password_changed_at": u.PasswordChangedAt,
+		"created_at":          u.CreatedAt,
+		"updated_at":          u.UpdatedAt,
+		"client_users":        clientUsers,
 	}
 }
 

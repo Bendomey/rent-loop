@@ -67,7 +67,7 @@ func ValidateClientMembershipMiddleware(appCtx pkg.AppContext) func(http.Handler
 
 			var clientUser struct {
 				models.ClientUser
-				MustChangePassword bool
+				PasswordChangedAt *time.Time
 			}
 			result := appCtx.DB.
 				Model(&models.ClientUser{}).
@@ -76,7 +76,7 @@ func ValidateClientMembershipMiddleware(appCtx pkg.AppContext) func(http.Handler
 					"client_users.client_id",
 					"client_users.role",
 					"client_users.status",
-					"users.must_change_password",
+					"users.password_changed_at",
 				).
 				Joins("JOIN users ON users.id = client_users.user_id").
 				Where("client_users.client_id = ? AND users.id = ? AND client_users.deleted_at IS NULL", clientID, userCtx.ID).
@@ -92,7 +92,7 @@ func ValidateClientMembershipMiddleware(appCtx pkg.AppContext) func(http.Handler
 				return
 			}
 
-			if clientUser.MustChangePassword {
+			if clientUser.PasswordChangedAt == nil {
 				http.Error(w, "PasswordChangeRequired", http.StatusForbidden)
 				return
 			}
