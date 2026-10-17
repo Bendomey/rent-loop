@@ -13,47 +13,51 @@ interface Props {
 }
 
 /**
- * The logo is editable through the company details dialog, while the accent
- * colour remains a placeholder until that feature is released.
+ * The logo is editable through the company details dialog, so only company
+ * accounts get it. The accent colour remains a placeholder until that feature
+ * is released.
  */
 export function BrandingTab({ client, onEdit }: Props) {
+	const isCompany = client.type === 'COMPANY'
 	const hasLogo = Boolean(client.logo_url)
 
 	return (
 		<div className="flex flex-col gap-5">
-			<SettingsPanel caption="Logo">
-				<div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center">
-					<div className="bg-muted/50 flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-dashed">
-						{hasLogo ? (
-							<img
-								key={client.logo_url || 'no-logo'}
-								alt={`${client.name || 'Company'} logo`}
-								className="h-full w-full object-contain p-2"
-								src={client.logo_url || undefined}
-							/>
-						) : (
-							<div className="flex flex-col items-center justify-center gap-1.5">
-								<Building2 className="text-muted-foreground/60 size-6" />
-								<span className="text-muted-foreground/60 font-mono text-[9.5px] tracking-[0.04em] uppercase">
-									No logo
-								</span>
-							</div>
-						)}
-					</div>
+			{isCompany ? (
+				<SettingsPanel caption="Logo">
+					<div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center">
+						<div className="bg-muted/50 flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-dashed">
+							{hasLogo ? (
+								<img
+									key={client.logo_url || 'no-logo'}
+									alt={`${client.name || 'Company'} logo`}
+									className="h-full w-full object-contain p-2"
+									src={client.logo_url || undefined}
+								/>
+							) : (
+								<div className="flex flex-col items-center justify-center gap-1.5">
+									<Building2 className="text-muted-foreground/60 size-6" />
+									<span className="text-muted-foreground/60 font-mono text-[9.5px] tracking-[0.04em] uppercase">
+										No logo
+									</span>
+								</div>
+							)}
+						</div>
 
-					<div className="flex-1">
-						<p className="text-muted-foreground max-w-md text-[15px] leading-relaxed">
-							Appears on invoices, lease documents and the tenant portal. Square
-							or wide, PNG or SVG, up to 2MB.
-						</p>
-						<div className="mt-3.5">
-							<Button size="sm" onClick={onEdit}>
-								{hasLogo ? 'Change logo' : 'Upload logo'}
-							</Button>
+						<div className="flex-1">
+							<p className="text-muted-foreground max-w-md text-[15px] leading-relaxed">
+								Appears on invoices, lease documents and the tenant portal.
+								Square or wide, PNG or SVG, up to 2MB.
+							</p>
+							<div className="mt-3.5">
+								<Button size="sm" onClick={onEdit}>
+									{hasLogo ? 'Change logo' : 'Upload logo'}
+								</Button>
+							</div>
 						</div>
 					</div>
-				</div>
-			</SettingsPanel>
+				</SettingsPanel>
+			) : null}
 
 			<SettingsPanel caption="Accent colour" className="pb-1">
 				<SettingsRow

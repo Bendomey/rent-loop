@@ -91,7 +91,9 @@ export function GeneralSettingsModule() {
 		BASE_TABS.profile,
 		isCompany ? COMPANY_TAB : IDENTITY_TAB,
 		BASE_TABS.location,
-		BASE_TABS.branding,
+		isCompany
+			? BASE_TABS.branding
+			: { ...BASE_TABS.branding, sub: 'Document accent colour' },
 		BASE_TABS.preferences,
 	]
 	// Switching account type swaps Company for Identity, so fall back to the
