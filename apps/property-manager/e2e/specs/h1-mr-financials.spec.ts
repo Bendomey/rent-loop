@@ -44,10 +44,12 @@ test('a request with no lease refuses to offer a tenant charge', async ({
 	await page.getByRole('button', { name: 'Log financial' }).click()
 
 	await page.getByRole('combobox').first().click()
+	await expect(page.getByRole('option', { name: /No one/ })).toBeVisible({
+		timeout: 10_000,
+	})
 	await expect(
-		page.getByRole('option', { name: /No one/ }),
-	).toBeVisible({ timeout: 10_000 })
-	await expect(page.getByRole('option', { name: /Landlord pays/ })).toBeVisible()
+		page.getByRole('option', { name: /Landlord pays/ }),
+	).toBeVisible()
 	await expect(page.getByRole('option', { name: /Tenant/ })).toHaveCount(0)
 })
 
@@ -103,7 +105,8 @@ test('logged financials are listed with their settlement and totalled', async ({
 
 	// ── the total is what the request cost, both lines together ────────────
 	const total = Number(VENDOR_AMOUNT) + Number(RECORD_AMOUNT)
-	await expect(
-		page.getByText(`Total:`).locator('..'),
-	).toContainText(total.toFixed(2), { timeout: 20_000 })
+	await expect(page.getByText(`Total:`).locator('..')).toContainText(
+		total.toFixed(2),
+		{ timeout: 20_000 },
+	)
 })
