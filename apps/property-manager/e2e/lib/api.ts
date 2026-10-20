@@ -242,7 +242,9 @@ export async function createMaintenanceRequest(
 		visibility?: 'TENANT_VISIBLE' | 'INTERNAL_ONLY'
 	},
 ): Promise<{ id: string; code: string }> {
-	const res = await call<{ data: { id: string; code: string }[] | { id: string; code: string } }>(
+	const res = await call<{
+		data: { id: string; code: string }[] | { id: string; code: string }
+	}>(
 		'POST',
 		`${clientPath(clientId)}/properties/${propertyId}/maintenance-requests`,
 		{

@@ -6,10 +6,19 @@ import { PropertyPermissionGuard } from '~/components/permissions/permission-gua
 import { SearchInput } from '~/components/search'
 import { Button } from '~/components/ui/button'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
+import { getPropertyUnitStatusLabel } from '~/lib/properties.utils'
 import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
 import { useClient } from '~/providers/client-provider'
 import type { loader } from '~/routes/_auth.properties.$propertyId.assets.units._index'
+
+const UNIT_STATUSES: Array<PropertyUnit['status']> = [
+	'Unit.Status.Draft',
+	'Unit.Status.Available',
+	'Unit.Status.Occupied',
+	'Unit.Status.PartiallyOccupied',
+	'Unit.Status.Maintenance',
+]
 
 export const PropertyAssetUnitsController = ({
 	isLoading,
@@ -29,11 +38,10 @@ export const PropertyAssetUnitsController = ({
 			selectType: 'single',
 			label: 'Status',
 			value: {
-				options: [
-					{ label: 'Active', value: 'Unit.Status.Active' },
-					{ label: 'Inactive', value: 'Unit.Status.Inactive' },
-					{ label: 'Maintenance', value: 'Unit.Status.Maintenance' },
-				],
+				options: UNIT_STATUSES.map((status) => ({
+					label: getPropertyUnitStatusLabel(status),
+					value: status,
+				})),
 				urlParam: 'status',
 				defaultValues: [],
 			},

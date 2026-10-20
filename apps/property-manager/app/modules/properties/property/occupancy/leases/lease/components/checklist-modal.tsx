@@ -159,7 +159,9 @@ export function ChecklistModal({
 				status,
 			})
 		} catch (err) {
-			toast.error(err instanceof Error ? err.message : 'Failed to update status')
+			toast.error(
+				err instanceof Error ? err.message : 'Failed to update status',
+			)
 		} finally {
 			setUpdatingItemId(null)
 		}
