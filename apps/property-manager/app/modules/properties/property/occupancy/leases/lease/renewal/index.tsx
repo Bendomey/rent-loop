@@ -118,12 +118,8 @@ export function LeaseRenewalModule() {
 	const clientId = safeString(clientUser?.client_id)
 	const renew = useRenewLease()
 
-	const [frequency, setFrequency] = useState<PaymentFrequency>(
-		(lease?.payment_frequency ?? 'MONTHLY') as PaymentFrequency,
-	)
-	const termFrequency = (lease?.stay_duration_frequency ??
-		lease?.payment_frequency ??
-		'MONTHLY') as PaymentFrequency
+	const [pickedRoomFrequency, setPickedRoomFrequency] =
+		useState<Nullable<PaymentFrequency>>(null)
 	const currency = lease?.rent_fee_currency ?? 'GHS'
 	const parentEnd = lease?.move_out_date ? new Date(lease.move_out_date) : null
 
@@ -178,13 +174,31 @@ export function LeaseRenewalModule() {
 	const feeTotal = fees.reduce((sum, fee) => sum + fee.amount, 0)
 	const currentUnitId = lease.unit?.id ?? ''
 	const unitChanged = !!unitId && unitId !== currentUnitId
+	/*
+	 * A move bills on the new room's cycle — the server takes it from the unit —
+	 * so the term has to be counted in that room's periods too, or a weekly
+	 * tenant moving to a daily room is booked "12 weeks" of daily rent.
+	 */
+	const frequency: PaymentFrequency =
+		unitChanged && pickedRoomFrequency
+			? pickedRoomFrequency
+			: ((lease.payment_frequency ?? 'MONTHLY') as PaymentFrequency)
+	const termFrequency: PaymentFrequency = unitChanged
+		? frequency
+		: ((lease.stay_duration_frequency ??
+				lease.payment_frequency ??
+				'MONTHLY') as PaymentFrequency)
 	const early = !!date && !!parentEnd && date < parentEnd
 	const duration =
 		durationChoice ?? defaultDuration(lease.stay_duration, unitChanged)
 	const end = date ? termEndDate(date, duration, termFrequency) : null
 	const parentLastDay = parentEnd ? lastDayOfTerm(parentEnd) : null
 	const parentPeriods = lease.stay_duration || 1
-	const durations = durationOptions(lease.stay_duration, termFrequency)
+	// The current length is in the old room's periods, so it is no precedent for a move.
+	const durations = durationOptions(
+		unitChanged ? 0 : lease.stay_duration,
+		termFrequency,
+	)
 
 	const paymentsOver = (periods: number) =>
 		date
@@ -687,7 +701,7 @@ export function LeaseRenewalModule() {
 									currency={currency}
 									parentEnd={parentLastDay}
 									onRentSuggestion={(minor) => setRent(String(minor / 100))}
-									onFrequencyChange={setFrequency}
+									onFrequencyChange={setPickedRoomFrequency}
 								/>
 								<Question
 									q="What’s the rent for the new term?"
