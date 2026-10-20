@@ -109,7 +109,7 @@ export function LeaseHeader({
 							rel="noopener noreferrer"
 						>
 							<Download className="size-4" />
-							Download PDF
+							Download Lease
 						</a>
 					</Button>
 				)}
