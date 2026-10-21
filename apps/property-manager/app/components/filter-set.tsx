@@ -25,10 +25,16 @@ export function FilterSet(props: Props) {
 				}))}
 				onClear={() => {
 					searchParams.delete(props.urlParam)
+					// Each filter's chosen value lives in its own param, which the page
+					// reads. Dropping only the list of open filters left the table filtered.
+					props.filters.forEach((filter) =>
+						searchParams.delete(filter.value.urlParam),
+					)
 					setSearchParams(searchParams, { replace: true })
 				}}
 				onRemove={(valOption) => {
 					searchParams.delete(props.urlParam, valOption.value)
+					searchParams.delete(valOption.value)
 					setSearchParams(searchParams, { replace: true })
 				}}
 				onSelect={(valOption) => {

@@ -5,6 +5,7 @@ import { FilterSet } from '~/components/filter-set'
 import { SearchInput } from '~/components/search'
 import { Button } from '~/components/ui/button'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
+import { EXPIRING_STATUS_FILTER } from '~/lib/lease.utils'
 import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
 import { useClient } from '~/providers/client-provider'
@@ -32,6 +33,7 @@ export const PropertyTenantLeasesController = ({
 					options: [
 						{ label: 'Pending', value: 'Lease.Status.Pending' },
 						{ label: 'Active', value: 'Lease.Status.Active' },
+						{ label: 'Expiring', value: EXPIRING_STATUS_FILTER },
 						{ label: 'Ended', value: 'Lease.Status.Completed' },
 						{ label: 'Cancelled', value: 'Lease.Status.Cancelled' },
 						{ label: 'Terminated', value: 'Lease.Status.Terminated' },

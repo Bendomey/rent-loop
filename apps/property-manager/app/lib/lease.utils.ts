@@ -88,6 +88,47 @@ export function leaseExpiringInDays(
 	return daysLeft
 }
 
+/** Not a stored status — a filter value that stands for the Expiring badge. */
+export const EXPIRING_STATUS_FILTER = 'Expiring'
+
+/**
+ * Turns the status filter into API params that return what the badges show.
+ *
+ * Expiring and Ended are worked out from the move-out date on Active leases,
+ * so filtering on the stored status alone made "Active" return leases badged
+ * Expiring, and offered no way to ask for Expiring at all.
+ */
+export function leaseStatusFilters(
+	status: string | undefined,
+	today = localizedDayjs(),
+): Pick<
+	FetchLeaseFilter,
+	'status' | 'move_out_date_from' | 'move_out_date_to'
+> {
+	if (!status) return {}
+
+	// One day past the window: the badge truncates to whole days, so a midnight
+	// move-out 31 days off is still "30 days left".
+	const lastExpiringDay = today.add(EXPIRING_WINDOW_DAYS + 1, 'day')
+
+	if (status === EXPIRING_STATUS_FILTER) {
+		return {
+			status: 'Lease.Status.Active',
+			move_out_date_from: today.format('YYYY-MM-DD'),
+			move_out_date_to: lastExpiringDay.format('YYYY-MM-DD'),
+		}
+	}
+
+	if (status === 'Lease.Status.Active') {
+		return {
+			status,
+			move_out_date_from: lastExpiringDay.add(1, 'day').format('YYYY-MM-DD'),
+		}
+	}
+
+	return { status }
+}
+
 export function getLeaseDisplayStatus(
 	lease: Pick<Lease, 'status' | 'move_out_date'>,
 ): { label: string; className: string } {
