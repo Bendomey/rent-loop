@@ -388,12 +388,16 @@ func (s *leaseService) linkRenewalFinancials(
 	// SecurityDepositFee is deliberately 0: a renewal never re-charges the
 	// deposit on its own. A top-up arrives as an explicit fee below, because a
 	// person asked for it.
+	//
+	// Rent is billed on the child's frequency, not the parent's: a move to a
+	// room with a different cycle would otherwise invoice on the old one while
+	// the lease itself says the new one.
 	if err := s.financials.Charges.MaterialiseForAccount(ctx, financials.MaterialiseForAccountInput{
 		FinancialAccountID:    accountID,
 		LeaseID:               &childID,
 		RentFee:               rentFee,
 		Currency:              parent.RentFeeCurrency,
-		PaymentFrequency:      *parent.PaymentFrequency,
+		PaymentFrequency:      unit.PaymentFrequency,
 		MoveInDate:            input.MoveInDate,
 		StayDuration:          input.StayDuration,
 		StayDurationFrequency: input.StayDurationFrequency,
