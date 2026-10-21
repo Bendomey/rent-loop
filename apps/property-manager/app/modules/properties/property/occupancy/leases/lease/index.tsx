@@ -294,63 +294,59 @@ export function LeaseDetailModule() {
 										</div>
 									</DetailPanel>
 
-									{application && (
-										<DetailPanel label="Financial terms">
-											<div className="grid grid-cols-2 gap-4">
-												<DetailField
-													label="Rent Fee"
-													value={
-														application.rent_fee == null
-															? '-'
-															: formatAmount(
-																	convertPesewasToCedis(application.rent_fee),
-																	application.rent_fee_currency,
-																)
-													}
-												/>
-												{application.initial_deposit_fee != null && (
+									<DetailPanel label="Financial terms">
+										<div className="grid grid-cols-2 gap-4">
+											<DetailField
+												label="Rent Fee"
+												value={formatAmount(
+													convertPesewasToCedis(lease.rent_fee),
+													lease.rent_fee_currency,
+												)}
+											/>
+											{/* The application's deposit was paid at the original move-in; a renewal shares that application, so showing it would present it as this term's. */}
+											{lease.type === 'ORIGINAL' &&
+												application?.initial_deposit_fee != null && (
 													<DetailField
 														label="Initial Deposit"
 														value={formatAmount(
 															convertPesewasToCedis(
 																application.initial_deposit_fee,
 															),
-															application.rent_fee_currency,
+															lease.rent_fee_currency,
 														)}
 													/>
 												)}
-												{application.payment_frequency && (
-													<DetailField
-														label="Payment Frequency"
-														value={getPaymentFrequencyLabel(
-															application.payment_frequency,
-														)}
-													/>
-												)}
+											{lease.payment_frequency && (
 												<DetailField
-													label="Security Deposit"
-													value={
-														securityDeposit > 0
-															? formatAmount(
-																	convertPesewasToCedis(securityDeposit),
-																	application.rent_fee_currency,
-																)
-															: '-'
-													}
-												/>
-											</div>
-											{application.financial_account && (
-												<DocumentRow
-													icon={<FileText className="size-[18px]" />}
-													tone="blue"
-													title="Financial account"
-													subtitle={`${application.financial_account.code} · ${application.financial_account.invoice_count} ${application.financial_account.invoice_count === 1 ? 'invoice' : 'invoices'}`}
-													to={`/properties/${propertyId}/financials/invoices`}
-													actionLabel="Open"
+													label="Payment Frequency"
+													value={getPaymentFrequencyLabel(
+														lease.payment_frequency,
+													)}
 												/>
 											)}
-										</DetailPanel>
-									)}
+											<DetailField
+												label="Security Deposit"
+												value={
+													securityDeposit > 0
+														? formatAmount(
+																convertPesewasToCedis(securityDeposit),
+																lease.rent_fee_currency,
+															)
+														: '-'
+												}
+											/>
+										</div>
+										{lease.financial_account && (
+											<DocumentRow
+												icon={<FileText className="size-[18px]" />}
+												tone="blue"
+												title="Financial account"
+												subtitle={`${lease.financial_account.code} · ${lease.financial_account.invoice_count} ${lease.financial_account.invoice_count === 1 ? 'invoice' : 'invoices'}`}
+												to={`/properties/${propertyId}/financials/invoices`}
+												actionLabel="Open"
+											/>
+										)}
+									</DetailPanel>
 
 									<DetailPanel label="Inspection reports">
 										<div id="lease-checklist">
