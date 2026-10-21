@@ -19,7 +19,7 @@ import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 import { getLeaseEndDate } from '~/lib/lease-checklist.utils'
-import { getLeaseDisplayStatus } from '~/lib/lease.utils'
+import { getLeaseDisplayStatus, leaseStatusFilters } from '~/lib/lease.utils'
 import { getPaymentFrequencyPeriodLabel } from '~/lib/properties.utils'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
@@ -61,7 +61,7 @@ export function PropertyTenantLeasesModule() {
 	const { data, isPending, isRefetching, error, refetch } =
 		useGetPropertyLeases(safeString(clientUser?.client_id), propertyId, {
 			filters: {
-				status,
+				...leaseStatusFilters(status),
 				unit_ids: unitIds.length > 0 ? unitIds : undefined,
 			},
 			pagination: { page, per },

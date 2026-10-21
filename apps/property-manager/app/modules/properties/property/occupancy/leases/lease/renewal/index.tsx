@@ -118,8 +118,7 @@ export function LeaseRenewalModule() {
 	const clientId = safeString(clientUser?.client_id)
 	const renew = useRenewLease()
 
-	const [pickedRoomFrequency, setPickedRoomFrequency] =
-		useState<Nullable<PaymentFrequency>>(null)
+	const [pickedRoom, setPickedRoom] = useState<Nullable<PropertyUnit>>(null)
 	const currency = lease?.rent_fee_currency ?? 'GHS'
 	const parentEnd = lease?.move_out_date ? new Date(lease.move_out_date) : null
 
@@ -179,10 +178,11 @@ export function LeaseRenewalModule() {
 	 * so the term has to be counted in that room's periods too, or a weekly
 	 * tenant moving to a daily room is booked "12 weeks" of daily rent.
 	 */
+	const newRoom = unitChanged ? pickedRoom : null
+	const newRoomName = newRoom?.name ?? lease.unit?.name
 	const frequency: PaymentFrequency =
-		unitChanged && pickedRoomFrequency
-			? pickedRoomFrequency
-			: ((lease.payment_frequency ?? 'MONTHLY') as PaymentFrequency)
+		newRoom?.payment_frequency ??
+		((lease.payment_frequency ?? 'MONTHLY') as PaymentFrequency)
 	const termFrequency: PaymentFrequency = unitChanged
 		? frequency
 		: ((lease.stay_duration_frequency ??
@@ -372,8 +372,8 @@ export function LeaseRenewalModule() {
 			<b className="text-foreground">
 				{lease.tenant?.first_name ?? 'This tenant'}
 			</b>{' '}
-			stays on in{' '}
-			<b className="text-foreground">{lease.unit?.name ?? 'their room'}</b> for
+			{newRoom ? 'moves to' : 'stays on in'}{' '}
+			<b className="text-foreground">{newRoomName ?? 'their room'}</b> for
 			another{' '}
 			<b className="text-foreground">{durationBare(duration, termFrequency)}</b>
 			, from <b className="text-foreground">{date ? formatDay(date) : '—'}</b>{' '}
@@ -701,7 +701,7 @@ export function LeaseRenewalModule() {
 									currency={currency}
 									parentEnd={parentLastDay}
 									onRentSuggestion={(minor) => setRent(String(minor / 100))}
-									onFrequencyChange={setPickedRoomFrequency}
+									onRoomPicked={setPickedRoom}
 								/>
 								<Question
 									q="What’s the rent for the new term?"
@@ -791,7 +791,7 @@ export function LeaseRenewalModule() {
 											[
 												'Room',
 												unitChanged
-													? 'A move to another room'
+													? `Moving from ${lease.unit?.name ?? 'their current room'} to ${newRoomName ?? '—'}`
 													: `${lease.unit?.name ?? '—'} — no change`,
 												unitChanged,
 											],

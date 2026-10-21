@@ -3,6 +3,10 @@ interface FetchLeaseFilter {
 	unit_ids?: string[]
 	ids?: string[]
 	property_id?: string
+	/** YYYY-MM-DD, inclusive. */
+	move_out_date_from?: string
+	/** YYYY-MM-DD, inclusive. */
+	move_out_date_to?: string
 	/**
 	 * Drops leases that already carry a renewal which is not Terminated or
 	 * Cancelled. A renewed lease stays Active until its own term runs out, so
