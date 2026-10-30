@@ -8255,6 +8255,10 @@ paths:
         in: query
         name: exclude_renewed
         type: boolean
+      - example: true
+        in: query
+        name: expiring
+        type: boolean
       - collectionFormat: multi
         example:
         - a8098c1a-f86e-11da-bd1a-00112444be1e
@@ -11491,6 +11495,10 @@ paths:
       - example: true
         in: query
         name: exclude_renewed
+        type: boolean
+      - example: true
+        in: query
+        name: expiring
         type: boolean
       - collectionFormat: multi
         example:
@@ -15593,6 +15601,10 @@ paths:
         in: query
         name: exclude_renewed
         type: boolean
+      - example: true
+        in: query
+        name: expiring
+        type: boolean
       - collectionFormat: multi
         example:
         - a8098c1a-f86e-11da-bd1a-00112444be1e
@@ -17892,6 +17904,10 @@ paths:
       - example: true
         in: query
         name: exclude_renewed
+        type: boolean
+      - example: true
+        in: query
+        name: expiring
         type: boolean
       - collectionFormat: multi
         example:

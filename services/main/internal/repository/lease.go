@@ -253,6 +253,7 @@ type ListLeasesFilter struct {
 	MoveOutDateFrom            *time.Time
 	MoveOutDateTo              *time.Time
 	ExcludeRenewed             *bool
+	Expiring                   *bool
 }
 
 func (r *leaseRepository) List(ctx context.Context, filterQuery ListLeasesFilter) (*[]models.Lease, error) {
@@ -271,6 +272,7 @@ func (r *leaseRepository) List(ctx context.Context, filterQuery ListLeasesFilter
 		leaseArrayFilterScope("unit_id", filterQuery.UnitIds),
 		leaseMoveOutDateRangeScope(filterQuery.MoveOutDateFrom, filterQuery.MoveOutDateTo),
 		excludeRenewedLeasesScope(filterQuery.ExcludeRenewed),
+		leaseExpiringScope(filterQuery.Expiring),
 		IDsFilterScope("leases", filterQuery.IDs),
 		DateRangeScope("leases", filterQuery.DateRange),
 		SearchScope("leases", filterQuery.Search),
@@ -308,6 +310,7 @@ func (r *leaseRepository) Count(ctx context.Context, filterQuery ListLeasesFilte
 		leaseArrayFilterScope("unit_id", filterQuery.UnitIds),
 		leaseMoveOutDateRangeScope(filterQuery.MoveOutDateFrom, filterQuery.MoveOutDateTo),
 		excludeRenewedLeasesScope(filterQuery.ExcludeRenewed),
+		leaseExpiringScope(filterQuery.Expiring),
 		IDsFilterScope("leases", filterQuery.IDs),
 		DateRangeScope("leases", filterQuery.DateRange),
 		SearchScope("leases", filterQuery.Search),
@@ -373,6 +376,40 @@ func leaseMoveOutDateRangeScope(from, to *time.Time) func(db *gorm.DB) *gorm.DB 
 			db = db.Where("leases.move_out_date <= ?", *to)
 		}
 		return db
+	}
+}
+
+// leaseExpiringWindowDaysSQL is how many days before its move-out a lease reads
+// Expiring. A flat month called a three-day stay expiring from the day it
+// began, so the warning scales with the unit the term is measured in. The
+// column holds both the payment-frequency words and the older duration words.
+//
+// Mirrored by expiringWindowDays in the property manager and by the Leases
+// cube, so the badge, the filter and the Insights counts agree.
+const leaseExpiringWindowDaysSQL = `(CASE
+	WHEN LOWER(leases.stay_duration_frequency) IN ('hourly','hours','hour') THEN 0
+	WHEN LOWER(leases.stay_duration_frequency) IN ('daily','days','day') THEN 1
+	WHEN LOWER(leases.stay_duration_frequency) IN ('weekly','weeks','week') THEN 3
+	ELSE 30
+END)`
+
+// leaseExpiringScope splits running leases at the edge of their expiring
+// window: true keeps those inside it, false those still short of it. The bounds
+// are the badge's whole-day count — 0 to window days left — in instants, so a
+// lease is never in one list and wearing the other's badge.
+func leaseExpiringScope(expiring *bool) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if expiring == nil {
+			return db
+		}
+
+		windowEnd := "NOW() + make_interval(days => " + leaseExpiringWindowDaysSQL + " + 1)"
+		if *expiring {
+			return db.Where("leases.move_out_date > NOW() - INTERVAL '1 day'").
+				Where("leases.move_out_date < " + windowEnd)
+		}
+
+		return db.Where("leases.move_out_date >= " + windowEnd)
 	}
 }
 

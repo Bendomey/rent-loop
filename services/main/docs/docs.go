@@ -3787,6 +3787,12 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "type": "boolean",
+                        "example": true,
+                        "name": "expiring",
+                        "in": "query"
+                    },
+                    {
                         "type": "array",
                         "items": {
                             "type": "string"
@@ -8937,6 +8943,12 @@ const docTemplate = `{
                         "type": "boolean",
                         "example": true,
                         "name": "exclude_renewed",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "example": true,
+                        "name": "expiring",
                         "in": "query"
                     },
                     {
@@ -15165,6 +15177,12 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "type": "boolean",
+                        "example": true,
+                        "name": "expiring",
+                        "in": "query"
+                    },
+                    {
                         "type": "array",
                         "items": {
                             "type": "string"
@@ -18372,6 +18390,12 @@ const docTemplate = `{
                         "type": "boolean",
                         "example": true,
                         "name": "exclude_renewed",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "example": true,
+                        "name": "expiring",
                         "in": "query"
                     },
                     {

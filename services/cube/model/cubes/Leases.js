@@ -44,8 +44,6 @@ cube(`Leases`, {
       filters: [{ sql: `${CUBE}.status = 'Lease.Status.Pending'` }],
     },
 
-    // Distinct properties with at least one active lease (combine with a
-    // moveOutDate timeDimension at query time to scope to an expiry window)
     expiringPropertyCount: {
       sql: `${propertyId}`,
       type: `countDistinct`,
@@ -53,12 +51,10 @@ cube(`Leases`, {
       filters: [
         { sql: `${CUBE}.status = 'Lease.Status.Active'` },
         { sql: `${hasLiveRenewal} = FALSE` },
+        { sql: `${isExpiring}` },
       ],
     },
 
-    // Active leases actually coming to an end. Pair with a moveOutDate
-    // timeDimension to scope the window.
-    //
     // Distinct from activeCount: a renewed lease stays Active until its own
     // term runs out, so it would otherwise be counted as expiring while the
     // tenancy is plainly continuing.
@@ -68,6 +64,7 @@ cube(`Leases`, {
       filters: [
         { sql: `${CUBE}.status = 'Lease.Status.Active'` },
         { sql: `${hasLiveRenewal} = FALSE` },
+        { sql: `${isExpiring}` },
       ],
     },
   },
@@ -112,6 +109,22 @@ cube(`Leases`, {
       )`,
       type: `boolean`,
       title: `Has Live Renewal`,
+    },
+
+    // Move-out inside the warning window for the unit the term is measured
+    // in. Must match leaseExpiringScope in services/main and
+    // expiringWindowDays in the property manager, or the Insights count
+    // disagrees with the list it opens.
+    isExpiring: {
+      sql: `(${CUBE}.move_out_date > NOW() - INTERVAL '1 day'
+        AND ${CUBE}.move_out_date < NOW() + make_interval(days => (CASE
+          WHEN LOWER(${CUBE}.stay_duration_frequency) IN ('hourly','hours','hour') THEN 0
+          WHEN LOWER(${CUBE}.stay_duration_frequency) IN ('daily','days','day') THEN 1
+          WHEN LOWER(${CUBE}.stay_duration_frequency) IN ('weekly','weeks','week') THEN 3
+          ELSE 30
+        END) + 1))`,
+      type: `boolean`,
+      title: `Is Expiring`,
     },
 
     activatedAt: {

@@ -171,6 +171,7 @@ type ListLeasesQuery struct {
 	MoveOutDateFrom            *string   `json:"move_out_date_from,omitempty"            validate:"omitempty"                                                                                                                      example:"2026-08-01"                           description:"Only leases whose move-out date is on or after this date (RFC3339 or YYYY-MM-DD)"`
 	MoveOutDateTo              *string   `json:"move_out_date_to,omitempty"              validate:"omitempty"                                                                                                                      example:"2026-09-30"                           description:"Only leases whose move-out date is on or before this date (RFC3339 or YYYY-MM-DD)"`
 	ExcludeRenewed             *bool     `json:"exclude_renewed,omitempty"               validate:"omitempty"                                                                                                                      example:"true"                                 description:"Drop leases that already carry a renewal which is not Terminated or Cancelled"`
+	Expiring                   *bool     `json:"expiring,omitempty"                      validate:"omitempty"                                                                                                                      example:"true"                                 description:"true: move-out inside the expiring window for the lease's stay unit (1 day daily, 3 weekly, 30 monthly and longer). false: move-out beyond it"`
 }
 
 // ListLeasesByTenant godoc
@@ -230,6 +231,7 @@ func (h *LeaseHandler) ListLeasesByTenant(w http.ResponseWriter, r *http.Request
 		MoveOutDateFrom:            moveOutFrom,
 		MoveOutDateTo:              moveOutTo,
 		ExcludeRenewed:             lib.NullOrBool(r.URL.Query().Get("exclude_renewed")),
+		Expiring:                   lib.NullOrBool(r.URL.Query().Get("expiring")),
 	}
 
 	leases, leasesErr := h.service.ListLeases(r.Context(), input)
@@ -310,6 +312,7 @@ func (h *LeaseHandler) ListLeasesByProperty(w http.ResponseWriter, r *http.Reque
 		MoveOutDateFrom:            moveOutFrom,
 		MoveOutDateTo:              moveOutTo,
 		ExcludeRenewed:             lib.NullOrBool(r.URL.Query().Get("exclude_renewed")),
+		Expiring:                   lib.NullOrBool(r.URL.Query().Get("expiring")),
 	}
 
 	leases, leasesErr := h.service.ListLeases(r.Context(), input)
@@ -394,6 +397,7 @@ func (h *LeaseHandler) ListLeasesAcrossProperties(w http.ResponseWriter, r *http
 		MoveOutDateFrom:            moveOutFrom,
 		MoveOutDateTo:              moveOutTo,
 		ExcludeRenewed:             lib.NullOrBool(r.URL.Query().Get("exclude_renewed")),
+		Expiring:                   lib.NullOrBool(r.URL.Query().Get("expiring")),
 	}
 
 	leases, leasesErr := h.service.ListLeases(r.Context(), input)
@@ -475,6 +479,7 @@ func (h *LeaseHandler) ListLeasesByTenantAccount(w http.ResponseWriter, r *http.
 		MoveOutDateFrom:            moveOutFrom,
 		MoveOutDateTo:              moveOutTo,
 		ExcludeRenewed:             lib.NullOrBool(r.URL.Query().Get("exclude_renewed")),
+		Expiring:                   lib.NullOrBool(r.URL.Query().Get("expiring")),
 	}
 
 	leases, leasesErr := h.service.ListLeases(r.Context(), input)

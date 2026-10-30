@@ -14,6 +14,11 @@ interface FetchLeaseFilter {
 	 * plainly continuing.
 	 */
 	exclude_renewed?: boolean
+	/**
+	 * true: move-out inside the expiring window for the lease's stay unit.
+	 * false: move-out beyond it. See expiringWindowDays.
+	 */
+	expiring?: boolean
 }
 
 interface Lease {

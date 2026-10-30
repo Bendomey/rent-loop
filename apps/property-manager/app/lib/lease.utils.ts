@@ -1,14 +1,35 @@
 import { localizedDayjs } from './date'
 
 /**
- * How close a term has to be before the product calls it expiring.
+ * How many days before its move-out a lease reads Expiring, by the unit its
+ * term is measured in. A flat month called a three-day stay expiring from the
+ * day it began. The column holds both the payment-frequency words and the
+ * older duration words.
  *
- * One number for every surface that asks the question — the Insights card, its
- * drill-down list, the lease-table badge and the lease header tag. They used to
- * disagree (60 and 14), which meant a lease could read Expiring in a table and
- * carry no tag on its own page.
+ * The API's `expiring` filter and the Leases cube apply the same table, so the
+ * badge, the Expiring filter and the Insights counts agree — change all three
+ * together.
  */
-export const EXPIRING_WINDOW_DAYS = 30
+export function expiringWindowDays(
+	stayFrequency: Nullable<string> | undefined,
+): number {
+	switch (stayFrequency?.toLowerCase()) {
+		case 'hourly':
+		case 'hours':
+		case 'hour':
+			return 0
+		case 'daily':
+		case 'days':
+		case 'day':
+			return 1
+		case 'weekly':
+		case 'weeks':
+		case 'week':
+			return 3
+		default:
+			return 30
+	}
+}
 
 export function getLeaseStatusLabel(status: Lease['status']) {
 	switch (status) {
@@ -46,44 +67,40 @@ export function getLeaseStatusClass(status: Lease['status']) {
 	}
 }
 
-/**
- * The badge a lease listing shows, which is its stored status overlaid with
- * where it sits in its term:
- *
- * - a lease whose move-out date has passed reads **Ended**, matching a lease
- *   already stored with that status — a term that has run out is not
- *   "expiring";
- * - one ending within the next {@link EXPIRING_WINDOW_DAYS} days reads
- *   **Expiring**;
- * - cancelled and terminated leases keep their own label. They ended
- *   deliberately, and the term overlay would hide why.
- *
- * Open-ended leases carry a far-future sentinel move-out date, so they fall
- * outside both windows and keep their stored status.
- */
-/**
- * Days until the term ends, when that is close enough to act on — otherwise
- * null.
- *
- * Cancelled and terminated leases are excluded: they ended deliberately and
- * are not running out.
- */
-export function leaseExpiringInDays(
-	lease: Pick<Lease, 'status' | 'move_out_date'>,
-): Nullable<number> {
-	if (
-		lease.status !== 'Lease.Status.Active' &&
-		lease.status !== 'Lease.Status.Pending'
-	) {
-		return null
-	}
-	if (!lease.move_out_date) return null
+type LeaseTerm = Pick<
+	Lease,
+	'status' | 'move_out_date' | 'stay_duration_frequency'
+>
 
-	const daysLeft = localizedDayjs(lease.move_out_date).diff(
-		localizedDayjs(),
-		'day',
+/**
+ * Whole days until the move-out — negative once it has passed — or null when
+ * there is none, or when the lease ended deliberately and the term overlay
+ * would hide why.
+ */
+function daysLeftInTerm(lease: LeaseTerm): Nullable<number> {
+	if (
+		(lease.status !== 'Lease.Status.Active' &&
+			lease.status !== 'Lease.Status.Pending') ||
+		!lease.move_out_date
 	)
-	if (daysLeft < 0 || daysLeft > EXPIRING_WINDOW_DAYS) return null
+		return null
+
+	return localizedDayjs(lease.move_out_date).diff(localizedDayjs(), 'day')
+}
+
+/**
+ * Days until the term ends, when inside its expiring window — otherwise null.
+ * Only an Active lease can be running out; a Pending one has not started.
+ */
+export function leaseExpiringInDays(lease: LeaseTerm): Nullable<number> {
+	if (lease.status !== 'Lease.Status.Active') return null
+	const daysLeft = daysLeftInTerm(lease)
+	if (daysLeft === null) return null
+	if (
+		daysLeft < 0 ||
+		daysLeft > expiringWindowDays(lease.stay_duration_frequency)
+	)
+		return null
 
 	return daysLeft
 }
@@ -96,66 +113,61 @@ export const EXPIRING_STATUS_FILTER = 'Expiring'
  *
  * Expiring and Ended are worked out from the move-out date on Active leases,
  * so filtering on the stored status alone made "Active" return leases badged
- * Expiring, and offered no way to ask for Expiring at all.
+ * Expiring, and offered no way to ask for Expiring at all. The window differs
+ * per lease, so the API applies it rather than a date range sent from here.
  */
 export function leaseStatusFilters(
 	status: string | undefined,
-	today = localizedDayjs(),
-): Pick<
-	FetchLeaseFilter,
-	'status' | 'move_out_date_from' | 'move_out_date_to'
-> {
+): Pick<FetchLeaseFilter, 'status' | 'expiring'> {
 	if (!status) return {}
 
-	// One day past the window: the badge truncates to whole days, so a midnight
-	// move-out 31 days off is still "30 days left".
-	const lastExpiringDay = today.add(EXPIRING_WINDOW_DAYS + 1, 'day')
-
 	if (status === EXPIRING_STATUS_FILTER) {
-		return {
-			status: 'Lease.Status.Active',
-			move_out_date_from: today.format('YYYY-MM-DD'),
-			move_out_date_to: lastExpiringDay.format('YYYY-MM-DD'),
-		}
+		return { status: 'Lease.Status.Active', expiring: true }
 	}
 
 	if (status === 'Lease.Status.Active') {
-		return {
-			status,
-			move_out_date_from: lastExpiringDay.add(1, 'day').format('YYYY-MM-DD'),
-		}
+		return { status, expiring: false }
 	}
 
 	return { status }
 }
 
-export function getLeaseDisplayStatus(
-	lease: Pick<Lease, 'status' | 'move_out_date'>,
-): { label: string; className: string } {
+/**
+ * The badge a lease listing shows, which is its stored status overlaid with
+ * where the lease sits in its term:
+ *
+ * - past its move-out date it reads **Ended**, matching a lease already stored
+ *   with that status. That includes a Pending lease nobody started: left as
+ *   Pending it reads as about to begin, for a term that is already over;
+ * - an Active lease inside its {@link expiringWindowDays} reads **Expiring**.
+ *   A Pending one stays Pending — it cannot run out before it starts.
+ *
+ * Cancelled and terminated leases keep their own label. Open-ended leases
+ * carry a far-future sentinel move-out date, so they fall outside both.
+ */
+export function getLeaseDisplayStatus(lease: LeaseTerm): {
+	label: string
+	className: string
+} {
 	const stored = {
 		label: getLeaseStatusLabel(lease.status),
 		className: getLeaseStatusClass(lease.status),
 	}
 
-	if (
-		lease.status === 'Lease.Status.Cancelled' ||
-		lease.status === 'Lease.Status.Terminated'
-	) {
-		return stored
-	}
+	const daysLeft = daysLeftInTerm(lease)
+	if (daysLeft === null) return stored
 
-	const daysLeft = lease.move_out_date
-		? localizedDayjs(lease.move_out_date).diff(localizedDayjs(), 'day')
-		: null
-
-	if (lease.status === 'Lease.Status.Completed' || (daysLeft ?? 1) < 0) {
+	if (daysLeft < 0) {
 		return {
 			label: getLeaseStatusLabel('Lease.Status.Completed'),
 			className: getLeaseStatusClass('Lease.Status.Completed'),
 		}
 	}
 
-	if (daysLeft !== null && daysLeft <= EXPIRING_WINDOW_DAYS) {
+	if (
+		lease.status === 'Lease.Status.Active' &&
+		daysLeft <= expiringWindowDays(lease.stay_duration_frequency)
+	) {
 		return {
 			label: 'Expiring',
 			className: 'bg-amber-500 text-white dark:bg-amber-600',
