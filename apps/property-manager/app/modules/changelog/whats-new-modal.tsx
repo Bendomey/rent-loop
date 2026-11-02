@@ -36,14 +36,14 @@ export function WhatsNewModal() {
 		<Dialog open={open} onOpenChange={(next) => !next && dismiss()}>
 			<DialogContent
 				showCloseButton={false}
-				className="flex max-h-[calc(100dvh-2rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-[560px]"
+				className="flex h-[min(42rem,calc(100dvh_-_2rem))] min-h-0 flex-col gap-0 overflow-hidden p-0 sm:max-w-[560px]"
 			>
 				<DialogClose className="bg-background/80 text-foreground hover:bg-background absolute top-3 right-3 z-10 flex size-8 items-center justify-center rounded-full backdrop-blur transition-colors">
 					<XIcon className="size-4" />
 					<span className="sr-only">Close</span>
 				</DialogClose>
 
-				<div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6">
+				<div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-6 pb-6">
 					<div
 						className="relative -mx-6 h-28 bg-cover bg-center sm:h-40"
 						style={{ backgroundImage: `url(${bgImage})` }}
@@ -95,7 +95,9 @@ export function WhatsNewModal() {
 						</div>
 					)}
 
-					<div className="mt-6 flex flex-wrap items-center gap-3">
+				</div>
+				<div className="shrink-0 border-t bg-background px-6 py-4">
+					<div className="flex flex-wrap items-center gap-3">
 						<span className="text-muted-foreground min-w-[13rem] flex-1 text-sm leading-snug">
 							You will only see this once. It stays under Changelog.
 						</span>
