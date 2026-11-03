@@ -70,24 +70,27 @@ func TestExpiringIsOptIn(t *testing.T) {
 	}
 }
 
-// The window is read per lease from the unit its term is measured in, in both
-// vocabularies the column has been written with.
-func TestExpiringWindowFollowsTheStayUnit(t *testing.T) {
+// The window is read per lease from how long the stay is, not from the unit
+// it was typed in or how it is paid: a one-month lease must not be Expiring
+// from its first day.
+func TestExpiringWindowFollowsTheStayLength(t *testing.T) {
 	on := true
 	sql := expiringSQL(t, &on)
 
 	for _, fragment := range []string{
-		"LOWER(leases.stay_duration_frequency)",
-		"'hourly','hours','hour') THEN 0",
-		"'daily','days','day') THEN 1",
-		"'weekly','weeks','week') THEN 3",
-		"ELSE 30",
-		"leases.move_out_date > NOW() - INTERVAL '1 day'",
-		"leases.move_out_date < NOW() + make_interval(days =>",
+		"WHEN leases.move_out_date - leases.move_in_date < INTERVAL '7 days' THEN INTERVAL '1 day'",
+		"WHEN leases.move_out_date - leases.move_in_date < INTERVAL '30 days' THEN INTERVAL '3 days'",
+		"WHEN leases.move_out_date - leases.move_in_date < INTERVAL '90 days' THEN INTERVAL '7 days'",
+		"ELSE INTERVAL '30 days'",
+		"leases.move_out_date > NOW()",
+		"leases.move_out_date <= NOW() + (CASE",
 	} {
 		if !strings.Contains(sql, fragment) {
 			t.Errorf("expected %q in the query, got: %s", fragment, sql)
 		}
+	}
+	if strings.Contains(sql, "stay_duration_frequency") {
+		t.Errorf("the window must not depend on the stay unit, got: %s", sql)
 	}
 }
 
@@ -97,10 +100,10 @@ func TestNotExpiringStartsWhereTheWindowEnds(t *testing.T) {
 	off := false
 	sql := expiringSQL(t, &off)
 
-	if !strings.Contains(sql, "leases.move_out_date >= NOW() + make_interval(days =>") {
+	if !strings.Contains(sql, "leases.move_out_date > NOW() + (CASE") {
 		t.Errorf("expected a lower bound past the window, got: %s", sql)
 	}
-	if strings.Contains(sql, "INTERVAL '1 day'") {
+	if strings.Contains(sql, "<= NOW()") {
 		t.Errorf("expected no expiring bound, got: %s", sql)
 	}
 }

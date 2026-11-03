@@ -111,18 +111,17 @@ cube(`Leases`, {
       title: `Has Live Renewal`,
     },
 
-    // Move-out inside the warning window for the unit the term is measured
-    // in. Must match leaseExpiringScope in services/main and
-    // expiringWindowDays in the property manager, or the Insights count
-    // disagrees with the list it opens.
+    // Move-out inside the warning window for the length of the stay. Must
+    // match leaseExpiringScope in services/main and expiringWindowMs in the
+    // property manager, or the Insights count disagrees with the list it opens.
     isExpiring: {
-      sql: `(${CUBE}.move_out_date > NOW() - INTERVAL '1 day'
-        AND ${CUBE}.move_out_date < NOW() + make_interval(days => (CASE
-          WHEN LOWER(${CUBE}.stay_duration_frequency) IN ('hourly','hours','hour') THEN 0
-          WHEN LOWER(${CUBE}.stay_duration_frequency) IN ('daily','days','day') THEN 1
-          WHEN LOWER(${CUBE}.stay_duration_frequency) IN ('weekly','weeks','week') THEN 3
-          ELSE 30
-        END) + 1))`,
+      sql: `(${CUBE}.move_out_date > NOW()
+        AND ${CUBE}.move_out_date <= NOW() + (CASE
+          WHEN ${CUBE}.move_out_date - ${CUBE}.move_in_date < INTERVAL '7 days' THEN INTERVAL '1 day'
+          WHEN ${CUBE}.move_out_date - ${CUBE}.move_in_date < INTERVAL '30 days' THEN INTERVAL '3 days'
+          WHEN ${CUBE}.move_out_date - ${CUBE}.move_in_date < INTERVAL '90 days' THEN INTERVAL '7 days'
+          ELSE INTERVAL '30 days'
+        END))`,
       type: `boolean`,
       title: `Is Expiring`,
     },

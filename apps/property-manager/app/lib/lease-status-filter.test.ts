@@ -2,10 +2,28 @@ import { describe, expect, test } from 'vitest'
 import { localizedDayjs } from './date'
 import {
 	EXPIRING_STATUS_FILTER,
-	expiringWindowDays,
+	expiringWindowMs,
 	getLeaseDisplayStatus,
+	leaseExpiringInDays,
 	leaseStatusFilters,
 } from './lease.utils'
+
+const HOUR = 3_600_000
+const DAY = 24 * HOUR
+
+/** A lease `stayDays` long whose move-out is `hoursLeft` hours from now. */
+const lease = (
+	status: Lease['status'],
+	stayDays: number,
+	hoursLeft: number,
+) => {
+	const moveOut = localizedDayjs().add(hoursLeft, 'hour')
+	return {
+		status,
+		move_in_date: moveOut.subtract(stayDays, 'day').toDate(),
+		move_out_date: moveOut.toDate(),
+	}
+}
 
 describe('leaseStatusFilters', () => {
 	test('no status means no status or expiring constraint', () => {
@@ -33,96 +51,85 @@ describe('leaseStatusFilters', () => {
 	})
 })
 
-describe('expiringWindowDays', () => {
+describe('expiringWindowMs', () => {
 	test.each([
-		['HOURLY', 0],
-		['hours', 0],
-		['DAILY', 1],
-		['days', 1],
-		['WEEKLY', 3],
-		['MONTHLY', 30],
-		['months', 30],
-		['ANNUALLY', 30],
-		[null, 30],
-	])('%s stays warn %i days out', (unit, days) => {
-		expect(expiringWindowDays(unit)).toBe(days)
+		[3, 1],
+		[6, 1],
+		[7, 3],
+		[20, 3],
+		[30, 7],
+		[89, 7],
+		[90, 30],
+		[365, 30],
+	])('a %i-day stay warns %i days out', (stayDays, windowDays) => {
+		expect(expiringWindowMs(lease('Lease.Status.Active', stayDays, 0))).toBe(
+			windowDays * DAY,
+		)
+	})
+
+	test('a lease with no move-in falls back to the longest window', () => {
+		expect(
+			expiringWindowMs({
+				move_in_date: null as never,
+				move_out_date: new Date(),
+			}),
+		).toBe(30 * DAY)
 	})
 })
 
 describe('getLeaseDisplayStatus', () => {
-	const ending = (hours: number) => localizedDayjs().add(hours, 'hour').toDate()
-	const label = (lease: Parameters<typeof getLeaseDisplayStatus>[0]) =>
-		getLeaseDisplayStatus(lease).label
+	const label = (value: ReturnType<typeof lease>) =>
+		getLeaseDisplayStatus(value).label
 
-	test('a daily stay three days from its end is not yet Expiring', () => {
-		expect(
-			label({
-				status: 'Lease.Status.Active',
-				stay_duration_frequency: 'DAILY',
-				move_out_date: ending(72 + 2),
-			}),
-		).toBe('Active')
+	test('a three-day stay with 30 hours left is not yet Expiring', () => {
+		expect(label(lease('Lease.Status.Active', 3, 30))).toBe('Active')
 	})
 
-	test('a daily stay ending tomorrow is Expiring', () => {
-		expect(
-			label({
-				status: 'Lease.Status.Active',
-				stay_duration_frequency: 'DAILY',
-				move_out_date: ending(30),
-			}),
-		).toBe('Expiring')
+	test('a three-day stay inside its last day is Expiring', () => {
+		expect(label(lease('Lease.Status.Active', 3, 20))).toBe('Expiring')
 	})
 
-	test('a weekly stay five days out is not yet Expiring', () => {
-		expect(
-			label({
-				status: 'Lease.Status.Active',
-				stay_duration_frequency: 'WEEKLY',
-				move_out_date: ending(5 * 24 + 2),
-			}),
-		).toBe('Active')
+	test('a one-month lease is not Expiring for most of its term', () => {
+		expect(label(lease('Lease.Status.Active', 31, 20 * 24))).toBe('Active')
 	})
 
-	test('a monthly lease twenty days out is Expiring', () => {
-		expect(
-			label({
-				status: 'Lease.Status.Active',
-				stay_duration_frequency: 'MONTHLY',
-				move_out_date: ending(20 * 24),
-			}),
-		).toBe('Expiring')
+	test('a one-month lease in its last week is Expiring', () => {
+		expect(label(lease('Lease.Status.Active', 31, 5 * 24))).toBe('Expiring')
 	})
 
-	test('an active lease past its move-out has Ended', () => {
-		expect(
-			label({
-				status: 'Lease.Status.Active',
-				stay_duration_frequency: 'MONTHLY',
-				move_out_date: ending(-72),
-			}),
-		).toBe('Ended')
+	test('a year-long lease twenty days out is Expiring', () => {
+		expect(label(lease('Lease.Status.Active', 365, 20 * 24))).toBe('Expiring')
+	})
+
+	test('an active lease reads Ended as soon as its move-out passes', () => {
+		expect(label(lease('Lease.Status.Active', 365, -2))).toBe('Ended')
 	})
 
 	test('a lease not yet started stays Pending near its end', () => {
-		expect(
-			label({
-				status: 'Lease.Status.Pending',
-				stay_duration_frequency: 'DAILY',
-				move_out_date: ending(12),
-			}),
-		).toBe('Pending')
+		expect(label(lease('Lease.Status.Pending', 3, 12))).toBe('Pending')
 	})
 
 	// Pending past its dates would read as "about to start" for a term that
 	// is already over.
 	test('a lease never started has Ended once its dates pass', () => {
+		expect(label(lease('Lease.Status.Pending', 3, -72))).toBe('Ended')
+	})
+})
+
+describe('leaseExpiringInDays', () => {
+	test('counts the whole days left inside the window', () => {
 		expect(
-			label({
-				status: 'Lease.Status.Pending',
-				stay_duration_frequency: 'DAILY',
-				move_out_date: ending(-72),
-			}),
-		).toBe('Ended')
+			leaseExpiringInDays(lease('Lease.Status.Active', 365, 20 * 24 + 2)),
+		).toBe(20)
+	})
+
+	test('is null outside the window', () => {
+		expect(
+			leaseExpiringInDays(lease('Lease.Status.Active', 31, 20 * 24)),
+		).toBeNull()
+	})
+
+	test('is null for a lease not yet started', () => {
+		expect(leaseExpiringInDays(lease('Lease.Status.Pending', 3, 12))).toBeNull()
 	})
 })

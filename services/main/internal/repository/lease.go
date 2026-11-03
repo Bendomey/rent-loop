@@ -379,37 +379,35 @@ func leaseMoveOutDateRangeScope(from, to *time.Time) func(db *gorm.DB) *gorm.DB 
 	}
 }
 
-// leaseExpiringWindowDaysSQL is how many days before its move-out a lease reads
-// Expiring. A flat month called a three-day stay expiring from the day it
-// began, so the warning scales with the unit the term is measured in. The
-// column holds both the payment-frequency words and the older duration words.
+// leaseExpiringWindowSQL is how long before its move-out a lease reads
+// Expiring, tiered by the length of the stay. How it is paid, or the unit the
+// term was typed in, says nothing about how much notice a landlord needs — and
+// a flat month called a one-month lease expiring from its first day.
 //
-// Mirrored by expiringWindowDays in the property manager and by the Leases
-// cube, so the badge, the filter and the Insights counts agree.
-const leaseExpiringWindowDaysSQL = `(CASE
-	WHEN LOWER(leases.stay_duration_frequency) IN ('hourly','hours','hour') THEN 0
-	WHEN LOWER(leases.stay_duration_frequency) IN ('daily','days','day') THEN 1
-	WHEN LOWER(leases.stay_duration_frequency) IN ('weekly','weeks','week') THEN 3
-	ELSE 30
+// Mirrored by expiringWindowMs in the property manager and by the Leases cube,
+// so the badge, the filter and the Insights counts agree.
+const leaseExpiringWindowSQL = `(CASE
+	WHEN leases.move_out_date - leases.move_in_date < INTERVAL '7 days' THEN INTERVAL '1 day'
+	WHEN leases.move_out_date - leases.move_in_date < INTERVAL '30 days' THEN INTERVAL '3 days'
+	WHEN leases.move_out_date - leases.move_in_date < INTERVAL '90 days' THEN INTERVAL '7 days'
+	ELSE INTERVAL '30 days'
 END)`
 
 // leaseExpiringScope splits running leases at the edge of their expiring
-// window: true keeps those inside it, false those still short of it. The bounds
-// are the badge's whole-day count — 0 to window days left — in instants, so a
-// lease is never in one list and wearing the other's badge.
+// window: true keeps those inside it, false those still short of it.
 func leaseExpiringScope(expiring *bool) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if expiring == nil {
 			return db
 		}
 
-		windowEnd := "NOW() + make_interval(days => " + leaseExpiringWindowDaysSQL + " + 1)"
+		windowEnd := "NOW() + " + leaseExpiringWindowSQL
 		if *expiring {
-			return db.Where("leases.move_out_date > NOW() - INTERVAL '1 day'").
-				Where("leases.move_out_date < " + windowEnd)
+			return db.Where("leases.move_out_date > NOW()").
+				Where("leases.move_out_date <= " + windowEnd)
 		}
 
-		return db.Where("leases.move_out_date >= " + windowEnd)
+		return db.Where("leases.move_out_date > " + windowEnd)
 	}
 }
 

@@ -107,7 +107,7 @@ export function RiskSummary() {
 			propertyCount: expiringProperties,
 			emptyText: 'Nothing expiring soon',
 			modalDescription:
-				'Leases near their end — a month out for monthly terms, 3 days for weekly, 1 for daily. Open a property to review the lease table.',
+				'Leases near their end — 30 days out for stays of 3 months or more, a week for shorter ones, down to a day for stays under a week. Open a property to review the lease table.',
 		},
 		{
 			type: 'maintenance',

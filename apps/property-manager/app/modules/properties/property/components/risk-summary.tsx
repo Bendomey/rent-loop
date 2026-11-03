@@ -103,7 +103,7 @@ export function PropertyRiskSummary({ propertyId }: Props) {
 			propertyCount: expiring > 0 ? 1 : 0,
 			emptyText: 'Nothing expiring soon',
 			modalDescription:
-				'Leases near their end — a month out for monthly terms, 3 days for weekly, 1 for daily.',
+				'Leases near their end — 30 days out for stays of 3 months or more, a week for shorter ones, down to a day for stays under a week.',
 		},
 		{
 			type: 'maintenance',
