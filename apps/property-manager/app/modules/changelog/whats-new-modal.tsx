@@ -36,20 +36,21 @@ export function WhatsNewModal() {
 		<Dialog open={open} onOpenChange={(next) => !next && dismiss()}>
 			<DialogContent
 				showCloseButton={false}
-				className="gap-0 overflow-hidden p-0 sm:max-w-[560px]"
+				className="flex max-h-[calc(100dvh-2rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-[560px]"
 			>
-				<div
-					className="relative h-40 bg-cover bg-center"
-					style={{ backgroundImage: `url(${bgImage})` }}
-				>
-					<div className="to-background absolute inset-0 bg-linear-to-b from-transparent" />
-					<DialogClose className="bg-background/80 text-foreground hover:bg-background absolute top-3 right-3 flex size-8 items-center justify-center rounded-full backdrop-blur transition-colors">
-						<XIcon className="size-4" />
-						<span className="sr-only">Close</span>
-					</DialogClose>
-				</div>
+				<DialogClose className="bg-background/80 text-foreground hover:bg-background absolute top-3 right-3 z-10 flex size-8 items-center justify-center rounded-full backdrop-blur transition-colors">
+					<XIcon className="size-4" />
+					<span className="sr-only">Close</span>
+				</DialogClose>
 
-				<div className="px-6 pb-6">
+				<div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6">
+					<div
+						className="relative -mx-6 h-28 bg-cover bg-center sm:h-40"
+						style={{ backgroundImage: `url(${bgImage})` }}
+					>
+						<div className="to-background absolute inset-0 bg-linear-to-b from-transparent" />
+					</div>
+
 					<p className="text-xs font-semibold tracking-widest text-rose-600 uppercase dark:text-rose-400">
 						New in Rentloop
 					</p>
