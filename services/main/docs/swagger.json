@@ -3779,6 +3779,12 @@
                         "in": "query"
                     },
                     {
+                        "type": "boolean",
+                        "example": true,
+                        "name": "expiring",
+                        "in": "query"
+                    },
+                    {
                         "type": "array",
                         "items": {
                             "type": "string"
@@ -8929,6 +8935,12 @@
                         "type": "boolean",
                         "example": true,
                         "name": "exclude_renewed",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "example": true,
+                        "name": "expiring",
                         "in": "query"
                     },
                     {
@@ -15157,6 +15169,12 @@
                         "in": "query"
                     },
                     {
+                        "type": "boolean",
+                        "example": true,
+                        "name": "expiring",
+                        "in": "query"
+                    },
+                    {
                         "type": "array",
                         "items": {
                             "type": "string"
@@ -18364,6 +18382,12 @@
                         "type": "boolean",
                         "example": true,
                         "name": "exclude_renewed",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "example": true,
+                        "name": "expiring",
                         "in": "query"
                     },
                     {

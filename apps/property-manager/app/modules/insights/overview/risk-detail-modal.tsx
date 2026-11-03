@@ -17,7 +17,6 @@ import {
 import { Skeleton } from '~/components/ui/skeleton'
 import { localizedDayjs } from '~/lib/date'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
-import { EXPIRING_WINDOW_DAYS } from '~/lib/lease.utils'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
 
@@ -62,11 +61,6 @@ function useRiskRecords(
 	const clientId = safeString(clientUser?.client_id)
 	const propertyId = scopedPropertyIds?.length ? scopedPropertyIds : undefined
 
-	const today = localizedDayjs().format('YYYY-MM-DD')
-	const windowEnd = localizedDayjs()
-		.add(EXPIRING_WINDOW_DAYS, 'day')
-		.format('YYYY-MM-DD')
-
 	// Ordering rides on `filters` rather than `sorter`: getQueryParams emits
 	// sorter as sort/sort_by, but the API reads order/order_by.
 	const invoices = useGetInvoicesAcrossPropertiesInfinite(
@@ -92,8 +86,7 @@ function useRiskRecords(
 			populate: ['Unit', 'Unit.Property', 'Tenant'],
 			filters: {
 				status: 'Lease.Status.Active',
-				move_out_date_from: today,
-				move_out_date_to: windowEnd,
+				expiring: true,
 				// Matches Leases.expiringCount, which the card above reports.
 				// Without it the list contradicts its own number: a renewed
 				// lease is still Active until its term runs out.
