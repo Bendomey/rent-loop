@@ -1,7 +1,9 @@
 package accounting
 
 import (
+	"errors"
 	"fmt"
+	"net/http"
 )
 
 // AccountingAPIError represents an error returned from the accounting API
@@ -9,6 +11,8 @@ type AccountingAPIError struct {
 	StatusCode int
 	Code       string
 	Message    string
+	// ExistingJournalEntryID is set on a 409: the entry already holding the reference.
+	ExistingJournalEntryID string
 }
 
 func (e *AccountingAPIError) Error() string {
@@ -76,4 +80,14 @@ func IsAlreadyPostedError(err error) bool {
 		return apiErr.Code == ErrCodeAlreadyPosted
 	}
 	return false
+}
+
+// DuplicateReferenceEntryID returns the id of the entry that already holds the
+// reference when fincore rejected a create as a duplicate.
+func DuplicateReferenceEntryID(err error) (string, bool) {
+	var apiErr *AccountingAPIError
+	if !errors.As(err, &apiErr) || apiErr.StatusCode != http.StatusConflict || apiErr.ExistingJournalEntryID == "" {
+		return "", false
+	}
+	return apiErr.ExistingJournalEntryID, true
 }

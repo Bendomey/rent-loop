@@ -657,26 +657,26 @@ func (s *paymentService) VerifyOfflinePayment(
 		// Post payment settlement journal entry
 		transactionDate := now.Format(time.RFC3339)
 		accounts := s.appCtx.Config.ChartOfAccounts
-		reference := fmt.Sprintf("PMT-%s", payment.Invoice.Code)
+		journalMetadata := map[string]any{
+			"payment_id":   input.PaymentID,
+			"invoice_id":   payment.Invoice.ID.String(),
+			"invoice_code": payment.Invoice.Code,
+			"amount":       payment.Amount,
+			"currency":     payment.Invoice.Currency,
+			"client_id":    lib.SafeString(payment.Invoice.ClientID),
+			"property_id":  lib.SafeString(payment.Invoice.PropertyID),
+		}
 		if payment.Reference != nil {
-			reference = *payment.Reference
+			journalMetadata["payment_reference"] = *payment.Reference
 		}
 
 		paymentLines := buildPaymentJournalLines(&payment.Invoice, payment.Amount, accounts)
 		_, journalErr := s.accountingService.RecordInvoicePayment(transCtx, accounting.CreateJournalEntryRequest{
 			Status:          string(accounting.JournalEntryStatusPosted),
-			Reference:       reference,
+			Reference:       paymentJournalReference(payment.Invoice.Code, payment.ID),
 			TransactionDate: &transactionDate,
-			Metadata: map[string]any{
-				"payment_id":   input.PaymentID,
-				"invoice_id":   payment.Invoice.ID.String(),
-				"invoice_code": payment.Invoice.Code,
-				"amount":       payment.Amount,
-				"currency":     payment.Invoice.Currency,
-				"client_id":    lib.SafeString(payment.Invoice.ClientID),
-				"property_id":  lib.SafeString(payment.Invoice.PropertyID),
-			},
-			Lines: paymentLines,
+			Metadata:        journalMetadata,
+			Lines:           paymentLines,
 		})
 		if journalErr != nil {
 			if !hasOuterTx {

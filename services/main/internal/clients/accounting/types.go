@@ -163,7 +163,8 @@ type APIResponse[T any] struct {
 }
 
 type Error struct {
-	Message string `json:"message"`
+	Message        string `json:"message"`
+	JournalEntryID string `json:"journal_entry_id,omitempty"`
 }
 
 // ============================================================================
