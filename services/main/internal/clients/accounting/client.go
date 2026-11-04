@@ -297,7 +297,9 @@ func (c *Client) doRequest(
 			return NewAccountingAPIError(resp.StatusCode, ErrCodeInternalError, string(respBody))
 		}
 		if apiResp.Errors != nil {
-			return NewAccountingAPIError(resp.StatusCode, ErrCodeInternalError, apiResp.Errors.Message)
+			apiErr := NewAccountingAPIError(resp.StatusCode, ErrCodeInternalError, apiResp.Errors.Message)
+			apiErr.ExistingJournalEntryID = apiResp.Errors.JournalEntryID
+			return apiErr
 		}
 		return NewAccountingAPIError(resp.StatusCode, ErrCodeInternalError, "Unknown error")
 	}
