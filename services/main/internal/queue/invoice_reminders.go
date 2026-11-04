@@ -2,6 +2,7 @@ package queue
 
 import (
 	"context"
+	"fmt"
 	"slices"
 	"strings"
 	"time"
@@ -46,6 +47,38 @@ var overdueThresholds = []reminderThreshold{
 	{1, "overdue_1d"},
 }
 
+// nextOverdueReminder picks the latest threshold reached and returns it with
+// every earlier one to mark as sent. An invoice first seen days late (issued
+// late, or the cron was down) gets one reminder, not a daily backlog of stale
+// ones that tells the tenant "1 day overdue" on day six.
+func nextOverdueReminder(daysPastDue int, sent []string) (string, []string) {
+	for i, threshold := range overdueThresholds {
+		if daysPastDue < threshold.days {
+			continue
+		}
+		if slices.Contains(sent, threshold.key) {
+			return "", nil
+		}
+
+		marks := make([]string, 0, len(overdueThresholds)-i)
+		for _, covered := range overdueThresholds[i:] {
+			if !slices.Contains(sent, covered.key) {
+				marks = append(marks, covered.key)
+			}
+		}
+		return threshold.key, marks
+	}
+
+	return "", nil
+}
+
+func daysOverdueLabel(days int) string {
+	if days == 1 {
+		return "1 day"
+	}
+	return fmt.Sprintf("%d days", days)
+}
+
 func handleInvoiceReminder(
 	repo repository.InvoiceRepository,
 	appCtx pkg.AppContext,
@@ -74,25 +107,24 @@ func handleInvoiceReminder(
 			daysUntilDue := int(dueDate.Sub(nowDate).Hours() / 24)
 
 			var reminderKey string
+			var reminderMarks []string
 			var subject, emailTemplateName, smsBodyTemplate string
+			daysOverdue := daysOverdueLabel(-daysUntilDue)
 
 			if daysUntilDue == 1 {
 				// Pre-due: due tomorrow (next calendar day)
 				if !slices.Contains(invoice.RemindersSent, "pre_due_1d") {
 					reminderKey = "pre_due_1d"
+					reminderMarks = []string{reminderKey}
 					subject = lib.INVOICE_PRE_DUE_1D_SUBJECT
 					emailTemplateName = "invoice/pre-due-1d"
 					smsBodyTemplate = lib.INVOICE_PRE_DUE_1D_SMS_BODY
 				}
 			} else if daysUntilDue < 0 {
-				// Overdue: find highest applicable unsent threshold based on full calendar days past due
-				daysPastDue := -daysUntilDue
-				for _, threshold := range overdueThresholds {
-					if daysPastDue >= threshold.days && !slices.Contains(invoice.RemindersSent, threshold.key) {
-						reminderKey = threshold.key
-						subject, emailTemplateName, smsBodyTemplate = overdueTemplate(threshold.key)
-						break
-					}
+				reminderKey, reminderMarks = nextOverdueReminder(-daysUntilDue, invoice.RemindersSent)
+				if reminderKey != "" {
+					subject, emailTemplateName, smsBodyTemplate = overdueTemplate(reminderKey)
+					subject = strings.ReplaceAll(subject, "{{days_overdue}}", daysOverdue)
 				}
 			}
 
@@ -119,6 +151,7 @@ func handleInvoiceReminder(
 				Currency:    invoice.Currency,
 				Amount:      lib.FormatAmount(lib.PesewasToCedis(int64(invoice.TotalAmount))),
 				DueDate:     invoice.DueDate.Format("2 Jan 2006"),
+				DaysOverdue: daysOverdue,
 			}
 			smsMessage := strings.NewReplacer(
 				"{{tenant_name}}", tenant.FirstName,
@@ -127,6 +160,7 @@ func handleInvoiceReminder(
 				"{{currency}}", invoice.Currency,
 				"{{amount}}", lib.FormatAmount(lib.PesewasToCedis(int64(invoice.TotalAmount))),
 				"{{due_date}}", invoice.DueDate.Format("2 Jan 2006"),
+				"{{days_overdue}}", daysOverdue,
 			).Replace(smsBodyTemplate)
 
 			channelSucceeded := false
@@ -194,8 +228,7 @@ func handleInvoiceReminder(
 				continue
 			}
 
-			// Mark reminder as sent
-			invoice.RemindersSent = append(invoice.RemindersSent, reminderKey)
+			invoice.RemindersSent = append(invoice.RemindersSent, reminderMarks...)
 			if updateErr := repo.Update(ctx, invoice); updateErr != nil {
 				log.WithError(updateErr).WithField("invoice_id", invoice.ID.String()).
 					Error("[Cron] failed to update invoice reminders_sent")

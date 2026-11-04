@@ -1,8 +1,8 @@
-{{define "preview"}}Your rent for {{.Data.UnitName}} is 1 day overdue.{{end}}
+{{define "preview"}}A friendly reminder: your rent for {{.Data.UnitName}} is {{.Data.DaysOverdue}} overdue.{{end}}
 {{define "content"}}
-<h1 class="headline" style="margin:0 0 14px;font-family:'DM Serif Display',Georgia,'Times New Roman',serif;font-size:28px;font-weight:400;color:#111110;line-height:1.2;letter-spacing:0.2px;">Your rent is 1 day overdue.</h1>
+<h1 class="headline" style="margin:0 0 14px;font-family:'DM Serif Display',Georgia,'Times New Roman',serif;font-size:28px;font-weight:400;color:#111110;line-height:1.2;letter-spacing:0.2px;">A friendly reminder about your rent.</h1>
 <p style="margin:0 0 20px;font-family:'DM Sans',Arial,sans-serif;font-size:14.5px;color:#444444;line-height:1.7;">Hi {{.Data.TenantName}},</p>
-<p style="margin:0 0 24px;font-family:'DM Sans',Arial,sans-serif;font-size:14.5px;color:#444444;line-height:1.7;">Your rent invoice for <strong>{{.Data.UnitName}}</strong> was due on <strong>{{.Data.DueDate}}</strong> and remains unpaid. Please make your payment as soon as possible to avoid further notices.</p>
+<p style="margin:0 0 24px;font-family:'DM Sans',Arial,sans-serif;font-size:14.5px;color:#444444;line-height:1.7;">Your rent invoice for <strong>{{.Data.UnitName}}</strong> was due on <strong>{{.Data.DueDate}}</strong> and is now <strong>{{.Data.DaysOverdue}} overdue</strong>. Kindly make payment when you can. If you have already paid, please disregard this message. Thank you!</p>
 
 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-radius:8px;overflow:hidden;margin-bottom:28px;border:1px solid #EAEAE8;">
   <tbody>

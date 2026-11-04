@@ -195,6 +195,7 @@ type InvoiceReminderData struct {
 	Currency    string
 	Amount      string
 	DueDate     string
+	DaysOverdue string // e.g. "8 days"; empty for pre-due reminders
 }
 
 // ─── Document Signing ─────────────────────────────────────────────────────────

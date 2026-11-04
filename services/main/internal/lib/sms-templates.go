@@ -52,10 +52,10 @@ const RENT_INVOICE_GENERATED_SUBJECT = "Your Rent Invoice is Ready"
 
 const (
 	INVOICE_PRE_DUE_1D_SUBJECT  = "Reminder: your rent is due tomorrow"
-	INVOICE_OVERDUE_1D_SUBJECT  = "Payment reminder: your rent is 1 day overdue"
-	INVOICE_OVERDUE_3D_SUBJECT  = "Payment reminder: your rent is 3 days overdue"
-	INVOICE_OVERDUE_7D_SUBJECT  = "Urgent: your rent is 7 days overdue"
-	INVOICE_OVERDUE_14D_SUBJECT = "Final notice: your rent is 14 days overdue"
+	INVOICE_OVERDUE_1D_SUBJECT  = "Friendly reminder: your rent is {{days_overdue}} overdue"
+	INVOICE_OVERDUE_3D_SUBJECT  = "Payment reminder: your rent is {{days_overdue}} overdue"
+	INVOICE_OVERDUE_7D_SUBJECT  = "Payment reminder: your rent is {{days_overdue}} overdue"
+	INVOICE_OVERDUE_14D_SUBJECT = "Payment reminder: your rent is {{days_overdue}} overdue"
 )
 
 const (
@@ -116,10 +116,10 @@ const (
 const (
 	RENT_INVOICE_GENERATED_SMS_BODY = `Hi {{tenant_name}}, your rent invoice ({{invoice_code}}) for {{unit_name}} is ready. Amount: {{currency}} {{amount}}.`
 	INVOICE_PRE_DUE_1D_SMS_BODY     = `Reminder: Invoice {{invoice_code}} for {{unit_name}} is due tomorrow. Amount: {{currency}} {{amount}}.`
-	INVOICE_OVERDUE_1D_SMS_BODY     = `Invoice {{invoice_code}} for {{unit_name}} is 1 day overdue. Amount: {{currency}} {{amount}}. Please pay now.`
-	INVOICE_OVERDUE_3D_SMS_BODY     = `Invoice {{invoice_code}} for {{unit_name}} is 3 days overdue. Amount: {{currency}} {{amount}}. Please pay promptly.`
-	INVOICE_OVERDUE_7D_SMS_BODY     = `Urgent: Invoice {{invoice_code}} is 7 days overdue. Amount: {{currency}} {{amount}}. Pay immediately.`
-	INVOICE_OVERDUE_14D_SMS_BODY    = `Final notice: Invoice {{invoice_code}} is 14 days overdue. Amount: {{currency}} {{amount}}. Pay now to avoid action.`
+	INVOICE_OVERDUE_1D_SMS_BODY     = `Friendly reminder: Invoice {{invoice_code}} ({{currency}} {{amount}}) was due {{due_date}} and is now {{days_overdue}} overdue. Kindly pay when you can. Thank you!`
+	INVOICE_OVERDUE_3D_SMS_BODY     = `Reminder: Invoice {{invoice_code}} ({{currency}} {{amount}}) is {{days_overdue}} overdue. Kindly make payment at your earliest convenience. Thank you!`
+	INVOICE_OVERDUE_7D_SMS_BODY     = `Invoice {{invoice_code}} ({{currency}} {{amount}}) is {{days_overdue}} overdue. Kindly make payment at your earliest convenience. Thank you!`
+	INVOICE_OVERDUE_14D_SMS_BODY    = `Payment Reminder: Invoice {{invoice_code}} ({{currency}} {{amount}}) is now {{days_overdue}} overdue. Kindly arrange payment soon to avoid further action. Thank you!`
 	INVOICE_PAID_SMS_BODY           = `Payment received for invoice {{invoice_code}}. Amount: {{currency}} {{amount}}. Thank you!`
 )
 

@@ -1,8 +1,8 @@
-{{define "preview"}}Final notice: your rent for {{.Data.UnitName}} is 14 days overdue.{{end}}
+{{define "preview"}}Payment reminder: your rent for {{.Data.UnitName}} is {{.Data.DaysOverdue}} overdue.{{end}}
 {{define "content"}}
-<h1 class="headline" style="margin:0 0 14px;font-family:'DM Serif Display',Georgia,'Times New Roman',serif;font-size:28px;font-weight:400;color:#111110;line-height:1.2;letter-spacing:0.2px;">Final notice: 14 days overdue.</h1>
+<h1 class="headline" style="margin:0 0 14px;font-family:'DM Serif Display',Georgia,'Times New Roman',serif;font-size:28px;font-weight:400;color:#111110;line-height:1.2;letter-spacing:0.2px;">Payment reminder: {{.Data.DaysOverdue}} overdue.</h1>
 <p style="margin:0 0 20px;font-family:'DM Sans',Arial,sans-serif;font-size:14.5px;color:#444444;line-height:1.7;">Hi {{.Data.TenantName}},</p>
-<p style="margin:0 0 24px;font-family:'DM Sans',Arial,sans-serif;font-size:14.5px;color:#444444;line-height:1.7;">Your rent invoice for <strong>{{.Data.UnitName}}</strong> is now <strong>14 days overdue</strong>. Please make your payment immediately. Continued non-payment may result in further action under the terms of your lease agreement.</p>
+<p style="margin:0 0 24px;font-family:'DM Sans',Arial,sans-serif;font-size:14.5px;color:#444444;line-height:1.7;">Your rent invoice for <strong>{{.Data.UnitName}}</strong> is now <strong>{{.Data.DaysOverdue}} overdue</strong>. Kindly arrange payment as soon as possible to avoid further action. If you need help, please reach out to your property manager. Thank you!</p>
 
 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-radius:8px;overflow:hidden;margin-bottom:28px;border:1px solid #EAEAE8;">
   <tbody>
