@@ -4,6 +4,14 @@
 
 ---
 
+## Home "still to collect" = Charges.outstandingAmount, collected = successful payments by successful month (2026-11-06)
+**Why:** "Still to collect" uses `Charges.outstandingAmount`, the same formula as the per-account balance, so Home and tenant detail agree on what is owed. "Collected this month" sums SUCCESSFUL `Payments.totalAmount` by `successfulAt` month, so part payments count; `Invoices.paidAmount` only sees fully paid bills. Arrears (`Charges.arrearsAmount`) is a sub-line, "{amount} of it is late".
+Still to collect sums only positive per-account balances (one Charges row per `financialAccountId`), so one tenant's credit never offsets another's debt, and late is capped at each account's balance.
+**Tradeoffs:** Charges are prepared for the whole term, so "still to collect" includes rent not yet due; the late line stops that being read as all overdue. Three separate Cube loads because the cubes have no join path.
+**Alternatives considered:** Summing the invoice list (disagrees with tenant balances), or a percent-collected bar (needs a defensible denominator).
+
+---
+
 ## Rent tab sums bills; tenant "owes" stays account-balance based (2026-11-06)
 **Why:** The Rent tab totals what is left on issued bills (`total_amount` minus SUCCESSFUL payments), because a bill is the thing a payment is recorded against. A tenant's "owes" figure elsewhere comes from the financial account balance (charges less payments), which also covers charges not yet billed. The two answer different questions, so each keeps its own source rather than being forced to agree.
 **Tradeoffs:** The Rent tab total can differ from the sum of tenants' "owes" until charges are billed. The API has no balance field, so the remainder is computed on the client.

@@ -4,53 +4,47 @@ import 'package:go_router/go_router.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:rentloop_manager/src/architecture/current_user/current_user_notifier.dart';
 import 'package:rentloop_manager/src/architecture/current_workspace/current_workspace_notifier.dart';
+import 'package:rentloop_manager/src/lib/home_stats_logic.dart';
 import 'package:rentloop_manager/src/lib/money.dart';
 import 'package:rentloop_manager/src/lib/workspace_resolution.dart';
 import 'package:rentloop_manager/src/modules/main/workspace_sheet.dart';
+import 'package:rentloop_manager/src/repository/providers/activity/activity_counts_provider.dart';
+import 'package:rentloop_manager/src/repository/providers/home/home_stats_provider.dart';
 import 'package:rentloop_manager/src/repository/providers/properties/my_property_roles_provider.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
+import 'package:shimmer/shimmer.dart';
 
-// Static design data — matches the handoff spec exactly.
-// Will be replaced by live API calls when the data layer is wired up.
-const _kRevenue = 184500;
-const _kRevenueDelta = '+12%';
-const _kCollected = 92.0; // %
-const _kOutstanding = 14200;
-const _kOccupancy = 88.0; // %
-const _kActiveLeases = 51;
-const _kOpenMaint = 7;
-const _kPendingApps = 4;
-const _kTrend = [78.0, 84.0, 81.0, 90.0, 86.0, 92.0];
-
-// ── Screen ─────────────────────────────────────────────────────────────────────
-
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       backgroundColor: RLTokens.surface,
       body: RefreshIndicator(
         color: RLTokens.crimson,
         onRefresh: () async {
           await Haptics.vibrate(HapticsType.light);
+          ref.invalidate(homeStatsProvider);
+          ref.invalidate(activityCountsProvider);
+          try {
+            await ref.read(homeStatsProvider.future);
+          } catch (_) {
+            // A failed refresh keeps the numbers already on screen.
+          }
         },
         child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
             SliverToBoxAdapter(child: _TopHeader()),
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
-                  _RevenueCard(),
+                  const _MoneyCard(),
                   const SizedBox(height: 10),
-                  _StatGrid(),
-                  const SizedBox(height: 22),
-                  _NeedsAttentionSection(),
-                  const SizedBox(height: 22),
-                  _CollectionTrendSection(),
+                  const _StatGrid(),
                   const SizedBox(height: 22),
                   _QuickActionsSection(),
                   const SizedBox(height: 40),
@@ -63,8 +57,6 @@ class HomeScreen extends StatelessWidget {
     );
   }
 }
-
-// ── Top header ─────────────────────────────────────────────────────────────────
 
 class _TopHeader extends ConsumerWidget {
   @override
@@ -131,95 +123,200 @@ class _TopHeader extends ConsumerWidget {
   }
 }
 
-// ── Revenue hero card (dark) ───────────────────────────────────────────────────
+class _MoneyCard extends ConsumerWidget {
+  const _MoneyCard();
 
-class _RevenueCard extends StatelessWidget {
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final clientId = ref.watch(currentWorkspaceNotifierProvider)?.clientId;
+    final stats = ref.watch(homeStatsProvider);
+    final value = stats.valueOrNull;
+    final data = value?.clientId == clientId ? value : null;
+
+    if (data == null && (stats.isLoading || !stats.hasError)) {
+      return Shimmer.fromColors(
+        baseColor: RLTokens.fill,
+        highlightColor: RLTokens.paper,
+        child: Container(
+          height: 150,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(RLTokens.rLg),
+          ),
+        ),
+      );
+    }
+
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: RLTokens.ink,
         borderRadius: BorderRadius.circular(RLTokens.rLg),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Label row
-          Row(
-            children: [
-              Text(
-                'Revenue · June',
-                style: TextStyle(
-                  fontFamily: RLTokens.fontMono,
-                  fontSize: 10.5,
-                  letterSpacing: 1,
-                  color: Colors.white.withAlpha(140),
+      child: data == null
+          ? Column(
+              children: [
+                Text(
+                  "Couldn't load your numbers.",
+                  style: TextStyle(
+                    fontFamily: RLTokens.fontSans,
+                    fontSize: 14,
+                    color: Colors.white.withAlpha(204),
+                  ),
                 ),
-              ),
-              const Spacer(),
-              _GreenPill('▲ $_kRevenueDelta'),
-            ],
+                const SizedBox(height: 14),
+                RLBtn(
+                  label: 'Try again',
+                  large: false,
+                  onPressed: () => ref.invalidate(homeStatsProvider),
+                ),
+              ],
+            )
+          : _MoneyCardBody(data),
+    );
+  }
+}
+
+class _MoneyCardBody extends StatelessWidget {
+  const _MoneyCardBody(this.stats);
+  final HomeStats stats;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Collected this month',
+          style: TextStyle(
+            fontFamily: RLTokens.fontSans,
+            fontSize: 12.5,
+            color: Colors.white.withAlpha(153),
           ),
-          const SizedBox(height: 12),
-          // Amount
-          RLMoney(_kRevenue, size: 40, color: Colors.white),
-          const SizedBox(height: 18),
-          // Collected row
-          Row(
-            children: [
-              Text(
-                'Rent collected',
-                style: TextStyle(
-                  fontFamily: RLTokens.fontSans,
-                  fontSize: 12.5,
-                  color: Colors.white.withAlpha(153),
-                ),
-              ),
-              const Spacer(),
-              Text(
-                '${_kCollected.toInt()}%',
-                style: const TextStyle(
-                  fontFamily: RLTokens.fontSans,
-                  fontSize: 12.5,
-                  fontWeight: RLTokens.semibold,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          RLBar(
-            percent: _kCollected,
+        ),
+        const SizedBox(height: 12),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: RLMoney(
+            pesewasToCedis(stats.collectedThisMonth),
+            size: 40,
             color: Colors.white,
-            trackColor: Colors.white.withAlpha(38),
           ),
-          const SizedBox(height: 14),
-          // Divider
-          Container(height: 1, color: Colors.white.withAlpha(26)),
-          const SizedBox(height: 14),
-          // Outstanding row
-          Row(
-            children: [
-              Text(
-                'Outstanding',
+        ),
+        const SizedBox(height: 14),
+        Container(height: 1, color: Colors.white.withAlpha(26)),
+        const SizedBox(height: 14),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Still to collect',
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontFamily: RLTokens.fontSans,
                   fontSize: 13,
                   color: Colors.white.withAlpha(166),
                 ),
               ),
-              const Spacer(),
-              Text(
-                'GH₵ ${_kOutstanding.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => ',')}',
-                style: const TextStyle(
-                  fontFamily: RLTokens.fontSans,
-                  fontSize: 14,
-                  fontWeight: RLTokens.semibold,
-                  color: Color(0xFFFF6F8E),
-                ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              formatPesewas(stats.stillToCollect),
+              style: const TextStyle(
+                fontFamily: RLTokens.fontSans,
+                fontSize: 14,
+                fontWeight: RLTokens.semibold,
+                color: Colors.white,
               ),
-            ],
+            ),
+          ],
+        ),
+        if (stats.late > 0) ...[
+          const SizedBox(height: 6),
+          Align(
+            alignment: Alignment.centerRight,
+            child: Text(
+              '${formatPesewas(stats.late)} of it is late',
+              style: const TextStyle(
+                fontFamily: RLTokens.fontSans,
+                fontSize: 12.5,
+                fontWeight: RLTokens.semibold,
+                color: Color(0xFFFF6F8E),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _StatGrid extends ConsumerWidget {
+  const _StatGrid();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final clientId = ref.watch(currentWorkspaceNotifierProvider)?.clientId;
+    final stats = ref.watch(homeStatsProvider);
+    final counts = ref.watch(activityCountsProvider);
+    final statsValue = stats.valueOrNull;
+    final countsValue = counts.valueOrNull;
+    final statsData = statsValue?.clientId == clientId ? statsValue : null;
+    final countsData = countsValue?.clientId == clientId ? countsValue : null;
+
+    String? shown(
+      AsyncValue<Object?> async,
+      Object? data,
+      String Function() f,
+    ) {
+      if (data != null) return f();
+      return async.hasError && !async.isLoading ? '—' : null;
+    }
+
+    final emptyUnits = shown(
+      stats,
+      statsData,
+      () => '${statsData!.emptyUnits} of ${statsData.totalUnits}',
+    );
+    final repairs = shown(
+      counts,
+      countsData,
+      () => '${countsData!.maintenance}',
+    );
+    final pending = shown(
+      counts,
+      countsData,
+      () => '${countsData!.applications}',
+    );
+
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: _StatCard(
+              value: emptyUnits,
+              label: 'Empty units',
+              onTap: () => context.go('/properties'),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _StatCard(
+              value: repairs,
+              label: 'Open repairs',
+              onTap: () => context.push('/repairs'),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _StatCard(
+              value: pending,
+              label: 'Pending tenants',
+              onTap: () => context.go('/tenants'),
+            ),
           ),
         ],
       ),
@@ -227,287 +324,79 @@ class _RevenueCard extends StatelessWidget {
   }
 }
 
-class _GreenPill extends StatelessWidget {
-  const _GreenPill(this.label);
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
-      decoration: BoxDecoration(
-        color: const Color.fromRGBO(27, 158, 92, 0.13),
-        borderRadius: BorderRadius.circular(RLTokens.rPill),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontFamily: RLTokens.fontSans,
-          fontSize: 11,
-          fontWeight: RLTokens.semibold,
-          color: Color(0xFF157A47),
-          letterSpacing: 0.1,
-        ),
-      ),
-    );
-  }
-}
-
-// ── 2×2 stat grid ─────────────────────────────────────────────────────────────
-
-class _StatGrid extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: _StatCard(
-                child: RLMetric(
-                  value: '${_kOccupancy.toInt()}%',
-                  label: 'Occupancy',
-                  delta: '▲ 3%',
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _StatCard(
-                child: const RLMetric(
-                  value: '$_kActiveLeases',
-                  label: 'Active leases',
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            Expanded(
-              child: _StatCard(
-                child: const RLMetric(
-                  value: '$_kOpenMaint',
-                  label: 'Open requests',
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _StatCard(
-                child: const RLMetric(
-                  value: '$_kPendingApps',
-                  label: 'Pending apps',
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
 class _StatCard extends StatelessWidget {
-  const _StatCard({required this.child});
-  final Widget child;
+  const _StatCard({
+    required this.value,
+    required this.label,
+    required this.onTap,
+  });
+
+  /// Null while loading.
+  final String? value;
+  final String label;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    final loading = value == null;
     return GestureDetector(
-      onTap: () async => Haptics.vibrate(HapticsType.selection),
+      onTap: () async {
+        await Haptics.vibrate(HapticsType.selection);
+        if (context.mounted) onTap();
+      },
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: RLTokens.surface,
           borderRadius: BorderRadius.circular(RLTokens.rLg),
           border: Border.all(color: RLTokens.hairline),
         ),
-        child: child,
-      ),
-    );
-  }
-}
-
-// ── Needs attention ────────────────────────────────────────────────────────────
-
-class _NeedsAttentionSection extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        RLLabel(
-          'Needs your attention',
-          action: 'Activity',
-          onAction: () async => Haptics.vibrate(HapticsType.selection),
-        ),
-        Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: RLTokens.surface,
-            borderRadius: BorderRadius.circular(RLTokens.rLg),
-            border: Border.all(color: RLTokens.hairline),
-          ),
-          child: Column(
-            children: [
-              RLRow(
-                leading: _TileIcon(
-                  bg: RLTokens.crimsonTint,
-                  iconColor: RLTokens.crimson,
-                  icon: Icons.build_rounded,
-                ),
-                title: 'Leaking kitchen tap',
-                subtitle: 'Unit 4B · High priority',
-                trailing: const RLPill('New'),
-                onTap: () async => Haptics.vibrate(HapticsType.selection),
-              ),
-              RLRow(
-                leading: const _TileIcon(
-                  bg: Color.fromRGBO(233, 123, 42, 0.16),
-                  iconColor: Color(0xFFBD5E16),
-                  icon: Icons.receipt_long_rounded,
-                ),
-                title: 'Invoice overdue',
-                subtitle: 'INV-2041 · Ama Boateng',
-                trailing: Text(
-                  '${currencySymbol(defaultCurrencyCode)} 4,200',
-                  style: const TextStyle(
-                    fontFamily: RLTokens.fontSans,
-                    fontWeight: RLTokens.bold,
-                    fontSize: 13.5,
-                    color: RLTokens.ink,
+        child: loading
+            ? Shimmer.fromColors(
+                baseColor: RLTokens.fill,
+                highlightColor: RLTokens.paper,
+                child: Container(
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                onTap: () async => Haptics.vibrate(HapticsType.selection),
-              ),
-              RLRow(
-                leading: const _TileIcon(
-                  bg: Color.fromRGBO(46, 108, 246, 0.12),
-                  iconColor: Color(0xFF2456C4),
-                  icon: Icons.description_rounded,
-                ),
-                title: 'New application',
-                subtitle: 'Adjoa Frimpong · Unit 1C',
-                trailing: const RLPill('Review'),
-                onTap: () async => Haptics.vibrate(HapticsType.selection),
-                last: true,
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _TileIcon extends StatelessWidget {
-  const _TileIcon({
-    required this.bg,
-    required this.iconColor,
-    required this.icon,
-  });
-  final Color bg;
-  final Color iconColor;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 38,
-      height: 38,
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(11),
-      ),
-      child: Icon(icon, size: 18, color: iconColor),
-    );
-  }
-}
-
-// ── Rent collection trend ──────────────────────────────────────────────────────
-
-class _CollectionTrendSection extends StatelessWidget {
-  static const _months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN'];
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const RLLabel('Rent collection · last 6 months'),
-        Container(
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            color: RLTokens.surface,
-            borderRadius: BorderRadius.circular(RLTokens.rLg),
-            border: Border.all(color: RLTokens.hairline),
-          ),
-          child: Row(
-            children: [
-              // Donut with inline center label
-              RLDonut(
-                percent: _kCollected,
-                size: 84,
-                thickness: 12,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '${_kCollected.toInt()}%',
-                      style: const TextStyle(
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      value!,
+                      style: TextStyle(
                         fontFamily: RLTokens.fontSerif,
-                        fontSize: 22,
+                        fontSize: 24,
                         color: RLTokens.ink,
+                        letterSpacing: -0.4,
                         height: 1,
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'June',
-                      style: TextStyle(
-                        fontFamily: RLTokens.fontSans,
-                        fontSize: 9.5,
-                        color: RLTokens.muted,
-                      ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    label,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: RLTokens.fontSans,
+                      fontSize: 11.5,
+                      color: RLTokens.muted,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 18),
-              Expanded(
-                child: Column(
-                  children: [
-                    RLMiniBars(data: _kTrend, height: 44),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: _months
-                          .map(
-                            (m) => Text(
-                              m,
-                              style: TextStyle(
-                                fontFamily: RLTokens.fontMono,
-                                fontSize: 9.5,
-                                color: RLTokens.micro,
-                              ),
-                            ),
-                          )
-                          .toList(),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
-
-// ── Quick actions ──────────────────────────────────────────────────────────────
 
 class _QuickActionsSection extends ConsumerWidget {
   static const _actions = [

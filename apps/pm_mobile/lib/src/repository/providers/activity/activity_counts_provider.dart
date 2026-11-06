@@ -65,6 +65,7 @@ Future<ActivityCounts> activityCounts(ActivityCountsRef ref) async {
       maintenanceRows: results[0],
       applicationRows: results[1],
       bookingRows: results[2],
+      clientId: clientId,
     );
   } on ApiException catch (e) {
     // Analytics token fetch failed (expired session, no analytics access for

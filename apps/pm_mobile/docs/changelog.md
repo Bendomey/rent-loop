@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-06 — Home with real numbers (plan: pm-mobile-v1-home)
+- Home shows "Collected this month", "Still to collect" (with "{amount} of it is late" when there are arrears), and Empty units / Open repairs / Pending tenants cards, all read from live data. Cards open Properties, Repairs and Tenants.
+- Removed the sample revenue card, stat grid, "Needs your attention" and collection trend. Loading shows shimmer; a failed read shows "Couldn't load your numbers." with Try again; pull-to-refresh reloads.
+- New: `homeStatsProvider`, `HomeStats` (`lib/home_stats_logic.dart`).
+
 ## 2026-11-06 — Tenant detail with real data (plan: pm-mobile-v1-tenant-detail)
 - `TenantDetailScreen` (`tenants/detail.dart`) now shows the real tenant: name, unit, Call and WhatsApp, what they owe, lease dates and rent, and contact details. All sample data and the placeholder Record card are gone.
 - "What they owe" is the lease's account balance, with credit shown as "You owe {name}". A failed lease read only affects that card.

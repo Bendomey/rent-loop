@@ -3,8 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:rentloop_manager/src/lib/home_stats_logic.dart';
 import 'package:rentloop_manager/src/modules/main/checklist_sheet.dart';
 import 'package:rentloop_manager/src/modules/main/home/root.dart';
+import 'package:rentloop_manager/src/repository/models/activity_counts_model.dart';
+import 'package:rentloop_manager/src/repository/providers/activity/activity_counts_provider.dart';
+import 'package:rentloop_manager/src/repository/providers/home/home_stats_provider.dart';
 import 'package:rentloop_manager/src/repository/providers/properties/my_property_roles_provider.dart';
 
 Future<void> _pump(
@@ -17,7 +21,13 @@ Future<void> _pump(
 
   await tester.pumpWidget(
     ProviderScope(
-      overrides: [myPropertyRolesProvider.overrideWith((ref) => roles())],
+      overrides: [
+        myPropertyRolesProvider.overrideWith((ref) => roles()),
+        homeStatsProvider.overrideWith((ref) => Completer<HomeStats>().future),
+        activityCountsProvider.overrideWith(
+          (ref) => Completer<ActivityCounts>().future,
+        ),
+      ],
       child: const MaterialApp(home: HomeScreen()),
     ),
   );

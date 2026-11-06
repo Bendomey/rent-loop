@@ -9,6 +9,7 @@
 - `routes.dart` exposes `appRoutes()`; tabs Home / Properties / Tenants / Rent / More.
 - `modules/main/repairs/root.dart` — `RepairsScreen` at `/repairs`.
 - Removed routes: `/notifications`, `/activity/bookings/*`, property and unit settings, `/more/documents`, `/more/members`, `/more/payment-accounts`, `/more/archived-properties`, `/more/agreement`, `/more/billing`, `/more/settings`.
+- Home (`modules/main/home/root.dart`): a `ConsumerWidget` fed by `homeStatsProvider` (collected this month, still to collect, late, empty/total units; Cube Payments, Charges, Units) and `activityCountsProvider` (open repairs, pending tenants). Money card and stat cards shimmer while loading; stats failure shows Try again; pull-to-refresh invalidates both. Stat cards go to `/properties`, `/repairs`, `/tenants`.
 - Home: no notification bell or `ChecklistBanner`; quick actions are Add tenant, Record payment, Repairs, Announcement.
 - More: Manage = Repairs, Announcements, Leases; Account = Help & support only; no Organisation settings section.
 - My account: Profile and sign-out only (Security and Sessions pages kept, unreachable).

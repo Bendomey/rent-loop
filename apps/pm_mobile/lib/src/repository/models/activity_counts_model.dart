@@ -8,10 +8,12 @@ class ActivityCounts {
   final int maintenance;
   final int applications;
   final int bookings;
+  final String? clientId;
 
   const ActivityCounts({
     this.maintenance = 0,
     this.applications = 0,
     this.bookings = 0,
+    this.clientId,
   });
 }
