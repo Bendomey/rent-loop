@@ -611,6 +611,10 @@ class _ManageGrid extends StatelessWidget {
         icon: Icons.assignment_outlined,
         label: 'Pending tenants',
         count: _count((s) => s.pendingApplications),
+        onTap: (context) => context.push(
+          '/more/tenants'
+          '?property_id=${property.id}&property_name=${Uri.encodeComponent(property.name)}',
+        ),
       ),
       _ManageAction(
         icon: Icons.build_outlined,

@@ -179,14 +179,15 @@ List<RouteBase> appRoutes() => [
   ),
   GoRoute(
     path: '/activity/applications/add',
-    builder: (_, __) => const AddApplicationScreen(),
+    builder: (_, state) => AddApplicationScreen(
+      propertyId: state.uri.queryParameters['property_id'],
+    ),
   ),
   GoRoute(
     path: '/activity/applications/:id',
     builder: (_, state) => ApplicationDetailScreen(
       id: state.pathParameters['id']!,
-      // The applications list passes the row it was already showing, so a
-      // tapped card opens that application instead of a seed fixture.
+      propertyId: state.uri.queryParameters['property_id'],
       application: state.extra is TenantApplicationModel
           ? state.extra! as TenantApplicationModel
           : null,

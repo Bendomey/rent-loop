@@ -15,6 +15,14 @@
 
 ## Per-Module Breakdown
 
+### Add tenant (2026-11-06)
+- `TenantApplicationApi`: `getApplication`, `createApplication` (dob RFC3339), `updateApplication` (dob `YYYY-MM-DD`), `cancelApplication`, `inviteTenant`, `lookupTenantByPhone`, `getTenantApplications`.
+- `ClientUserPropertyApi.getMyPropertyRoles` (`GET .../properties/me`) feeds `myPropertyRolesProvider`; `canManageProperty` and `canEditApplication` gate every edit.
+- `normalizePhone` (`lib/src/lib/phone.dart`); `computeApplicationChecklist` (web-parity checklist); `tenantApplyUrl` builds the setup link shared by `InviteTenantSheet`.
+- Providers: `pendingTenantsProvider` (Tenants tab, `tenants/pending_tenants_section.dart`), `applicationDetailProvider`, `applicationUnitOptionsProvider` (units in properties the caller manages).
+- Mutation notifiers on `ApiState`: `CreateApplicationNotifier`, `UpdateApplicationNotifier`, `CancelApplicationNotifier`, `InviteTenantNotifier`.
+- UI: `activity/add_application.dart` (steps + review), `application_detail*.dart`, `application_edit_sheets.dart`, `cancel_application_sheet.dart`, `application_form_widgets.dart` (`ApplicationUploadTile`).
+
 ### api/
 - **Entry point:** `lib/src/api/root.dart` — `AbstractApi` base class
 - **Key classes:** `AbstractApi` (`execute()`: GET/POST/PATCH/DELETE, attaches `Authorization: Bearer <token>` unless `authRequired: false`, throws `ApiException` on ≥400), `ApiException` (parses `json['errors']['message']`, `null`-safe on malformed bodies)

@@ -1,5 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
+
+import 'package:rentloop_manager/src/api/tenant_application_api.dart';
+import 'package:rentloop_manager/src/architecture/current_workspace/current_workspace_notifier.dart';
+import 'package:rentloop_manager/src/constants.dart';
+import 'package:rentloop_manager/src/lib/application_utils.dart';
+import 'package:rentloop_manager/src/lib/phone.dart';
+import 'package:rentloop_manager/src/modules/main/activity/application_form_widgets.dart';
+import 'package:rentloop_manager/src/repository/api_state.dart';
+import 'package:rentloop_manager/src/repository/models/tenant_application_model.dart';
+import 'package:rentloop_manager/src/repository/models/unit_model.dart';
+import 'package:rentloop_manager/src/repository/notifiers/activity/create_application_notifier.dart';
+import 'package:rentloop_manager/src/repository/notifiers/activity/invite_tenant_notifier.dart';
+import 'package:rentloop_manager/src/repository/providers/activity/application_unit_options_provider.dart';
+import 'package:rentloop_manager/src/shared/toast.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
@@ -7,51 +26,75 @@ import 'package:rentloop_manager/src/shared/widgets.dart';
 
 const _kStepLabels = ['Unit', 'Basic info', 'Identity', 'Background', 'Review'];
 
-const _kUnits = [
-  '003 · Available',
-  '005 · Available',
-  '012 · Available',
-  '1C · Available',
-];
-const _kGenders = ['Male', 'Female', 'Other', 'Prefer not to say'];
-const _kMarital = ['Single', 'Married', 'Divorced', 'Widowed'];
-const _kIdTypes = ['National ID', "Driver's License", 'Passport', 'Voter ID'];
+const _kMethodFill = "I'll fill it in";
+const _kMethodLink = 'Send the tenant a link';
+
+final _emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+
+String _unitLabel(UnitModel u) => [
+  u.name,
+  if (u.propertyBlock != null) u.propertyBlock!.name,
+  if (u.property != null) u.property!.name,
+].join(' · ');
+
+String? _opt(String s) {
+  final t = s.trim();
+  return t.isEmpty ? null : t;
+}
+
+String _formatDate(DateTime d) => DateFormat('d MMM yyyy').format(d);
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
-class AddApplicationScreen extends StatefulWidget {
-  const AddApplicationScreen({super.key});
+class AddApplicationScreen extends ConsumerStatefulWidget {
+  const AddApplicationScreen({super.key, this.propertyId});
+
+  final String? propertyId;
 
   @override
-  State<AddApplicationScreen> createState() => _AddApplicationScreenState();
+  ConsumerState<AddApplicationScreen> createState() =>
+      _AddApplicationScreenState();
 }
 
-class _AddApplicationScreenState extends State<AddApplicationScreen> {
+class _AddApplicationScreenState extends ConsumerState<AddApplicationScreen> {
   int _step = 1;
   String? _picker;
   bool _showInvite = false;
+  bool _looking = false;
+  bool _returning = false;
+  String? _lookedUpPhone;
 
-  // form state
-  String _unit = '';
-  String _method = 'Admin onboarding';
+  UnitModel? _unit;
+  String _method = _kMethodFill;
   final _firstCtrl = TextEditingController();
   final _otherCtrl = TextEditingController();
   final _lastCtrl = TextEditingController();
   String _gender = '';
   final _emailCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
-  String _dob = '';
+  DateTime? _dob;
   String _marital = '';
   final _addressCtrl = TextEditingController();
-  final _natCtrl = TextEditingController();
+  final _natCtrl = TextEditingController(text: 'Ghanaian');
   String _idType = '';
   final _idNumCtrl = TextEditingController();
   final _ecNameCtrl = TextEditingController();
   final _ecRelCtrl = TextEditingController();
   final _ecPhoneCtrl = TextEditingController();
-  String _employment = 'Student';
-  final _schoolCtrl = TextEditingController();
-  final _schoolAddrCtrl = TextEditingController();
+  String _employment = 'Worker';
+  final _occupationCtrl = TextEditingController();
+  final _employerCtrl = TextEditingController();
+  final _workAddrCtrl = TextEditingController();
+
+  String? _profileUrl;
+  String? _idFrontUrl;
+  String? _idBackUrl;
+  String? _proofUrl;
+  final _blocking = <String>{};
+  final _errors = <String, String>{};
+
+  bool get _isStudent => _employment == 'Student';
+  bool get _fillIn => _method == _kMethodFill;
 
   @override
   void dispose() {
@@ -67,25 +110,26 @@ class _AddApplicationScreenState extends State<AddApplicationScreen> {
       _ecNameCtrl,
       _ecRelCtrl,
       _ecPhoneCtrl,
-      _schoolCtrl,
-      _schoolAddrCtrl,
+      _occupationCtrl,
+      _employerCtrl,
+      _workAddrCtrl,
     ]) {
       c.dispose();
     }
     super.dispose();
   }
 
-  void _pick(String key, String value) {
+  void _pick(String key, String value, List<UnitModel> units) {
     setState(() {
       switch (key) {
         case 'unit':
-          _unit = value;
+          _unit = units.firstWhere((u) => u.id == value);
+          _errors.remove('unit');
         case 'gender':
           _gender = value;
+          _errors.remove('gender');
         case 'marital':
           _marital = value;
-        case 'dob':
-          _dob = value;
         case 'idType':
           _idType = value;
       }
@@ -94,13 +138,237 @@ class _AddApplicationScreenState extends State<AddApplicationScreen> {
     Haptics.vibrate(HapticsType.selection);
   }
 
-  void _next() async {
-    await Haptics.vibrate(HapticsType.selection);
-    if (_step == 1 && _method == 'Self onboarding') {
-      setState(() => _showInvite = true);
+  Future<void> _pickDob() async {
+    Haptics.vibrate(HapticsType.selection);
+    final now = DateTime.now();
+    final latest = DateTime(now.year - 18, now.month, now.day);
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _dob != null && !_dob!.isAfter(latest) ? _dob! : latest,
+      firstDate: DateTime(1900),
+      lastDate: latest,
+    );
+    if (picked == null || !mounted) return;
+    setState(() {
+      _dob = DateTime.utc(picked.year, picked.month, picked.day);
+      _errors.remove('dob');
+    });
+  }
+
+  void _setBlocking(String id, bool blocking) {
+    if (!mounted) return;
+    setState(() => blocking ? _blocking.add(id) : _blocking.remove(id));
+  }
+
+  bool _validateStep(int step) {
+    final errors = <String, String>{};
+    switch (step) {
+      case 1:
+        if (_unit == null) errors['unit'] = 'Choose a unit.';
+        if (_fillIn && normalizePhone(_phoneCtrl.text) == null) {
+          errors['phone'] = 'Enter a valid phone number.';
+        }
+      case 2:
+        if (_firstCtrl.text.trim().length < 2) {
+          errors['first'] = 'Enter at least 2 letters.';
+        }
+        if (_lastCtrl.text.trim().length < 2) {
+          errors['last'] = 'Enter at least 2 letters.';
+        }
+        if (_gender.isEmpty) errors['gender'] = 'Choose one.';
+        if (_dob == null) {
+          errors['dob'] = 'Choose a date.';
+        } else if (!isAdult(_dob!, DateTime.now())) {
+          errors['dob'] = 'Must be 18 or older.';
+        }
+        if (_addressCtrl.text.trim().length < 5) {
+          errors['address'] = 'Enter at least 5 characters.';
+        }
+        final email = _emailCtrl.text.trim();
+        if (email.isNotEmpty && !_emailPattern.hasMatch(email)) {
+          errors['email'] = 'Enter a valid email.';
+        }
+      case 4:
+        final ec = _ecPhoneCtrl.text.trim();
+        if (ec.isNotEmpty && normalizePhone(ec) == null) {
+          errors['ecPhone'] = 'Enter a valid phone number.';
+        }
+    }
+    setState(() {
+      const keysByStep = {
+        1: ['unit', 'phone'],
+        2: ['first', 'last', 'gender', 'dob', 'address', 'email'],
+        4: ['ecPhone'],
+      };
+      _errors.removeWhere((k, _) => (keysByStep[step] ?? []).contains(k));
+      _errors.addAll(errors);
+    });
+    return errors.isEmpty;
+  }
+
+  int? _firstInvalidStep() {
+    for (final step in [1, 2, 4]) {
+      if (!_validateStep(step)) return step;
+    }
+    return null;
+  }
+
+  void _prefill(TenantLookupModel t) {
+    _firstCtrl.text = t.firstName ?? '';
+    _otherCtrl.text = t.otherNames ?? '';
+    _lastCtrl.text = t.lastName ?? '';
+    _emailCtrl.text = t.email ?? '';
+    if (t.phone != null) _phoneCtrl.text = t.phone!;
+    _addressCtrl.text = t.currentAddress ?? '';
+    _gender = applicationGenderLabel(t.gender) ?? '';
+    _marital = applicationMaritalStatusLabel(t.maritalStatus) ?? '';
+    final dob = t.dateOfBirth?.toUtc();
+    _dob = dob == null ? null : DateTime.utc(dob.year, dob.month, dob.day);
+    _natCtrl.text = t.nationality ?? 'Ghanaian';
+    _idType = applicationIdTypeLabel(t.idType) ?? '';
+    _idNumCtrl.text = t.idNumber ?? '';
+    _ecNameCtrl.text = t.emergencyContactName ?? '';
+    _ecRelCtrl.text = t.relationshipToEmergencyContact ?? '';
+    _ecPhoneCtrl.text = t.emergencyContactPhone ?? '';
+    _employment = t.occupation == 'STUDENT' ? 'Student' : 'Worker';
+    _occupationCtrl.text = t.occupation == 'STUDENT' ? '' : t.occupation ?? '';
+    _employerCtrl.text = t.employer ?? '';
+    _workAddrCtrl.text = t.occupationAddress ?? '';
+    _profileUrl = t.profilePhotoUrl;
+    _idFrontUrl = t.idFrontUrl;
+    _idBackUrl = t.idBackUrl;
+    _proofUrl = t.proofOfIncomeUrl;
+  }
+
+  void _clearPrefill() {
+    for (final c in [
+      _firstCtrl,
+      _otherCtrl,
+      _lastCtrl,
+      _emailCtrl,
+      _addressCtrl,
+      _idNumCtrl,
+      _ecNameCtrl,
+      _ecRelCtrl,
+      _ecPhoneCtrl,
+      _occupationCtrl,
+      _employerCtrl,
+      _workAddrCtrl,
+    ]) {
+      c.clear();
+    }
+    _natCtrl.text = 'Ghanaian';
+    _gender = '';
+    _marital = '';
+    _dob = null;
+    _idType = '';
+    _employment = 'Worker';
+    _profileUrl = null;
+    _idFrontUrl = null;
+    _idBackUrl = null;
+    _proofUrl = null;
+  }
+
+  Future<void> _lookup() async {
+    final e164 = normalizePhone(_phoneCtrl.text)!;
+    if (e164 == _lookedUpPhone) {
+      setState(() => _step = _returning ? 5 : 2);
       return;
     }
-    setState(() => _step = (_step + 1).clamp(1, 5));
+    setState(() => _looking = true);
+    TenantLookupModel? tenant;
+    var succeeded = true;
+    try {
+      tenant = await ref
+          .read(tenantApplicationApiProvider)
+          .lookupTenantByPhone(e164);
+    } catch (_) {
+      succeeded = false;
+    }
+    if (!mounted) return;
+    setState(() {
+      _looking = false;
+      if (_returning) _clearPrefill();
+      _lookedUpPhone = succeeded ? e164 : null;
+      _returning = tenant != null;
+      if (tenant != null) {
+        _prefill(tenant);
+        _step = 5;
+      } else {
+        _phoneCtrl.text = e164;
+        _step = 2;
+      }
+    });
+  }
+
+  Future<void> _submit() async {
+    final invalid = _firstInvalidStep();
+    if (invalid != null) {
+      setState(() => _step = invalid);
+      return;
+    }
+    final unit = _unit!;
+    final propertyId = unit.propertyId ?? unit.property?.id;
+    if (propertyId == null) return;
+
+    final input = CreateTenantApplicationInput(
+      desiredUnitId: unit.id,
+      firstName: _firstCtrl.text.trim(),
+      lastName: _lastCtrl.text.trim(),
+      phone: normalizePhone(_phoneCtrl.text)!,
+      gender: applicationGenderApiValue(_gender),
+      otherNames: _opt(_otherCtrl.text),
+      email: _opt(_emailCtrl.text),
+      dateOfBirth: _dob,
+      nationality: _opt(_natCtrl.text),
+      maritalStatus: _marital.isEmpty
+          ? null
+          : applicationMaritalStatusApiValue(_marital),
+      idType: _idType.isEmpty ? null : applicationIdTypeApiValue(_idType),
+      idNumber: _opt(_idNumCtrl.text),
+      idFrontUrl: _idFrontUrl,
+      idBackUrl: _idBackUrl,
+      currentAddress: _opt(_addressCtrl.text),
+      emergencyContactName: _opt(_ecNameCtrl.text),
+      emergencyContactPhone: normalizePhone(_ecPhoneCtrl.text),
+      relationshipToEmergencyContact: _opt(_ecRelCtrl.text),
+      occupation: _isStudent ? 'STUDENT' : _opt(_occupationCtrl.text),
+      employer: _opt(_employerCtrl.text),
+      employerType: _isStudent ? 'STUDENT' : 'WORKER',
+      proofOfIncomeUrl: _proofUrl,
+      occupationAddress: _opt(_workAddrCtrl.text),
+      profilePhotoUrl: _profileUrl,
+    );
+
+    await Haptics.vibrate(HapticsType.medium);
+    final notifier = ref.read(createApplicationNotifierProvider.notifier);
+    await notifier.submit(input, propertyId: propertyId);
+    if (!mounted) return;
+    final created = ref.read(createApplicationNotifierProvider).application;
+    if (created != null) {
+      context.pushReplacement(
+        '/activity/applications/${created.id}?property_id=$propertyId',
+      );
+    }
+  }
+
+  Future<void> _next() async {
+    await Haptics.vibrate(HapticsType.selection);
+    if (!mounted || _looking) return;
+    if (!_validateStep(_step)) return;
+    if (_step == 1) {
+      if (_fillIn) {
+        await _lookup();
+      } else {
+        setState(() => _showInvite = true);
+      }
+      return;
+    }
+    if (_step == 5) {
+      await _submit();
+      return;
+    }
+    setState(() => _step = _step + 1);
   }
 
   void _prev() async {
@@ -115,6 +383,16 @@ class _AddApplicationScreenState extends State<AddApplicationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final unitsAsync = ref.watch(
+      applicationUnitOptionsProvider(widget.propertyId),
+    );
+    final units = unitsAsync.valueOrNull ?? const <UnitModel>[];
+    final submitting = ref
+        .watch(createApplicationNotifierProvider)
+        .status
+        .isLoading();
+    final canAdvance = _blocking.isEmpty && !_looking && !submitting;
+
     return Scaffold(
       backgroundColor: RLTokens.surface,
       body: Stack(
@@ -125,93 +403,94 @@ class _AddApplicationScreenState extends State<AddApplicationScreen> {
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(20, 14, 20, 140),
-                  child: _buildStep(),
+                  child: _buildStep(unitsAsync),
                 ),
               ),
             ],
           ),
 
-          // ── Sticky footer ──────────────────────────────────────────────
           Positioned(
             left: 0,
             right: 0,
             bottom: 0,
             child: _Footer(
               step: _step,
+              busy: _looking || submitting,
               onCancel: _cancel,
               onBack: _prev,
-              onNext: _next,
+              onNext: canAdvance ? _next : null,
             ),
           ),
 
-          // ── Pickers ────────────────────────────────────────────────────
           if (_picker == 'unit')
             _PickerSheet(
               title: 'Select unit',
-              options: _kUnits.map((l) => _PickerOption(label: l)).toList(),
-              selected: _unit,
-              onPick: (v) => _pick('unit', v),
+              options: units
+                  .map((u) => _PickerOption(label: _unitLabel(u), value: u.id))
+                  .toList(),
+              selected: _unit?.id ?? '',
+              onPick: (v) => _pick('unit', v, units),
               onClose: () => setState(() => _picker = null),
             ),
           if (_picker == 'gender')
             _PickerSheet(
               title: 'Gender',
-              options: _kGenders.map((l) => _PickerOption(label: l)).toList(),
+              options: kApplicationGenderLabels
+                  .map((l) => _PickerOption(label: l))
+                  .toList(),
               selected: _gender,
-              onPick: (v) => _pick('gender', v),
+              onPick: (v) => _pick('gender', v, units),
               onClose: () => setState(() => _picker = null),
             ),
           if (_picker == 'marital')
             _PickerSheet(
               title: 'Marital status',
-              options: _kMarital.map((l) => _PickerOption(label: l)).toList(),
+              options: kApplicationMaritalStatusLabels
+                  .map((l) => _PickerOption(label: l))
+                  .toList(),
               selected: _marital,
-              onPick: (v) => _pick('marital', v),
-              onClose: () => setState(() => _picker = null),
-            ),
-          if (_picker == 'dob')
-            _PickerSheet(
-              title: 'Date of birth',
-              options: [
-                '1990',
-                '1992',
-                '1995',
-                '1998',
-                '2000',
-              ].map((l) => _PickerOption(label: l)).toList(),
-              selected: _dob,
-              onPick: (v) => _pick('dob', v),
+              onPick: (v) => _pick('marital', v, units),
               onClose: () => setState(() => _picker = null),
             ),
           if (_picker == 'idType')
             _PickerSheet(
               title: 'ID type',
-              options: _kIdTypes.map((l) => _PickerOption(label: l)).toList(),
+              options: kApplicationIdTypeLabels
+                  .map((l) => _PickerOption(label: l))
+                  .toList(),
               selected: _idType,
-              onPick: (v) => _pick('idType', v),
+              onPick: (v) => _pick('idType', v, units),
               onClose: () => setState(() => _picker = null),
             ),
 
-          // ── Invite sheet ───────────────────────────────────────────────
           if (_showInvite)
-            _InviteSheet(
-              unit: _unit,
+            InviteTenantSheet(
+              unit: _unit!,
               onClose: () => setState(() => _showInvite = false),
+              onSent: () => context.pop(),
             ),
         ],
       ),
     );
   }
 
-  Widget _buildStep() {
+  void _openPicker(String key) {
+    Haptics.vibrate(HapticsType.selection);
+    setState(() => _picker = key);
+  }
+
+  Widget _buildStep(AsyncValue<List<UnitModel>> unitsAsync) {
     return switch (_step) {
       1 => _Step1(
-        unit: _unit,
+        unitsAsync: unitsAsync,
+        unit: _unit == null ? '' : _unitLabel(_unit!),
         method: _method,
-        onOpenUnitPicker: () => setState(() {
-          _picker = 'unit';
-          Haptics.vibrate(HapticsType.selection);
-        }),
+        phoneCtrl: _phoneCtrl,
+        unitError: _errors['unit'],
+        phoneError: _errors['phone'],
+        onOpenUnitPicker: () => _openPicker('unit'),
+        onRetryUnits: () =>
+            ref.invalidate(applicationUnitOptionsProvider(widget.propertyId)),
         onMethodChanged: (v) => setState(() => _method = v),
       ),
       2 => _Step2(
@@ -220,61 +499,73 @@ class _AddApplicationScreenState extends State<AddApplicationScreen> {
         lastCtrl: _lastCtrl,
         gender: _gender,
         emailCtrl: _emailCtrl,
-        phoneCtrl: _phoneCtrl,
-        dob: _dob,
+        dob: _dob == null ? '' : _formatDate(_dob!),
         marital: _marital,
         addressCtrl: _addressCtrl,
-        onOpenGenderPicker: () => setState(() {
-          _picker = 'gender';
-          Haptics.vibrate(HapticsType.selection);
-        }),
-        onOpenDobPicker: () => setState(() {
-          _picker = 'dob';
-          Haptics.vibrate(HapticsType.selection);
-        }),
-        onOpenMaritalPicker: () => setState(() {
-          _picker = 'marital';
-          Haptics.vibrate(HapticsType.selection);
-        }),
+        errors: _errors,
+        profileUrl: _profileUrl,
+        onProfileChanged: (u) => setState(() => _profileUrl = u),
+        onBlockingChanged: _setBlocking,
+        onOpenGenderPicker: () => _openPicker('gender'),
+        onOpenDobPicker: _pickDob,
+        onOpenMaritalPicker: () => _openPicker('marital'),
       ),
       3 => _Step3(
         natCtrl: _natCtrl,
         idType: _idType,
         idNumCtrl: _idNumCtrl,
-        onOpenIdTypePicker: () => setState(() {
-          _picker = 'idType';
-          Haptics.vibrate(HapticsType.selection);
-        }),
+        frontUrl: _idFrontUrl,
+        backUrl: _idBackUrl,
+        onFrontChanged: (u) => setState(() => _idFrontUrl = u),
+        onBackChanged: (u) => setState(() => _idBackUrl = u),
+        onBlockingChanged: _setBlocking,
+        onOpenIdTypePicker: () => _openPicker('idType'),
       ),
       4 => _Step4(
         ecNameCtrl: _ecNameCtrl,
         ecRelCtrl: _ecRelCtrl,
         ecPhoneCtrl: _ecPhoneCtrl,
+        ecPhoneError: _errors['ecPhone'],
         employment: _employment,
-        schoolCtrl: _schoolCtrl,
-        schoolAddrCtrl: _schoolAddrCtrl,
+        occupationCtrl: _occupationCtrl,
+        employerCtrl: _employerCtrl,
+        workAddrCtrl: _workAddrCtrl,
+        proofUrl: _proofUrl,
+        onProofChanged: (u) => setState(() => _proofUrl = u),
+        onBlockingChanged: _setBlocking,
         onEmploymentChanged: (v) {
           Haptics.vibrate(HapticsType.selection);
           setState(() => _employment = v);
         },
       ),
       _ => _Step5(
-        unit: _unit,
+        returning: _returning,
+        unit: _unit == null ? '' : _unitLabel(_unit!),
         method: _method,
+        phone: _phoneCtrl.text,
         first: _firstCtrl.text,
+        other: _otherCtrl.text,
         last: _lastCtrl.text,
         gender: _gender,
         marital: _marital,
+        dob: _dob == null ? '' : _formatDate(_dob!),
         email: _emailCtrl.text,
-        phone: _phoneCtrl.text,
-        address: _addressCtrl.text,
+        addressCtrl: _addressCtrl,
         nationality: _natCtrl.text,
         idType: _idType,
         idNum: _idNumCtrl.text,
         ecName: _ecNameCtrl.text,
         ecRel: _ecRelCtrl.text,
+        ecPhone: _ecPhoneCtrl.text,
         employment: _employment,
-        school: _schoolCtrl.text,
+        occupation: _occupationCtrl.text,
+        employer: _employerCtrl.text,
+        workAddr: _workAddrCtrl.text,
+        profileUrl: _profileUrl,
+        idFrontUrl: _idFrontUrl,
+        idBackUrl: _idBackUrl,
+        proofUrl: _proofUrl,
+        error: ref.watch(createApplicationNotifierProvider).errorMessage,
         onEditStep: (s) {
           Haptics.vibrate(HapticsType.selection);
           setState(() => _step = s);
@@ -312,7 +603,7 @@ class _StepHeader extends StatelessWidget {
                 ),
                 const Expanded(
                   child: Text(
-                    'New application',
+                    'New tenant',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontFamily: RLTokens.fontSans,
@@ -377,21 +668,25 @@ class _StepHeader extends StatelessWidget {
 class _Footer extends StatelessWidget {
   const _Footer({
     required this.step,
+    required this.busy,
     required this.onCancel,
     required this.onBack,
     required this.onNext,
   });
   final int step;
+  final bool busy;
   final VoidCallback onCancel;
   final VoidCallback onBack;
-  final VoidCallback onNext;
+  final VoidCallback? onNext;
 
   @override
   Widget build(BuildContext context) {
-    final String nextLabel = step == 4
+    final String nextLabel = busy
+        ? 'Please wait…'
+        : step == 4
         ? 'Preview'
         : step == 5
-        ? 'Submit application'
+        ? 'Add tenant'
         : 'Next';
     final IconData nextIcon = step == 5
         ? Icons.check_rounded
@@ -465,18 +760,27 @@ class _Footer extends StatelessWidget {
   }
 }
 
-// ── Step 1 — Unit & onboarding ────────────────────────────────────────────────
+// ── Step 1 — Unit & method ────────────────────────────────────────────────────
 
 class _Step1 extends StatelessWidget {
   const _Step1({
+    required this.unitsAsync,
     required this.unit,
     required this.method,
+    required this.phoneCtrl,
+    required this.unitError,
+    required this.phoneError,
     required this.onOpenUnitPicker,
+    required this.onRetryUnits,
     required this.onMethodChanged,
   });
+  final AsyncValue<List<UnitModel>> unitsAsync;
   final String unit;
   final String method;
+  final TextEditingController phoneCtrl;
+  final String? unitError, phoneError;
   final VoidCallback onOpenUnitPicker;
+  final VoidCallback onRetryUnits;
   final ValueChanged<String> onMethodChanged;
 
   @override
@@ -486,39 +790,87 @@ class _Step1 extends StatelessWidget {
       children: [
         const _StepHead(
           title: 'Unit & onboarding',
-          desc: 'Choose the unit and how this tenant will be onboarded.',
+          desc: 'Choose the unit and how this tenant will be added.',
         ),
         const SizedBox(height: 22),
         _FormField(
           label: 'Unit',
-          child: _SelectField(
-            value: unit,
-            placeholder: 'Select unit',
-            onTap: onOpenUnitPicker,
+          error: unitError,
+          child: unitsAsync.when(
+            loading: () => const _SelectField(
+              value: '',
+              placeholder: 'Loading units…',
+              onTap: _noop,
+            ),
+            error: (_, __) => GestureDetector(
+              onTap: onRetryUnits,
+              child: const Text(
+                "Couldn't load units. Tap to try again.",
+                style: TextStyle(
+                  fontFamily: RLTokens.fontSans,
+                  fontSize: 13.5,
+                  color: RLTokens.danger,
+                ),
+              ),
+            ),
+            data: (units) => units.isEmpty
+                ? const Text(
+                    'You can only add tenants to properties you manage.',
+                    style: TextStyle(
+                      fontFamily: RLTokens.fontSans,
+                      fontSize: 13.5,
+                      color: RLTokens.muted,
+                      height: 1.4,
+                    ),
+                  )
+                : _SelectField(
+                    value: unit,
+                    placeholder: 'Select unit',
+                    onTap: onOpenUnitPicker,
+                  ),
           ),
         ),
         const SizedBox(height: 18),
-        const _FieldLabel(text: 'Onboarding method', required: true),
+        const _FieldLabel(text: 'How do you want to add them?', required: true),
         const SizedBox(height: 8),
         _RentalRow(
           icon: Icons.person_outline_rounded,
-          title: 'Admin onboarding',
-          desc: 'You fill out the application on the tenant\'s behalf.',
-          selected: method == 'Admin onboarding',
-          onTap: () => onMethodChanged('Admin onboarding'),
+          title: _kMethodFill,
+          desc: 'You enter the tenant\'s details on their behalf.',
+          selected: method == _kMethodFill,
+          onTap: () => onMethodChanged(_kMethodFill),
         ),
         const SizedBox(height: 10),
         _RentalRow(
           icon: Icons.bolt_rounded,
-          title: 'Self onboarding',
-          desc: 'Send the tenant a link to complete it themselves.',
-          selected: method == 'Self onboarding',
-          onTap: () => onMethodChanged('Self onboarding'),
+          title: _kMethodLink,
+          desc: 'They complete their own details from a link.',
+          selected: method == _kMethodLink,
+          onTap: () => onMethodChanged(_kMethodLink),
         ),
+        if (method == _kMethodFill) ...[
+          const SizedBox(height: 22),
+          _FormField(
+            label: 'Tenant\'s phone number',
+            error: phoneError,
+            child: _PhoneField(controller: phoneCtrl),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'If they have rented with RentLoop before, we\'ll fill in their details.',
+            style: TextStyle(
+              fontFamily: RLTokens.fontSans,
+              fontSize: 11.5,
+              color: RLTokens.mutedSoft,
+            ),
+          ),
+        ],
       ],
     );
   }
 }
+
+void _noop() {}
 
 // ── Step 2 — Basic information ────────────────────────────────────────────────
 
@@ -529,10 +881,13 @@ class _Step2 extends StatelessWidget {
     required this.lastCtrl,
     required this.gender,
     required this.emailCtrl,
-    required this.phoneCtrl,
     required this.dob,
     required this.marital,
     required this.addressCtrl,
+    required this.errors,
+    required this.profileUrl,
+    required this.onProfileChanged,
+    required this.onBlockingChanged,
     required this.onOpenGenderPicker,
     required this.onOpenDobPicker,
     required this.onOpenMaritalPicker,
@@ -541,9 +896,12 @@ class _Step2 extends StatelessWidget {
       otherCtrl,
       lastCtrl,
       emailCtrl,
-      phoneCtrl,
       addressCtrl;
   final String gender, dob, marital;
+  final Map<String, String> errors;
+  final String? profileUrl;
+  final ValueChanged<String?> onProfileChanged;
+  final void Function(String id, bool blocking) onBlockingChanged;
   final VoidCallback onOpenGenderPicker, onOpenDobPicker, onOpenMaritalPicker;
 
   @override
@@ -553,17 +911,16 @@ class _Step2 extends StatelessWidget {
       children: [
         const _StepHead(
           title: 'Basic information',
-          desc: 'The applicant\'s personal details.',
+          desc: 'The tenant\'s personal details.',
         ),
         const SizedBox(height: 22),
-
-        // First + Other name
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
               child: _FormField(
                 label: 'First name',
+                error: errors['first'],
                 child: _InputField(controller: firstCtrl, placeholder: 'First'),
               ),
             ),
@@ -581,14 +938,13 @@ class _Step2 extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16),
-
-        // Last + Gender
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
               child: _FormField(
                 label: 'Last name',
+                error: errors['last'],
                 child: _InputField(controller: lastCtrl, placeholder: 'Last'),
               ),
             ),
@@ -596,6 +952,7 @@ class _Step2 extends StatelessWidget {
             Expanded(
               child: _FormField(
                 label: 'Gender',
+                error: errors['gender'],
                 child: _SelectField(
                   value: gender,
                   placeholder: 'Select',
@@ -606,15 +963,15 @@ class _Step2 extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16),
-
-        // Email
         _FormField(
           label: 'Email',
           required: false,
+          error: errors['email'],
           child: _InputField(
             controller: emailCtrl,
             placeholder: 'name@example.com',
             prefixIcon: Icons.mail_outline_rounded,
+            keyboardType: TextInputType.emailAddress,
           ),
         ),
         const SizedBox(height: 6),
@@ -627,30 +984,13 @@ class _Step2 extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-
-        // Phone
-        _FormField(
-          label: 'Phone',
-          child: _PhoneField(controller: phoneCtrl),
-        ),
-        const SizedBox(height: 6),
-        const Text(
-          'We\'ll send notifications to this number.',
-          style: TextStyle(
-            fontFamily: RLTokens.fontSans,
-            fontSize: 11.5,
-            color: RLTokens.mutedSoft,
-          ),
-        ),
-        const SizedBox(height: 16),
-
-        // DOB + Marital
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
               child: _FormField(
                 label: 'Date of birth',
+                error: errors['dob'],
                 child: _SelectField(
                   value: dob,
                   placeholder: 'Select date',
@@ -662,6 +1002,7 @@ class _Step2 extends StatelessWidget {
             Expanded(
               child: _FormField(
                 label: 'Marital status',
+                required: false,
                 child: _SelectField(
                   value: marital,
                   placeholder: 'Select',
@@ -672,42 +1013,44 @@ class _Step2 extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16),
-
-        // Address
         _FormField(
           label: 'Current address',
+          error: errors['address'],
           child: _InputField(
             controller: addressCtrl,
             placeholder: 'Street, city',
           ),
         ),
         const SizedBox(height: 20),
-
-        // Profile picture
-        Row(
-          children: [
-            const Text(
-              'Profile picture',
-              style: TextStyle(
-                fontFamily: RLTokens.fontSans,
-                fontSize: 13.5,
-                fontWeight: RLTokens.semibold,
-                color: RLTokens.ink,
-              ),
+        const Text.rich(
+          TextSpan(
+            text: 'Profile picture',
+            style: TextStyle(
+              fontFamily: RLTokens.fontSans,
+              fontSize: 13.5,
+              fontWeight: RLTokens.semibold,
+              color: RLTokens.ink,
             ),
-            const Text(
-              '  ·  Optional',
-              style: TextStyle(
-                fontFamily: RLTokens.fontSans,
-                fontSize: 13.5,
-                color: RLTokens.mutedSoft,
-                fontWeight: RLTokens.medium,
+            children: [
+              TextSpan(
+                text: '  ·  Optional',
+                style: TextStyle(
+                  color: RLTokens.mutedSoft,
+                  fontWeight: RLTokens.medium,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         const SizedBox(height: 10),
-        const _ProfilePic(),
+        ApplicationUploadTile(
+          label: 'Profile picture',
+          objectKeyPrefix: 'tenant-applications/profile-photos',
+          circular: true,
+          initialUrl: profileUrl,
+          onChanged: onProfileChanged,
+          onBlockingChanged: (b) => onBlockingChanged('profile', b),
+        ),
       ],
     );
   }
@@ -720,10 +1063,18 @@ class _Step3 extends StatelessWidget {
     required this.natCtrl,
     required this.idType,
     required this.idNumCtrl,
+    required this.frontUrl,
+    required this.backUrl,
+    required this.onFrontChanged,
+    required this.onBackChanged,
+    required this.onBlockingChanged,
     required this.onOpenIdTypePicker,
   });
   final TextEditingController natCtrl, idNumCtrl;
   final String idType;
+  final String? frontUrl, backUrl;
+  final ValueChanged<String?> onFrontChanged, onBackChanged;
+  final void Function(String id, bool blocking) onBlockingChanged;
   final VoidCallback onOpenIdTypePicker;
 
   @override
@@ -742,6 +1093,7 @@ class _Step3 extends StatelessWidget {
             Expanded(
               child: _FormField(
                 label: 'Nationality',
+                required: false,
                 child: _InputField(controller: natCtrl, placeholder: 'Country'),
               ),
             ),
@@ -749,6 +1101,7 @@ class _Step3 extends StatelessWidget {
             Expanded(
               child: _FormField(
                 label: 'ID type',
+                required: false,
                 child: _SelectField(
                   value: idType,
                   placeholder: 'Select',
@@ -761,6 +1114,7 @@ class _Step3 extends StatelessWidget {
         const SizedBox(height: 16),
         _FormField(
           label: 'ID number',
+          required: false,
           child: _InputField(controller: idNumCtrl, placeholder: 'ID number'),
         ),
         const SizedBox(height: 24),
@@ -768,9 +1122,21 @@ class _Step3 extends StatelessWidget {
           title: 'ID document images',
           desc: 'Upload clear photos of both sides of the ID.',
         ),
-        const _UploadTile(label: 'Front of ID', optional: true),
+        ApplicationUploadTile(
+          label: 'Front of ID',
+          objectKeyPrefix: 'tenant-applications/id-documents',
+          initialUrl: frontUrl,
+          onChanged: onFrontChanged,
+          onBlockingChanged: (b) => onBlockingChanged('idFront', b),
+        ),
         const SizedBox(height: 12),
-        const _UploadTile(label: 'Back of ID', optional: true),
+        ApplicationUploadTile(
+          label: 'Back of ID',
+          objectKeyPrefix: 'tenant-applications/id-documents',
+          initialUrl: backUrl,
+          onChanged: onBackChanged,
+          onBlockingChanged: (b) => onBlockingChanged('idBack', b),
+        ),
       ],
     );
   }
@@ -783,17 +1149,27 @@ class _Step4 extends StatelessWidget {
     required this.ecNameCtrl,
     required this.ecRelCtrl,
     required this.ecPhoneCtrl,
+    required this.ecPhoneError,
     required this.employment,
-    required this.schoolCtrl,
-    required this.schoolAddrCtrl,
+    required this.occupationCtrl,
+    required this.employerCtrl,
+    required this.workAddrCtrl,
+    required this.proofUrl,
+    required this.onProofChanged,
+    required this.onBlockingChanged,
     required this.onEmploymentChanged,
   });
   final TextEditingController ecNameCtrl,
       ecRelCtrl,
       ecPhoneCtrl,
-      schoolCtrl,
-      schoolAddrCtrl;
+      occupationCtrl,
+      employerCtrl,
+      workAddrCtrl;
+  final String? ecPhoneError;
   final String employment;
+  final String? proofUrl;
+  final ValueChanged<String?> onProofChanged;
+  final void Function(String id, bool blocking) onBlockingChanged;
   final ValueChanged<String> onEmploymentChanged;
 
   @override
@@ -804,14 +1180,13 @@ class _Step4 extends StatelessWidget {
       children: [
         const _StepHead(
           title: 'Emergency contact & background',
-          desc: 'Emergency contact and employment details.',
+          desc: 'Emergency contact and work or study details.',
         ),
         const SizedBox(height: 22),
-
-        // Emergency contact
         const _SubHead(title: 'Emergency contact'),
         _FormField(
           label: 'Full name',
+          required: false,
           child: _InputField(
             controller: ecNameCtrl,
             placeholder: 'Enter full name',
@@ -820,6 +1195,7 @@ class _Step4 extends StatelessWidget {
         const SizedBox(height: 16),
         _FormField(
           label: 'Relationship',
+          required: false,
           child: _InputField(
             controller: ecRelCtrl,
             placeholder: 'e.g. Sibling, Parent, Friend',
@@ -828,32 +1204,32 @@ class _Step4 extends StatelessWidget {
         const SizedBox(height: 16),
         _FormField(
           label: 'Phone number',
+          required: false,
+          error: ecPhoneError,
           child: _PhoneField(controller: ecPhoneCtrl),
         ),
-
-        // Employment divider
         const SizedBox(height: 26),
         Container(height: 1, color: RLTokens.hairlineSoft),
         const SizedBox(height: 22),
         const _SubHead(
-          title: 'Employment type',
-          desc: 'Select the current employment status.',
+          title: 'Work or study',
+          desc: 'Select the current status.',
         ),
         Row(
           children: [
             Expanded(
               child: _ToggleButton(
-                label: 'Student',
-                selected: isStudent,
-                onTap: () => onEmploymentChanged('Student'),
+                label: 'Worker',
+                selected: !isStudent,
+                onTap: () => onEmploymentChanged('Worker'),
               ),
             ),
             const SizedBox(width: 8),
             Expanded(
               child: _ToggleButton(
-                label: 'Worker',
-                selected: !isStudent,
-                onTap: () => onEmploymentChanged('Worker'),
+                label: 'Student',
+                selected: isStudent,
+                onTap: () => onEmploymentChanged('Student'),
               ),
             ),
           ],
@@ -862,14 +1238,25 @@ class _Step4 extends StatelessWidget {
         _SubHead(
           title: isStudent ? 'Student information' : 'Worker information',
         ),
+        if (!isStudent) ...[
+          _FormField(
+            label: 'Occupation',
+            required: false,
+            child: _InputField(
+              controller: occupationCtrl,
+              placeholder: 'e.g. Accountant',
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
         _FormField(
-          label: isStudent ? 'Institution / school' : 'Employer',
+          label: isStudent ? 'School' : 'Employer',
           required: false,
           child: _InputField(
-            controller: schoolCtrl,
+            controller: employerCtrl,
             placeholder: isStudent
-                ? 'e.g. Institution / school'
-                : 'e.g. Company name',
+                ? 'e.g. University of Ghana'
+                : 'e.g. Company',
           ),
         ),
         const SizedBox(height: 16),
@@ -877,24 +1264,25 @@ class _Step4 extends StatelessWidget {
           label: 'Address',
           required: false,
           child: _InputField(
-            controller: schoolAddrCtrl,
-            placeholder: 'e.g. 123 Business St, City, Country',
+            controller: workAddrCtrl,
+            placeholder: 'e.g. 123 Business St, City',
           ),
         ),
-
-        // Proof divider
         const SizedBox(height: 26),
         Container(height: 1, color: RLTokens.hairlineSoft),
         const SizedBox(height: 22),
         _SubHead(
           title: isStudent ? 'Proof of admission' : 'Proof of employment',
           desc:
-              'Upload a document (acceptance letter, enrollment / employment verification, etc.).',
+              'Upload a photo of a document, such as an admission letter or '
+              'employment letter.',
         ),
-        _UploadTile(
+        ApplicationUploadTile(
           label: isStudent ? 'Proof of admission' : 'Proof of employment',
-          kind: _UploadKind.doc,
-          optional: true,
+          objectKeyPrefix: 'tenant-applications/proof-of-income',
+          initialUrl: proofUrl,
+          onChanged: onProofChanged,
+          onBlockingChanged: (b) => onBlockingChanged('proof', b),
         ),
       ],
     );
@@ -905,66 +1293,101 @@ class _Step4 extends StatelessWidget {
 
 class _Step5 extends StatelessWidget {
   const _Step5({
+    required this.returning,
     required this.unit,
     required this.method,
+    required this.phone,
     required this.first,
+    required this.other,
     required this.last,
     required this.gender,
     required this.marital,
+    required this.dob,
     required this.email,
-    required this.phone,
-    required this.address,
+    required this.addressCtrl,
     required this.nationality,
     required this.idType,
     required this.idNum,
     required this.ecName,
     required this.ecRel,
+    required this.ecPhone,
     required this.employment,
-    required this.school,
+    required this.occupation,
+    required this.employer,
+    required this.workAddr,
+    required this.profileUrl,
+    required this.idFrontUrl,
+    required this.idBackUrl,
+    required this.proofUrl,
+    required this.error,
     required this.onEditStep,
   });
+  final bool returning;
   final String unit,
       method,
+      phone,
       first,
+      other,
       last,
       gender,
       marital,
+      dob,
       email,
-      phone,
-      address;
-  final String nationality, idType, idNum, ecName, ecRel, employment, school;
+      nationality,
+      idType,
+      idNum,
+      ecName,
+      ecRel,
+      ecPhone,
+      employment,
+      occupation,
+      employer,
+      workAddr;
+  final TextEditingController addressCtrl;
+  final String? profileUrl, idFrontUrl, idBackUrl, proofUrl, error;
   final ValueChanged<int> onEditStep;
 
   @override
   Widget build(BuildContext context) {
-    final unitName = unit.isNotEmpty ? unit.split(' · ').first : '—';
-    final unitStatus = unit.contains(' · ')
-        ? unit.split(' · ').last
-        : 'Available';
-
+    final student = employment == 'Student';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const _StepHead(
-          title: 'Review application',
+          title: 'Review details',
           desc:
-              'Review everything below. Tap edit to change a section before submitting.',
+              'Review everything below. Tap edit to change a section before adding.',
         ),
         const SizedBox(height: 20),
-
+        if (returning) ...[
+          const RLInlineBanner(
+            tone: RLBannerTone.info,
+            title: 'Returning tenant — we filled in their details',
+            body: 'Check them below. You can still change the current address.',
+          ),
+          const SizedBox(height: 12),
+          _FormField(
+            label: 'Current address',
+            child: _InputField(
+              controller: addressCtrl,
+              placeholder: 'Street, city',
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
         _RevSection(
           title: 'Unit & onboarding',
           desc: 'Selected unit and method',
           onEdit: () => onEditStep(1),
           child: _RevGrid(
             children: [
-              _RevPair(k: 'Unit', v: '$unitName ($unitStatus)'),
-              _RevPair(k: 'Onboarding', v: method),
+              _RevPair(k: 'Unit', v: unit),
+              _RevPair(k: 'Method', v: method),
+              _RevPair(k: 'Phone', v: phone),
             ],
           ),
         ),
         const SizedBox(height: 12),
-
         _RevSection(
           title: 'Basic information',
           desc: 'Personal details',
@@ -976,52 +1399,105 @@ class _Step5 extends StatelessWidget {
                 children: [
                   _RevPair(k: 'First name', v: first),
                   _RevPair(k: 'Last name', v: last),
+                  _RevPair(k: 'Other names', v: other),
                   _RevPair(k: 'Gender', v: gender),
+                  _RevPair(k: 'Date of birth', v: dob),
                   _RevPair(k: 'Marital status', v: marital),
                   _RevPair(k: 'Email', v: email),
-                  _RevPair(k: 'Phone', v: phone),
                 ],
               ),
-              if (address.isNotEmpty) ...[
-                const SizedBox(height: 14),
-                _RevPair(k: 'Address', v: address),
-              ],
+              const SizedBox(height: 14),
+              _RevPair(k: 'Address', v: addressCtrl.text),
+              _RevThumbs(urls: [profileUrl]),
             ],
           ),
         ),
         const SizedBox(height: 12),
-
         _RevSection(
           title: 'Identity verification',
           desc: 'Identification details',
           onEdit: () => onEditStep(3),
-          child: _RevGrid(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _RevPair(k: 'Nationality', v: nationality),
-              _RevPair(k: 'ID type', v: idType),
-              _RevPair(k: 'ID number', v: idNum),
+              _RevGrid(
+                children: [
+                  _RevPair(k: 'Nationality', v: nationality),
+                  _RevPair(k: 'ID type', v: idType),
+                  _RevPair(k: 'ID number', v: idNum),
+                ],
+              ),
+              _RevThumbs(urls: [idFrontUrl, idBackUrl]),
             ],
           ),
         ),
         const SizedBox(height: 12),
-
         _RevSection(
           title: 'Emergency & background',
-          desc: 'Contact and employment',
+          desc: 'Contact and work or study',
           onEdit: () => onEditStep(4),
-          child: _RevGrid(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _RevPair(k: 'Emergency name', v: ecName),
-              _RevPair(k: 'Relationship', v: ecRel),
-              _RevPair(k: 'Employment', v: employment),
-              _RevPair(
-                k: employment == 'Student' ? 'School' : 'Employer',
-                v: school,
+              _RevGrid(
+                children: [
+                  _RevPair(k: 'Emergency name', v: ecName),
+                  _RevPair(k: 'Relationship', v: ecRel),
+                  _RevPair(k: 'Emergency phone', v: ecPhone),
+                  _RevPair(k: 'Status', v: employment),
+                  if (!student) _RevPair(k: 'Occupation', v: occupation),
+                  _RevPair(k: student ? 'School' : 'Employer', v: employer),
+                  _RevPair(k: 'Address', v: workAddr),
+                ],
               ),
+              _RevThumbs(urls: [proofUrl]),
             ],
           ),
         ),
+        if (error != null) ...[
+          const SizedBox(height: 14),
+          RLInlineBanner(title: error!),
+        ],
       ],
+    );
+  }
+}
+
+class _RevThumbs extends StatelessWidget {
+  const _RevThumbs({required this.urls});
+  final List<String?> urls;
+
+  @override
+  Widget build(BuildContext context) {
+    final shown = urls.whereType<String>().toList();
+    if (shown.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 14),
+      child: Wrap(
+        spacing: 10,
+        runSpacing: 10,
+        children: [
+          for (final url in shown)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(RLTokens.rMd),
+              child: SizedBox(
+                width: 64,
+                height: 64,
+                child: Image.network(
+                  url,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    color: RLTokens.fill,
+                    child: const Icon(
+                      Icons.image_outlined,
+                      color: RLTokens.mutedSoft,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
@@ -1113,13 +1589,15 @@ class _FieldLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Text(
-          text,
-          style: const TextStyle(
-            fontFamily: RLTokens.fontSans,
-            fontSize: 13.5,
-            fontWeight: RLTokens.semibold,
-            color: RLTokens.ink,
+        Flexible(
+          child: Text(
+            text,
+            style: const TextStyle(
+              fontFamily: RLTokens.fontSans,
+              fontSize: 13.5,
+              fontWeight: RLTokens.semibold,
+              color: RLTokens.ink,
+            ),
           ),
         ),
         if (required)
@@ -1142,10 +1620,12 @@ class _FormField extends StatelessWidget {
     required this.label,
     required this.child,
     this.required = true,
+    this.error,
   });
   final String label;
   final Widget child;
   final bool required;
+  final String? error;
 
   @override
   Widget build(BuildContext context) {
@@ -1155,6 +1635,17 @@ class _FormField extends StatelessWidget {
         _FieldLabel(text: label, required: required),
         const SizedBox(height: 8),
         child,
+        if (error != null) ...[
+          const SizedBox(height: 6),
+          Text(
+            error!,
+            style: const TextStyle(
+              fontFamily: RLTokens.fontSans,
+              fontSize: 12,
+              color: RLTokens.danger,
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -1213,10 +1704,12 @@ class _InputField extends StatelessWidget {
     required this.controller,
     required this.placeholder,
     this.prefixIcon,
+    this.keyboardType,
   });
   final TextEditingController controller;
   final String placeholder;
   final IconData? prefixIcon;
+  final TextInputType? keyboardType;
 
   @override
   Widget build(BuildContext context) {
@@ -1236,6 +1729,7 @@ class _InputField extends StatelessWidget {
           Expanded(
             child: TextField(
               controller: controller,
+              keyboardType: keyboardType,
               style: const TextStyle(
                 fontFamily: RLTokens.fontSans,
                 fontSize: 14.5,
@@ -1477,128 +1971,6 @@ class _ToggleButton extends StatelessWidget {
   }
 }
 
-// ── Upload tile ───────────────────────────────────────────────────────────────
-
-enum _UploadKind { image, doc }
-
-class _UploadTile extends StatelessWidget {
-  const _UploadTile({
-    required this.label,
-    this.kind = _UploadKind.image,
-    this.optional = false,
-  });
-  final String label;
-  final _UploadKind kind;
-  final bool optional;
-
-  @override
-  Widget build(BuildContext context) {
-    final thumbSize = kind == _UploadKind.doc ? 64.0 : 84.0;
-    final thumbIcon = kind == _UploadKind.doc
-        ? Icons.description_outlined
-        : Icons.camera_alt_outlined;
-    final btnLabel = kind == _UploadKind.doc
-        ? 'Choose document'
-        : 'Choose image';
-
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        border: Border.all(color: RLTokens.hairline),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontFamily: RLTokens.fontSans,
-              fontSize: 13.5,
-              fontWeight: RLTokens.semibold,
-              color: RLTokens.ink,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Container(
-                width: thumbSize,
-                height: thumbSize,
-                decoration: BoxDecoration(
-                  color: RLTokens.fill,
-                  borderRadius: BorderRadius.circular(RLTokens.rMd),
-                  border: Border.all(color: RLTokens.hairlineSoft),
-                ),
-                child: Icon(thumbIcon, size: 24, color: RLTokens.mutedSoft),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  RLBtn(
-                    label: btnLabel,
-                    kind: RLBtnKind.light,
-                    large: false,
-                    onPressed: () async =>
-                        Haptics.vibrate(HapticsType.selection),
-                  ),
-                  if (optional) ...[
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Optional',
-                      style: TextStyle(
-                        fontFamily: RLTokens.fontSans,
-                        fontSize: 11.5,
-                        color: RLTokens.mutedSoft,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Profile pic ───────────────────────────────────────────────────────────────
-
-class _ProfilePic extends StatelessWidget {
-  const _ProfilePic();
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 92,
-          height: 92,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: RLTokens.fill,
-            border: Border.all(color: RLTokens.hairlineSoft),
-          ),
-          child: const Icon(
-            Icons.camera_alt_outlined,
-            size: 26,
-            color: RLTokens.mutedSoft,
-          ),
-        ),
-        const SizedBox(width: 16),
-        RLBtn(
-          label: 'Choose image',
-          kind: RLBtnKind.light,
-          large: false,
-          onPressed: () async => Haptics.vibrate(HapticsType.selection),
-        ),
-      ],
-    );
-  }
-}
-
 // ── Review components ─────────────────────────────────────────────────────────
 
 class _RevSection extends StatelessWidget {
@@ -1736,8 +2108,10 @@ class _RevGrid extends StatelessWidget {
 // ── Picker sheet ──────────────────────────────────────────────────────────────
 
 class _PickerOption {
-  const _PickerOption({required this.label});
+  const _PickerOption({required this.label, String? value})
+    : value = value ?? label;
   final String label;
+  final String value;
 }
 
 class _PickerSheet extends StatelessWidget {
@@ -1819,9 +2193,9 @@ class _PickerSheet extends StatelessWidget {
                           final i = e.key;
                           final o = e.value;
                           final isLast = i == options.length - 1;
-                          final isSel = selected == o.label;
+                          final isSel = selected == o.value;
                           return GestureDetector(
-                            onTap: () => onPick(o.label),
+                            onTap: () => onPick(o.value),
                             behavior: HitTestBehavior.opaque,
                             child: Container(
                               padding: const EdgeInsets.symmetric(
@@ -1878,20 +2252,35 @@ class _PickerSheet extends StatelessWidget {
 
 // ── Invite tenant sheet ───────────────────────────────────────────────────────
 
-class _InviteSheet extends StatefulWidget {
-  const _InviteSheet({required this.unit, required this.onClose});
-  final String unit;
+class InviteTenantSheet extends ConsumerStatefulWidget {
+  const InviteTenantSheet({
+    super.key,
+    required this.unit,
+    required this.onClose,
+    required this.onSent,
+  });
+  final UnitModel unit;
   final VoidCallback onClose;
+  final VoidCallback onSent;
 
   @override
-  State<_InviteSheet> createState() => _InviteSheetState();
+  ConsumerState<InviteTenantSheet> createState() => _InviteTenantSheetState();
 }
 
-class _InviteSheetState extends State<_InviteSheet> {
-  String _tab = 'Email';
+class _InviteTenantSheetState extends ConsumerState<InviteTenantSheet> {
+  static final _emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+
+  String _tab = 'Phone';
   final _emailCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
   bool _copied = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailCtrl.addListener(_refresh);
+    _phoneCtrl.addListener(_refresh);
+  }
 
   @override
   void dispose() {
@@ -1900,16 +2289,67 @@ class _InviteSheetState extends State<_InviteSheet> {
     super.dispose();
   }
 
+  void _refresh() => setState(() {});
+
+  String? get _phone =>
+      _tab == 'Phone' ? normalizePhone(_phoneCtrl.text) : null;
+  String? get _email {
+    final v = _emailCtrl.text.trim();
+    return _tab == 'Email' && _emailPattern.hasMatch(v) ? v : null;
+  }
+
+  bool get _valid => _phone != null || _email != null;
+
+  String? get _clientUserId => ref.read(currentWorkspaceNotifierProvider)?.id;
+
+  String? get _link {
+    final id = _clientUserId;
+    if (id == null) return null;
+    return tenantApplyUrl(unitId: widget.unit.id, referredBy: id).toString();
+  }
+
+  Future<void> _copy() async {
+    final link = _link;
+    if (link == null) return;
+    await Haptics.vibrate(HapticsType.medium);
+    await Clipboard.setData(ClipboardData(text: link));
+    if (!mounted) return;
+    setState(() => _copied = true);
+    showRLToast(ref, tone: RLToastTone.success, title: 'Link copied');
+  }
+
+  Future<void> _share() async {
+    final link = _link;
+    if (link == null) return;
+    await Haptics.vibrate(HapticsType.selection);
+    await Share.share(
+      'Please complete your tenant setup for ${widget.unit.name}: $link',
+    );
+  }
+
+  Future<void> _send() async {
+    final propertyId = widget.unit.propertyId ?? widget.unit.property?.id;
+    if (!_valid || propertyId == null) return;
+    await Haptics.vibrate(HapticsType.medium);
+    final notifier = ref.read(inviteTenantNotifierProvider.notifier);
+    await notifier.submit(
+      propertyId: propertyId,
+      unitId: widget.unit.id,
+      email: _email,
+      phone: _phone,
+    );
+    if (!mounted) return;
+    if (ref.read(inviteTenantNotifierProvider).status == ApiStatus.success) {
+      showRLToast(ref, tone: RLToastTone.success, title: 'Link sent');
+      widget.onSent();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final unitName = widget.unit.isNotEmpty
-        ? widget.unit.split(' · ').first
-        : '003';
-    final unitStatus = widget.unit.contains(' · ')
-        ? widget.unit.split(' · ').last
-        : 'Available';
-    final url =
-        'https://rentloopapp.com/tenants/apply?unit=${unitName.toLowerCase()}';
+    final invite = ref.watch(inviteTenantNotifierProvider);
+    final sending = invite.status == ApiStatus.pending;
+    final url = _link ?? '';
 
     return GestureDetector(
       onTap: widget.onClose,
@@ -1948,22 +2388,14 @@ class _InviteSheetState extends State<_InviteSheet> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
-                          child: RichText(
-                            text: TextSpan(
-                              style: const TextStyle(
-                                fontFamily: RLTokens.fontSerif,
-                                fontSize: 21,
-                                color: RLTokens.ink,
-                                letterSpacing: -0.3,
-                                height: 1.15,
-                              ),
-                              children: [
-                                TextSpan(text: 'Invite tenant to $unitName '),
-                                TextSpan(
-                                  text: '($unitStatus)',
-                                  style: const TextStyle(color: RLTokens.muted),
-                                ),
-                              ],
+                          child: Text(
+                            'Send ${widget.unit.name} setup link to the tenant',
+                            style: const TextStyle(
+                              fontFamily: RLTokens.fontSerif,
+                              fontSize: 21,
+                              color: RLTokens.ink,
+                              letterSpacing: -0.3,
+                              height: 1.15,
                             ),
                           ),
                         ),
@@ -1984,7 +2416,7 @@ class _InviteSheetState extends State<_InviteSheet> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'Invite your tenant to complete their application via email, phone number, or by sharing the application link below.',
+                            'We will message your tenant a link to set up their tenancy, or you can copy and share the link yourself.',
                             style: TextStyle(
                               fontFamily: RLTokens.fontSans,
                               fontSize: 13,
@@ -2000,8 +2432,8 @@ class _InviteSheetState extends State<_InviteSheet> {
                               setState(() => _tab = v);
                             },
                             items: const [
-                              RLSegmentItem(key: 'Email', label: 'Email'),
                               RLSegmentItem(key: 'Phone', label: 'Phone'),
+                              RLSegmentItem(key: 'Email', label: 'Email'),
                             ],
                           ),
                           const SizedBox(height: 16),
@@ -2012,6 +2444,7 @@ class _InviteSheetState extends State<_InviteSheet> {
                               controller: _emailCtrl,
                               placeholder: 'Enter email address',
                               prefixIcon: Icons.mail_outline_rounded,
+                              keyboardType: TextInputType.emailAddress,
                             ),
                           ] else ...[
                             const _FieldLabel(text: 'Phone', required: false),
@@ -2020,7 +2453,7 @@ class _InviteSheetState extends State<_InviteSheet> {
                           ],
                           const SizedBox(height: 22),
                           const Text(
-                            'Anyone with the link can access this application.',
+                            'Anyone with the link can open this tenant setup.',
                             style: TextStyle(
                               fontFamily: RLTokens.fontSans,
                               fontSize: 12.5,
@@ -2038,7 +2471,7 @@ class _InviteSheetState extends State<_InviteSheet> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const Text(
-                                  'APPLICATION LINK',
+                                  'SETUP LINK',
                                   style: TextStyle(
                                     fontFamily: RLTokens.fontMono,
                                     fontSize: 9.5,
@@ -2057,23 +2490,47 @@ class _InviteSheetState extends State<_InviteSheet> {
                                   ),
                                 ),
                                 const SizedBox(height: 12),
-                                RLBtn(
-                                  label: _copied ? 'Copied!' : 'Copy link',
-                                  kind: RLBtnKind.light,
-                                  full: true,
-                                  large: false,
-                                  icon: _copied
-                                      ? Icons.check_rounded
-                                      : Icons.copy_outlined,
-                                  onPressed: () async {
-                                    await Haptics.vibrate(HapticsType.medium);
-                                    setState(() => _copied = true);
-                                  },
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: RLBtn(
+                                        label: _copied
+                                            ? 'Copied!'
+                                            : 'Copy link',
+                                        kind: RLBtnKind.light,
+                                        full: true,
+                                        large: false,
+                                        icon: _copied
+                                            ? Icons.check_rounded
+                                            : Icons.copy_outlined,
+                                        onPressed: _copy,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: RLBtn(
+                                        label: 'Share',
+                                        kind: RLBtnKind.light,
+                                        full: true,
+                                        large: false,
+                                        icon: Icons.ios_share_rounded,
+                                        onPressed: _share,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
                           ),
                           const SizedBox(height: 20),
+                          if (invite.status == ApiStatus.failed) ...[
+                            RLInlineBanner(
+                              title:
+                                  invite.errorMessage ??
+                                  'Could not send the link',
+                            ),
+                            const SizedBox(height: 12),
+                          ],
                           Row(
                             children: [
                               RLBtn(
@@ -2088,13 +2545,12 @@ class _InviteSheetState extends State<_InviteSheet> {
                               const SizedBox(width: 10),
                               Expanded(
                                 child: RLBtn(
-                                  label: 'Invite tenant',
+                                  label: sending ? 'Sending...' : 'Send link',
                                   kind: RLBtnKind.primary,
                                   full: true,
                                   large: false,
                                   icon: Icons.arrow_forward_rounded,
-                                  onPressed: () async =>
-                                      Haptics.vibrate(HapticsType.medium),
+                                  onPressed: _valid && !sending ? _send : null,
                                 ),
                               ),
                             ],

@@ -225,6 +225,8 @@ class RLSheetTextArea extends StatelessWidget {
     this.hint,
     this.helper,
     this.lines = 3,
+    this.maxLength,
+    this.onChanged,
   });
 
   final String label;
@@ -232,6 +234,8 @@ class RLSheetTextArea extends StatelessWidget {
   final String? hint;
   final String? helper;
   final int lines;
+  final int? maxLength;
+  final ValueChanged<String>? onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -241,6 +245,8 @@ class RLSheetTextArea extends StatelessWidget {
       child: TextField(
         controller: controller,
         maxLines: lines,
+        maxLength: maxLength,
+        onChanged: onChanged,
         style: const TextStyle(
           fontFamily: RLTokens.fontSans,
           fontSize: 14.5,

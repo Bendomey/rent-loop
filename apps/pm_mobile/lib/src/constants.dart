@@ -89,3 +89,12 @@ Uri leaseDocumentSigningUrl(
     'leaseId': leaseId,
   },
 );
+
+const String kWebsiteHost = 'rentloopapp.com';
+
+Uri tenantApplyUrl({required String unitId, required String referredBy}) => Uri(
+  scheme: 'https',
+  host: kWebsiteHost,
+  path: '/tenants/apply',
+  query: 'unit=$unitId&referred_by=$referredBy',
+);

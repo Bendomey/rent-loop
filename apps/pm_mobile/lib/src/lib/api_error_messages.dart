@@ -14,6 +14,16 @@ String translateApiErrorMessage({
       return 'This unit is occupied and can\'t be deleted.';
     case 'PropertyHasActiveOccupancy':
       return 'This property still has active occupancy and can\'t be deleted yet.';
+    case 'ChargesAlreadyBilled':
+      return 'Rent has already been billed, so this can no longer be changed.';
+    case 'UnitNotAvailable':
+      return 'That unit is no longer available. Pick another unit.';
+    case 'PhoneOrEmailRequired':
+      return 'Enter the tenant\'s phone number or email.';
+    case 'TenantApplicationAlreadyCompleted':
+      return 'This tenant has already moved in.';
+    case 'TenantApplicationAlreadyCancelled':
+      return 'This tenant setup was already cancelled.';
     // No specific error codes confirmed for the login flow yet — add
     // cases here as they're discovered against the real API (e.g. wrong
     // password, deactivated account).

@@ -65,10 +65,19 @@ class UnitApi extends AbstractApi {
   /// relies on backend scoping rather than re-deriving it client-side.
   Future<List<UnitModel>> getUnitsAcrossProperties({
     required String clientId,
+    List<String>? propertyIds,
   }) async {
+    final queryString = Uri(
+      queryParameters: {
+        'page_size': '200',
+        'populate': 'Property',
+        if (propertyIds != null && propertyIds.isNotEmpty)
+          'property_id': propertyIds,
+      },
+    ).query;
     final response = await execute(
       method: 'GET',
-      path: '/api/v1/admin/clients/$clientId/units?page_size=200',
+      path: '/api/v1/admin/clients/$clientId/units?$queryString',
     );
     final json = jsonDecode(response.body) as Map<String, dynamic>;
     final data = json['data'] as Map<String, dynamic>;

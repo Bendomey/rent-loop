@@ -3,225 +3,201 @@ import 'package:flutter/foundation.dart';
 import 'package:rentloop_manager/src/lib/document_utils.dart';
 import 'package:rentloop_manager/src/repository/models/tenant_application_model.dart';
 
-/// The application completeness checklist, ported one-for-one from the web's
-/// `use-calculate-checklist.ts` and its five `checklist-*.ts` builders. Both
-/// clients must agree on what "complete" means, so this file is a deliberate
-/// mirror — change it only alongside the web.
-@immutable
-class ApplicationChecklistItem {
-  const ApplicationChecklistItem(this.label, {required this.done});
+enum ChecklistSection {
+  unit('unit', 'Select a unit'),
+  tenant('tenant', 'Add tenant details'),
+  moveIn('movein', 'Move-in setup'),
+  financial('financial', 'Financial setup'),
+  docs('docs', 'Lease docs setup');
 
-  final String label;
-  final bool done;
-}
-
-@immutable
-class ApplicationChecklistSection {
-  const ApplicationChecklistSection({
-    required this.key,
-    required this.label,
-    required this.items,
-  });
+  const ChecklistSection(this.key, this.label);
 
   final String key;
   final String label;
-  final List<ApplicationChecklistItem> items;
-
-  int get doneCount => items.where((i) => i.done).length;
-
-  /// An empty section passes the approval gate vacuously (docs are optional
-  /// until a document is attached), but only a section with items counts as
-  /// complete for display.
-  bool get complete => items.isNotEmpty && doneCount == items.length;
 }
+
+enum ChecklistStepState { todo, progress, done, locked, blocked, attention }
+
+@immutable
+class ChecklistStep {
+  const ChecklistStep({
+    required this.section,
+    required this.state,
+    required this.doneItems,
+    required this.totalItems,
+  });
+
+  final ChecklistSection section;
+  final ChecklistStepState state;
+  final int doneItems;
+  final int totalItems;
+
+  bool get isSatisfied =>
+      state == ChecklistStepState.done || state == ChecklistStepState.locked;
+
+  bool get hasItems => totalItems > 0;
+
+  bool get allItemsDone => totalItems > 0 && doneItems == totalItems;
+}
+
+@immutable
+class ApplicationChecklist {
+  const ApplicationChecklist({
+    required this.steps,
+    required this.progress,
+    required this.canApprove,
+  });
+
+  final List<ChecklistStep> steps;
+  final double progress;
+  final bool canApprove;
+
+  ChecklistStep step(ChecklistSection section) =>
+      steps.firstWhere((s) => s.section == section);
+}
+
+const _inProgress = 'TenantApplication.Status.InProgress';
+const _completed = 'TenantApplication.Status.Completed';
+const _unitOccupied = 'Unit.Status.Occupied';
+
+const _dependsOn = {
+  ChecklistSection.unit: <ChecklistSection>[],
+  ChecklistSection.tenant: <ChecklistSection>[],
+  ChecklistSection.moveIn: [ChecklistSection.unit],
+  ChecklistSection.financial: [ChecklistSection.moveIn],
+  ChecklistSection.docs: [ChecklistSection.financial],
+};
 
 bool _has(String? v) => v != null && v.isNotEmpty;
 
-ApplicationChecklistSection getUnitSection(TenantApplicationModel a) =>
-    ApplicationChecklistSection(
-      key: 'unit',
-      label: 'Select a unit',
-      items: [
-        ApplicationChecklistItem('Unit selected', done: a.desiredUnit != null),
-      ],
-    );
+bool _all(List<bool> checks) => checks.every((c) => c);
 
-ApplicationChecklistSection getTenantDetailsSection(TenantApplicationModel a) =>
-    ApplicationChecklistSection(
-      key: 'tenant',
-      label: 'Add tenant details',
-      items: [
-        ApplicationChecklistItem('First name', done: _has(a.firstName)),
-        ApplicationChecklistItem('Last name', done: _has(a.lastName)),
-        ApplicationChecklistItem('Phone', done: _has(a.phone)),
-        ApplicationChecklistItem('Gender', done: _has(a.gender)),
-        ApplicationChecklistItem('Date of birth', done: a.dateOfBirth != null),
-        ApplicationChecklistItem('Nationality', done: _has(a.nationality)),
-        ApplicationChecklistItem('Marital status', done: _has(a.maritalStatus)),
-        ApplicationChecklistItem('ID type', done: _has(a.idType)),
-        ApplicationChecklistItem('ID number', done: _has(a.idNumber)),
-        ApplicationChecklistItem(
-          'Current address',
-          done: _has(a.currentAddress),
-        ),
-        ApplicationChecklistItem(
-          'Emergency contact name',
-          done: _has(a.emergencyContactName),
-        ),
-        ApplicationChecklistItem(
-          'Emergency contact phone',
-          done: _has(a.emergencyContactPhone),
-        ),
-        ApplicationChecklistItem(
-          'Relationship to emergency contact',
-          done: _has(a.relationshipToEmergencyContact),
-        ),
-        ApplicationChecklistItem('Employment type', done: _has(a.employerType)),
-        ApplicationChecklistItem('Occupation', done: _has(a.occupation)),
-        ApplicationChecklistItem('Employer', done: _has(a.employer)),
-        ApplicationChecklistItem(
-          'Occupation address',
-          done: _has(a.occupationAddress),
-        ),
-      ],
-    );
+List<bool> _unitItems(TenantApplicationModel a) => [a.desiredUnit != null];
 
-ApplicationChecklistSection getMoveInSection(TenantApplicationModel a) =>
-    ApplicationChecklistSection(
-      key: 'movein',
-      label: 'Move-in setup',
-      items: [
-        ApplicationChecklistItem(
-          'Move-in date',
-          done: a.desiredMoveInDate != null,
-        ),
-        ApplicationChecklistItem(
-          'Stay duration frequency',
-          done: _has(a.stayDurationFrequency),
-        ),
-        ApplicationChecklistItem('Stay duration', done: a.stayDuration != null),
-      ],
-    );
+List<bool> _tenantItems(TenantApplicationModel a) => [
+  _all([
+    _has(a.firstName),
+    _has(a.lastName),
+    _has(a.phone),
+    _has(a.gender),
+    a.dateOfBirth != null,
+    _has(a.nationality),
+    _has(a.maritalStatus),
+    _has(a.currentAddress),
+  ]),
+  _all([_has(a.idType), _has(a.idNumber)]),
+  _all([
+    _has(a.employerType),
+    _has(a.occupation),
+    _has(a.employer),
+    _has(a.occupationAddress),
+  ]),
+  _all([
+    _has(a.emergencyContactName),
+    _has(a.emergencyContactPhone),
+    _has(a.relationshipToEmergencyContact),
+  ]),
+];
 
-ApplicationChecklistSection getFinancialSection(TenantApplicationModel a) {
-  final invoice = a.applicationPaymentInvoice;
-  return ApplicationChecklistSection(
-    key: 'financial',
-    label: 'Financial setup',
-    items: [
-      ApplicationChecklistItem('Rent fee', done: a.rentFee != null),
-      ApplicationChecklistItem(
-        'Payment frequency',
-        done: _has(a.paymentFrequency),
-      ),
-      ApplicationChecklistItem('Invoice generated', done: invoice != null),
-      ApplicationChecklistItem('Invoice paid', done: invoice?.isPaid ?? false),
-    ],
-  );
-}
+List<bool> _moveInItems(TenantApplicationModel a) => [
+  a.desiredMoveInDate != null,
+  _has(a.stayDurationFrequency),
+  a.stayDuration != null,
+];
 
-/// Docs are optional — with no document mode set the section is empty and
-/// passes the approval gate vacuously. Witness rows are not fixed: they are
-/// authored into the document body, so they are read out of its content.
-ApplicationChecklistSection getDocsSection(TenantApplicationModel a) {
-  const key = 'docs';
-  const label = 'Lease docs setup';
+List<bool> _financialItems(TenantApplicationModel a) => [
+  a.rentFee != null,
+  a.financialAccount != null,
+];
 
+List<bool> _docsItems(TenantApplicationModel a) {
   final mode = a.leaseAgreementDocumentMode;
-  if (!_has(mode)) {
-    return const ApplicationChecklistSection(key: key, label: label, items: []);
-  }
+  if (!_has(mode)) return const [];
 
   final isManual = mode == 'MANUAL';
-
   final signatures = (a.leaseAgreementDocumentSignatures ?? [])
       .where((s) => s.documentId == a.leaseAgreementDocumentId)
       .toList();
   bool hasRole(String role) => signatures.any((s) => s.role == role);
-  final pmWitnessSignatures = signatures
-      .where((s) => s.role == 'PM_WITNESS')
-      .toList();
-  final tenantWitnessSignatures = signatures
-      .where((s) => s.role == 'TENANT_WITNESS')
-      .toList();
+  final signedCount = {
+    'pm_witness': signatures.where((s) => s.role == 'PM_WITNESS').length,
+    'tenant_witness': signatures
+        .where((s) => s.role == 'TENANT_WITNESS')
+        .length,
+  };
 
-  final witnessNodes = getWitnessNodesFromContent(
+  final seen = {'pm_witness': 0, 'tenant_witness': 0};
+  final witnessItems = <bool>[];
+  for (final node in getWitnessNodesFromContent(
     a.leaseAgreementDocument?.content,
-  );
-  final pmWitnessCount = witnessNodes
-      .where((n) => n.role == 'pm_witness')
-      .length;
-  final tenantWitnessCount = witnessNodes
-      .where((n) => n.role == 'tenant_witness')
-      .length;
+  )) {
+    final roleIdx = seen[node.role] ?? 0;
+    seen[node.role] = roleIdx + 1;
+    witnessItems.add(isManual || roleIdx < (signedCount[node.role] ?? 0));
+  }
 
-  final witnessItems = <ApplicationChecklistItem>[];
-  for (var i = 0; i < witnessNodes.length; i++) {
-    final node = witnessNodes[i];
-    // How many nodes of THIS role came before it — the index into that role's
-    // signature rows.
-    final roleIdx = witnessNodes
-        .take(i)
-        .where((n) => n.role == node.role)
-        .length;
-    final isPm = node.role == 'pm_witness';
-    final sigs = isPm ? pmWitnessSignatures : tenantWitnessSignatures;
-    final showTag = isPm ? pmWitnessCount > 1 : tenantWitnessCount > 1;
-    final itemLabel = showTag ? '${node.label} #${roleIdx + 1}' : node.label;
-    witnessItems.add(
-      ApplicationChecklistItem(
-        '$itemLabel signed',
-        done: isManual || roleIdx < sigs.length,
-      ),
+  return [
+    mode == 'ONLINE'
+        ? _has(a.leaseAgreementDocumentId)
+        : _has(a.leaseAgreementDocumentUrl),
+    isManual || hasRole('PROPERTY_MANAGER'),
+    isManual || hasRole('TENANT'),
+    ...witnessItems,
+  ];
+}
+
+List<bool> _items(ChecklistSection section, TenantApplicationModel a) =>
+    switch (section) {
+      ChecklistSection.unit => _unitItems(a),
+      ChecklistSection.tenant => _tenantItems(a),
+      ChecklistSection.moveIn => _moveInItems(a),
+      ChecklistSection.financial => _financialItems(a),
+      ChecklistSection.docs => _docsItems(a),
+    };
+
+ApplicationChecklist computeApplicationChecklist(TenantApplicationModel a) {
+  final approved = a.status == _completed;
+  final unitTaken =
+      a.status == _inProgress && a.desiredUnit?.status == _unitOccupied;
+  final resolved = <ChecklistSection, ChecklistStep>{};
+  var canApprove = true;
+
+  for (final section in ChecklistSection.values) {
+    final items = _items(section, a);
+    final doneItems = items.where((i) => i).length;
+    final complete = items.isNotEmpty && doneItems == items.length;
+    final blocked = _dependsOn[section]!.any(
+      (d) => !(resolved[d]?.isSatisfied ?? false),
+    );
+
+    final ChecklistStepState state;
+    if (section == ChecklistSection.unit && unitTaken) {
+      state = ChecklistStepState.attention;
+    } else if (blocked) {
+      state = ChecklistStepState.blocked;
+    } else if (complete) {
+      state = approved ? ChecklistStepState.locked : ChecklistStepState.done;
+    } else if (doneItems > 0) {
+      state = ChecklistStepState.progress;
+    } else {
+      state = ChecklistStepState.todo;
+    }
+
+    if (items.isNotEmpty && !complete) canApprove = false;
+
+    resolved[section] = ChecklistStep(
+      section: section,
+      state: state,
+      doneItems: doneItems,
+      totalItems: items.length,
     );
   }
 
-  return ApplicationChecklistSection(
-    key: key,
-    label: label,
-    items: [
-      ApplicationChecklistItem(
-        'Document uploaded',
-        done: mode == 'ONLINE'
-            ? _has(a.leaseAgreementDocumentId)
-            : _has(a.leaseAgreementDocumentUrl),
-      ),
-      ApplicationChecklistItem(
-        'Manager signed',
-        done: isManual || hasRole('PROPERTY_MANAGER'),
-      ),
-      ApplicationChecklistItem(
-        'Tenant signed',
-        done: isManual || hasRole('TENANT'),
-      ),
-      ...witnessItems,
-    ],
+  final steps = [for (final s in ChecklistSection.values) resolved[s]!];
+  final satisfied = steps.where((s) => s.isSatisfied).length;
+  return ApplicationChecklist(
+    steps: steps,
+    progress: satisfied / steps.length,
+    canApprove: canApprove,
   );
-}
-
-/// The five sections, in the order the hub renders them.
-List<ApplicationChecklistSection> buildApplicationChecklist(
-  TenantApplicationModel a,
-) => [
-  getUnitSection(a),
-  getTenantDetailsSection(a),
-  getMoveInSection(a),
-  getFinancialSection(a),
-  getDocsSection(a),
-];
-
-/// Percentage of the five sections that are fully complete. Empty sections
-/// count as incomplete for display, matching the web.
-double applicationProgress(TenantApplicationModel a) {
-  final sections = buildApplicationChecklist(a);
-  final done = sections.where((s) => s.complete).length;
-  return done / sections.length * 100;
-}
-
-/// Approval gate — only sections that actually carry items must pass.
-bool canApproveApplication(TenantApplicationModel a) {
-  final required = buildApplicationChecklist(
-    a,
-  ).where((s) => s.items.isNotEmpty);
-  return required.isEmpty || required.every((s) => s.complete);
 }

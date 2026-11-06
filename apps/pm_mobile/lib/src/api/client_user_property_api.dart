@@ -112,6 +112,37 @@ class ClientUserPropertyApi extends AbstractApi {
       meta: PaginationMetaModel.fromJson(data['meta'] as Map<String, dynamic>),
     );
   }
+
+  /// `GET .../properties/me`, paged to the end, reduced to
+  /// `property_id -> role` (MANAGER or STAFF). Property mutations are gated on
+  /// this role alone, so callers need it for every property, not one page.
+  Future<Map<String, String>> getMyPropertyRoles({
+    required String clientId,
+  }) async {
+    final roles = <String, String>{};
+    var page = 1;
+    while (true) {
+      final queryString = Uri(
+        queryParameters: {'page': '$page', 'page_size': '200'},
+      ).query;
+      final response = await execute(
+        method: 'GET',
+        path: '/api/v1/admin/clients/$clientId/properties/me?$queryString',
+      );
+      final data =
+          (jsonDecode(response.body) as Map<String, dynamic>)['data']
+              as Map<String, dynamic>;
+      for (final row in data['rows'] as List<dynamic>) {
+        final map = row as Map<String, dynamic>;
+        final propertyId = map['property_id'] as String?;
+        final role = map['role'] as String?;
+        if (propertyId != null && role != null) roles[propertyId] = role;
+      }
+      final meta = data['meta'] as Map<String, dynamic>;
+      if (meta['has_next_page'] != true) return roles;
+      page++;
+    }
+  }
 }
 
 @riverpod

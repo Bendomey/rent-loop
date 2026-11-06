@@ -1,5 +1,10 @@
 # Patterns
 
+## Phone numbers and upload tiles (Add tenant)
+- `normalizePhone(String?)` in `lib/src/lib/phone.dart` returns E.164 or null; Ghana (+233) is the default for national numbers. Normalise before every lookup, create and invite call.
+- `ApplicationUploadTile` (`activity/application_form_widgets.dart`) is the one tile for photo, ID and proof-of-income uploads: it picks a file, uploads via `r2UploadServiceProvider.uploadBytes(objectKeyPrefix: ...)`, shows progress and failure inline, and a failed upload blocks the form until cleared. `isAdult` guards date of birth (18 or older).
+- Role gating uses `canManageProperty(roles, propertyId)` (`lib/src/lib/property_roles.dart`) with `myPropertyRolesProvider`; `canEditApplication` adds the in-progress check.
+
 ## Naming Conventions
 - Files: `snake_case.dart`; screen root files are named `root.dart` inside their feature folder
 - Classes: `PascalCase`; screens suffix with `Screen`, notifiers with `Notifier`, states with `State`

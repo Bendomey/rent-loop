@@ -4,6 +4,13 @@
 
 ---
 
+## Tenant checklist ported 1:1 from the web; Ghana-default phone normalisation (2026-11-06)
+**Why:** `computeApplicationChecklist` mirrors the web portal's tenant-setup checklist step for step, so a landlord sees the same blockers on both clients and the backend stays the single source of truth for what "ready" means. Phones are normalised to E.164 on the client because the lookup, create and invite endpoints all key on E.164, and landlords type local numbers (`024 123 4567`); a bare national number is assumed Ghanaian (+233) rather than rejected.
+**Tradeoffs:** A landlord typing a non-Ghana number must include the `+` country code. Checklist changes on the web must be repeated here.
+**Alternatives considered:** Asking the backend to normalise — rejected, the lookup endpoint is called before any record exists and needs the canonical form up front.
+
+---
+
 ## Cedi glyph: bundle a subset fallback font, don't change the strings (2026-07-27)
 **Why:** `DMSans`/`DMSerifDisplay`/`JetBrainsMono` have no glyph for U+20B5 (`₵`), and Android's system fallback doesn't reliably supply one, so every money surface showed a tofu box. Three options were on the table: (a) replace `GH₵` with `GHS` everywhere, (b) hand-wire `fontFamilyFallback` onto the ~800 widget-level `TextStyle`s, (c) bundle a fallback family and declare it once in the theme. (c) won: `TextStyle.merge`/`copyWith` preserve a parent's `fontFamilyFallback` when the child only sets `fontFamily`, so declaring it on `ThemeData` + the `textTheme` propagates to every `Text` through `DefaultTextStyle` — one small diff instead of 800, and the design keeps its currency symbol.
 **Tradeoffs:** +24 KB of assets, and the cedi is drawn in Inter while the digits around it are DM Sans. The subset keeps Inter's `wght` axis and the two families' cap heights are within ~4% (0.728 vs 0.700 em), so the mismatch is not noticeable at UI sizes. A bare `RichText` doesn't inherit `DefaultTextStyle`, so a span rendering currency must set the fallback itself — none do today, and `test/shared/font_coverage_test.dart` guards the font side of this.

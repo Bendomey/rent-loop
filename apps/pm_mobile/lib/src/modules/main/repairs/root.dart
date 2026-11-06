@@ -14,6 +14,7 @@ class RepairsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final id = propertyId;
     return Scaffold(
       backgroundColor: RLTokens.surface,
       floatingActionButton: FloatingActionButton.extended(
@@ -47,7 +48,9 @@ class RepairsScreen extends ConsumerWidget {
               if (context.mounted) context.pop();
             },
           ),
-          Expanded(child: MaintenanceBoard(initialPropertyIds: [?propertyId])),
+          Expanded(
+            child: MaintenanceBoard(initialPropertyIds: [if (id != null) id]),
+          ),
         ],
       ),
     );

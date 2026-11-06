@@ -3,51 +3,94 @@
 // Each "Edit" affordance on a section card opens the matching sheet here. The
 // field sets mirror the web forms one-for-one (see
 // apps/property-manager/.../applications/application/{tenant,move-in,financial}),
-// so the validation rules and enum options line up when this is wired to the
-// API. Sheets pop with an updated sub-model, or null when cancelled.
+// so the validation rules and enum options line up with the API. The tenant
+// sheets (basic, identity, background) save through UpdateApplicationNotifier
+// and close on success; the remaining sheets pop an updated sub-model, or null
+// when cancelled.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:rentloop_manager/src/lib/phone.dart';
 import 'package:rentloop_manager/src/lib/money.dart';
 import 'package:rentloop_manager/src/lib/property_status.dart';
 import 'package:rentloop_manager/src/lib/unit_status.dart';
 import 'package:rentloop_manager/src/modules/main/activity/application_data.dart';
+import 'package:rentloop_manager/src/modules/main/activity/application_form_widgets.dart';
+import 'package:rentloop_manager/src/repository/api_state.dart';
+import 'package:rentloop_manager/src/repository/models/unit_model.dart';
+import 'package:rentloop_manager/src/repository/notifiers/activity/update_application_notifier.dart';
+import 'package:rentloop_manager/src/repository/providers/activity/application_unit_options_provider.dart';
+import 'package:rentloop_manager/src/shared/sheet_kit.dart' show RLSheetNote;
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
+import 'package:shimmer/shimmer.dart';
 
 // ── Public API ───────────────────────────────────────────────────────────────
 
-Future<ApplicationApplicant?> showBasicInfoSheet(
-  BuildContext context,
-  ApplicationApplicant applicant,
-) => _open<ApplicationApplicant>(
+Future<void> showBasicInfoSheet(
+  BuildContext context, {
+  required ApplicationApplicant applicant,
+  required String propertyId,
+  required String id,
+}) => _open<void>(
   context,
-  (close) => _BasicInfoSheet(applicant: applicant, onClose: close),
+  (close) => _BasicInfoSheet(
+    applicant: applicant,
+    propertyId: propertyId,
+    id: id,
+    onClose: close,
+  ),
 );
 
-Future<ApplicationIdentity?> showIdentitySheet(
-  BuildContext context,
-  ApplicationIdentity identity,
-) => _open<ApplicationIdentity>(
+Future<void> showIdentitySheet(
+  BuildContext context, {
+  required ApplicationIdentity identity,
+  required String propertyId,
+  required String id,
+}) => _open<void>(
   context,
-  (close) => _IdentitySheet(identity: identity, onClose: close),
+  (close) => _IdentitySheet(
+    identity: identity,
+    propertyId: propertyId,
+    id: id,
+    onClose: close,
+  ),
 );
 
-Future<ApplicationBackground?> showBackgroundSheet(
-  BuildContext context,
-  ApplicationBackground background,
-) => _open<ApplicationBackground>(
+Future<void> showBackgroundSheet(
+  BuildContext context, {
+  required ApplicationBackground background,
+  required String propertyId,
+  required String id,
+}) => _open<void>(
   context,
-  (close) => _BackgroundSheet(background: background, onClose: close),
+  (close) => _BackgroundSheet(
+    background: background,
+    propertyId: propertyId,
+    id: id,
+    onClose: close,
+  ),
 );
 
-Future<ApplicationMoveIn?> showMoveInSheet(
-  BuildContext context,
-  ApplicationMoveIn moveIn,
-) => _open<ApplicationMoveIn>(
+Future<void> showMoveInSheet(
+  BuildContext context, {
+  required ApplicationMoveIn moveIn,
+  required String? fallbackFrequency,
+  required int chargeCount,
+  required String propertyId,
+  required String id,
+}) => _open<void>(
   context,
-  (close) => _MoveInSheet(moveIn: moveIn, onClose: close),
+  (close) => _MoveInSheet(
+    moveIn: moveIn,
+    fallbackFrequency: fallbackFrequency,
+    chargeCount: chargeCount,
+    propertyId: propertyId,
+    id: id,
+    onClose: close,
+  ),
 );
 
 Future<ApplicationFinancial?> showFinancialSheet(
@@ -65,16 +108,19 @@ Future<ApplicationFinancial?> showFinancialSheet(
   ),
 );
 
-/// Unit picker. Pops the chosen unit, or null when cancelled.
-Future<ApplicationUnit?> showChangeUnitSheet(
+Future<void> showChangeUnitSheet(
   BuildContext context, {
-  required List<ApplicationUnit> units,
+  required String propertyId,
+  required String id,
   required String? currentUnitId,
-}) => _open<ApplicationUnit>(
+  required int? applicationRentFee,
+}) => _open<void>(
   context,
   (close) => _ChangeUnitSheet(
-    units: units,
+    propertyId: propertyId,
+    id: id,
     currentUnitId: currentUnitId,
+    applicationRentFee: applicationRentFee,
     onClose: close,
   ),
 );
@@ -245,6 +291,36 @@ class _CloseBtn extends StatelessWidget {
     );
   }
 }
+
+/// Sends [patch] and reports whether the save went through; the shared
+/// notifier carries the error message the sheet shows on failure.
+Future<bool> _savePatch(
+  WidgetRef ref, {
+  required String propertyId,
+  required String id,
+  required Map<String, dynamic> patch,
+}) async {
+  await ref
+      .read(updateApplicationNotifierProvider.notifier)
+      .submit(propertyId: propertyId, id: id, patch: patch);
+  return ref.read(updateApplicationNotifierProvider).status.isSuccess();
+}
+
+String _dateOnly(DateTime d) =>
+    '${d.year.toString().padLeft(4, '0')}-'
+    '${d.month.toString().padLeft(2, '0')}-'
+    '${d.day.toString().padLeft(2, '0')}';
+
+Widget _saveError(UpdateApplicationState state) =>
+    state.status == ApiStatus.failed
+    ? Padding(
+        padding: const EdgeInsets.only(top: 14),
+        child: RLSheetNote(
+          text: state.errorMessage ?? 'Something happened. Try again.',
+          tone: RLTone.danger,
+        ),
+      )
+    : const SizedBox.shrink();
 
 /// Cancel + Save footer. [onSave] is null while the form is invalid.
 Widget _saveCancel({
@@ -460,12 +536,14 @@ class _DateInput extends StatelessWidget {
     required this.onChanged,
     required this.placeholder,
     this.lastDate,
+    this.firstDate,
   });
 
   final DateTime? value;
   final ValueChanged<DateTime> onChanged;
   final String placeholder;
   final DateTime? lastDate;
+  final DateTime? firstDate;
 
   @override
   Widget build(BuildContext context) {
@@ -473,7 +551,7 @@ class _DateInput extends StatelessWidget {
       onTap: () async {
         await Haptics.vibrate(HapticsType.selection);
         if (!context.mounted) return;
-        final first = DateTime(1900);
+        final first = firstDate ?? DateTime(1900);
         final last = lastDate ?? DateTime(DateTime.now().year + 10);
         // showDatePicker asserts initialDate sits within the range, and
         // `last` may be a hair behind "now" for past-only fields like DOB.
@@ -569,16 +647,23 @@ class _SheetSectionLabel extends StatelessWidget {
 
 // ── 1. Basic Information ─────────────────────────────────────────────────────
 
-class _BasicInfoSheet extends StatefulWidget {
-  const _BasicInfoSheet({required this.applicant, required this.onClose});
+class _BasicInfoSheet extends ConsumerStatefulWidget {
+  const _BasicInfoSheet({
+    required this.applicant,
+    required this.propertyId,
+    required this.id,
+    required this.onClose,
+  });
   final ApplicationApplicant applicant;
-  final void Function([ApplicationApplicant? result]) onClose;
+  final String propertyId;
+  final String id;
+  final VoidCallback onClose;
 
   @override
-  State<_BasicInfoSheet> createState() => _BasicInfoSheetState();
+  ConsumerState<_BasicInfoSheet> createState() => _BasicInfoSheetState();
 }
 
-class _BasicInfoSheetState extends State<_BasicInfoSheet> {
+class _BasicInfoSheetState extends ConsumerState<_BasicInfoSheet> {
   late final _first = TextEditingController(text: widget.applicant.firstName);
   late final _last = TextEditingController(text: widget.applicant.lastName);
   late final _other = TextEditingController(
@@ -589,6 +674,16 @@ class _BasicInfoSheetState extends State<_BasicInfoSheet> {
   late String? _gender = widget.applicant.gender;
   late String? _marital = widget.applicant.maritalStatus;
   late DateTime? _dob = widget.applicant.dateOfBirth;
+  late String? _photoUrl = widget.applicant.profilePhotoUrl;
+  bool _uploading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(
+      () => ref.read(updateApplicationNotifierProvider.notifier).reset(),
+    );
+  }
 
   @override
   void dispose() {
@@ -600,40 +695,65 @@ class _BasicInfoSheetState extends State<_BasicInfoSheet> {
     super.dispose();
   }
 
+  bool get _adult => _dob == null || isAdult(_dob!, DateTime.now());
+
   bool get _valid =>
       _first.text.trim().isNotEmpty &&
       _last.text.trim().isNotEmpty &&
-      _phone.text.trim().isNotEmpty &&
+      normalizePhone(_phone.text) != null &&
+      _adult &&
       RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(_email.text.trim());
 
   String? _nullIfEmpty(String v) => v.trim().isEmpty ? null : v.trim();
 
+  Future<void> _save() async {
+    final ok = await _savePatch(
+      ref,
+      propertyId: widget.propertyId,
+      id: widget.id,
+      patch: {
+        'first_name': _first.text.trim(),
+        'last_name': _last.text.trim(),
+        'other_names': _nullIfEmpty(_other.text),
+        'gender': _gender,
+        'marital_status': _marital,
+        'email': _email.text.trim(),
+        'phone': normalizePhone(_phone.text),
+        'date_of_birth': _dob == null ? null : _dateOnly(_dob!),
+        'profile_photo_url': _photoUrl,
+      },
+    );
+    if (ok && mounted) widget.onClose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(updateApplicationNotifierProvider);
+    final pending = state.status.isLoading();
     return _Sheet(
       title: 'Basic Information',
-      desc: "The applicant's personal details.",
+      desc: "The tenant's personal details.",
       onDismiss: widget.onClose,
       footer: _saveCancel(
         onCancel: widget.onClose,
-        onSave: _valid
-            ? () => widget.onClose(
-                widget.applicant.copyWith(
-                  firstName: _first.text.trim(),
-                  lastName: _last.text.trim(),
-                  otherNames: () => _nullIfEmpty(_other.text),
-                  gender: () => _gender,
-                  maritalStatus: () => _marital,
-                  email: _email.text.trim(),
-                  phone: () => _nullIfEmpty(_phone.text),
-                  dateOfBirth: () => _dob,
-                ),
-              )
-            : null,
+        saveLabel: pending ? 'Saving…' : 'Save',
+        onSave: _valid && !pending && !_uploading ? _save : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          _Field(
+            label: 'Profile photo',
+            optional: true,
+            child: ApplicationUploadTile(
+              label: 'Profile photo',
+              objectKeyPrefix: 'tenant-applications/profile-photos/',
+              initialUrl: _photoUrl,
+              circular: true,
+              onChanged: (url) => _photoUrl = url,
+              onBlockingChanged: (b) => setState(() => _uploading = b),
+            ),
+          ),
           _Field(
             label: 'First name',
             child: _TextInput(
@@ -704,6 +824,12 @@ class _BasicInfoSheetState extends State<_BasicInfoSheet> {
               onChanged: (d) => setState(() => _dob = d),
             ),
           ),
+          if (!_adult)
+            const RLSheetNote(
+              text: 'The tenant must be at least 18 years old.',
+              tone: RLTone.danger,
+            ),
+          _saveError(state),
         ],
       ),
     );
@@ -712,16 +838,23 @@ class _BasicInfoSheetState extends State<_BasicInfoSheet> {
 
 // ── 2. Identity Verification ─────────────────────────────────────────────────
 
-class _IdentitySheet extends StatefulWidget {
-  const _IdentitySheet({required this.identity, required this.onClose});
+class _IdentitySheet extends ConsumerStatefulWidget {
+  const _IdentitySheet({
+    required this.identity,
+    required this.propertyId,
+    required this.id,
+    required this.onClose,
+  });
   final ApplicationIdentity identity;
-  final void Function([ApplicationIdentity? result]) onClose;
+  final String propertyId;
+  final String id;
+  final VoidCallback onClose;
 
   @override
-  State<_IdentitySheet> createState() => _IdentitySheetState();
+  ConsumerState<_IdentitySheet> createState() => _IdentitySheetState();
 }
 
-class _IdentitySheetState extends State<_IdentitySheet> {
+class _IdentitySheetState extends ConsumerState<_IdentitySheet> {
   late final _nationality = TextEditingController(
     text: widget.identity.nationality ?? '',
   );
@@ -732,6 +865,18 @@ class _IdentitySheetState extends State<_IdentitySheet> {
     text: widget.identity.currentAddress ?? '',
   );
   late String? _idType = widget.identity.idType;
+  late String? _frontUrl = widget.identity.idFrontUrl;
+  late String? _backUrl = widget.identity.idBackUrl;
+  bool _frontBusy = false;
+  bool _backBusy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(
+      () => ref.read(updateApplicationNotifierProvider.notifier).reset(),
+    );
+  }
 
   @override
   void dispose() {
@@ -747,24 +892,35 @@ class _IdentitySheetState extends State<_IdentitySheet> {
       _idNumber.text.trim().isNotEmpty &&
       _address.text.trim().isNotEmpty;
 
+  Future<void> _save() async {
+    final ok = await _savePatch(
+      ref,
+      propertyId: widget.propertyId,
+      id: widget.id,
+      patch: {
+        'nationality': _nationality.text.trim(),
+        'id_type': _idType,
+        'id_number': _idNumber.text.trim(),
+        'current_address': _address.text.trim(),
+        'id_front_url': _frontUrl,
+        'id_back_url': _backUrl,
+      },
+    );
+    if (ok && mounted) widget.onClose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(updateApplicationNotifierProvider);
+    final pending = state.status.isLoading();
     return _Sheet(
       title: 'Identity Verification',
-      desc: "The applicant's nationality and identity document.",
+      desc: "The tenant's nationality and identity document.",
       onDismiss: widget.onClose,
       footer: _saveCancel(
         onCancel: widget.onClose,
-        onSave: _valid
-            ? () => widget.onClose(
-                widget.identity.copyWith(
-                  nationality: () => _nationality.text.trim(),
-                  idType: () => _idType,
-                  idNumber: () => _idNumber.text.trim(),
-                  currentAddress: () => _address.text.trim(),
-                ),
-              )
-            : null,
+        saveLabel: pending ? 'Saving…' : 'Save',
+        onSave: _valid && !pending && !_frontBusy && !_backBusy ? _save : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -806,46 +962,22 @@ class _IdentitySheetState extends State<_IdentitySheet> {
             ),
           ),
           const _SheetSectionLabel('ID document images'),
-          const _UploadHint(
-            text: 'Front and back images are captured on the web portal.',
+          ApplicationUploadTile(
+            label: 'ID front',
+            objectKeyPrefix: 'tenant-applications/id-documents/',
+            initialUrl: _frontUrl,
+            onChanged: (url) => _frontUrl = url,
+            onBlockingChanged: (b) => setState(() => _frontBusy = b),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _UploadHint extends StatelessWidget {
-  const _UploadHint({required this.text});
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-      decoration: BoxDecoration(
-        color: RLTokens.fill,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.info_outline_rounded,
-            size: 17,
-            color: RLTokens.mutedSoft,
+          const SizedBox(height: 12),
+          ApplicationUploadTile(
+            label: 'ID back',
+            objectKeyPrefix: 'tenant-applications/id-documents/',
+            initialUrl: _backUrl,
+            onChanged: (url) => _backUrl = url,
+            onBlockingChanged: (b) => setState(() => _backBusy = b),
           ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(
-                fontFamily: RLTokens.fontSans,
-                fontSize: 12.5,
-                color: RLTokens.muted,
-                height: 1.45,
-              ),
-            ),
-          ),
+          _saveError(state),
         ],
       ),
     );
@@ -854,16 +986,23 @@ class _UploadHint extends StatelessWidget {
 
 // ── 3. Emergency Contact & Background ────────────────────────────────────────
 
-class _BackgroundSheet extends StatefulWidget {
-  const _BackgroundSheet({required this.background, required this.onClose});
+class _BackgroundSheet extends ConsumerStatefulWidget {
+  const _BackgroundSheet({
+    required this.background,
+    required this.propertyId,
+    required this.id,
+    required this.onClose,
+  });
   final ApplicationBackground background;
-  final void Function([ApplicationBackground? result]) onClose;
+  final String propertyId;
+  final String id;
+  final VoidCallback onClose;
 
   @override
-  State<_BackgroundSheet> createState() => _BackgroundSheetState();
+  ConsumerState<_BackgroundSheet> createState() => _BackgroundSheetState();
 }
 
-class _BackgroundSheetState extends State<_BackgroundSheet> {
+class _BackgroundSheetState extends ConsumerState<_BackgroundSheet> {
   late final _name = TextEditingController(
     text: widget.background.emergencyContactName ?? '',
   );
@@ -883,8 +1022,18 @@ class _BackgroundSheetState extends State<_BackgroundSheet> {
     text: widget.background.occupationAddress ?? '',
   );
   late String? _employerType = widget.background.employerType;
+  late String? _proofUrl = widget.background.proofOfIncomeUrl;
+  bool _uploading = false;
 
   bool get _isStudent => _employerType == 'STUDENT';
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(
+      () => ref.read(updateApplicationNotifierProvider.notifier).reset(),
+    );
+  }
 
   @override
   void dispose() {
@@ -900,36 +1049,43 @@ class _BackgroundSheetState extends State<_BackgroundSheet> {
   bool get _valid =>
       _name.text.trim().length >= 2 &&
       _relationship.text.trim().length >= 2 &&
-      _phone.text.trim().isNotEmpty &&
+      normalizePhone(_phone.text) != null &&
       _employerType != null;
 
-  String? _nullIfEmpty(String v) => v.trim().isEmpty ? null : v.trim();
+  Future<void> _save() async {
+    final ok = await _savePatch(
+      ref,
+      propertyId: widget.propertyId,
+      id: widget.id,
+      patch: {
+        'emergency_contact_name': _name.text.trim(),
+        'emergency_contact_phone': normalizePhone(_phone.text),
+        'relationship_to_emergency_contact': _relationship.text.trim(),
+        'employer_type': _employerType,
+        // The web pins occupation to STUDENT for students.
+        // The backend skips a null for these three plain-string fields, so a
+        // cleared value has to travel as an empty string.
+        'occupation': _isStudent ? 'STUDENT' : _occupation.text.trim(),
+        'employer': _employer.text.trim(),
+        'occupation_address': _occupationAddress.text.trim(),
+        'proof_of_income_url': _proofUrl,
+      },
+    );
+    if (ok && mounted) widget.onClose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(updateApplicationNotifierProvider);
+    final pending = state.status.isLoading();
     return _Sheet(
       title: 'Emergency Contact & Background',
       desc: 'Who to reach in an emergency, plus employment details.',
       onDismiss: widget.onClose,
       footer: _saveCancel(
         onCancel: widget.onClose,
-        onSave: _valid
-            ? () => widget.onClose(
-                widget.background.copyWith(
-                  emergencyContactName: () => _name.text.trim(),
-                  relationshipToEmergencyContact: () =>
-                      _relationship.text.trim(),
-                  emergencyContactPhone: () => _phone.text.trim(),
-                  employerType: () => _employerType,
-                  // The web pins occupation to STUDENT for students.
-                  occupation: () =>
-                      _isStudent ? 'STUDENT' : _nullIfEmpty(_occupation.text),
-                  employer: () => _nullIfEmpty(_employer.text),
-                  occupationAddress: () =>
-                      _nullIfEmpty(_occupationAddress.text),
-                ),
-              )
-            : null,
+        saveLabel: pending ? 'Saving…' : 'Save',
+        onSave: _valid && !pending && !_uploading ? _save : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1005,10 +1161,14 @@ class _BackgroundSheetState extends State<_BackgroundSheet> {
               textCapitalization: TextCapitalization.words,
             ),
           ),
-          _UploadHint(
-            text:
-                'Proof of ${_isStudent ? 'admission' : 'income'} is uploaded on the web portal.',
+          ApplicationUploadTile(
+            label: 'Proof of ${_isStudent ? 'admission' : 'income'}',
+            objectKeyPrefix: 'tenant-applications/proof-of-income/',
+            initialUrl: _proofUrl,
+            onChanged: (url) => _proofUrl = url,
+            onBlockingChanged: (b) => setState(() => _uploading = b),
           ),
+          _saveError(state),
         ],
       ),
     );
@@ -1017,21 +1177,42 @@ class _BackgroundSheetState extends State<_BackgroundSheet> {
 
 // ── 4. Move In Setup ─────────────────────────────────────────────────────────
 
-class _MoveInSheet extends StatefulWidget {
-  const _MoveInSheet({required this.moveIn, required this.onClose});
+class _MoveInSheet extends ConsumerStatefulWidget {
+  const _MoveInSheet({
+    required this.moveIn,
+    required this.fallbackFrequency,
+    required this.chargeCount,
+    required this.propertyId,
+    required this.id,
+    required this.onClose,
+  });
   final ApplicationMoveIn moveIn;
-  final void Function([ApplicationMoveIn? result]) onClose;
+  final String? fallbackFrequency;
+  final int chargeCount;
+  final String propertyId;
+  final String id;
+  final VoidCallback onClose;
 
   @override
-  State<_MoveInSheet> createState() => _MoveInSheetState();
+  ConsumerState<_MoveInSheet> createState() => _MoveInSheetState();
 }
 
-class _MoveInSheetState extends State<_MoveInSheet> {
+class _MoveInSheetState extends ConsumerState<_MoveInSheet> {
   late final _duration = TextEditingController(
-    text: widget.moveIn.stayDuration?.toString() ?? '',
+    text: (widget.moveIn.stayDuration ?? 6).toString(),
   );
   late DateTime? _date = widget.moveIn.desiredMoveInDate;
-  late String? _frequency = widget.moveIn.stayDurationFrequency;
+
+  String? get _frequency =>
+      widget.moveIn.stayDurationFrequency ?? widget.fallbackFrequency;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(
+      () => ref.read(updateApplicationNotifierProvider.notifier).reset(),
+    );
+  }
 
   @override
   void dispose() {
@@ -1039,16 +1220,87 @@ class _MoveInSheetState extends State<_MoveInSheet> {
     super.dispose();
   }
 
+  DateTime get _today {
+    final n = DateTime.now();
+    return DateTime(n.year, n.month, n.day);
+  }
+
   int? get _durationValue {
     final n = int.tryParse(_duration.text.trim());
     return (n != null && n >= 1) ? n : null;
   }
 
-  /// Duration is optional, but a non-empty value must be at least 1.
-  bool get _valid => _duration.text.trim().isEmpty || _durationValue != null;
+  bool get _dateChanged {
+    final saved = widget.moveIn.desiredMoveInDate;
+    final d = _date;
+    if (d == null || saved == null) return d != saved;
+    return d.year != saved.year || d.month != saved.month || d.day != saved.day;
+  }
+
+  bool get _changed =>
+      _dateChanged || _durationValue != widget.moveIn.stayDuration;
+
+  bool get _datePast =>
+      _dateChanged && _date != null && _date!.isBefore(_today);
+
+  bool get _valid => _date != null && !_datePast && _durationValue != null;
+
+  Future<bool> _confirmRecalculation() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: RLTokens.surface,
+        content: const Text(
+          'Changing this will recalculate the rent for this tenant. Continue?',
+          style: TextStyle(
+            fontFamily: RLTokens.fontSans,
+            fontSize: 14,
+            color: RLTokens.ink,
+            height: 1.5,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Continue'),
+          ),
+        ],
+      ),
+    );
+    return ok == true;
+  }
+
+  Future<void> _save() async {
+    if (widget.chargeCount > 0 && _changed && !await _confirmRecalculation()) {
+      return;
+    }
+    if (!mounted) return;
+    final d = _date!;
+    final ok = await _savePatch(
+      ref,
+      propertyId: widget.propertyId,
+      id: widget.id,
+      patch: {
+        'desired_move_in_date': DateTime.utc(
+          d.year,
+          d.month,
+          d.day,
+        ).toIso8601String(),
+        'stay_duration': _durationValue,
+        'stay_duration_frequency': _frequency,
+      },
+    );
+    if (ok && mounted) widget.onClose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(updateApplicationNotifierProvider);
+    final pending = state.status.isLoading();
     final unit = periodLabel(_frequency, _durationValue ?? 2);
     return _Sheet(
       title: 'Move In Setup',
@@ -1056,40 +1308,29 @@ class _MoveInSheetState extends State<_MoveInSheet> {
       onDismiss: widget.onClose,
       footer: _saveCancel(
         onCancel: widget.onClose,
-        onSave: _valid
-            ? () => widget.onClose(
-                widget.moveIn.copyWith(
-                  desiredMoveInDate: () => _date,
-                  stayDurationFrequency: () => _frequency,
-                  stayDuration: () => _durationValue,
-                ),
-              )
-            : null,
+        saveLabel: pending ? 'Saving…' : 'Save',
+        onSave: _valid && !pending ? _save : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _Field(
             label: 'Desired move-in date',
-            optional: true,
             child: _DateInput(
               value: _date,
               placeholder: 'Select a date',
+              firstDate: _today,
               onChanged: (d) => setState(() => _date = d),
             ),
           ),
+          if (_datePast)
+            const _InlineError("Move-in date can't be in the past."),
           _Field(
             label: 'Stay duration frequency',
-            optional: true,
-            child: _SelectInput(
-              value: _frequency,
-              options: kStayFrequencyOptions,
-              onChanged: (v) => setState(() => _frequency = v),
-            ),
+            child: _ReadOnlyValue(kStayFrequencyOptions[_frequency] ?? '—'),
           ),
           _Field(
             label: 'Stay duration',
-            optional: true,
             child: _TextInput(
               controller: _duration,
               placeholder: 'Number of $unit',
@@ -1098,9 +1339,36 @@ class _MoveInSheetState extends State<_MoveInSheet> {
               onChanged: (_) => setState(() {}),
             ),
           ),
-          if (_duration.text.trim().isNotEmpty && _durationValue == null)
+          if (_durationValue == null)
             const _InlineError('Stay duration must be at least 1.'),
+          _saveError(state),
         ],
+      ),
+    );
+  }
+}
+
+class _ReadOnlyValue extends StatelessWidget {
+  const _ReadOnlyValue(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
+      decoration: BoxDecoration(
+        color: RLTokens.fill,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: RLTokens.hairline, width: 1.5),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontFamily: RLTokens.fontSans,
+          fontSize: 15,
+          color: RLTokens.muted,
+        ),
       ),
     );
   }
@@ -1514,71 +1782,135 @@ class _InvoiceRow extends StatelessWidget {
 
 // ── 6. Change unit ───────────────────────────────────────────────────────────
 
-class _ChangeUnitSheet extends StatefulWidget {
+class _ChangeUnitSheet extends ConsumerStatefulWidget {
   const _ChangeUnitSheet({
-    required this.units,
+    required this.propertyId,
+    required this.id,
     required this.currentUnitId,
+    required this.applicationRentFee,
     required this.onClose,
   });
 
-  final List<ApplicationUnit> units;
+  final String propertyId;
+  final String id;
   final String? currentUnitId;
-  final void Function([ApplicationUnit? result]) onClose;
+  final int? applicationRentFee;
+  final VoidCallback onClose;
 
   @override
-  State<_ChangeUnitSheet> createState() => _ChangeUnitSheetState();
+  ConsumerState<_ChangeUnitSheet> createState() => _ChangeUnitSheetState();
 }
 
-class _ChangeUnitSheetState extends State<_ChangeUnitSheet> {
+class _ChangeUnitSheetState extends ConsumerState<_ChangeUnitSheet> {
   late String? _selectedId = widget.currentUnitId;
 
   @override
+  void initState() {
+    super.initState();
+    Future.microtask(
+      () => ref.read(updateApplicationNotifierProvider.notifier).reset(),
+    );
+  }
+
+  Future<void> _save(ApplicationUnit unit) async {
+    final ok = await _savePatch(
+      ref,
+      propertyId: widget.propertyId,
+      id: widget.id,
+      patch: {
+        'desired_unit_id': unit.id,
+        'rent_fee': widget.applicationRentFee ?? unit.rentFee,
+        'rent_fee_currency': unit.rentFeeCurrency,
+        'payment_frequency': unit.paymentFrequency,
+        'stay_duration_frequency': unit.paymentFrequency,
+      },
+    );
+    if (ok && mounted) widget.onClose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final options = ref.watch(
+      applicationUnitOptionsProvider(widget.propertyId),
+    );
+    final state = ref.watch(updateApplicationNotifierProvider);
+    final pending = state.status.isLoading();
+    final units = [
+      for (final u in options.valueOrNull ?? const <UnitModel>[])
+        ApplicationUnit.fromModel(u),
+    ];
     final changed = _selectedId != null && _selectedId != widget.currentUnitId;
-    final selected = widget.units
-        .where((u) => u.id == _selectedId)
-        .cast<ApplicationUnit?>()
-        .firstOrNull;
+    final selected = units.where((u) => u.id == _selectedId).firstOrNull;
 
     return _Sheet(
       title: widget.currentUnitId == null ? 'Assign unit' : 'Change unit',
-      desc: 'Select the unit for this lease application.',
+      desc: 'Select the unit for this tenant.',
       onDismiss: widget.onClose,
       footer: _saveCancel(
         onCancel: widget.onClose,
-        // Saving the unit already selected would be a no-op, so it stays off
-        // until the choice actually differs — matching the web.
-        onSave: changed && selected != null
-            ? () => widget.onClose(selected)
+        saveLabel: pending ? 'Saving…' : 'Save',
+        onSave: changed && selected != null && !pending
+            ? () => _save(selected)
             : null,
       ),
-      child: widget.units.isEmpty
-          ? const Padding(
-              padding: EdgeInsets.symmetric(vertical: 28),
-              child: Text(
-                'No units available for this property.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: RLTokens.fontSans,
-                  fontSize: 13.5,
-                  color: RLTokens.muted,
-                ),
-              ),
-            )
-          : Column(
-              children: [
-                for (final unit in widget.units)
-                  _UnitOption(
-                    unit: unit,
-                    selected: _selectedId == unit.id,
-                    isCurrent: widget.currentUnitId == unit.id,
-                    onTap: () {
-                      Haptics.vibrate(HapticsType.selection);
-                      setState(() => _selectedId = unit.id);
-                    },
+      child: options.when(
+        loading: () => const _UnitOptionsSkeleton(),
+        error: (_, __) => RLSectionError(
+          title: "Couldn't load units",
+          compact: true,
+          onRetry: () =>
+              ref.invalidate(applicationUnitOptionsProvider(widget.propertyId)),
+        ),
+        data: (_) => units.isEmpty
+            ? const Padding(
+                padding: EdgeInsets.symmetric(vertical: 28),
+                child: Text(
+                  'No units available for this property.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: RLTokens.fontSans,
+                    fontSize: 13.5,
+                    color: RLTokens.muted,
                   ),
-              ],
-            ),
+                ),
+              )
+            : Column(
+                children: [
+                  for (final unit in units)
+                    _UnitOption(
+                      unit: unit,
+                      selected: _selectedId == unit.id,
+                      isCurrent: widget.currentUnitId == unit.id,
+                      onTap: () {
+                        Haptics.vibrate(HapticsType.selection);
+                        setState(() => _selectedId = unit.id);
+                      },
+                    ),
+                  _saveError(state),
+                ],
+              ),
+      ),
+    );
+  }
+}
+
+class _UnitOptionsSkeleton extends StatelessWidget {
+  const _UnitOptionsSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    Widget block() => Container(
+      height: 68,
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(RLTokens.rMd),
+      ),
+    );
+    return Shimmer.fromColors(
+      baseColor: Colors.grey.shade200,
+      highlightColor: Colors.grey.shade50,
+      child: Column(children: [block(), block(), block()]),
     );
   }
 }
@@ -1600,7 +1932,7 @@ class _UnitOption extends StatelessWidget {
   Widget build(BuildContext context) {
     // An occupied or under-maintenance unit can't be taken — unless it is the
     // one already on this application, which must stay selectable.
-    final selectable = unit.isAvailable || isCurrent;
+    final selectable = unit.isBookable || isCurrent;
     final statusLabel = propertyStatusLabel(unit.status);
 
     return Opacity(
@@ -2048,7 +2380,7 @@ class _WhatsNextSheet extends StatelessWidget {
       (Icons.account_balance_wallet_outlined, 'Add a charge to this lease'),
       (Icons.checklist_rounded, 'Create a move-in inspection checklist'),
       (Icons.person_outline_rounded, 'Visit tenant profile'),
-      (Icons.add_rounded, 'Create another rental application'),
+      (Icons.add_rounded, 'Add another tenant'),
     ];
 
     final bottom = MediaQuery.of(context).padding.bottom;

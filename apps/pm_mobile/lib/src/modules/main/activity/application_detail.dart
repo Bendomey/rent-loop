@@ -1,202 +1,236 @@
-// Application Info — hub screen.
+// Tenant setup — hub screen.
 //
-// Redesign of the old single long scroll: the hub carries the hero and the
-// "Complete application info" checklist, and each checklist row opens its own
-// section page (see application_detail_pages.dart). Progress is derived from
-// the data rather than stored, so editing a section moves the bar.
+// The hub carries the hero and the "Complete tenant setup" checklist, and each
+// checklist row opens its own section page (see application_detail_pages.dart).
+// Progress is derived from the fetched application rather than stored, so
+// editing a section moves the bar.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:rentloop_manager/src/lib/application_checklist.dart';
+import 'package:rentloop_manager/src/lib/application_utils.dart';
 import 'package:rentloop_manager/src/lib/money.dart';
-import 'package:rentloop_manager/src/repository/models/tenant_application_model.dart';
 import 'package:rentloop_manager/src/lib/unit_status.dart';
 import 'package:rentloop_manager/src/modules/main/activity/application_data.dart';
 import 'package:rentloop_manager/src/modules/main/activity/application_detail_pages.dart';
 import 'package:rentloop_manager/src/modules/main/activity/application_edit_sheets.dart';
+import 'package:rentloop_manager/src/modules/main/activity/cancel_application_sheet.dart';
+import 'package:rentloop_manager/src/repository/models/tenant_application_model.dart';
+import 'package:rentloop_manager/src/repository/providers/activity/application_detail_provider.dart';
+import 'package:rentloop_manager/src/repository/providers/properties/my_property_roles_provider.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
+import 'package:shimmer/shimmer.dart';
 
-class ApplicationDetailScreen extends StatefulWidget {
+class ApplicationDetailScreen extends ConsumerStatefulWidget {
   const ApplicationDetailScreen({
     super.key,
     required this.id,
+    this.propertyId,
     this.application,
   });
 
   final String id;
+  final String? propertyId;
 
-  /// The row the applications list was showing when it was tapped. This screen
-  /// is otherwise still seed-backed (there is no detail fetch yet), so without
-  /// this a real application id would fall through to the first fixture and
-  /// every card would open the same record.
+  /// Shown while the fetch runs; the fetched application always replaces it.
   final TenantApplicationModel? application;
 
   @override
-  State<ApplicationDetailScreen> createState() =>
+  ConsumerState<ApplicationDetailScreen> createState() =>
       _ApplicationDetailScreenState();
 }
 
-class _ApplicationDetailScreenState extends State<ApplicationDetailScreen> {
-  late ApplicationDetailData _d = widget.application != null
-      ? ApplicationDetailData.fromApplicationModel(widget.application!)
-      : ApplicationDetailData.forId(widget.id);
+class _ApplicationDetailScreenState
+    extends ConsumerState<ApplicationDetailScreen> {
+  ApplicationDetailData? _local;
 
-  void _update(ApplicationDetailData next) => setState(() => _d = next);
+  String? get _propertyId =>
+      widget.propertyId ?? widget.application?.propertyId;
 
-  Future<void> _openSection(String key) async {
+  void _update(ApplicationDetailData next) => setState(() => _local = next);
+
+  Future<void> _refresh(String propertyId) async {
+    try {
+      final provider = applicationDetailProvider(propertyId, widget.id);
+      ref.invalidate(provider);
+      ref.invalidate(myPropertyRolesProvider);
+      await ref.read(provider.future);
+    } catch (_) {
+      // The error state renders from the provider itself.
+    }
+  }
+
+  Future<void> _openSection(ApplicationDetailData d, String key) async {
+    final propertyId = _propertyId;
+    if (propertyId == null) return;
     await Haptics.vibrate(HapticsType.selection);
     if (!mounted) return;
 
     Widget page(ApplicationDetailData d) => switch (key) {
-      'unit' => ApplicationUnitPage(data: d, onChanged: _update),
-      'tenant' => ApplicationTenantPage(data: d, onChanged: _update),
-      'movein' => ApplicationMoveInPage(data: d, onChanged: _update),
-      'financial' => ApplicationFinancialPage(data: d, onChanged: _update),
-      'docs' => ApplicationDocsPage(data: d, onChanged: _update),
-      _ => ApplicationTenantPage(data: d, onChanged: _update),
+      'unit' => ApplicationUnitPage(data: d, propertyId: propertyId),
+      'movein' => ApplicationMoveInPage(data: d, propertyId: propertyId),
+      'financial' => ApplicationFinancialPage(
+        data: d,
+        onChanged: _update,
+        readOnly: true,
+        propertyId: propertyId,
+      ),
+      'docs' => ApplicationDocsPage(
+        data: d,
+        onChanged: _update,
+        readOnly: true,
+        propertyId: propertyId,
+      ),
+      _ => ApplicationTenantPage(data: d, propertyId: propertyId),
     };
 
     await Navigator.of(
       context,
-    ).push(MaterialPageRoute(builder: (_) => page(_d)));
+    ).push(MaterialPageRoute(builder: (_) => page(d)));
   }
 
-  Future<void> _approve() async {
-    if (!_d.canApprove) {
-      await Haptics.vibrate(HapticsType.warning);
-      if (!mounted) return;
-      final pending = _d.checklist
-          .where((s) => s.items.isNotEmpty && !s.complete)
-          .map((s) => s.label.toLowerCase())
-          .join(', ');
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Still to complete: $pending')));
-      return;
-    }
-
-    await Haptics.vibrate(HapticsType.medium);
+  Future<void> _cancel(String propertyId) async {
+    await Haptics.vibrate(HapticsType.selection);
     if (!mounted) return;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: RLTokens.surface,
-        title: const Text(
-          'Approve application?',
-          style: TextStyle(
-            fontFamily: RLTokens.fontSerif,
-            fontSize: 20,
-            color: RLTokens.ink,
-          ),
-        ),
-        content: Text(
-          'This creates a lease for ${_d.applicant.fullName}. The application '
-          'can no longer be edited afterwards.',
-          style: const TextStyle(
-            fontFamily: RLTokens.fontSans,
-            fontSize: 14,
-            color: RLTokens.muted,
-            height: 1.5,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(
-                fontFamily: RLTokens.fontSans,
-                color: RLTokens.muted,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text(
-              'Approve',
-              style: TextStyle(
-                fontFamily: RLTokens.fontSans,
-                fontWeight: RLTokens.semibold,
-                color: RLTokens.crimson,
-              ),
-            ),
-          ),
-        ],
-      ),
+    final cancelled = await showCancelApplicationSheet(
+      context,
+      propertyId: propertyId,
+      id: widget.id,
     );
-
-    if (confirmed != true || !mounted) return;
-    setState(() => _d = _d.copyWith(approved: true));
-    await showWhatsNextSheet(context, _d.applicant.fullName);
+    if (cancelled && mounted) Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
+    final propertyId = _propertyId;
+    final async = propertyId == null
+        ? null
+        : ref.watch(applicationDetailProvider(propertyId, widget.id));
+    if (propertyId != null) {
+      ref.listen(applicationDetailProvider(propertyId, widget.id), (_, next) {
+        if (next.hasValue && _local != null) setState(() => _local = null);
+      });
+    }
+
+    final model = async?.valueOrNull ?? widget.application;
+    final roles = ref.watch(myPropertyRolesProvider).valueOrNull;
+    final editable = model != null && canEditApplication(model, roles);
+    final d =
+        _local ??
+        (model == null
+            ? null
+            : ApplicationDetailData.fromApplicationModel(model));
+    final settled = model?.financialAccount?.totalSettled ?? 0;
+
+    final showError = d == null && (propertyId == null || async!.hasError);
+
     return Scaffold(
       backgroundColor: RLTokens.surface,
       body: Column(
         children: [
           RLBackHeader(
-            title: '#${_d.code}',
+            title: d == null ? 'Tenant setup' : '#${d.code}',
             onBack: () async {
               await Haptics.vibrate(HapticsType.selection);
               if (context.mounted) Navigator.of(context).pop();
             },
-            trailing: GestureDetector(
-              onTap: () async {
-                await Haptics.vibrate(HapticsType.selection);
-                if (context.mounted) await showAddDocumentSheet(context);
-              },
-              child: const Padding(
-                padding: EdgeInsets.all(10),
-                child: Icon(Icons.more_horiz, size: 22, color: RLTokens.ink),
-              ),
-            ),
           ),
           Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(
-                RLTokens.gutter,
-                4,
-                RLTokens.gutter,
-                24,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (_d.approved) ...[
-                    const SizedBox(height: 8),
-                    const _LeaseCreatedBanner(),
-                  ],
-                  const SizedBox(height: 8),
-                  _HeroCard(data: _d),
-                  if (_d.approved && _d.desiredUnit != null) ...[
-                    const SizedBox(height: 10),
-                    _UnitCard(unit: _d.desiredUnit!, data: _d),
-                  ],
-                  const SizedBox(height: 8),
-                  _ChecklistCard(data: _d, onOpen: _openSection),
-                  const SizedBox(height: 8),
-                ],
-              ),
+            child: showError
+                ? Padding(
+                    padding: const EdgeInsets.all(RLTokens.gutter),
+                    child: RLSectionError(
+                      title: "Couldn't load this tenant setup",
+                      onRetry: propertyId == null
+                          ? null
+                          : () => ref.invalidate(
+                              applicationDetailProvider(propertyId, widget.id),
+                            ),
+                    ),
+                  )
+                : d == null
+                ? const _DetailSkeleton()
+                : RefreshIndicator(
+                    onRefresh: () => _refresh(propertyId!),
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(
+                        RLTokens.gutter,
+                        4,
+                        RLTokens.gutter,
+                        24,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (d.approved) ...[
+                            const SizedBox(height: 8),
+                            const _LeaseCreatedBanner(),
+                          ],
+                          const SizedBox(height: 8),
+                          _HeroCard(data: d),
+                          if (d.approved && d.desiredUnit != null) ...[
+                            const SizedBox(height: 10),
+                            _UnitCard(unit: d.desiredUnit!, data: d),
+                          ],
+                          const SizedBox(height: 8),
+                          _ChecklistCard(
+                            data: d,
+                            onOpen: (key) => _openSection(d, key),
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+                      ),
+                    ),
+                  ),
+          ),
+          if (d != null && (editable || d.approved))
+            _ActionBar(
+              approved: d.approved,
+              onCancel: settled > 0 ? null : () => _cancel(propertyId!),
+              cancelBlocked: settled > 0,
+              onWhatsNext: () async {
+                await Haptics.vibrate(HapticsType.selection);
+                if (context.mounted) {
+                  await showWhatsNextSheet(context, d.applicant.fullName);
+                }
+              },
             ),
-          ),
-          _ActionBar(
-            approved: _d.approved,
-            onApprove: _approve,
-            onCancel: () async {
-              await Haptics.vibrate(HapticsType.selection);
-              if (context.mounted) Navigator.of(context).pop();
-            },
-            onWhatsNext: () async {
-              await Haptics.vibrate(HapticsType.selection);
-              if (context.mounted) {
-                await showWhatsNextSheet(context, _d.applicant.fullName);
-              }
-            },
-          ),
         ],
+      ),
+    );
+  }
+}
+
+class _DetailSkeleton extends StatelessWidget {
+  const _DetailSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    Widget block(double height) => Container(
+      height: height,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(RLTokens.rLg),
+      ),
+    );
+
+    return Shimmer.fromColors(
+      key: const ValueKey('application-detail-skeleton'),
+      baseColor: Colors.grey.shade200,
+      highlightColor: Colors.grey.shade50,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          RLTokens.gutter,
+          12,
+          RLTokens.gutter,
+          0,
+        ),
+        child: Column(
+          children: [block(110), const SizedBox(height: 14), block(300)],
+        ),
       ),
     );
   }
@@ -236,7 +270,7 @@ class _LeaseCreatedBanner extends StatelessWidget {
                 ),
                 const SizedBox(height: 3),
                 const Text(
-                  'This application is approved and can no longer be edited '
+                  'This tenant setup is approved and can no longer be edited '
                   'here. Head to the tenants page to make changes.',
                   style: TextStyle(
                     fontFamily: RLTokens.fontSans,
@@ -279,15 +313,15 @@ class _HeroCard extends StatelessWidget {
               ),
               const Spacer(),
               RLPill(
-                data.displayStatus,
+                data.approved ? 'Moved in' : data.displayStatus,
                 tone: data.approved ? RLTone.success : statusTone(data.status),
                 large: true,
               ),
             ],
           ),
           const SizedBox(height: 10),
-          const Text(
-            'Application Info',
+          Text(
+            'Tenant setup #${data.code}',
             style: TextStyle(
               fontFamily: RLTokens.fontSerif,
               fontSize: 21,
@@ -381,14 +415,14 @@ class _ChecklistCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sections = data.checklist;
+    final sections = data.checklist.steps;
     return RLCard(
       padding: const EdgeInsets.all(18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Complete application info',
+            'Complete tenant setup',
             style: TextStyle(
               fontFamily: RLTokens.fontSerif,
               fontSize: 19,
@@ -398,7 +432,7 @@ class _ChecklistCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           const Text(
-            'Fill out the lease application — tap a step to open it.',
+            'Fill in the tenant\'s details — tap a step to open it.',
             style: TextStyle(
               fontFamily: RLTokens.fontSans,
               fontSize: 12.5,
@@ -425,9 +459,9 @@ class _ChecklistCard extends StatelessWidget {
           const SizedBox(height: 12),
           for (var i = 0; i < sections.length; i++)
             _ChecklistRow(
-              section: sections[i],
+              step: sections[i],
               first: i == 0,
-              onTap: () => onOpen(sections[i].key),
+              onTap: () => onOpen(sections[i].section.key),
             ),
         ],
       ),
@@ -437,19 +471,19 @@ class _ChecklistCard extends StatelessWidget {
 
 class _ChecklistRow extends StatelessWidget {
   const _ChecklistRow({
-    required this.section,
+    required this.step,
     required this.first,
     required this.onTap,
   });
 
-  final ApplicationChecklistSection section;
+  final ChecklistStep step;
   final bool first;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final done = section.complete;
-    final hasItems = section.items.isNotEmpty;
+    final done = step.isSatisfied;
+    final hasItems = step.hasItems;
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -484,7 +518,7 @@ class _ChecklistRow extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                section.label,
+                step.section.label,
                 style: const TextStyle(
                   fontFamily: RLTokens.fontSans,
                   fontSize: 15,
@@ -495,7 +529,7 @@ class _ChecklistRow extends StatelessWidget {
             ),
             if (hasItems) ...[
               _CountBadge(
-                text: '${section.doneCount}/${section.items.length}',
+                text: '${step.doneItems}/${step.totalItems}',
                 done: done,
               ),
               const SizedBox(width: 8),
@@ -544,14 +578,14 @@ class _CountBadge extends StatelessWidget {
 class _ActionBar extends StatelessWidget {
   const _ActionBar({
     required this.approved,
-    required this.onApprove,
     required this.onCancel,
+    required this.cancelBlocked,
     required this.onWhatsNext,
   });
 
   final bool approved;
-  final VoidCallback onApprove;
-  final VoidCallback onCancel;
+  final VoidCallback? onCancel;
+  final bool cancelBlocked;
   final VoidCallback onWhatsNext;
 
   @override
@@ -576,23 +610,28 @@ class _ActionBar extends StatelessWidget {
               full: true,
               onPressed: onWhatsNext,
             )
-          : Row(
+          : Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 RLBtn(
-                  label: 'Cancel',
-                  kind: RLBtnKind.light,
+                  label: 'Cancel tenant setup',
+                  kind: RLBtnKind.danger,
+                  full: true,
                   onPressed: onCancel,
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: RLBtn(
-                    label: 'Approve',
-                    kind: RLBtnKind.primary,
-                    icon: Icons.check_rounded,
-                    full: true,
-                    onPressed: onApprove,
+                if (cancelBlocked)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 8),
+                    child: Text(
+                      'Payments were recorded — refund them first',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: RLTokens.fontSans,
+                        fontSize: 12.5,
+                        color: RLTokens.muted,
+                      ),
+                    ),
                   ),
-                ),
               ],
             ),
     );

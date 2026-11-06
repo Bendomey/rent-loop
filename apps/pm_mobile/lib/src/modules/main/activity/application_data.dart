@@ -281,6 +281,7 @@ class ApplicationFinancial {
     this.customPeriods = 1,
     this.invoiceGenerated = false,
     this.invoicePaid = false,
+    this.hasFinancialAccount = false,
     this.unitDefaultRentFee,
   });
 
@@ -295,6 +296,7 @@ class ApplicationFinancial {
   final int customPeriods;
   final bool invoiceGenerated;
   final bool invoicePaid;
+  final bool hasFinancialAccount;
 
   /// Pesewas — the unit's own rent, shown as "Unit default" on the web form.
   final int? unitDefaultRentFee;
@@ -319,6 +321,7 @@ class ApplicationFinancial {
     int? customPeriods,
     bool? invoiceGenerated,
     bool? invoicePaid,
+    bool? hasFinancialAccount,
   }) {
     return ApplicationFinancial(
       rentFee: rentFee != null ? rentFee() : this.rentFee,
@@ -334,6 +337,7 @@ class ApplicationFinancial {
       customPeriods: customPeriods ?? this.customPeriods,
       invoiceGenerated: invoiceGenerated ?? this.invoiceGenerated,
       invoicePaid: invoicePaid ?? this.invoicePaid,
+      hasFinancialAccount: hasFinancialAccount ?? this.hasFinancialAccount,
       unitDefaultRentFee: unitDefaultRentFee,
     );
   }
@@ -396,8 +400,20 @@ class ApplicationUnit {
     required this.status,
     this.rentFee,
     this.paymentFrequency,
+    this.rentFeeCurrency,
     this.imageUrl,
   });
+
+  factory ApplicationUnit.fromModel(UnitModel u) => ApplicationUnit(
+    id: u.id,
+    name: u.name,
+    type: u.type,
+    status: u.status,
+    rentFee: u.rentFee,
+    paymentFrequency: u.paymentFrequency,
+    rentFeeCurrency: u.rentFeeCurrency,
+    imageUrl: u.images?.firstOrNull,
+  );
 
   final String id;
   final String name;
@@ -413,9 +429,13 @@ class ApplicationUnit {
   /// Market rent in pesewas.
   final int? rentFee;
   final String? paymentFrequency;
+  final String? rentFeeCurrency;
   final String? imageUrl;
 
   bool get isAvailable => status == 'Unit.Status.Available';
+  bool get isOccupied => status == 'Unit.Status.Occupied';
+  bool get isBookable =>
+      isAvailable || status == 'Unit.Status.PartiallyOccupied';
 }
 
 // ── Root ─────────────────────────────────────────────────────────────────────
@@ -598,6 +618,9 @@ class ApplicationDetailData {
       rentFee: financial.rentFee,
       paymentFrequency: financial.paymentFrequency,
       securityDepositFee: financial.securityDepositFee,
+      financialAccount: financial.hasFinancialAccount
+          ? FinancialAccountSummaryModel(id: 'seed-account')
+          : null,
       applicationPaymentInvoice: financial.invoiceGenerated
           ? InvoiceRef(
               id: 'seed-invoice',
@@ -623,29 +646,15 @@ class ApplicationDetailData {
     );
   }
 
-  // Per-section accessors, kept so the type's API is unchanged. Each is a
-  // one-line delegate to the shared lib.
-  ApplicationChecklistSection get unitSection =>
-      getUnitSection(toApplicationModel());
+  ApplicationChecklist get checklist =>
+      computeApplicationChecklist(toApplicationModel());
 
-  ApplicationChecklistSection get tenantSection =>
-      getTenantDetailsSection(toApplicationModel());
+  ChecklistStep stepFor(ChecklistSection section) => checklist.step(section);
 
-  ApplicationChecklistSection get moveInSection =>
-      getMoveInSection(toApplicationModel());
+  /// Percentage (0-100) of steps done or locked.
+  double get progress => checklist.progress * 100;
 
-  ApplicationChecklistSection get financialSection =>
-      getFinancialSection(toApplicationModel());
-
-  ApplicationChecklistSection get docsSection =>
-      getDocsSection(toApplicationModel());
-
-  List<ApplicationChecklistSection> get checklist =>
-      buildApplicationChecklist(toApplicationModel());
-
-  double get progress => applicationProgress(toApplicationModel());
-
-  bool get canApprove => canApproveApplication(toApplicationModel());
+  bool get canApprove => checklist.canApprove;
 
   /// Builds the screen's view model from a real API row — the inverse of
   /// [toApplicationModel]. Used when the applications list pushes the row it
@@ -722,6 +731,8 @@ class ApplicationDetailData {
         idType: a.idType,
         idNumber: a.idNumber,
         currentAddress: a.currentAddress,
+        idFrontUrl: a.idFrontUrl,
+        idBackUrl: a.idBackUrl,
       ),
       background: ApplicationBackground(
         emergencyContactName: a.emergencyContactName,
@@ -731,6 +742,7 @@ class ApplicationDetailData {
         occupation: a.occupation,
         employer: a.employer,
         occupationAddress: a.occupationAddress,
+        proofOfIncomeUrl: a.proofOfIncomeUrl,
       ),
       moveIn: ApplicationMoveIn(
         desiredMoveInDate: a.desiredMoveInDate,
@@ -744,6 +756,7 @@ class ApplicationDetailData {
         securityDepositEnabled: a.securityDepositFee != null,
         invoiceGenerated: invoice != null,
         invoicePaid: invoice?.isPaid ?? false,
+        hasFinancialAccount: a.financialAccount != null,
       ),
       doc: ApplicationDoc(
         mode: a.leaseAgreementDocumentMode,
@@ -758,15 +771,12 @@ class ApplicationDetailData {
               status: a.desiredUnit!.status,
               rentFee: a.desiredUnit!.rentFee,
               paymentFrequency: a.desiredUnit!.paymentFrequency,
+              rentFeeCurrency: a.desiredUnit!.rentFeeCurrency,
+              imageUrl: a.desiredUnit!.images?.firstOrNull,
             ),
       approved: a.status == 'TenantApplication.Status.Completed',
     );
   }
-
-  // ── Seed lookup ───────────────────────────────────────────────────────────
-
-  static ApplicationDetailData forId(String id) =>
-      _seed.firstWhere((a) => a.id == id, orElse: () => _seed.first);
 }
 
 // ── Seeded units available to pick from ──────────────────────────────────────
@@ -813,167 +823,5 @@ const kApplicationSeedUnits = <ApplicationUnit>[
     status: 'Unit.Status.Maintenance',
     rentFee: 600000,
     paymentFrequency: 'MONTHLY',
-  ),
-];
-
-// ── Seeded applications (ids mirror the activity board) ──────────────────────
-
-ApplicationDoc _leaseDoc(String code) => ApplicationDoc(
-  name: '$code - Lease Agreement',
-  source: 'Selected from library',
-  status: 'Ready for Signing',
-  mode: 'ONLINE',
-  signers: const [
-    ApplicationSigner(
-      role: 'PROPERTY_MANAGER',
-      label: 'Property Manager',
-      signed: false,
-      isSelf: true,
-    ),
-    ApplicationSigner(
-      role: 'TENANT',
-      label: 'Tenant',
-      signed: false,
-      isSelf: false,
-    ),
-    ApplicationSigner(
-      role: 'PM_WITNESS',
-      label: 'Property Manager Witness',
-      signed: false,
-      isSelf: false,
-    ),
-    ApplicationSigner(
-      role: 'TENANT_WITNESS',
-      label: 'Tenant Witness',
-      signed: false,
-      isSelf: false,
-    ),
-  ],
-);
-
-final List<ApplicationDetailData> _seed = [
-  ApplicationDetailData(
-    id: 'a1',
-    code: '2607QUOWF0',
-    status: 'In Progress',
-    submittedOn: 'Fri, 10 Jul 2026 · 11:34',
-    submittedBy: 'Benjamin Domey',
-    applicant: ApplicationApplicant(
-      firstName: 'Ebenezer',
-      lastName: 'Adu',
-      gender: 'MALE',
-      maritalStatus: 'SINGLE',
-      email: 'gideonbempong533@gmail.com',
-      phone: '+233 27 709 9220',
-      dateOfBirth: DateTime(1998, 3, 4),
-    ),
-    identity: const ApplicationIdentity(
-      nationality: 'Ghanaian',
-      idType: 'NATIONAL_ID',
-      idNumber: 'GHA-14564-464',
-    ),
-    background: const ApplicationBackground(
-      employerType: 'WORKER',
-      occupation: 'Accountant',
-    ),
-    moveIn: const ApplicationMoveIn(
-      stayDurationFrequency: 'MONTHLY',
-      stayDuration: 12,
-    ),
-    financial: const ApplicationFinancial(
-      rentFee: 50000,
-      paymentFrequency: 'MONTHLY',
-      unitDefaultRentFee: 50000,
-    ),
-    doc: _leaseDoc('2607QUOWF0'),
-    desiredUnit: kApplicationSeedUnits[0],
-  ),
-  ApplicationDetailData(
-    id: 'a2',
-    code: '2607DNLOF2',
-    status: 'In Progress',
-    submittedOn: 'Wed, 8 Jul 2026 · 09:12',
-    submittedBy: 'Benjamin Domey',
-    applicant: ApplicationApplicant(
-      firstName: 'Daniel',
-      lastName: 'Ofori',
-      gender: 'MALE',
-      maritalStatus: 'MARRIED',
-      email: 'daniel.ofori@example.com',
-      phone: '+233 24 330 7781',
-      dateOfBirth: DateTime(1991, 11, 19),
-    ),
-    identity: const ApplicationIdentity(
-      nationality: 'Ghanaian',
-      idType: 'GHANA_CARD',
-      idNumber: 'GHA-72210-118',
-      currentAddress: '14 Spintex Road, Accra',
-    ),
-    background: const ApplicationBackground(
-      emergencyContactName: 'Akosua Ofori',
-      relationshipToEmergencyContact: 'Spouse',
-      emergencyContactPhone: '+233 24 118 9930',
-      employerType: 'WORKER',
-      occupation: 'Logistics Manager',
-      employer: 'Bollore Transport',
-      occupationAddress: 'Tema Industrial Area, Tema',
-    ),
-    moveIn: ApplicationMoveIn(
-      desiredMoveInDate: DateTime(2026, 8, 1),
-      stayDurationFrequency: 'MONTHLY',
-      stayDuration: 12,
-    ),
-    financial: const ApplicationFinancial(
-      rentFee: 350000,
-      paymentFrequency: 'MONTHLY',
-      securityDepositEnabled: true,
-      securityDepositFee: 350000,
-      unitDefaultRentFee: 350000,
-      invoiceGenerated: true,
-    ),
-    doc: _leaseDoc('2607DNLOF2'),
-    desiredUnit: kApplicationSeedUnits[2],
-  ),
-  ApplicationDetailData(
-    id: 'a3',
-    code: '2607NAADJ3',
-    status: 'In Progress',
-    submittedOn: 'Tue, 7 Jul 2026 · 16:48',
-    submittedBy: 'Benjamin Domey',
-    applicant: ApplicationApplicant(
-      firstName: 'Naa',
-      lastName: 'Adjeley',
-      gender: 'FEMALE',
-      email: 'naa.adjeley@example.com',
-      phone: '+233 20 555 9921',
-    ),
-    identity: const ApplicationIdentity(nationality: 'Ghanaian'),
-    background: const ApplicationBackground(),
-    moveIn: const ApplicationMoveIn(stayDurationFrequency: 'MONTHLY'),
-    financial: const ApplicationFinancial(
-      rentFee: 600000,
-      paymentFrequency: 'MONTHLY',
-      unitDefaultRentFee: 600000,
-    ),
-    doc: const ApplicationDoc(),
-    desiredUnit: kApplicationSeedUnits[4],
-  ),
-  ApplicationDetailData(
-    id: 'a4',
-    code: '2607SLRKD4',
-    status: 'New',
-    submittedOn: 'Mon, 6 Jul 2026 · 08:05',
-    submittedBy: 'Benjamin Domey',
-    applicant: ApplicationApplicant(
-      firstName: 'Selorm',
-      lastName: 'Kudjo',
-      email: 'selorm.kudjo@example.com',
-      phone: '+233 55 712 0034',
-    ),
-    identity: const ApplicationIdentity(),
-    background: const ApplicationBackground(),
-    moveIn: const ApplicationMoveIn(),
-    financial: const ApplicationFinancial(unitDefaultRentFee: 350000),
-    doc: const ApplicationDoc(),
   ),
 ];

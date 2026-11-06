@@ -71,6 +71,40 @@ class ApplicationDocumentSignatureModel {
       _$ApplicationDocumentSignatureModelToJson(this);
 }
 
+@JsonSerializable()
+class FinancialAccountSummaryModel {
+  final String? id;
+  final String? currency;
+  @JsonKey(name: 'total_charged')
+  final int? totalCharged;
+  @JsonKey(name: 'total_settled')
+  final int? totalSettled;
+  @JsonKey(name: 'outstanding_amount')
+  final int? outstandingAmount;
+  @JsonKey(name: 'charge_count')
+  final int? chargeCount;
+  @JsonKey(name: 'invoice_count')
+  final int? invoiceCount;
+  @JsonKey(name: 'rent_terms_locked')
+  final bool? rentTermsLocked;
+
+  FinancialAccountSummaryModel({
+    this.id,
+    this.currency,
+    this.totalCharged,
+    this.totalSettled,
+    this.outstandingAmount,
+    this.chargeCount,
+    this.invoiceCount,
+    this.rentTermsLocked,
+  });
+
+  factory FinancialAccountSummaryModel.fromJson(Map<String, dynamic> json) =>
+      _$FinancialAccountSummaryModelFromJson(json);
+
+  Map<String, dynamic> toJson() => _$FinancialAccountSummaryModelToJson(this);
+}
+
 /// A tenant (lease) application. Used two ways, both fed by the same
 /// `DBAdminTenantApplicationToRest` transform: nested on a lease (where only
 /// the financial-terms fields are populated) and as a row of the applications
@@ -102,6 +136,12 @@ class TenantApplicationModel {
   final String? profilePhotoUrl;
 
   // Identity
+  @JsonKey(name: 'id_front_url')
+  final String? idFrontUrl;
+  @JsonKey(name: 'id_back_url')
+  final String? idBackUrl;
+  @JsonKey(name: 'proof_of_income_url')
+  final String? proofOfIncomeUrl;
   @JsonKey(name: 'id_type')
   final String? idType;
   @JsonKey(name: 'id_number')
@@ -128,6 +168,8 @@ class TenantApplicationModel {
   final String? desiredUnitId;
   @JsonKey(name: 'desired_unit')
   final UnitModel? desiredUnit;
+  @JsonKey(name: 'property_id')
+  final String? apiPropertyId;
 
   // Move-in
   @JsonKey(name: 'desired_move_in_date')
@@ -166,6 +208,13 @@ class TenantApplicationModel {
   final List<ApplicationDocumentSignatureModel>?
   leaseAgreementDocumentSignatures;
 
+  @JsonKey(name: 'financial_account')
+  final FinancialAccountSummaryModel? financialAccount;
+
+  @JsonKey(name: 'cancelled_at')
+  final DateTime? cancelledAt;
+  @JsonKey(name: 'completed_at')
+  final DateTime? completedAt;
   @JsonKey(name: 'created_at')
   final DateTime? createdAt;
   @JsonKey(name: 'updated_at')
@@ -186,6 +235,9 @@ class TenantApplicationModel {
     this.nationality,
     this.maritalStatus,
     this.profilePhotoUrl,
+    this.idFrontUrl,
+    this.idBackUrl,
+    this.proofOfIncomeUrl,
     this.idType,
     this.idNumber,
     this.currentAddress,
@@ -198,6 +250,7 @@ class TenantApplicationModel {
     this.occupationAddress,
     this.desiredUnitId,
     this.desiredUnit,
+    this.apiPropertyId,
     this.desiredMoveInDate,
     this.stayDuration,
     this.stayDurationFrequency,
@@ -213,6 +266,9 @@ class TenantApplicationModel {
     this.leaseAgreementDocumentStatus,
     this.leaseAgreementDocument,
     this.leaseAgreementDocumentSignatures,
+    this.financialAccount,
+    this.cancelledAt,
+    this.completedAt,
     this.createdAt,
     this.updatedAt,
   });
@@ -222,9 +278,170 @@ class TenantApplicationModel {
 
   Map<String, dynamic> toJson() => _$TenantApplicationModelToJson(this);
 
+  String? get propertyId => apiPropertyId ?? desiredUnit?.propertyId;
+
   String get fullName => [
     firstName,
     otherNames,
     lastName,
   ].whereType<String>().where((s) => s.isNotEmpty).join(' ');
+}
+
+class CreateTenantApplicationInput {
+  CreateTenantApplicationInput({
+    required this.desiredUnitId,
+    required this.firstName,
+    required this.lastName,
+    required this.phone,
+    required this.gender,
+    this.otherNames,
+    this.email,
+    this.dateOfBirth,
+    this.nationality,
+    this.maritalStatus,
+    this.idType,
+    this.idNumber,
+    this.idFrontUrl,
+    this.idBackUrl,
+    this.currentAddress,
+    this.emergencyContactName,
+    this.emergencyContactPhone,
+    this.relationshipToEmergencyContact,
+    this.occupation,
+    this.employer,
+    this.employerType,
+    this.proofOfIncomeUrl,
+    this.occupationAddress,
+    this.profilePhotoUrl,
+  });
+
+  final String desiredUnitId;
+  final String firstName;
+  final String lastName;
+  final String phone;
+  final String gender;
+  final String? otherNames;
+  final String? email;
+  final DateTime? dateOfBirth;
+  final String? nationality;
+  final String? maritalStatus;
+  final String? idType;
+  final String? idNumber;
+  final String? idFrontUrl;
+  final String? idBackUrl;
+  final String? currentAddress;
+  final String? emergencyContactName;
+  final String? emergencyContactPhone;
+  final String? relationshipToEmergencyContact;
+  final String? occupation;
+  final String? employer;
+  final String? employerType;
+  final String? proofOfIncomeUrl;
+  final String? occupationAddress;
+  final String? profilePhotoUrl;
+
+  Map<String, dynamic> toJson() => {
+    'desired_unit_id': desiredUnitId,
+    'first_name': firstName,
+    'last_name': lastName,
+    'phone': phone,
+    'gender': gender,
+    if (otherNames != null) 'other_names': otherNames,
+    if (email != null) 'email': email,
+    if (dateOfBirth != null)
+      'date_of_birth': dateOfBirth!.toUtc().toIso8601String(),
+    if (nationality != null) 'nationality': nationality,
+    if (maritalStatus != null) 'marital_status': maritalStatus,
+    if (idType != null) 'id_type': idType,
+    if (idNumber != null) 'id_number': idNumber,
+    if (idFrontUrl != null) 'id_front_url': idFrontUrl,
+    if (idBackUrl != null) 'id_back_url': idBackUrl,
+    if (currentAddress != null) 'current_address': currentAddress,
+    if (emergencyContactName != null)
+      'emergency_contact_name': emergencyContactName,
+    if (emergencyContactPhone != null)
+      'emergency_contact_phone': emergencyContactPhone,
+    if (relationshipToEmergencyContact != null)
+      'relationship_to_emergency_contact': relationshipToEmergencyContact,
+    if (occupation != null) 'occupation': occupation,
+    if (employer != null) 'employer': employer,
+    if (employerType != null) 'employer_type': employerType,
+    if (proofOfIncomeUrl != null) 'proof_of_income_url': proofOfIncomeUrl,
+    if (occupationAddress != null) 'occupation_address': occupationAddress,
+    if (profilePhotoUrl != null) 'profile_photo_url': profilePhotoUrl,
+  };
+}
+
+@JsonSerializable()
+class TenantLookupModel {
+  final String? id;
+  @JsonKey(name: 'first_name')
+  final String? firstName;
+  @JsonKey(name: 'other_names')
+  final String? otherNames;
+  @JsonKey(name: 'last_name')
+  final String? lastName;
+  final String? email;
+  final String? phone;
+  final String? gender;
+  @JsonKey(name: 'date_of_birth')
+  final DateTime? dateOfBirth;
+  final String? nationality;
+  @JsonKey(name: 'marital_status')
+  final String? maritalStatus;
+  @JsonKey(name: 'id_type')
+  final String? idType;
+  @JsonKey(name: 'id_number')
+  final String? idNumber;
+  @JsonKey(name: 'id_front_url')
+  final String? idFrontUrl;
+  @JsonKey(name: 'id_back_url')
+  final String? idBackUrl;
+  @JsonKey(name: 'current_address')
+  final String? currentAddress;
+  @JsonKey(name: 'emergency_contact_name')
+  final String? emergencyContactName;
+  @JsonKey(name: 'emergency_contact_phone')
+  final String? emergencyContactPhone;
+  @JsonKey(name: 'relationship_to_emergency_contact')
+  final String? relationshipToEmergencyContact;
+  final String? occupation;
+  final String? employer;
+  @JsonKey(name: 'occupation_address')
+  final String? occupationAddress;
+  @JsonKey(name: 'proof_of_income_url')
+  final String? proofOfIncomeUrl;
+  @JsonKey(name: 'profile_photo_url')
+  final String? profilePhotoUrl;
+
+  TenantLookupModel({
+    this.id,
+    this.firstName,
+    this.otherNames,
+    this.lastName,
+    this.email,
+    this.phone,
+    this.gender,
+    this.dateOfBirth,
+    this.nationality,
+    this.maritalStatus,
+    this.idType,
+    this.idNumber,
+    this.idFrontUrl,
+    this.idBackUrl,
+    this.currentAddress,
+    this.emergencyContactName,
+    this.emergencyContactPhone,
+    this.relationshipToEmergencyContact,
+    this.occupation,
+    this.employer,
+    this.occupationAddress,
+    this.proofOfIncomeUrl,
+    this.profilePhotoUrl,
+  });
+
+  factory TenantLookupModel.fromJson(Map<String, dynamic> json) =>
+      _$TenantLookupModelFromJson(json);
+
+  Map<String, dynamic> toJson() => _$TenantLookupModelToJson(this);
 }

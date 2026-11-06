@@ -192,8 +192,12 @@ class LeaseHeroCard extends ConsumerWidget {
                     onTap: () async {
                       await Haptics.vibrate(HapticsType.selection);
                       if (context.mounted) {
+                        final propertyId =
+                            lease.tenantApplication?.propertyId ??
+                            unit?.propertyId;
                         context.push(
-                          '/activity/applications/${lease.tenantApplicationId}',
+                          '/activity/applications/${lease.tenantApplicationId}'
+                          '${propertyId == null ? '' : '?property_id=$propertyId'}',
                         );
                       }
                     },

@@ -6,12 +6,19 @@
 // Move In, Financial and Docs each get their own.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:rentloop_manager/src/lib/application_utils.dart';
 import 'package:rentloop_manager/src/lib/money.dart';
 import 'package:rentloop_manager/src/lib/property_status.dart';
 import 'package:rentloop_manager/src/lib/unit_status.dart';
 import 'package:rentloop_manager/src/modules/main/activity/application_data.dart';
 import 'package:rentloop_manager/src/modules/main/activity/application_edit_sheets.dart';
+import 'package:rentloop_manager/src/repository/models/tenant_application_model.dart';
+import 'package:rentloop_manager/src/repository/providers/activity/application_detail_provider.dart';
+import 'package:rentloop_manager/src/repository/providers/properties/my_property_roles_provider.dart';
+import 'package:rentloop_manager/src/repository/providers/properties/property_detail_provider.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
@@ -96,6 +103,36 @@ class _SectionScaffold extends StatelessWidget {
 }
 
 // ── Shared section building blocks ───────────────────────────────────────────
+
+bool _canEdit(WidgetRef ref, TenantApplicationModel? model) =>
+    model != null &&
+    canEditApplication(model, ref.watch(myPropertyRolesProvider).valueOrNull);
+
+class _FinishOnWebNotice extends ConsumerWidget {
+  const _FinishOnWebNotice({required this.propertyId, required this.id});
+  final String propertyId;
+  final String id;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final model = ref
+        .watch(applicationDetailProvider(propertyId, id))
+        .valueOrNull;
+    if (!_canEdit(ref, model)) return const SizedBox.shrink();
+    return const Padding(
+      padding: EdgeInsets.fromLTRB(2, 0, 2, 14),
+      child: Text(
+        'Finish this step on the web for now.',
+        style: TextStyle(
+          fontFamily: RLTokens.fontSans,
+          fontSize: 13.5,
+          color: RLTokens.muted,
+          height: 1.5,
+        ),
+      ),
+    );
+  }
+}
 
 /// Card with a serif heading and an optional Edit affordance.
 class AppSectionCard extends StatelessWidget {
@@ -324,9 +361,19 @@ class MonoLabel extends StatelessWidget {
   }
 }
 
-class _IdImagePlaceholder extends StatelessWidget {
-  const _IdImagePlaceholder({required this.label});
+class _IdImage extends StatelessWidget {
+  const _IdImage({required this.label, required this.url});
   final String label;
+  final String? url;
+
+  Widget _placeholder() => const Text(
+    'No image',
+    style: TextStyle(
+      fontFamily: RLTokens.fontSans,
+      fontSize: 11.5,
+      color: RLTokens.micro,
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -344,20 +391,22 @@ class _IdImagePlaceholder extends StatelessWidget {
         const SizedBox(height: 6),
         Container(
           height: 92,
+          clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
             color: RLTokens.fill,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: RLTokens.hairline),
           ),
           alignment: Alignment.center,
-          child: const Text(
-            'No image',
-            style: TextStyle(
-              fontFamily: RLTokens.fontSans,
-              fontSize: 11.5,
-              color: RLTokens.micro,
-            ),
-          ),
+          child: url == null
+              ? _placeholder()
+              : Image.network(
+                  url!,
+                  width: double.infinity,
+                  height: 92,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => _placeholder(),
+                ),
         ),
       ],
     );
@@ -366,87 +415,98 @@ class _IdImagePlaceholder extends StatelessWidget {
 
 // ── Unit Setup ───────────────────────────────────────────────────────────────
 
-class ApplicationUnitPage extends StatefulWidget {
+class ApplicationUnitPage extends ConsumerWidget {
   const ApplicationUnitPage({
     super.key,
     required this.data,
-    required this.onChanged,
+    required this.propertyId,
+    this.readOnly = false,
   });
 
   final ApplicationDetailData data;
-  final ValueChanged<ApplicationDetailData> onChanged;
+  final String propertyId;
+  final bool readOnly;
 
-  @override
-  State<ApplicationUnitPage> createState() => _ApplicationUnitPageState();
-}
+  Future<void> _pickUnit(BuildContext context, ApplicationDetailData d) =>
+      showChangeUnitSheet(
+        context,
+        propertyId: propertyId,
+        id: d.id,
+        currentUnitId: d.desiredUnit?.id,
+        applicationRentFee: d.financial.rentFee,
+      );
 
-class _ApplicationUnitPageState extends State<ApplicationUnitPage> {
-  late ApplicationDetailData _d = widget.data;
-
-  Future<void> _pickUnit() async {
-    final picked = await showChangeUnitSheet(
-      context,
-      units: kApplicationSeedUnits,
-      currentUnitId: _d.desiredUnit?.id,
-    );
-    if (picked == null) return;
-
-    // Picking a unit rewrites the rent and frequency the rest of the
-    // application is built on, so say so rather than silently changing them.
-    final next = _d.withUnit(picked);
-    setState(() => _d = next);
-    widget.onChanged(next);
-
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Unit set to ${picked.name}. Rent and payment frequency now follow '
-          'the unit.',
-        ),
-      ),
-    );
-  }
-
-  Future<void> _viewUnit() async {
+  Future<void> _viewUnit(BuildContext context, String unitId) async {
     await Haptics.vibrate(HapticsType.selection);
-    if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Unit details coming soon')));
+    if (!context.mounted) return;
+    await context.push('/properties/$propertyId/units/$unitId');
   }
 
   @override
-  Widget build(BuildContext context) {
-    final unit = _d.desiredUnit;
-    final locked = _d.isUnitChangeLocked;
-    final canChange = _d.canChangeUnit;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final model = ref
+        .watch(applicationDetailProvider(propertyId, data.id))
+        .valueOrNull;
+    final d = model == null
+        ? data
+        : ApplicationDetailData.fromApplicationModel(model);
+    final single =
+        ref.watch(propertyDetailProvider(propertyId)).valueOrNull?.type ==
+        'SINGLE';
+    final unit = d.desiredUnit;
+
+    final String? lockReason;
+    if (model?.financialAccount?.rentTermsLocked == true) {
+      lockReason =
+          "Rent has already been billed, so the unit can't be changed.";
+    } else if (const {
+      'SIGNED',
+      'SIGNING',
+    }.contains(model?.leaseAgreementDocumentStatus)) {
+      lockReason =
+          'The lease document has been signed, so the unit can no longer be '
+          'changed.';
+    } else {
+      lockReason = null;
+    }
+    final locked = readOnly || !_canEdit(ref, model);
+    final canChange = !locked && !single && lockReason == null;
 
     return _SectionScaffold(
       title: 'Unit Setup',
-      description: 'The unit this application is for.',
+      description: 'The unit this tenant is moving into.',
       children: [
         if (unit == null)
-          _NoUnitSelected(canAssign: canChange && !locked, onAssign: _pickUnit)
+          _NoUnitSelected(
+            canAssign: canChange,
+            onAssign: () => _pickUnit(context, d),
+          )
         else ...[
           _SelectedUnitCard(
             unit: unit,
-            onView: _viewUnit,
-            onChange: canChange && !locked ? _pickUnit : null,
+            onView: () => _viewUnit(context, unit.id),
+            onChange: canChange ? () => _pickUnit(context, d) : null,
             showChange: canChange,
           ),
-          if (canChange && locked && _d.unitChangeLockReason != null)
+          if (canChange && unit.isOccupied)
+            const Padding(
+              padding: EdgeInsets.only(top: 12),
+              child: _LockNotice(
+                reason: 'This unit is now occupied — choose another unit',
+              ),
+            ),
+          if (!locked && lockReason != null)
             Padding(
               padding: const EdgeInsets.only(top: 12),
-              child: _LockNotice(reason: _d.unitChangeLockReason!),
+              child: _LockNotice(reason: lockReason),
             ),
-          if (_d.isSingleUnitProperty)
+          if (single)
             const Padding(
               padding: EdgeInsets.only(top: 12),
               child: _LockNotice(
                 reason:
                     'This is a single-unit property, so there is no other '
-                    'unit to move the application to.',
+                    'unit to choose.',
               ),
             ),
         ],
@@ -675,7 +735,7 @@ class _NoUnitSelected extends StatelessWidget {
           const SizedBox(height: 6),
           const Text(
             'Assign a unit to set the rent and payment frequency for this '
-            'application.',
+            'tenant.',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: RLTokens.fontSans,
@@ -740,33 +800,36 @@ class _LockNotice extends StatelessWidget {
 
 // ── Tenant Details ───────────────────────────────────────────────────────────
 
-class ApplicationTenantPage extends StatefulWidget {
+class ApplicationTenantPage extends ConsumerWidget {
   const ApplicationTenantPage({
     super.key,
     required this.data,
-    required this.onChanged,
+    required this.propertyId,
+    this.readOnly = false,
   });
 
   final ApplicationDetailData data;
-  final ValueChanged<ApplicationDetailData> onChanged;
+  final String propertyId;
+  final bool readOnly;
 
   @override
-  State<ApplicationTenantPage> createState() => _ApplicationTenantPageState();
-}
-
-class _ApplicationTenantPageState extends State<ApplicationTenantPage> {
-  late ApplicationDetailData _d = widget.data;
-
-  void _apply(ApplicationDetailData next) {
-    setState(() => _d = next);
-    widget.onChanged(next);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final a = _d.applicant;
-    final id = _d.identity;
-    final b = _d.background;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final model = ref
+        .watch(applicationDetailProvider(propertyId, data.id))
+        .valueOrNull;
+    final d = model == null
+        ? data
+        : ApplicationDetailData.fromApplicationModel(model);
+    final a = d.applicant;
+    final id = d.identity;
+    final b = d.background;
+    final locked =
+        readOnly ||
+        !_canEdit(ref, model) ||
+        const {
+          'SIGNED',
+          'SIGNING',
+        }.contains(model?.leaseAgreementDocumentStatus);
 
     return _SectionScaffold(
       title: 'Tenant Details',
@@ -774,10 +837,14 @@ class _ApplicationTenantPageState extends State<ApplicationTenantPage> {
       children: [
         AppSectionCard(
           title: 'Basic Information',
-          onEdit: () async {
-            final updated = await showBasicInfoSheet(context, a);
-            if (updated != null) _apply(_d.copyWith(applicant: updated));
-          },
+          onEdit: locked
+              ? null
+              : () => showBasicInfoSheet(
+                  context,
+                  applicant: a,
+                  propertyId: propertyId,
+                  id: d.id,
+                ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -786,19 +853,29 @@ class _ApplicationTenantPageState extends State<ApplicationTenantPage> {
                   Container(
                     width: 56,
                     height: 56,
+                    clipBehavior: Clip.antiAlias,
                     decoration: const BoxDecoration(
                       color: RLTokens.fill,
                       shape: BoxShape.circle,
                     ),
                     alignment: Alignment.center,
-                    child: const Text(
-                      'No photo',
-                      style: TextStyle(
-                        fontFamily: RLTokens.fontSans,
-                        fontSize: 10.5,
-                        color: RLTokens.micro,
-                      ),
-                    ),
+                    child: a.profilePhotoUrl == null
+                        ? const Text(
+                            'No photo',
+                            style: TextStyle(
+                              fontFamily: RLTokens.fontSans,
+                              fontSize: 10.5,
+                              color: RLTokens.micro,
+                            ),
+                          )
+                        : Image.network(
+                            a.profilePhotoUrl!,
+                            width: 56,
+                            height: 56,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) =>
+                                const SizedBox.shrink(),
+                          ),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -851,10 +928,14 @@ class _ApplicationTenantPageState extends State<ApplicationTenantPage> {
         ),
         AppSectionCard(
           title: 'Identity Verification',
-          onEdit: () async {
-            final updated = await showIdentitySheet(context, id);
-            if (updated != null) _apply(_d.copyWith(identity: updated));
-          },
+          onEdit: locked
+              ? null
+              : () => showIdentitySheet(
+                  context,
+                  identity: id,
+                  propertyId: propertyId,
+                  id: d.id,
+                ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -865,13 +946,17 @@ class _ApplicationTenantPageState extends State<ApplicationTenantPage> {
                 KVEntry('Current address', id.currentAddress),
               ]),
               const CardSubheading('ID document images', divided: false),
-              const Padding(
-                padding: EdgeInsets.only(top: 6),
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
                 child: Row(
                   children: [
-                    Expanded(child: _IdImagePlaceholder(label: 'Front')),
-                    SizedBox(width: 12),
-                    Expanded(child: _IdImagePlaceholder(label: 'Back')),
+                    Expanded(
+                      child: _IdImage(label: 'Front', url: id.idFrontUrl),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _IdImage(label: 'Back', url: id.idBackUrl),
+                    ),
                   ],
                 ),
               ),
@@ -880,10 +965,14 @@ class _ApplicationTenantPageState extends State<ApplicationTenantPage> {
         ),
         AppSectionCard(
           title: 'Emergency Contact & Background',
-          onEdit: () async {
-            final updated = await showBackgroundSheet(context, b);
-            if (updated != null) _apply(_d.copyWith(background: updated));
-          },
+          onEdit: locked
+              ? null
+              : () => showBackgroundSheet(
+                  context,
+                  background: b,
+                  propertyId: propertyId,
+                  id: d.id,
+                ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -902,7 +991,7 @@ class _ApplicationTenantPageState extends State<ApplicationTenantPage> {
                   'Employment type',
                   kEmployerTypeOptions[b.employerType],
                 ),
-                KVEntry('Occupation', b.occupation),
+                if (!b.isStudent) KVEntry('Occupation', b.occupation),
                 KVEntry(
                   b.isStudent ? 'Institution/School' : 'Employer',
                   b.employer,
@@ -919,27 +1008,33 @@ class _ApplicationTenantPageState extends State<ApplicationTenantPage> {
 
 // ── Move In Setup ────────────────────────────────────────────────────────────
 
-class ApplicationMoveInPage extends StatefulWidget {
+class ApplicationMoveInPage extends ConsumerWidget {
   const ApplicationMoveInPage({
     super.key,
     required this.data,
-    required this.onChanged,
+    required this.propertyId,
+    this.readOnly = false,
   });
 
   final ApplicationDetailData data;
-  final ValueChanged<ApplicationDetailData> onChanged;
+  final String propertyId;
+  final bool readOnly;
 
   @override
-  State<ApplicationMoveInPage> createState() => _ApplicationMoveInPageState();
-}
-
-class _ApplicationMoveInPageState extends State<ApplicationMoveInPage> {
-  late ApplicationDetailData _d = widget.data;
-
-  @override
-  Widget build(BuildContext context) {
-    final m = _d.moveIn;
-    final frequencyLabel = kStayFrequencyOptions[m.stayDurationFrequency];
+  Widget build(BuildContext context, WidgetRef ref) {
+    final model = ref
+        .watch(applicationDetailProvider(propertyId, data.id))
+        .valueOrNull;
+    final d = model == null
+        ? data
+        : ApplicationDetailData.fromApplicationModel(model);
+    final account = model?.financialAccount;
+    final locked =
+        readOnly || !_canEdit(ref, model) || account?.rentTermsLocked == true;
+    final m = d.moveIn;
+    final frequency =
+        m.stayDurationFrequency ?? d.desiredUnit?.paymentFrequency;
+    final frequencyLabel = kStayFrequencyOptions[frequency];
 
     return _SectionScaffold(
       title: 'Move In Setup',
@@ -947,14 +1042,16 @@ class _ApplicationMoveInPageState extends State<ApplicationMoveInPage> {
       children: [
         AppSectionCard(
           title: 'Move In Setup',
-          onEdit: () async {
-            final updated = await showMoveInSheet(context, m);
-            if (updated != null) {
-              final next = _d.copyWith(moveIn: updated);
-              setState(() => _d = next);
-              widget.onChanged(next);
-            }
-          },
+          onEdit: locked
+              ? null
+              : () => showMoveInSheet(
+                  context,
+                  moveIn: m,
+                  fallbackFrequency: d.desiredUnit?.paymentFrequency,
+                  chargeCount: account?.chargeCount ?? 0,
+                  propertyId: propertyId,
+                  id: d.id,
+                ),
           child: KVGrid([
             KVEntry(
               'Desired move-in date',
@@ -969,7 +1066,7 @@ class _ApplicationMoveInPageState extends State<ApplicationMoveInPage> {
               m.stayDuration == null
                   ? null
                   : '${m.stayDuration} '
-                        '${periodLabel(m.stayDurationFrequency, m.stayDuration!)}',
+                        '${periodLabel(frequency, m.stayDuration!)}',
               full: true,
             ),
           ]),
@@ -986,10 +1083,16 @@ class ApplicationFinancialPage extends StatefulWidget {
     super.key,
     required this.data,
     required this.onChanged,
+    this.readOnly = false,
+    this.propertyId,
   });
 
   final ApplicationDetailData data;
   final ValueChanged<ApplicationDetailData> onChanged;
+  final bool readOnly;
+
+  /// When set, a manager is told to finish this step on the web.
+  final String? propertyId;
 
   @override
   State<ApplicationFinancialPage> createState() =>
@@ -1015,7 +1118,10 @@ class _ApplicationFinancialPageState extends State<ApplicationFinancialPage> {
   Future<void> _generateInvoice() async {
     await Haptics.vibrate(HapticsType.medium);
     final next = _d.copyWith(
-      financial: _d.financial.copyWith(invoiceGenerated: true),
+      financial: _d.financial.copyWith(
+        invoiceGenerated: true,
+        hasFinancialAccount: true,
+      ),
     );
     setState(() => _d = next);
     widget.onChanged(next);
@@ -1038,9 +1144,11 @@ class _ApplicationFinancialPageState extends State<ApplicationFinancialPage> {
     return _SectionScaffold(
       title: 'Financial Setup',
       children: [
+        if (widget.propertyId != null)
+          _FinishOnWebNotice(propertyId: widget.propertyId!, id: _d.id),
         AppSectionCard(
           title: 'Financial Setup',
-          onEdit: _edit,
+          onEdit: widget.readOnly ? null : _edit,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1130,7 +1238,7 @@ class _ApplicationFinancialPageState extends State<ApplicationFinancialPage> {
                             value:
                                 kPaymentModeOptions[f.paymentMode] ??
                                 'Full stay payment',
-                            onTap: _edit,
+                            onTap: widget.readOnly ? null : _edit,
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -1255,7 +1363,7 @@ class _ApplicationFinancialPageState extends State<ApplicationFinancialPage> {
                     ],
                   ),
                 )
-              else
+              else if (!widget.readOnly)
                 RLBtn(
                   label: 'Generate Invoice',
                   kind: RLBtnKind.primary,
@@ -1319,7 +1427,7 @@ class _ReadonlyPicker extends StatelessWidget {
 
   final String label;
   final String value;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -1462,10 +1570,16 @@ class ApplicationDocsPage extends StatefulWidget {
     super.key,
     required this.data,
     required this.onChanged,
+    this.readOnly = false,
+    this.propertyId,
   });
 
   final ApplicationDetailData data;
   final ValueChanged<ApplicationDetailData> onChanged;
+  final bool readOnly;
+
+  /// When set, a manager is told to finish this step on the web.
+  final String? propertyId;
 
   @override
   State<ApplicationDocsPage> createState() => _ApplicationDocsPageState();
@@ -1508,11 +1622,15 @@ class _ApplicationDocsPageState extends State<ApplicationDocsPage> {
     return _SectionScaffold(
       title: 'Docs Setup',
       description: 'Documentation for the lease agreement.',
-      onAddDocument: () => showAddDocumentSheet(context),
+      onAddDocument: widget.readOnly
+          ? null
+          : () => showAddDocumentSheet(context),
       children: [
+        if (widget.propertyId != null)
+          _FinishOnWebNotice(propertyId: widget.propertyId!, id: _d.id),
         AppSectionCard(
           title: 'Docs Setup',
-          onEdit: () => showAddDocumentSheet(context),
+          onEdit: widget.readOnly ? null : () => showAddDocumentSheet(context),
           child: doc.attached
               ? Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1525,11 +1643,14 @@ class _ApplicationDocsPageState extends State<ApplicationDocsPage> {
                       _SignerRow(
                         signer: doc.signers[i],
                         first: i == 0,
+                        readOnly: widget.readOnly,
                         onSign: () => _sign(doc.signers[i]),
                         onPrompt: () => _prompt(doc.signers[i]),
                       ),
                   ],
                 )
+              : widget.readOnly
+              ? const _NoDocument(onAdd: null)
               : _NoDocument(onAdd: () => showAddDocumentSheet(context)),
         ),
       ],
@@ -1629,12 +1750,14 @@ class _SignerRow extends StatelessWidget {
   const _SignerRow({
     required this.signer,
     required this.first,
+    required this.readOnly,
     required this.onSign,
     required this.onPrompt,
   });
 
   final ApplicationSigner signer;
   final bool first;
+  final bool readOnly;
   final VoidCallback onSign;
   final VoidCallback onPrompt;
 
@@ -1698,7 +1821,7 @@ class _SignerRow extends StatelessWidget {
               ),
             ],
           ),
-          if (!signer.signed)
+          if (!signer.signed && !readOnly)
             Padding(
               padding: const EdgeInsets.only(top: 10, left: 45),
               child: Align(
@@ -1728,7 +1851,7 @@ class _SignerRow extends StatelessWidget {
 
 class _NoDocument extends StatelessWidget {
   const _NoDocument({required this.onAdd});
-  final VoidCallback onAdd;
+  final VoidCallback? onAdd;
 
   @override
   Widget build(BuildContext context) {
@@ -1747,13 +1870,14 @@ class _NoDocument extends StatelessWidget {
             ),
           ),
         ),
-        RLBtn(
-          label: 'Add document',
-          kind: RLBtnKind.light,
-          icon: Icons.add_rounded,
-          full: true,
-          onPressed: onAdd,
-        ),
+        if (onAdd != null)
+          RLBtn(
+            label: 'Add document',
+            kind: RLBtnKind.light,
+            icon: Icons.add_rounded,
+            full: true,
+            onPressed: onAdd,
+          ),
       ],
     );
   }

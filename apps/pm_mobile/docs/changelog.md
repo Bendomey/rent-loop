@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-06 — Add tenant wired to the real API (plan 2a)
+- Add tenant now creates a real tenant application: phone lookup prefills returning tenants, uploads go to R2, and the invite sheet shares a setup link.
+- Tenant setup detail loads live data, with edit sheets, unit and move-in changes, and Cancel tenant setup, all gated on the caller's property role (MANAGER).
+- Pending tenants list above active tenants on the Tenants tab.
+- Wording sweep: "application" no longer appears in user-visible copy on these screens (list, empty and error states, unit page, post-approve sheet).
+- Error codes `UnitNotAvailable`, `ChargesAlreadyBilled`, `PhoneOrEmailRequired`, `TenantApplicationAlreadyCompleted`, `TenantApplicationAlreadyCancelled` now translate to plain English.
+- Modules affected: `api/`, `lib/`, `repository/`, `modules/main/activity/`, `modules/main/tenants/`
+
 ## 2026-11-06 — Home and More reduced to v1
 - Home: removed the notifications bell and `ChecklistBanner`; quick actions are now Add tenant, Record payment, Repairs, Announcement.
 - More: Manage is Repairs / Announcements / Leases; removed Tenants, Documents, Reports, the Organisation settings section and Share Rentloop.

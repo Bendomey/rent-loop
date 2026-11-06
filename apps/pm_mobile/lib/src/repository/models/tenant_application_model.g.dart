@@ -54,6 +54,32 @@ Map<String, dynamic> _$ApplicationDocumentSignatureModelToJson(
   'created_at': instance.createdAt?.toIso8601String(),
 };
 
+FinancialAccountSummaryModel _$FinancialAccountSummaryModelFromJson(
+  Map<String, dynamic> json,
+) => FinancialAccountSummaryModel(
+  id: json['id'] as String?,
+  currency: json['currency'] as String?,
+  totalCharged: (json['total_charged'] as num?)?.toInt(),
+  totalSettled: (json['total_settled'] as num?)?.toInt(),
+  outstandingAmount: (json['outstanding_amount'] as num?)?.toInt(),
+  chargeCount: (json['charge_count'] as num?)?.toInt(),
+  invoiceCount: (json['invoice_count'] as num?)?.toInt(),
+  rentTermsLocked: json['rent_terms_locked'] as bool?,
+);
+
+Map<String, dynamic> _$FinancialAccountSummaryModelToJson(
+  FinancialAccountSummaryModel instance,
+) => <String, dynamic>{
+  'id': instance.id,
+  'currency': instance.currency,
+  'total_charged': instance.totalCharged,
+  'total_settled': instance.totalSettled,
+  'outstanding_amount': instance.outstandingAmount,
+  'charge_count': instance.chargeCount,
+  'invoice_count': instance.invoiceCount,
+  'rent_terms_locked': instance.rentTermsLocked,
+};
+
 TenantApplicationModel _$TenantApplicationModelFromJson(
   Map<String, dynamic> json,
 ) => TenantApplicationModel(
@@ -73,6 +99,9 @@ TenantApplicationModel _$TenantApplicationModelFromJson(
   nationality: json['nationality'] as String?,
   maritalStatus: json['marital_status'] as String?,
   profilePhotoUrl: json['profile_photo_url'] as String?,
+  idFrontUrl: json['id_front_url'] as String?,
+  idBackUrl: json['id_back_url'] as String?,
+  proofOfIncomeUrl: json['proof_of_income_url'] as String?,
   idType: json['id_type'] as String?,
   idNumber: json['id_number'] as String?,
   currentAddress: json['current_address'] as String?,
@@ -88,6 +117,7 @@ TenantApplicationModel _$TenantApplicationModelFromJson(
   desiredUnit: json['desired_unit'] == null
       ? null
       : UnitModel.fromJson(json['desired_unit'] as Map<String, dynamic>),
+  apiPropertyId: json['property_id'] as String?,
   desiredMoveInDate: json['desired_move_in_date'] == null
       ? null
       : DateTime.parse(json['desired_move_in_date'] as String),
@@ -121,6 +151,17 @@ TenantApplicationModel _$TenantApplicationModelFromJson(
             ),
           )
           .toList(),
+  financialAccount: json['financial_account'] == null
+      ? null
+      : FinancialAccountSummaryModel.fromJson(
+          json['financial_account'] as Map<String, dynamic>,
+        ),
+  cancelledAt: json['cancelled_at'] == null
+      ? null
+      : DateTime.parse(json['cancelled_at'] as String),
+  completedAt: json['completed_at'] == null
+      ? null
+      : DateTime.parse(json['completed_at'] as String),
   createdAt: json['created_at'] == null
       ? null
       : DateTime.parse(json['created_at'] as String),
@@ -146,6 +187,9 @@ Map<String, dynamic> _$TenantApplicationModelToJson(
   'nationality': instance.nationality,
   'marital_status': instance.maritalStatus,
   'profile_photo_url': instance.profilePhotoUrl,
+  'id_front_url': instance.idFrontUrl,
+  'id_back_url': instance.idBackUrl,
+  'proof_of_income_url': instance.proofOfIncomeUrl,
   'id_type': instance.idType,
   'id_number': instance.idNumber,
   'current_address': instance.currentAddress,
@@ -158,6 +202,7 @@ Map<String, dynamic> _$TenantApplicationModelToJson(
   'occupation_address': instance.occupationAddress,
   'desired_unit_id': instance.desiredUnitId,
   'desired_unit': instance.desiredUnit,
+  'property_id': instance.apiPropertyId,
   'desired_move_in_date': instance.desiredMoveInDate?.toIso8601String(),
   'stay_duration': instance.stayDuration,
   'stay_duration_frequency': instance.stayDurationFrequency,
@@ -174,6 +219,67 @@ Map<String, dynamic> _$TenantApplicationModelToJson(
   'lease_agreement_document': instance.leaseAgreementDocument,
   'lease_agreement_document_signatures':
       instance.leaseAgreementDocumentSignatures,
+  'financial_account': instance.financialAccount,
+  'cancelled_at': instance.cancelledAt?.toIso8601String(),
+  'completed_at': instance.completedAt?.toIso8601String(),
   'created_at': instance.createdAt?.toIso8601String(),
   'updated_at': instance.updatedAt?.toIso8601String(),
+};
+
+TenantLookupModel _$TenantLookupModelFromJson(Map<String, dynamic> json) =>
+    TenantLookupModel(
+      id: json['id'] as String?,
+      firstName: json['first_name'] as String?,
+      otherNames: json['other_names'] as String?,
+      lastName: json['last_name'] as String?,
+      email: json['email'] as String?,
+      phone: json['phone'] as String?,
+      gender: json['gender'] as String?,
+      dateOfBirth: json['date_of_birth'] == null
+          ? null
+          : DateTime.parse(json['date_of_birth'] as String),
+      nationality: json['nationality'] as String?,
+      maritalStatus: json['marital_status'] as String?,
+      idType: json['id_type'] as String?,
+      idNumber: json['id_number'] as String?,
+      idFrontUrl: json['id_front_url'] as String?,
+      idBackUrl: json['id_back_url'] as String?,
+      currentAddress: json['current_address'] as String?,
+      emergencyContactName: json['emergency_contact_name'] as String?,
+      emergencyContactPhone: json['emergency_contact_phone'] as String?,
+      relationshipToEmergencyContact:
+          json['relationship_to_emergency_contact'] as String?,
+      occupation: json['occupation'] as String?,
+      employer: json['employer'] as String?,
+      occupationAddress: json['occupation_address'] as String?,
+      proofOfIncomeUrl: json['proof_of_income_url'] as String?,
+      profilePhotoUrl: json['profile_photo_url'] as String?,
+    );
+
+Map<String, dynamic> _$TenantLookupModelToJson(
+  TenantLookupModel instance,
+) => <String, dynamic>{
+  'id': instance.id,
+  'first_name': instance.firstName,
+  'other_names': instance.otherNames,
+  'last_name': instance.lastName,
+  'email': instance.email,
+  'phone': instance.phone,
+  'gender': instance.gender,
+  'date_of_birth': instance.dateOfBirth?.toIso8601String(),
+  'nationality': instance.nationality,
+  'marital_status': instance.maritalStatus,
+  'id_type': instance.idType,
+  'id_number': instance.idNumber,
+  'id_front_url': instance.idFrontUrl,
+  'id_back_url': instance.idBackUrl,
+  'current_address': instance.currentAddress,
+  'emergency_contact_name': instance.emergencyContactName,
+  'emergency_contact_phone': instance.emergencyContactPhone,
+  'relationship_to_emergency_contact': instance.relationshipToEmergencyContact,
+  'occupation': instance.occupation,
+  'employer': instance.employer,
+  'occupation_address': instance.occupationAddress,
+  'proof_of_income_url': instance.proofOfIncomeUrl,
+  'profile_photo_url': instance.profilePhotoUrl,
 };

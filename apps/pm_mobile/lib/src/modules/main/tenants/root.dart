@@ -8,7 +8,10 @@ import 'package:shimmer/shimmer.dart';
 
 import 'package:rentloop_manager/src/lib/property_status.dart';
 import 'package:rentloop_manager/src/repository/models/tenant_model.dart';
+import 'package:rentloop_manager/src/modules/main/tenants/pending_tenants_section.dart';
 import 'package:rentloop_manager/src/repository/notifiers/tenants/tenants_notifier.dart';
+import 'package:rentloop_manager/src/repository/providers/properties/my_property_roles_provider.dart';
+import 'package:rentloop_manager/src/repository/providers/tenants/pending_tenants_provider.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
@@ -103,6 +106,31 @@ class _TenantsScreenState extends ConsumerState<TenantsScreen> {
         .loadFirstPage(_query);
   }
 
+  Future<void> _refresh() async {
+    ref.invalidate(pendingTenantsProvider(widget.propertyId));
+    ref.invalidate(myPropertyRolesProvider);
+    await Future.wait([
+      ref
+          .read(tenantsNotifierProvider(widget.propertyId).notifier)
+          .loadFirstPage(_query),
+      ref
+          .read(pendingTenantsProvider(widget.propertyId).future)
+          .then((_) {}, onError: (_) {}),
+    ]);
+  }
+
+  Future<void> _addTenant() async {
+    await Haptics.vibrate(HapticsType.selection);
+    if (!mounted) return;
+    final propertyId = widget.propertyId;
+    await context.push(
+      propertyId == null
+          ? '/activity/applications/add'
+          : '/activity/applications/add?property_id=$propertyId',
+    );
+    ref.invalidate(pendingTenantsProvider);
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(tenantsNotifierProvider(widget.propertyId));
@@ -113,6 +141,13 @@ class _TenantsScreenState extends ConsumerState<TenantsScreen> {
 
     return Scaffold(
       backgroundColor: RLTokens.surface,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _addTenant,
+        backgroundColor: RLTokens.crimson,
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.person_add_alt_1_outlined),
+        label: const Text('Add tenant'),
+      ),
       body: Column(
         children: [
           RLBackHeader(
@@ -126,9 +161,7 @@ class _TenantsScreenState extends ConsumerState<TenantsScreen> {
           Expanded(
             child: RefreshIndicator(
               color: RLTokens.crimson,
-              onRefresh: () => ref
-                  .read(tenantsNotifierProvider(widget.propertyId).notifier)
-                  .loadFirstPage(_query),
+              onRefresh: _refresh,
               child: CustomScrollView(
                 controller: _scrollController,
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -207,6 +240,20 @@ class _TenantsScreenState extends ConsumerState<TenantsScreen> {
                         selected: _statusFilter,
                         onSelect: _onSelectStatus,
                       ),
+                    ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: PendingTenantsSection(propertyId: widget.propertyId),
+                  ),
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        RLTokens.gutter,
+                        16,
+                        RLTokens.gutter,
+                        0,
+                      ),
+                      child: SectionLabel('Active tenants'),
                     ),
                   ),
                   if (showSkeleton)
@@ -299,7 +346,7 @@ class _TenantsScreenState extends ConsumerState<TenantsScreen> {
                         ),
                       ),
                   ],
-                  const SliverToBoxAdapter(child: SizedBox(height: 32)),
+                  const SliverToBoxAdapter(child: SizedBox(height: 96)),
                 ],
               ),
             ),
