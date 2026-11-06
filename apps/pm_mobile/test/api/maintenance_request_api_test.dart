@@ -14,6 +14,7 @@ class _RecordingApi extends MaintenanceRequestApi {
   _RecordingApi() : super(tokenManager: TokenManager(SecureStorage()));
 
   final List<String> paths = [];
+  void Function(String method, Map<String, dynamic>? body)? onExecute;
   Map<String, dynamic> nextBody = {
     'data': {'rows': <dynamic>[]},
   };
@@ -26,6 +27,7 @@ class _RecordingApi extends MaintenanceRequestApi {
     bool authRequired = true,
   }) async {
     paths.add(path);
+    onExecute?.call(method, body);
     return http.Response(jsonEncode(nextBody), 200);
   }
 }
@@ -133,5 +135,59 @@ void main() {
         }
       },
     );
+  });
+
+  test('createMaintenanceRequest posts the web body', () async {
+    String? method;
+    Map<String, dynamic>? sent;
+    final api = _RecordingApi()
+      ..nextBody = {
+        'data': [
+          {
+            'id': 'r1',
+            'code': 'ABC',
+            'title': 'Leaking tap',
+            'category': 'PLUMBING',
+            'priority': 'HIGH',
+            'status': 'NEW',
+            'property_id': 'p1',
+          },
+        ],
+      }
+      ..onExecute = (m, body) {
+        method = m;
+        sent = body;
+      };
+
+    final created = await api.createMaintenanceRequest(
+      clientId: 'c1',
+      propertyId: 'p1',
+      unitIds: ['u1'],
+      blockIds: [],
+      title: 'Leaking tap',
+      description: 'Kitchen',
+      priority: 'HIGH',
+      category: 'PLUMBING',
+      visibility: 'TENANT_VISIBLE',
+      attachments: ['https://r2/x.jpg'],
+    );
+
+    expect(method, 'POST');
+    expect(
+      api.paths.single,
+      '/api/v1/admin/clients/c1/properties/p1/maintenance-requests',
+    );
+    expect(sent, {
+      'unit_ids': ['u1'],
+      'block_ids': [],
+      'create_separate_requests': false,
+      'title': 'Leaking tap',
+      'description': 'Kitchen',
+      'priority': 'HIGH',
+      'category': 'PLUMBING',
+      'visibility': 'TENANT_VISIBLE',
+      'attachments': ['https://r2/x.jpg'],
+    });
+    expect(created.single.id, 'r1');
   });
 }

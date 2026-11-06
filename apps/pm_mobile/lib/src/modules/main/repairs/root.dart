@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:rentloop_manager/src/modules/main/activity/maintenance_board.dart';
+import 'package:rentloop_manager/src/repository/providers/properties/my_property_roles_provider.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
@@ -15,29 +16,41 @@ class RepairsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final id = propertyId;
+    final roles = ref.watch(myPropertyRolesProvider).valueOrNull;
+    final canAdd = roles == null
+        ? false
+        : id == null
+        ? roles.values.any((r) => r == 'MANAGER')
+        : roles[id] == 'MANAGER';
     return Scaffold(
       backgroundColor: RLTokens.surface,
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: 'fab-repairs',
-        onPressed: () async {
-          await Haptics.vibrate(HapticsType.medium);
-          if (!context.mounted) return;
-          await context.push('/activity/maintenances/add');
-        },
-        backgroundColor: RLTokens.crimson,
-        foregroundColor: Colors.white,
-        elevation: 6,
-        shape: const StadiumBorder(),
-        icon: const Icon(Icons.add, size: 20),
-        label: const Text(
-          'Add repair',
-          style: TextStyle(
-            fontFamily: RLTokens.fontSans,
-            fontWeight: RLTokens.semibold,
-            fontSize: RLTokens.textAction,
-          ),
-        ),
-      ),
+      floatingActionButton: !canAdd
+          ? null
+          : FloatingActionButton.extended(
+              heroTag: 'fab-repairs',
+              onPressed: () async {
+                await Haptics.vibrate(HapticsType.medium);
+                if (!context.mounted) return;
+                await context.push(
+                  id == null
+                      ? '/activity/maintenances/add'
+                      : '/activity/maintenances/add?property_id=$id',
+                );
+              },
+              backgroundColor: RLTokens.crimson,
+              foregroundColor: Colors.white,
+              elevation: 6,
+              shape: const StadiumBorder(),
+              icon: const Icon(Icons.add, size: 20),
+              label: const Text(
+                'Add repair',
+                style: TextStyle(
+                  fontFamily: RLTokens.fontSans,
+                  fontWeight: RLTokens.semibold,
+                  fontSize: RLTokens.textAction,
+                ),
+              ),
+            ),
       body: Column(
         children: [
           RLBackHeader(

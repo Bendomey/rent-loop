@@ -168,7 +168,9 @@ List<RouteBase> appRoutes() => [
   // activity routes
   GoRoute(
     path: '/activity/maintenances/add',
-    builder: (_, __) => const AddMaintenanceScreen(),
+    builder: (_, state) => AddMaintenanceScreen(
+      propertyId: state.uri.queryParameters['property_id'],
+    ),
   ),
   GoRoute(
     path: '/activity/maintenances/:id',

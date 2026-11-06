@@ -218,6 +218,42 @@ class MaintenanceRequestApi extends AbstractApi {
     return (data['rows'] as List<dynamic>?) ?? const [];
   }
 
+  /// `POST .../properties/{propertyId}/maintenance-requests`. Returns one row
+  /// per created request; with `create_separate_requests: false` that is one.
+  Future<List<MaintenanceRequestModel>> createMaintenanceRequest({
+    required String clientId,
+    required String propertyId,
+    required List<String> unitIds,
+    required List<String> blockIds,
+    required String title,
+    required String description,
+    required String priority,
+    required String category,
+    required String visibility,
+    required List<String> attachments,
+  }) async {
+    final response = await execute(
+      method: 'POST',
+      path:
+          '/api/v1/admin/clients/$clientId/properties/$propertyId/maintenance-requests',
+      body: {
+        'unit_ids': unitIds,
+        'block_ids': blockIds,
+        'create_separate_requests': false,
+        'title': title,
+        'description': description,
+        'priority': priority,
+        'category': category,
+        'visibility': visibility,
+        'attachments': attachments,
+      },
+    );
+    final json = jsonDecode(response.body) as Map<String, dynamic>;
+    return (json['data'] as List<dynamic>)
+        .map((e) => MaintenanceRequestModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
   /// `PATCH .../properties/{propertyId}/maintenance-requests/{requestId}/status`
   /// — this is a per-property route (unlike the cross-property list above),
   /// matching web's `useUpdateMaintenanceRequestStatus`. [propertyId] comes

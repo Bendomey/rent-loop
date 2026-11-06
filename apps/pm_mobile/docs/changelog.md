@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-06 — Add repair connected to real data (plan: pm-mobile-v1-add-repair)
+- "New repair" (`activity/add_maintenance.dart`) now lists the manager's real properties, blocks and units, uploads real photos (up to 5, via `ApplicationUploadTile`) and creates the repair. On success it opens the new repair's detail and shows "Repair added". The sample blocks, units and photo counter are gone.
+- The form shows a shimmer while properties load, says "You need manager access to a property to add a repair." when there are none, and keeps its fields on a server error.
+- The Repairs "Add repair" button and the Activity add action (Repairs tab) show only for users who manage a property. `/activity/maintenances/add?property_id=` pre-selects a property.
+- Modules affected: `modules/main/activity/`, `modules/main/repairs/`, `navigation/routes.dart`.
+
 ## 2026-11-06 — Home with real numbers (plan: pm-mobile-v1-home)
 - Home shows "Collected this month", "Still to collect" (with "{amount} of it is late" when there are arrears), and Empty units / Open repairs / Pending tenants cards, all read from live data. Cards open Properties, Repairs and Tenants.
 - Removed the sample revenue card, stat grid, "Needs your attention" and collection trend. Loading shows shimmer; a failed read shows "Couldn't load your numbers." with Try again; pull-to-refresh reloads.

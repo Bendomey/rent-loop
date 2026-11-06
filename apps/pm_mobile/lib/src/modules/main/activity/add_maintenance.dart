@@ -1,62 +1,66 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:shimmer/shimmer.dart';
+
+import 'package:rentloop_manager/src/lib/repair_labels.dart';
+import 'package:rentloop_manager/src/modules/main/activity/application_form_widgets.dart';
+import 'package:rentloop_manager/src/repository/api_state.dart';
+import 'package:rentloop_manager/src/repository/models/property_model.dart';
+import 'package:rentloop_manager/src/repository/notifiers/activity/create_maintenance_request_notifier.dart';
+import 'package:rentloop_manager/src/repository/providers/activity/repair_form_options_provider.dart';
+import 'package:rentloop_manager/src/shared/toast.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
-// ── Options ───────────────────────────────────────────────────────────────────
+const _kAssetError = 'Pick at least one block or unit';
+const _kVacantNote =
+    'No tenant lives here yet, so only staff will see this repair.';
+const _kMaxPhotos = 5;
+const _kInternalValue = 'INTERNAL_ONLY';
+const _kTenantValue = 'TENANT_VISIBLE';
 
-const _kBlocks = ['Cantonments Court', 'Spintex Heights'];
+String _labelFor(List<(String, String)> options, String value) {
+  for (final o in options) {
+    if (o.$1 == value) return o.$2;
+  }
+  return '';
+}
 
-const _kUnits = [
-  'Unit 4B · Cantonments Court',
-  'Unit 5A · Cantonments Court',
-  'Unit 1C · Cantonments Court',
-  'Unit 3B · Cantonments Court',
-  'Unit 7 · Spintex Heights',
-];
-
-const _kPriorities = ['High', 'Medium', 'Low'];
-
-const _kCategories = [
-  'Plumbing',
-  'Electrical',
-  'HVAC',
-  'Appliance',
-  'General',
-  'Security',
-];
-
-const _kVisibility = ['Visible for Tenant', 'Hidden from Tenant'];
-
-const _kVisibilitySubs = {
-  'Visible for Tenant': 'Tenant sees this in their portal.',
-  'Hidden from Tenant': 'Internal only — staff and managers.',
-};
-
-const _kAssetError = 'Select at least one block or unit';
+class _PhotoSlot {
+  final key = UniqueKey();
+  String? url;
+  bool blocking = false;
+}
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
-class AddMaintenanceScreen extends StatefulWidget {
-  const AddMaintenanceScreen({super.key});
+class AddMaintenanceScreen extends ConsumerStatefulWidget {
+  const AddMaintenanceScreen({super.key, this.propertyId});
+
+  final String? propertyId;
 
   @override
-  State<AddMaintenanceScreen> createState() => _AddMaintenanceScreenState();
+  ConsumerState<AddMaintenanceScreen> createState() =>
+      _AddMaintenanceScreenState();
 }
 
-class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
+class _AddMaintenanceScreenState extends ConsumerState<AddMaintenanceScreen> {
   final _blocks = <String>{};
   final _units = <String>{};
   final _titleCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
+  final _photos = [_PhotoSlot()];
+  String? _pickedPropertyId;
   String _priority = '';
   String _category = '';
-  String _visibility = 'Visible for Tenant';
-  int _photoCount = 1;
+  String _chosenVisibility = _kTenantValue;
   String? _activePicker;
-  // Only raised once the manager tries to submit an empty selection, so the
-  // form doesn't scold them before they've had a go at it.
-  bool _showAssetError = false;
+  bool _submitting = false;
+  // Only raised once the manager tries to submit, so the form doesn't scold
+  // them before they've had a go at it.
+  bool _showErrors = false;
 
   int get _assetCount => _blocks.length + _units.length;
 
@@ -65,8 +69,23 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
   bool get _forcedInternal => _blocks.isNotEmpty || _assetCount > 1;
 
   String get _forcedInternalReason => _units.isEmpty
-      ? 'Block work has no tenant attached, so this repair stays hidden from tenants.'
-      : 'This repair covers more than one asset, so it stays hidden from tenants and no one is notified.';
+      ? 'Block work has no tenant attached, so only staff can see this repair.'
+      : 'This repair covers more than one place, so only staff can see it and no tenant is told.';
+
+  String get _visibility =>
+      _forcedInternal ? _kInternalValue : _chosenVisibility;
+
+  bool get _photoBlocking => _photos.any((p) => p.blocking);
+
+  String? _propertyFor(List<PropertyModel> options) {
+    final picked = _pickedPropertyId;
+    if (picked != null && options.any((p) => p.id == picked)) return picked;
+    final scoped = widget.propertyId;
+    if (scoped != null) {
+      return options.any((p) => p.id == scoped) ? scoped : null;
+    }
+    return options.length == 1 ? options.first.id : null;
+  }
 
   @override
   void dispose() {
@@ -82,15 +101,26 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
 
   void _closePicker() => setState(() => _activePicker = null);
 
+  void _pickProperty(String id, String? current) {
+    setState(() {
+      if (id != current) {
+        _blocks.clear();
+        _units.clear();
+        _chosenVisibility = _kTenantValue;
+        _showErrors = false;
+      }
+      _pickedPropertyId = id;
+      _activePicker = null;
+    });
+    Haptics.vibrate(HapticsType.selection);
+  }
+
   /// Blocks and units are independent selections, so the sheet stays open and
   /// each tap toggles one asset.
   void _toggleAsset(String key, String value) {
     setState(() {
       final selection = key == 'block' ? _blocks : _units;
       if (!selection.remove(value)) selection.add(value);
-
-      if (_assetCount > 0) _showAssetError = false;
-      if (_forcedInternal) _visibility = 'Hidden from Tenant';
     });
     Haptics.vibrate(HapticsType.selection);
   }
@@ -103,30 +133,108 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
         case 'category':
           _category = value;
         case 'vis':
-          _visibility = value;
+          _chosenVisibility = value;
       }
       _activePicker = null;
     });
     Haptics.vibrate(HapticsType.selection);
   }
 
-  Future<void> _submit() async {
-    if (_assetCount == 0) {
-      setState(() => _showAssetError = true);
+  bool get _valid =>
+      _assetCount > 0 &&
+      _titleCtrl.text.trim().isNotEmpty &&
+      _descCtrl.text.trim().isNotEmpty &&
+      _priority.isNotEmpty &&
+      _category.isNotEmpty;
+
+  Future<void> _submit(String? propertyId) async {
+    if (_submitting || _photoBlocking) return;
+    if (propertyId == null || !_valid) {
+      setState(() => _showErrors = true);
       await Haptics.vibrate(HapticsType.warning);
       return;
     }
+    setState(() => _submitting = true);
     await Haptics.vibrate(HapticsType.medium);
+
+    final notifier = ref.read(
+      createMaintenanceRequestNotifierProvider.notifier,
+    );
+    await notifier.submit(
+      propertyId: propertyId,
+      unitIds: _units.toList(),
+      blockIds: _blocks.toList(),
+      title: _titleCtrl.text.trim(),
+      description: _descCtrl.text.trim(),
+      priority: _priority,
+      category: _category,
+      visibility: _visibility,
+      attachments: [
+        for (final p in _photos)
+          if (p.url != null) p.url!,
+      ],
+    );
+    if (!mounted) return;
+    setState(() => _submitting = false);
+
+    final result = ref.read(createMaintenanceRequestNotifierProvider);
+    if (result.status == ApiStatus.success) {
+      showRLToast(ref, tone: RLToastTone.success, title: 'Repair added');
+      final id = result.createdId;
+      if (id == null) {
+        context.pop();
+      } else {
+        context.pushReplacement(
+          '/activity/maintenances/$id',
+          extra: propertyId,
+        );
+      }
+    } else {
+      showRLToast(
+        ref,
+        tone: RLToastTone.error,
+        title: result.errorMessage ?? 'Something happened. Try again.',
+      );
+    }
   }
 
-  String _assetSummary(Set<String> selection, String plural) {
+  String _assetSummary(
+    Set<String> selection,
+    String plural,
+    String Function(String) nameOf,
+  ) {
     if (selection.isEmpty) return '';
-    if (selection.length == 1) return selection.first;
+    if (selection.length == 1) return nameOf(selection.first);
     return '${selection.length} $plural selected';
   }
 
   @override
   Widget build(BuildContext context) {
+    final optionsAsync = ref.watch(repairPropertyOptionsProvider);
+    final options = optionsAsync.valueOrNull;
+    final loading = !optionsAsync.hasValue && optionsAsync.isLoading;
+    final noAccess = options != null && options.isEmpty;
+    final propertyId = options == null ? null : _propertyFor(options);
+    final assetsAsync = propertyId == null
+        ? null
+        : ref.watch(repairAssetOptionsProvider(propertyId));
+    final assets = assetsAsync?.valueOrNull;
+    final assetsLoading =
+        assetsAsync != null && !assetsAsync.hasValue && assetsAsync.isLoading;
+    final assetsFailed =
+        assetsAsync != null && !assetsAsync.hasValue && assetsAsync.hasError;
+    final blockList = assets?.blocks ?? const [];
+    final unitList = assets?.units ?? const [];
+    final vacantSingleUnit =
+        _blocks.isEmpty &&
+        _units.length == 1 &&
+        unitList.any(
+          (u) =>
+              u.id == _units.first &&
+              u.status != 'Unit.Status.Occupied' &&
+              u.status != 'Unit.Status.PartiallyOccupied',
+        );
+
     return Scaffold(
       backgroundColor: RLTokens.surface,
       body: Stack(
@@ -141,161 +249,194 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
                 },
               ),
               Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(20, 14, 20, 140),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // ── Page heading ──────────────────────────────────────
-                      const Text(
-                        'New repair',
-                        style: TextStyle(
-                          fontFamily: RLTokens.fontSerif,
-                          fontSize: 25,
-                          color: RLTokens.ink,
-                          letterSpacing: -0.4,
-                          height: 1.1,
-                        ),
-                      ),
-                      const SizedBox(height: 7),
-                      const Text(
-                        'Report something that needs fixing in a block or unit.',
-                        style: TextStyle(
-                          fontFamily: RLTokens.fontSans,
-                          fontSize: 13.5,
-                          color: RLTokens.muted,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // ── Form fields ───────────────────────────────────────
-                      _FormField(
-                        label: 'Blocks',
-                        required: false,
-                        child: _SelectField(
-                          value: _assetSummary(_blocks, 'blocks'),
-                          placeholder: 'Select blocks',
-                          hasError: _showAssetError,
-                          onTap: () => _openPicker('block'),
-                        ),
-                      ),
-                      const SizedBox(height: 18),
-                      _FormField(
-                        label: 'Units',
-                        required: false,
-                        child: _SelectField(
-                          value: _assetSummary(_units, 'units'),
-                          placeholder: 'Select units',
-                          hasError: _showAssetError,
-                          onTap: () => _openPicker('unit'),
-                        ),
-                      ),
-                      // One message for the pair — either picker satisfies it.
-                      if (_showAssetError) ...[
-                        const SizedBox(height: 8),
-                        const Text(
-                          _kAssetError,
+                child: noAccess
+                    ? const Padding(
+                        padding: EdgeInsets.all(28),
+                        child: Text(
+                          'You need manager access to a property to add a repair.',
                           style: TextStyle(
                             fontFamily: RLTokens.fontSans,
-                            fontSize: 12.5,
-                            color: RLTokens.danger,
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: 18),
-                      _FormField(
-                        label: 'Title',
-                        child: _InputField(
-                          controller: _titleCtrl,
-                          placeholder: 'e.g. Fix leaky faucet',
-                        ),
-                      ),
-                      const SizedBox(height: 18),
-                      _FormField(
-                        label: 'Description',
-                        child: _TextAreaField(
-                          controller: _descCtrl,
-                          placeholder: 'Describe the issue in detail…',
-                        ),
-                      ),
-                      const SizedBox(height: 18),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: _FormField(
-                              label: 'Priority',
-                              child: _SelectField(
-                                value: _priority,
-                                placeholder: 'Select',
-                                onTap: () => _openPicker('priority'),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _FormField(
-                              label: 'Category',
-                              child: _SelectField(
-                                value: _category,
-                                placeholder: 'Select',
-                                onTap: () => _openPicker('category'),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      // ── Attachments ───────────────────────────────────────
-                      const SizedBox(height: 28),
-                      const Text(
-                        'Add attachments',
-                        style: TextStyle(
-                          fontFamily: RLTokens.fontSerif,
-                          fontSize: 19,
-                          color: RLTokens.ink,
-                          letterSpacing: -0.3,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      RichText(
-                        text: const TextSpan(
-                          style: TextStyle(
-                            fontFamily: RLTokens.fontSans,
-                            fontSize: 12.5,
+                            fontSize: 15,
                             color: RLTokens.muted,
+                            height: 1.45,
                           ),
-                          children: [
-                            TextSpan(text: 'Add photos related to the issue. '),
-                            TextSpan(
-                              text: 'Optional',
-                              style: TextStyle(color: RLTokens.mutedSoft),
-                            ),
-                          ],
                         ),
-                      ),
-                      const SizedBox(height: 14),
-                      _PhotosRow(
-                        count: _photoCount,
-                        onRemove: (i) {
-                          Haptics.vibrate(HapticsType.selection);
-                          setState(
-                            () => _photoCount = (_photoCount - 1).clamp(0, 99),
-                          );
-                        },
-                        onAdd: () {
-                          Haptics.vibrate(HapticsType.selection);
-                          setState(() => _photoCount++);
-                        },
-                      ),
-
-                      // ── Visibility ────────────────────────────────────────
-                      const SizedBox(height: 28),
-                      RichText(
-                        text: TextSpan(
+                      )
+                    : SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(20, 14, 20, 140),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const TextSpan(
-                              text: 'Visibility',
+                            const Text(
+                              'New repair',
+                              style: TextStyle(
+                                fontFamily: RLTokens.fontSerif,
+                                fontSize: 25,
+                                color: RLTokens.ink,
+                                letterSpacing: -0.4,
+                                height: 1.1,
+                              ),
+                            ),
+                            const SizedBox(height: 7),
+                            const Text(
+                              'Report something that needs fixing in a block or unit.',
+                              style: TextStyle(
+                                fontFamily: RLTokens.fontSans,
+                                fontSize: 13.5,
+                                color: RLTokens.muted,
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            _FormField(
+                              label: 'Property',
+                              error:
+                                  _showErrors && propertyId == null && !loading
+                                  ? 'Pick a property'
+                                  : null,
+                              child: loading
+                                  ? const _FieldSkeleton()
+                                  : _SelectField(
+                                      value:
+                                          options
+                                              ?.where((p) => p.id == propertyId)
+                                              .firstOrNull
+                                              ?.name ??
+                                          '',
+                                      placeholder: optionsAsync.hasError
+                                          ? "Couldn't load properties"
+                                          : 'Select property',
+                                      onTap: () => _openPicker('property'),
+                                    ),
+                            ),
+                            const SizedBox(height: 18),
+                            _FormField(
+                              label: 'Blocks',
+                              required: false,
+                              child: assetsLoading
+                                  ? const _FieldSkeleton()
+                                  : assetsFailed
+                                  ? _AssetLoadError(
+                                      onRetry: () => ref.invalidate(
+                                        repairAssetOptionsProvider(propertyId!),
+                                      ),
+                                    )
+                                  : _SelectField(
+                                      value: _assetSummary(
+                                        _blocks,
+                                        'blocks',
+                                        (id) =>
+                                            blockList
+                                                .where((b) => b.id == id)
+                                                .firstOrNull
+                                                ?.name ??
+                                            '',
+                                      ),
+                                      placeholder: propertyId == null
+                                          ? 'Pick a property first'
+                                          : 'Select blocks',
+                                      enabled: propertyId != null,
+                                      hasError: _showErrors && _assetCount == 0,
+                                      onTap: () => _openPicker('block'),
+                                    ),
+                            ),
+                            if (!assetsFailed) ...[
+                              const SizedBox(height: 18),
+                              _FormField(
+                                label: 'Units',
+                                required: false,
+                                child: assetsLoading
+                                    ? const _FieldSkeleton()
+                                    : _SelectField(
+                                        value: _assetSummary(
+                                          _units,
+                                          'units',
+                                          (id) =>
+                                              unitList
+                                                  .where((u) => u.id == id)
+                                                  .firstOrNull
+                                                  ?.name ??
+                                              '',
+                                        ),
+                                        placeholder: propertyId == null
+                                            ? 'Pick a property first'
+                                            : 'Select units',
+                                        enabled: propertyId != null,
+                                        hasError:
+                                            _showErrors && _assetCount == 0,
+                                        onTap: () => _openPicker('unit'),
+                                      ),
+                              ),
+                            ],
+                            if (_showErrors && _assetCount == 0) ...[
+                              const SizedBox(height: 8),
+                              const _FieldError(_kAssetError),
+                            ],
+                            const SizedBox(height: 18),
+                            _FormField(
+                              label: 'Title',
+                              error:
+                                  _showErrors && _titleCtrl.text.trim().isEmpty
+                                  ? 'Add a title'
+                                  : null,
+                              child: _InputField(
+                                controller: _titleCtrl,
+                                placeholder: 'e.g. Fix leaky faucet',
+                              ),
+                            ),
+                            const SizedBox(height: 18),
+                            _FormField(
+                              label: 'Description',
+                              error:
+                                  _showErrors && _descCtrl.text.trim().isEmpty
+                                  ? 'Add a description'
+                                  : null,
+                              child: _TextAreaField(
+                                controller: _descCtrl,
+                                placeholder: 'Describe the issue in detail…',
+                              ),
+                            ),
+                            const SizedBox(height: 18),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: _FormField(
+                                    label: 'Priority',
+                                    error: _showErrors && _priority.isEmpty
+                                        ? 'Pick how urgent it is'
+                                        : null,
+                                    child: _SelectField(
+                                      value: _labelFor([
+                                        for (final p in repairPriorities)
+                                          (p.$1, p.$2),
+                                      ], _priority),
+                                      placeholder: 'Select urgency',
+                                      onTap: () => _openPicker('priority'),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: _FormField(
+                                    label: 'Category',
+                                    error: _showErrors && _category.isEmpty
+                                        ? 'Pick a category'
+                                        : null,
+                                    child: _SelectField(
+                                      value: _labelFor(
+                                        repairCategories,
+                                        _category,
+                                      ),
+                                      placeholder: 'Select category',
+                                      onTap: () => _openPicker('category'),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 28),
+                            const Text(
+                              'Photos (optional)',
                               style: TextStyle(
                                 fontFamily: RLTokens.fontSerif,
                                 fontSize: 19,
@@ -303,127 +444,212 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
                                 letterSpacing: -0.3,
                               ),
                             ),
-                            const TextSpan(
-                              text: '  ·  Optional',
+                            const SizedBox(height: 4),
+                            const Text(
+                              'Add photos related to the issue.',
                               style: TextStyle(
                                 fontFamily: RLTokens.fontSans,
-                                fontSize: 13,
-                                color: RLTokens.mutedSoft,
-                                fontWeight: FontWeight.w500,
+                                fontSize: 12.5,
+                                color: RLTokens.muted,
                               ),
                             ),
+                            const SizedBox(height: 14),
+                            for (final slot in _photos) ...[
+                              ApplicationUploadTile(
+                                key: slot.key,
+                                label: 'Photo',
+                                objectKeyPrefix: 'maintenance-requests/',
+                                optional: true,
+                                onChanged: (url) => slot.url = url,
+                                onBlockingChanged: (b) {
+                                  if (!mounted) return;
+                                  setState(() => slot.blocking = b);
+                                },
+                              ),
+                              const SizedBox(height: 10),
+                            ],
+                            if (_photos.length < _kMaxPhotos)
+                              RLBtn(
+                                label: 'Add another photo',
+                                kind: RLBtnKind.light,
+                                large: false,
+                                onPressed: () {
+                                  Haptics.vibrate(HapticsType.selection);
+                                  setState(() => _photos.add(_PhotoSlot()));
+                                },
+                              ),
+                            const SizedBox(height: 28),
+                            const Text(
+                              'Visibility',
+                              style: TextStyle(
+                                fontFamily: RLTokens.fontSerif,
+                                fontSize: 19,
+                                color: RLTokens.ink,
+                                letterSpacing: -0.3,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            const Text(
+                              'Should the tenant see this repair in their app?',
+                              style: TextStyle(
+                                fontFamily: RLTokens.fontSans,
+                                fontSize: 12.5,
+                                color: RLTokens.muted,
+                                height: 1.45,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            if (_forcedInternal)
+                              Tooltip(
+                                message: _forcedInternalReason,
+                                triggerMode: TooltipTriggerMode.tap,
+                                showDuration: const Duration(seconds: 4),
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 10,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: RLTokens.ink,
+                                  borderRadius: BorderRadius.circular(
+                                    RLTokens.rSm,
+                                  ),
+                                ),
+                                textStyle: const TextStyle(
+                                  fontFamily: RLTokens.fontSans,
+                                  fontSize: 12.5,
+                                  color: RLTokens.surface,
+                                  height: 1.4,
+                                ),
+                                child: _SelectField(
+                                  value: _labelFor([
+                                    for (final v in repairVisibilities)
+                                      (v.$1, v.$2),
+                                  ], _kInternalValue),
+                                  placeholder: 'Select visibility',
+                                  enabled: false,
+                                ),
+                              )
+                            else
+                              _SelectField(
+                                value: _labelFor([
+                                  for (final v in repairVisibilities)
+                                    (v.$1, v.$2),
+                                ], _chosenVisibility),
+                                placeholder: 'Select visibility',
+                                onTap: () => _openPicker('vis'),
+                              ),
+                            if (vacantSingleUnit) ...[
+                              const SizedBox(height: 8),
+                              const Text(
+                                _kVacantNote,
+                                style: TextStyle(
+                                  fontFamily: RLTokens.fontSans,
+                                  fontSize: 12.5,
+                                  color: RLTokens.muted,
+                                  height: 1.45,
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Should the tenant see this repair in their portal?',
-                        style: TextStyle(
-                          fontFamily: RLTokens.fontSans,
-                          fontSize: 12.5,
-                          color: RLTokens.muted,
-                          height: 1.45,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      if (_forcedInternal)
-                        // Locked, so the field itself carries the reason —
-                        // tap it to read why, no standalone banner.
-                        Tooltip(
-                          message: _forcedInternalReason,
-                          triggerMode: TooltipTriggerMode.tap,
-                          showDuration: const Duration(seconds: 4),
-                          margin: const EdgeInsets.symmetric(horizontal: 20),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 10,
-                          ),
-                          decoration: BoxDecoration(
-                            color: RLTokens.ink,
-                            borderRadius: BorderRadius.circular(RLTokens.rSm),
-                          ),
-                          textStyle: const TextStyle(
-                            fontFamily: RLTokens.fontSans,
-                            fontSize: 12.5,
-                            color: RLTokens.surface,
-                            height: 1.4,
-                          ),
-                          child: _SelectField(
-                            value: _visibility,
-                            placeholder: 'Select visibility',
-                            enabled: false,
-                          ),
-                        )
-                      else
-                        _SelectField(
-                          value: _visibility,
-                          placeholder: 'Select visibility',
-                          onTap: () => _openPicker('vis'),
-                        ),
-                    ],
-                  ),
-                ),
               ),
             ],
           ),
 
-          // ── Bottom action bar ─────────────────────────────────────────────
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: Container(
-              padding: EdgeInsets.fromLTRB(
-                20,
-                12,
-                20,
-                12 + MediaQuery.of(context).padding.bottom,
-              ),
-              decoration: BoxDecoration(
-                color: RLTokens.surface,
-                border: const Border(top: BorderSide(color: RLTokens.hairline)),
-                boxShadow: RLTokens.elevBar,
-              ),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () async {
-                      await Haptics.vibrate(HapticsType.selection);
-                      if (context.mounted) Navigator.of(context).pop();
-                    },
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 12,
-                      ),
-                      child: Text(
-                        'Cancel',
-                        style: TextStyle(
-                          fontFamily: RLTokens.fontSans,
-                          fontSize: RLTokens.textAction,
-                          fontWeight: RLTokens.semibold,
-                          color: RLTokens.ink,
+          if (!noAccess)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Container(
+                padding: EdgeInsets.fromLTRB(
+                  20,
+                  12,
+                  20,
+                  12 + MediaQuery.of(context).padding.bottom,
+                ),
+                decoration: BoxDecoration(
+                  color: RLTokens.surface,
+                  border: const Border(
+                    top: BorderSide(color: RLTokens.hairline),
+                  ),
+                  boxShadow: RLTokens.elevBar,
+                ),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () async {
+                        await Haptics.vibrate(HapticsType.selection);
+                        if (context.mounted) Navigator.of(context).pop();
+                      },
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 12,
+                        ),
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(
+                            fontFamily: RLTokens.fontSans,
+                            fontSize: RLTokens.textAction,
+                            fontWeight: RLTokens.semibold,
+                            color: RLTokens.ink,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  const Spacer(),
-                  RLBtn(
-                    label: 'Create repair',
-                    kind: RLBtnKind.primary,
-                    icon: Icons.check_rounded,
-                    onPressed: _submit,
-                  ),
-                ],
+                    const Spacer(),
+                    if (_photoBlocking)
+                      const Flexible(
+                        child: Padding(
+                          padding: EdgeInsets.only(right: 12),
+                          child: Text(
+                            'Wait for the photos to finish.',
+                            textAlign: TextAlign.end,
+                            style: TextStyle(
+                              fontFamily: RLTokens.fontSans,
+                              fontSize: 12.5,
+                              color: RLTokens.muted,
+                            ),
+                          ),
+                        ),
+                      ),
+                    RLBtn(
+                      label: 'Create repair',
+                      kind: RLBtnKind.primary,
+                      icon: Icons.check_rounded,
+                      onPressed: _submitting || _photoBlocking
+                          ? null
+                          : () => _submit(propertyId),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
 
-          // ── Picker sheets ─────────────────────────────────────────────────
+          if (_activePicker == 'property' && options != null)
+            _PickerSheet(
+              title: 'Property',
+              options: [
+                for (final p in options)
+                  _PickerOption(value: p.id, label: p.name),
+              ],
+              selected: propertyId ?? '',
+              onPick: (v) => _pickProperty(v, propertyId),
+              onClose: _closePicker,
+            ),
           if (_activePicker == 'block')
             _PickerSheet(
               title: 'Select blocks',
-              options: _kBlocks.map((l) => _PickerOption(label: l)).toList(),
+              options: [
+                for (final b in blockList)
+                  _PickerOption(value: b.id, label: b.name),
+              ],
+              emptyMessage: 'No blocks in this property',
               selectedValues: _blocks,
               onPick: (v) => _toggleAsset('block', v),
               onClose: _closePicker,
@@ -431,7 +657,15 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
           if (_activePicker == 'unit')
             _PickerSheet(
               title: 'Select units',
-              options: _kUnits.map((l) => _PickerOption(label: l)).toList(),
+              options: [
+                for (final u in unitList)
+                  _PickerOption(
+                    value: u.id,
+                    label: u.name,
+                    sub: u.propertyBlock?.name,
+                  ),
+              ],
+              emptyMessage: 'No units in this property',
               selectedValues: _units,
               onPick: (v) => _toggleAsset('unit', v),
               onClose: _closePicker,
@@ -439,9 +673,16 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
           if (_activePicker == 'priority')
             _PickerSheet(
               title: 'Priority',
-              options: _kPriorities
-                  .map((l) => _PickerOption(label: l, tone: statusTone(l)))
-                  .toList(),
+              options: [
+                for (final p in repairPriorities)
+                  _PickerOption(
+                    value: p.$1,
+                    label: p.$2,
+                    tone: p.$1 == 'EMERGENCY'
+                        ? RLTone.danger
+                        : statusTone(p.$2),
+                  ),
+              ],
               selected: _priority,
               onPick: (v) => _pick('priority', v),
               onClose: _closePicker,
@@ -449,9 +690,10 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
           if (_activePicker == 'category')
             _PickerSheet(
               title: 'Category',
-              options: _kCategories
-                  .map((l) => _PickerOption(label: l))
-                  .toList(),
+              options: [
+                for (final c in repairCategories)
+                  _PickerOption(value: c.$1, label: c.$2),
+              ],
               selected: _category,
               onPick: (v) => _pick('category', v),
               onClose: _closePicker,
@@ -459,14 +701,63 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
           if (_activePicker == 'vis')
             _PickerSheet(
               title: 'Tenant visibility',
-              options: _kVisibility
-                  .map((l) => _PickerOption(label: l, sub: _kVisibilitySubs[l]))
-                  .toList(),
-              selected: _visibility,
+              options: [
+                for (final v in repairVisibilities)
+                  _PickerOption(value: v.$1, label: v.$2, sub: v.$3),
+              ],
+              selected: _chosenVisibility,
               onPick: (v) => _pick('vis', v),
               onClose: _closePicker,
             ),
         ],
+      ),
+    );
+  }
+}
+
+class _AssetLoadError extends StatelessWidget {
+  const _AssetLoadError({required this.onRetry});
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const Expanded(
+          child: Text(
+            "Couldn't load blocks and units.",
+            style: TextStyle(
+              fontFamily: RLTokens.fontSans,
+              fontSize: 13.5,
+              color: RLTokens.danger,
+            ),
+          ),
+        ),
+        RLBtn(
+          label: 'Try again',
+          kind: RLBtnKind.light,
+          large: false,
+          onPressed: onRetry,
+        ),
+      ],
+    );
+  }
+}
+
+class _FieldSkeleton extends StatelessWidget {
+  const _FieldSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey.shade200,
+      highlightColor: Colors.grey.shade50,
+      child: Container(
+        height: 50,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(RLTokens.rMd),
+        ),
       ),
     );
   }
@@ -479,9 +770,11 @@ class _FormField extends StatelessWidget {
     required this.label,
     required this.child,
     this.required = true,
+    this.error,
   });
   final String label;
   final Widget child;
+  final String? error;
 
   /// Blocks and units are each optional on their own — one of the two is
   /// required, so neither carries the asterisk.
@@ -517,9 +810,25 @@ class _FormField extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         child,
+        if (error != null) ...[const SizedBox(height: 6), _FieldError(error!)],
       ],
     );
   }
+}
+
+class _FieldError extends StatelessWidget {
+  const _FieldError(this.message);
+  final String message;
+
+  @override
+  Widget build(BuildContext context) => Text(
+    message,
+    style: const TextStyle(
+      fontFamily: RLTokens.fontSans,
+      fontSize: 12.5,
+      color: RLTokens.danger,
+    ),
+  );
 }
 
 // ── Select field ──────────────────────────────────────────────────────────────
@@ -672,119 +981,16 @@ class _TextAreaField extends StatelessWidget {
   }
 }
 
-// ── Photos row ────────────────────────────────────────────────────────────────
-
-class _PhotosRow extends StatelessWidget {
-  const _PhotosRow({
-    required this.count,
-    required this.onRemove,
-    required this.onAdd,
-  });
-  final int count;
-  final ValueChanged<int> onRemove;
-  final VoidCallback onAdd;
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
-      children: [
-        for (var i = 0; i < count; i++)
-          _PhotoThumb(onRemove: () => onRemove(i)),
-        GestureDetector(
-          onTap: onAdd,
-          child: Container(
-            width: 86,
-            height: 86,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(RLTokens.rMd),
-              border: Border.all(
-                color: RLTokens.hairline,
-                width: 1.5,
-                style: BorderStyle.solid,
-              ),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                Icon(
-                  Icons.camera_alt_outlined,
-                  size: 22,
-                  color: RLTokens.mutedSoft,
-                ),
-                SizedBox(height: 4),
-                Text(
-                  'Add',
-                  style: TextStyle(
-                    fontFamily: RLTokens.fontSans,
-                    fontSize: 11,
-                    color: RLTokens.mutedSoft,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _PhotoThumb extends StatelessWidget {
-  const _PhotoThumb({required this.onRemove});
-  final VoidCallback onRemove;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 86,
-      height: 86,
-      child: Stack(
-        children: [
-          Container(
-            width: 86,
-            height: 86,
-            decoration: BoxDecoration(
-              color: RLTokens.fill,
-              borderRadius: BorderRadius.circular(RLTokens.rMd),
-            ),
-            child: const Center(
-              child: Icon(
-                Icons.image_outlined,
-                size: 28,
-                color: RLTokens.mutedSoft,
-              ),
-            ),
-          ),
-          Positioned(
-            top: 5,
-            right: 5,
-            child: GestureDetector(
-              onTap: onRemove,
-              child: Container(
-                width: 22,
-                height: 22,
-                decoration: const BoxDecoration(
-                  color: Color.fromRGBO(17, 17, 16, 0.6),
-                  shape: BoxShape.circle,
-                ),
-                child: const Center(
-                  child: Icon(Icons.close, size: 13, color: Colors.white),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 // ── Picker option model ───────────────────────────────────────────────────────
 
 class _PickerOption {
-  const _PickerOption({required this.label, this.tone, this.sub});
+  const _PickerOption({
+    required this.value,
+    required this.label,
+    this.tone,
+    this.sub,
+  });
+  final String value;
   final String label;
   final RLTone? tone;
   final String? sub;
@@ -798,6 +1004,7 @@ class _PickerSheet extends StatelessWidget {
     required this.options,
     required this.onPick,
     required this.onClose,
+    this.emptyMessage,
     this.selected = '',
     this.selectedValues,
   });
@@ -806,15 +1013,16 @@ class _PickerSheet extends StatelessWidget {
   final List<_PickerOption> options;
   final ValueChanged<String> onPick;
   final VoidCallback onClose;
+  final String? emptyMessage;
 
-  /// Single-select sheets track one label…
+  /// Single-select sheets track one value…
   final String selected;
 
-  /// …while multi-select sheets stay open and toggle each tapped label.
+  /// …while multi-select sheets stay open and toggle each tapped value.
   final Set<String>? selectedValues;
 
-  bool _isSelected(String label) =>
-      selectedValues?.contains(label) ?? selected == label;
+  bool _isSelected(String value) =>
+      selectedValues?.contains(value) ?? selected == value;
 
   @override
   Widget build(BuildContext context) {
@@ -884,75 +1092,89 @@ class _PickerSheet extends StatelessWidget {
                     child: SingleChildScrollView(
                       padding: const EdgeInsets.fromLTRB(14, 4, 14, 30),
                       child: Column(
-                        children: options.asMap().entries.map((e) {
-                          final i = e.key;
-                          final o = e.value;
-                          final isLast = i == options.length - 1;
-                          final isSelected = _isSelected(o.label);
-                          return GestureDetector(
-                            onTap: () => onPick(o.label),
-                            behavior: HitTestBehavior.opaque,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 13,
-                                horizontal: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                border: isLast
-                                    ? null
-                                    : const Border(
-                                        bottom: BorderSide(
-                                          color: RLTokens.hairlineSoft,
-                                        ),
-                                      ),
-                              ),
-                              child: Row(
-                                children: [
-                                  if (o.tone != null) ...[
-                                    RLDot(tone: o.tone!, size: 9),
-                                    const SizedBox(width: 12),
-                                  ],
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          o.label,
-                                          style: TextStyle(
-                                            fontFamily: RLTokens.fontSans,
-                                            fontSize: 15,
-                                            fontWeight: isSelected
-                                                ? RLTokens.bold
-                                                : RLTokens.medium,
-                                            color: RLTokens.ink,
-                                          ),
-                                        ),
-                                        if (o.sub != null) ...[
-                                          const SizedBox(height: 2),
-                                          Text(
-                                            o.sub!,
-                                            style: const TextStyle(
-                                              fontFamily: RLTokens.fontSans,
-                                              fontSize: 12,
-                                              color: RLTokens.muted,
-                                            ),
-                                          ),
-                                        ],
-                                      ],
-                                    ),
-                                  ),
-                                  if (isSelected)
-                                    const Icon(
-                                      Icons.check_rounded,
-                                      size: 18,
-                                      color: RLTokens.crimson,
-                                    ),
-                                ],
+                        children: [
+                          if (options.isEmpty && emptyMessage != null)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 24),
+                              child: Text(
+                                emptyMessage!,
+                                style: const TextStyle(
+                                  fontFamily: RLTokens.fontSans,
+                                  fontSize: 14,
+                                  color: RLTokens.muted,
+                                ),
                               ),
                             ),
-                          );
-                        }).toList(),
+                          ...options.asMap().entries.map((e) {
+                            final i = e.key;
+                            final o = e.value;
+                            final isLast = i == options.length - 1;
+                            final isSelected = _isSelected(o.value);
+                            return GestureDetector(
+                              onTap: () => onPick(o.value),
+                              behavior: HitTestBehavior.opaque,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 13,
+                                  horizontal: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  border: isLast
+                                      ? null
+                                      : const Border(
+                                          bottom: BorderSide(
+                                            color: RLTokens.hairlineSoft,
+                                          ),
+                                        ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    if (o.tone != null) ...[
+                                      RLDot(tone: o.tone!, size: 9),
+                                      const SizedBox(width: 12),
+                                    ],
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            o.label,
+                                            style: TextStyle(
+                                              fontFamily: RLTokens.fontSans,
+                                              fontSize: 15,
+                                              fontWeight: isSelected
+                                                  ? RLTokens.bold
+                                                  : RLTokens.medium,
+                                              color: RLTokens.ink,
+                                            ),
+                                          ),
+                                          if (o.sub != null) ...[
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              o.sub!,
+                                              style: const TextStyle(
+                                                fontFamily: RLTokens.fontSans,
+                                                fontSize: 12,
+                                                color: RLTokens.muted,
+                                              ),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                    ),
+                                    if (isSelected)
+                                      const Icon(
+                                        Icons.check_rounded,
+                                        size: 18,
+                                        color: RLTokens.crimson,
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }),
+                        ],
                       ),
                     ),
                   ),
