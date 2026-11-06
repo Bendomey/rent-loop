@@ -104,3 +104,12 @@ The boundary is a semi-join (`accessiblePropertyIDsSubQuery` in `repository/comm
 *Say "coming soon" instead of pretending to save.* The old screen's Save buttons closed the sheet and did nothing — indistinguishable from a successful save. There is no client API class in this app (no mobile counterpart to the web's `PATCH /v1/admin/clients`), so the new sheets close and fire a "coming soon" toast, the same treatment My Account already gives two-factor, email updates and account deletion.
 **Tradeoffs:** `my_account/sheets.dart` was **not** migrated onto the kit in this pass, so two copies of the chrome exist for now — deliberate: My Account is a working screen the request didn't cover, and a mechanical rewrite of 820 lines carries regression risk out of proportion to the duplication it removes. It should migrate when next touched. On the toast: a user who could previously type into a field and watch it close now gets told nothing was saved, which is a visible downgrade in perceived capability but an upgrade in honesty — the data never persisted either way. Wiring the edits for real is a separate piece of work (a `ClientApi` class, an update notifier, and provider invalidation on `currentUserNotifierProvider`).
 **Alternatives considered:** *Fork the chrome a third time* (rejected — the convention is real enough to name); *migrate My Account onto the kit in the same pass* (rejected for scope/risk, noted as a follow-up); *build the client API in this pass* (rejected — a data-integration pass with its own model, notifier and error-handling surface, and the request was for the UI); *keep the silent no-op* (rejected — a Save that looks like it worked is worse than one that admits it hasn't shipped); *hide Branding and Preferences until they have a backend* (rejected — the design asks for them and the placeholder header documents exactly what to wire).
+
+---
+
+## v1 hides out-of-scope screens by deleting routes and entry points (2026-11-06)
+**Date:** 2026-11-06
+**Why:** v1 targets non-technical Ghanaian landlords; setup, billing and admin screens are done on the web.
+**Decision:** Remove the GoRouter routes and every Home/More/My-account entry point. Keep the screen files on disk.
+**Tradeoffs:** Dead code stays in the tree; restoring a screen is re-adding a route and a row.
+**Alternatives considered:** Feature flags (rejected, extra surface for a hide that is meant to be temporary); deleting the files (rejected, v2 will bring them back).

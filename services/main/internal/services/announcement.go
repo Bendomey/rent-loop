@@ -361,6 +361,10 @@ func (s *announcementService) Publish(ctx context.Context, id string) error {
 	return nil
 }
 
+func announcementChannels(priority string) (sms bool, email bool) {
+	return true, priority == "URGENT"
+}
+
 func (s *announcementService) fanOutNotifications(ctx context.Context, a *models.Announcement) {
 	accounts, err := s.resolveTargetAccounts(ctx, a)
 	if err != nil {
@@ -405,6 +409,8 @@ func (s *announcementService) fanOutNotifications(ctx context.Context, a *models
 		"{{announcement_content}}", a.Content,
 	).Replace(lib.ANNOUNCEMENT_SMS_BODY)
 
+	sendSMS, sendEmail := announcementChannels(a.Priority)
+
 	for _, account := range *accounts {
 		accountID := account.ID.String()
 		tenant := tenantsByID[account.TenantId]
@@ -421,8 +427,7 @@ func (s *announcementService) fanOutNotifications(ctx context.Context, a *models
 			continue
 		}
 
-		// URGENT → collect for bulk email
-		if a.Priority == "URGENT" && tenant.Email != nil {
+		if sendEmail && tenant.Email != nil {
 			emailRecipients = append(emailRecipients, pkg.BulkEmailRecipient{
 				To:       *tenant.Email,
 				Subject:  lib.ANNOUNCEMENT_EMAIL_SUBJECT,
@@ -431,8 +436,7 @@ func (s *announcementService) fanOutNotifications(ctx context.Context, a *models
 			})
 		}
 
-		// IMPORTANT / URGENT → collect for bulk SMS
-		if a.Priority == "IMPORTANT" || a.Priority == "URGENT" {
+		if sendSMS {
 			smsRecipients = append(smsRecipients, tenant.Phone)
 		}
 	}

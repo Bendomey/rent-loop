@@ -5,6 +5,14 @@
 - `lib/src/app.dart` — `RentloopManagerApp`; builds `MaterialApp.router` with GoRouter (`buildRoutes(ref)`) and `buildTheme()`
 - `lib/src/navigation/routes.dart` — `buildRoutes(ref)`: defines all `GoRoute`/`StatefulShellRoute` entries + auth redirect logic
 
+## v1 Surface (2026-11-06)
+- `routes.dart` exposes `appRoutes()`; tabs Home / Properties / Tenants / Rent / More.
+- `modules/main/repairs/root.dart` — `RepairsScreen` at `/repairs`.
+- Removed routes: `/notifications`, `/activity/bookings/*`, property and unit settings, `/more/documents`, `/more/members`, `/more/payment-accounts`, `/more/archived-properties`, `/more/agreement`, `/more/billing`, `/more/settings`.
+- Home: no notification bell or `ChecklistBanner`; quick actions are Add tenant, Record payment, Repairs, Announcement.
+- More: Manage = Repairs, Announcements, Leases; Account = Help & support only; no Organisation settings section.
+- My account: Profile and sign-out only (Security and Sessions pages kept, unreachable).
+
 ## Per-Module Breakdown
 
 ### api/

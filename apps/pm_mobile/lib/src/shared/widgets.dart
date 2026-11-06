@@ -894,9 +894,11 @@ class RLBackHeader extends StatelessWidget {
     this.onBack,
     this.trailing,
     this.dark = false,
+    this.showBack = true,
   });
 
   final String title;
+  final bool showBack;
   final VoidCallback? onBack;
   final Widget? trailing;
   final bool dark;
@@ -915,18 +917,21 @@ class RLBackHeader extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(14, 4, 14, 12),
             child: Row(
               children: [
-                GestureDetector(
-                  onTap:
-                      onBack ??
-                      () {
-                        final navigator = Navigator.of(context);
-                        if (navigator.canPop()) navigator.pop();
-                      },
-                  child: Padding(
-                    padding: const EdgeInsets.all(6),
-                    child: Icon(Icons.chevron_left, size: 26, color: fg),
-                  ),
-                ),
+                if (showBack)
+                  GestureDetector(
+                    onTap:
+                        onBack ??
+                        () {
+                          final navigator = Navigator.of(context);
+                          if (navigator.canPop()) navigator.pop();
+                        },
+                    child: Padding(
+                      padding: const EdgeInsets.all(6),
+                      child: Icon(Icons.chevron_left, size: 26, color: fg),
+                    ),
+                  )
+                else
+                  const SizedBox(width: 38),
                 Expanded(
                   child: Text(
                     title,

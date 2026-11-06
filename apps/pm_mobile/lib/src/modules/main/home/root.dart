@@ -6,7 +6,6 @@ import 'package:rentloop_manager/src/architecture/current_user/current_user_noti
 import 'package:rentloop_manager/src/architecture/current_workspace/current_workspace_notifier.dart';
 import 'package:rentloop_manager/src/lib/money.dart';
 import 'package:rentloop_manager/src/lib/workspace_resolution.dart';
-import 'package:rentloop_manager/src/modules/main/checklist_sheet.dart';
 import 'package:rentloop_manager/src/modules/main/workspace_sheet.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
@@ -21,7 +20,6 @@ const _kOccupancy = 88.0; // %
 const _kActiveLeases = 51;
 const _kOpenMaint = 7;
 const _kPendingApps = 4;
-const _kUnreadCount = 3;
 const _kTrend = [78.0, 84.0, 81.0, 90.0, 86.0, 92.0];
 
 // ── Screen ─────────────────────────────────────────────────────────────────────
@@ -45,8 +43,6 @@ class HomeScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
-                  const ChecklistBanner(),
-                  const SizedBox(height: 10),
                   _RevenueCard(),
                   const SizedBox(height: 10),
                   _StatGrid(),
@@ -121,14 +117,6 @@ class _TopHeader extends ConsumerWidget {
           : nameText,
       title: 'Good morning',
       trailing: [
-        RLIconBtn(
-          icon: Icons.notifications_outlined,
-          badge: _kUnreadCount,
-          onTap: () async {
-            await Haptics.vibrate(HapticsType.selection);
-            if (context.mounted) context.push('/notifications');
-          },
-        ),
         GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: () async {
@@ -523,14 +511,9 @@ class _CollectionTrendSection extends StatelessWidget {
 class _QuickActionsSection extends StatelessWidget {
   static const _actions = [
     _QuickAction(
-      icon: Icons.description_outlined,
-      label: 'New application',
+      icon: Icons.person_add_alt_1_outlined,
+      label: 'Add tenant',
       route: '/activity/applications/add',
-    ),
-    _QuickAction(
-      icon: Icons.calendar_today_outlined,
-      label: 'New booking',
-      route: '/activity/bookings/add',
     ),
     _QuickAction(
       icon: Icons.credit_card_outlined,
@@ -538,14 +521,14 @@ class _QuickActionsSection extends StatelessWidget {
       route: '/money/record-payment',
     ),
     _QuickAction(
+      icon: Icons.build_outlined,
+      label: 'Repairs',
+      route: '/repairs',
+    ),
+    _QuickAction(
       icon: Icons.campaign_outlined,
       label: 'Announcement',
       route: '/more/announcements/add',
-    ),
-    _QuickAction(
-      icon: Icons.apartment_outlined,
-      label: 'Add property',
-      route: '/properties/add',
     ),
   ];
 

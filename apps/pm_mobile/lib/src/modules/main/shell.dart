@@ -34,8 +34,8 @@ class _TabBar extends StatelessWidget {
   static const _tabs = [
     _TabSpec(label: 'Home', icon: 'home'),
     _TabSpec(label: 'Properties', icon: 'building'),
-    _TabSpec(label: 'Activity', icon: 'activity'),
-    _TabSpec(label: 'Money', icon: 'money'),
+    _TabSpec(label: 'Tenants', icon: 'people'),
+    _TabSpec(label: 'Rent', icon: 'money'),
     _TabSpec(label: 'More', icon: 'more'),
   ];
 
@@ -203,6 +203,29 @@ class _TabIconPainter extends CustomPainter {
             ..lineTo(10, 18)
             ..lineTo(14, 18)
             ..lineTo(14, 21),
+          stroke,
+        );
+
+      case 'people':
+        canvas.drawCircle(const Offset(9, 8.5), 3.3, stroke);
+        canvas.drawPath(
+          Path()
+            ..moveTo(3, 19.5)
+            ..cubicTo(3, 15.9, 5.7, 14, 9, 14)
+            ..cubicTo(12.3, 14, 15, 15.9, 15, 19.5),
+          stroke,
+        );
+        canvas.drawPath(
+          Path()
+            ..moveTo(15.5, 5.4)
+            ..cubicTo(17.6, 5.8, 18.8, 7.1, 18.8, 8.7)
+            ..cubicTo(18.8, 10.3, 17.6, 11.6, 15.5, 12),
+          stroke,
+        );
+        canvas.drawPath(
+          Path()
+            ..moveTo(17, 14.3)
+            ..cubicTo(19.4, 14.9, 21, 16.5, 21, 19.5),
           stroke,
         );
 

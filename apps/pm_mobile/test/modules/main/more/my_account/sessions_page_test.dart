@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rentloop_manager/src/modules/main/more/my_account/root.dart';
+import 'package:rentloop_manager/src/modules/main/more/my_account/sessions_page.dart';
 import 'package:rentloop_manager/src/repository/models/session_model.dart';
 import 'package:rentloop_manager/src/repository/providers/sessions_provider.dart';
 
@@ -18,10 +18,8 @@ SessionModel _session({required String id, required bool isCurrent}) =>
     );
 
 Widget _app(List<SessionModel> sessions) => ProviderScope(
-  overrides: [
-    sessionsProvider.overrideWith((ref) async => sessions),
-  ],
-  child: const MaterialApp(home: MyAccountScreen()),
+  overrides: [sessionsProvider.overrideWith((ref) async => sessions)],
+  child: const MaterialApp(home: Scaffold(body: AccountSessionsPage())),
 );
 
 void main() {
@@ -36,9 +34,6 @@ void main() {
         _session(id: 'b', isCurrent: false),
       ]),
     );
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Sessions'));
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
@@ -59,13 +54,11 @@ void main() {
             ),
           ),
         ],
-        child: const MaterialApp(home: MyAccountScreen()),
+        child: const MaterialApp(home: Scaffold(body: AccountSessionsPage())),
       ),
     );
     await tester.pump();
 
-    await tester.tap(find.text('Sessions'));
-    await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 
     expect(tester.takeException(), isNull);

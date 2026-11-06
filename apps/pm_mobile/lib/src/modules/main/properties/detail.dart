@@ -43,13 +43,6 @@ class PropertyDetailScreen extends ConsumerWidget {
               await Haptics.vibrate(HapticsType.selection);
               if (context.mounted) Navigator.of(context).pop();
             },
-            trailing: RLIconBtn(
-              icon: Icons.settings_outlined,
-              onTap: () async {
-                await Haptics.vibrate(HapticsType.selection);
-                if (context.mounted) context.push('/properties/$id/settings');
-              },
-            ),
           ),
           Expanded(
             child: showSkeleton
@@ -583,8 +576,6 @@ class _ManageGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isBooking = (property.modes ?? const []).contains('BOOKING');
-
     final actions = [
       _ManageAction(
         icon: Icons.dashboard_outlined,
@@ -618,13 +609,16 @@ class _ManageGrid extends StatelessWidget {
       ),
       _ManageAction(
         icon: Icons.assignment_outlined,
-        label: 'Applications',
+        label: 'Pending tenants',
         count: _count((s) => s.pendingApplications),
       ),
       _ManageAction(
-        icon: Icons.calendar_today_outlined,
-        label: 'Bookings',
-        count: isBooking ? _count((s) => s.activeBookings) : '—',
+        icon: Icons.build_outlined,
+        label: 'Repairs',
+        onTap: (context) => context.push(
+          '/repairs'
+          '?property_id=${property.id}&property_name=${Uri.encodeComponent(property.name)}',
+        ),
       ),
     ];
 

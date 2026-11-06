@@ -442,6 +442,10 @@ class _RentalModeSheet extends StatefulWidget {
 class _RentalModeSheetState extends State<_RentalModeSheet> {
   late String _value = widget.current;
 
+  // New properties are long-term only in v1; booking options stay visible
+  // only so an existing booking property isn't stranded.
+  bool get _hasBookings => widget.current != 'lease';
+
   @override
   Widget build(BuildContext context) {
     return _PSSheet(
@@ -454,35 +458,37 @@ class _RentalModeSheetState extends State<_RentalModeSheet> {
           _RentalRow(
             icon: Icons.description_outlined,
             title: 'Long-term (Leases)',
-            desc: 'Monthly rent, applications, lease agreements.',
+            desc: 'Monthly rent, tenants, lease agreements.',
             selected: _value == 'lease',
             onTap: () {
               Haptics.vibrate(HapticsType.selection);
               setState(() => _value = 'lease');
             },
           ),
-          const SizedBox(height: 10),
-          _RentalRow(
-            icon: Icons.calendar_month_outlined,
-            title: 'Short-term (Bookings)',
-            desc: 'Nightly stays, booking link, availability calendar.',
-            selected: _value == 'booking',
-            onTap: () {
-              Haptics.vibrate(HapticsType.selection);
-              setState(() => _value = 'booking');
-            },
-          ),
-          const SizedBox(height: 10),
-          _RentalRow(
-            icon: Icons.grid_view_rounded,
-            title: 'Both',
-            desc: 'Some units long-term, others for short stays.',
-            selected: _value == 'both',
-            onTap: () {
-              Haptics.vibrate(HapticsType.selection);
-              setState(() => _value = 'both');
-            },
-          ),
+          if (_hasBookings) ...[
+            const SizedBox(height: 10),
+            _RentalRow(
+              icon: Icons.calendar_month_outlined,
+              title: 'Short-term (Bookings)',
+              desc: 'Nightly stays, booking link, availability calendar.',
+              selected: _value == 'booking',
+              onTap: () {
+                Haptics.vibrate(HapticsType.selection);
+                setState(() => _value = 'booking');
+              },
+            ),
+            const SizedBox(height: 10),
+            _RentalRow(
+              icon: Icons.grid_view_rounded,
+              title: 'Both',
+              desc: 'Some units long-term, others for short stays.',
+              selected: _value == 'both',
+              onTap: () {
+                Haptics.vibrate(HapticsType.selection);
+                setState(() => _value = 'both');
+              },
+            ),
+          ],
         ],
       ),
     );

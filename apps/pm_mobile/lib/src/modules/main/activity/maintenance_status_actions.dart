@@ -167,7 +167,7 @@ class _MaintenanceCancelReasonSheetState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Cancel request',
+              'Cancel repair',
               style: TextStyle(
                 fontFamily: RLTokens.fontSerif,
                 fontSize: RLTokens.textCardHead,

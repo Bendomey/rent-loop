@@ -81,10 +81,7 @@ class _MaintCard extends StatelessWidget {
         onTap: () async {
           await Haptics.vibrate(HapticsType.selection);
           if (context.mounted) {
-            context.push(
-              '/activity/maintenances/${m.id}',
-              extra: m.propertyId,
-            );
+            context.push('/activity/maintenances/${m.id}', extra: m.propertyId);
           }
         },
         child: card,
@@ -492,7 +489,7 @@ class _StatusColumnPageState extends ConsumerState<_StatusColumnPage> {
                               padding: const EdgeInsets.only(top: 60),
                               child: Center(
                                 child: Text(
-                                  'No requests here',
+                                  'No repairs here',
                                   style: TextStyle(
                                     fontFamily: RLTokens.fontSans,
                                     fontSize: 13,
@@ -617,7 +614,9 @@ class _PageDots extends StatelessWidget {
 // ── Board ─────────────────────────────────────────────────────────────────────
 
 class MaintenanceBoard extends ConsumerStatefulWidget {
-  const MaintenanceBoard({super.key});
+  const MaintenanceBoard({super.key, this.initialPropertyIds = const []});
+
+  final List<String> initialPropertyIds;
 
   @override
   ConsumerState<MaintenanceBoard> createState() => _MaintenanceBoardState();
@@ -639,6 +638,8 @@ class _MaintenanceBoardState extends ConsumerState<MaintenanceBoard> {
   @override
   void initState() {
     super.initState();
+    _propertyFilterIds = widget.initialPropertyIds;
+    _query = MaintenanceRequestsQuery(propertyIds: widget.initialPropertyIds);
     _pageController = PageController(viewportFraction: 0.92);
     _pageController.addListener(() {
       final page = _pageController.page;

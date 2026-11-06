@@ -137,34 +137,29 @@ void main() {
     expect(find.text('View lease'), findsOneWidget);
   });
 
-  testWidgets('every spec row trailing glyph shares one right edge', (
-    tester,
-  ) async {
+  testWidgets('spec row values share one right edge', (tester) async {
     await _pumpScreen(tester);
 
-    // Edit rows end in a chevron, navigation rows in an arrow; all seven must
-    // land on the same right edge regardless of how wide their value is.
-    List<double> rightEdges(IconData icon) {
-      final finder = find.byIcon(icon);
-      return List.generate(
-        finder.evaluate().length,
-        (i) => tester.getBottomRight(finder.at(i)).dx,
-      );
-    }
-
     final edges = [
-      ...rightEdges(Icons.chevron_right_rounded),
-      ...rightEdges(Icons.arrow_forward_rounded),
-    ];
-
-    expect(edges.length, 7, reason: '5 editable rows + 2 navigation rows');
+      'Gideon Bempong',
+      'Benjamin Domey',
+      'Electrical',
+      'Tenant Visible',
+    ].map((t) => tester.getBottomRight(find.text(t)).dx).toList();
     for (final edge in edges) {
-      expect(
-        edge,
-        moreOrLessEquals(edges.first, epsilon: 0.5),
-        reason: 'trailing glyphs must be flush to a single right edge',
-      );
+      expect(edge, moreOrLessEquals(edges.first, epsilon: 0.5));
     }
+  });
+
+  testWidgets('detail shows no coming-soon affordances', (tester) async {
+    await _pumpScreen(tester);
+
+    expect(find.textContaining('Coming soon'), findsNothing);
+    expect(find.textContaining('coming soon'), findsNothing);
+    expect(find.textContaining('Maintenance'), findsNothing);
+    expect(find.text('Assign'), findsNothing);
+    expect(find.byIcon(Icons.more_horiz_rounded), findsNothing);
+    expect(find.byIcon(Icons.chevron_right_rounded), findsNothing);
   });
 
   group('history sentences', () {

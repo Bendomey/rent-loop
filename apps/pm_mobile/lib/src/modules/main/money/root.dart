@@ -181,7 +181,7 @@ class _MoneyScreenState extends State<MoneyScreen> {
       body: Column(
         children: [
           RLTopHeader(
-            title: 'Money',
+            title: 'Rent',
             trailing: [
               RLIconBtn(
                 icon: Icons.tune_rounded,

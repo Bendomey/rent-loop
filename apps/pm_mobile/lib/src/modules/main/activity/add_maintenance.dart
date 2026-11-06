@@ -65,8 +65,8 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
   bool get _forcedInternal => _blocks.isNotEmpty || _assetCount > 1;
 
   String get _forcedInternalReason => _units.isEmpty
-      ? 'Block work has no tenant attached, so this request stays hidden from tenants.'
-      : 'This request covers more than one asset, so it stays hidden from tenants and no one is notified.';
+      ? 'Block work has no tenant attached, so this repair stays hidden from tenants.'
+      : 'This repair covers more than one asset, so it stays hidden from tenants and no one is notified.';
 
   @override
   void dispose() {
@@ -134,7 +134,7 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
           Column(
             children: [
               RLBackHeader(
-                title: 'New request',
+                title: 'New repair',
                 onBack: () async {
                   await Haptics.vibrate(HapticsType.selection);
                   if (context.mounted) Navigator.of(context).pop();
@@ -148,7 +148,7 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
                     children: [
                       // ── Page heading ──────────────────────────────────────
                       const Text(
-                        'New maintenance request',
+                        'New repair',
                         style: TextStyle(
                           fontFamily: RLTokens.fontSerif,
                           fontSize: 25,
@@ -159,7 +159,7 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
                       ),
                       const SizedBox(height: 7),
                       const Text(
-                        'Report a new maintenance issue for one or more blocks or units.',
+                        'Report something that needs fixing in a block or unit.',
                         style: TextStyle(
                           fontFamily: RLTokens.fontSans,
                           fontSize: 13.5,
@@ -317,7 +317,7 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
                       ),
                       const SizedBox(height: 4),
                       const Text(
-                        'Should the tenant see this request in their portal?',
+                        'Should the tenant see this repair in their portal?',
                         style: TextStyle(
                           fontFamily: RLTokens.fontSans,
                           fontSize: 12.5,
@@ -409,7 +409,7 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
                   ),
                   const Spacer(),
                   RLBtn(
-                    label: 'Create request',
+                    label: 'Create repair',
                     kind: RLBtnKind.primary,
                     icon: Icons.check_rounded,
                     onPressed: _submit,

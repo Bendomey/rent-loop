@@ -27,8 +27,6 @@ class TenantsScreen extends ConsumerStatefulWidget {
 
   /// Pre-applied property filter — set when arriving from a property's
   /// detail page (Manage-grid "Tenants" tile), via GoRouter query params.
-  /// This is the same global tenants list either way; the filter is just
-  /// pre-seeded rather than the screen being a different one.
   final String? propertyId;
   final String? propertyName;
 
@@ -50,7 +48,9 @@ class _TenantsScreenState extends ConsumerState<TenantsScreen> {
     _searchController = TextEditingController();
     _scrollController = ScrollController()..addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(tenantsNotifierProvider.notifier).loadFirstPage(_query);
+      ref
+          .read(tenantsNotifierProvider(widget.propertyId).notifier)
+          .loadFirstPage(_query);
     });
   }
 
@@ -65,7 +65,9 @@ class _TenantsScreenState extends ConsumerState<TenantsScreen> {
   void _onScroll() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
-      ref.read(tenantsNotifierProvider.notifier).loadNextPage();
+      ref
+          .read(tenantsNotifierProvider(widget.propertyId).notifier)
+          .loadNextPage();
     }
   }
 
@@ -75,7 +77,9 @@ class _TenantsScreenState extends ConsumerState<TenantsScreen> {
       setState(() {
         _query = _query.copyWith(search: value, clearSearch: value.isEmpty);
       });
-      ref.read(tenantsNotifierProvider.notifier).loadFirstPage(_query);
+      ref
+          .read(tenantsNotifierProvider(widget.propertyId).notifier)
+          .loadFirstPage(_query);
     });
   }
 
@@ -86,18 +90,22 @@ class _TenantsScreenState extends ConsumerState<TenantsScreen> {
       _statusFilter = label;
       _query = _query.copyWith(status: apiValue, clearStatus: apiValue == null);
     });
-    ref.read(tenantsNotifierProvider.notifier).loadFirstPage(_query);
+    ref
+        .read(tenantsNotifierProvider(widget.propertyId).notifier)
+        .loadFirstPage(_query);
   }
 
   Future<void> _clearPropertyFilter() async {
     await Haptics.vibrate(HapticsType.selection);
     setState(() => _query = _query.copyWith(clearPropertyId: true));
-    ref.read(tenantsNotifierProvider.notifier).loadFirstPage(_query);
+    ref
+        .read(tenantsNotifierProvider(widget.propertyId).notifier)
+        .loadFirstPage(_query);
   }
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(tenantsNotifierProvider);
+    final state = ref.watch(tenantsNotifierProvider(widget.propertyId));
     final showSkeleton = state.isLoading && state.items.isEmpty;
     final showError = state.error != null && state.items.isEmpty;
     final showEmpty =
@@ -109,6 +117,7 @@ class _TenantsScreenState extends ConsumerState<TenantsScreen> {
         children: [
           RLBackHeader(
             title: 'Tenants',
+            showBack: widget.propertyId != null || context.canPop(),
             onBack: () async {
               await Haptics.vibrate(HapticsType.selection);
               if (context.mounted) Navigator.of(context).pop();
@@ -118,7 +127,7 @@ class _TenantsScreenState extends ConsumerState<TenantsScreen> {
             child: RefreshIndicator(
               color: RLTokens.crimson,
               onRefresh: () => ref
-                  .read(tenantsNotifierProvider.notifier)
+                  .read(tenantsNotifierProvider(widget.propertyId).notifier)
                   .loadFirstPage(_query),
               child: CustomScrollView(
                 controller: _scrollController,
@@ -209,7 +218,11 @@ class _TenantsScreenState extends ConsumerState<TenantsScreen> {
                         padding: const EdgeInsets.all(RLTokens.gutter),
                         child: RLSectionError(
                           onRetry: () => ref
-                              .read(tenantsNotifierProvider.notifier)
+                              .read(
+                                tenantsNotifierProvider(
+                                  widget.propertyId,
+                                ).notifier,
+                              )
                               .loadFirstPage(_query),
                         ),
                       ),

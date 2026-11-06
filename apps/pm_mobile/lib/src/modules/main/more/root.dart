@@ -10,7 +10,6 @@ import 'package:rentloop_manager/src/modules/main/workspace_sheet.dart';
 import 'package:rentloop_manager/src/shared/dialogs.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // ── Row item model ────────────────────────────────────────────────────────────
@@ -41,9 +40,6 @@ class MoreScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final workspaceName =
-        ref.watch(currentWorkspaceNotifierProvider)?.client?.name ??
-        'your workspace';
     final hasMultipleWorkspaces =
         ref
             .watch(currentUserNotifierProvider)
@@ -52,96 +48,30 @@ class MoreScreen extends ConsumerWidget {
             .length !=
         1;
 
-    final manageRows = [
-      const _RowItem(
-        label: 'Tenants',
-        sub: 'Directory & profiles',
-        icon: Icons.people_outline_rounded,
-        bg: RLTokens.infoBg,
-        fg: RLTokens.info,
-        route: '/more/tenants',
+    const manageRows = [
+      _RowItem(
+        label: 'Repairs',
+        sub: 'Things that need fixing',
+        icon: Icons.build_outlined,
+        bg: RLTokens.warningBg,
+        fg: RLTokens.warning,
+        route: '/repairs',
       ),
-      const _RowItem(
+      _RowItem(
+        label: 'Announcements',
+        sub: 'Send a message to tenants',
+        icon: Icons.campaign_outlined,
+        bg: RLTokens.crimsonTint,
+        fg: RLTokens.crimson,
+        route: '/more/announcements',
+      ),
+      _RowItem(
         label: 'Leases',
         sub: 'Rental agreements',
         icon: Icons.description_outlined,
         bg: RLTokens.successBg,
         fg: RLTokens.success,
         route: '/more/leases',
-      ),
-      const _RowItem(
-        label: 'Announcements',
-        sub: 'Notices & polls',
-        icon: Icons.campaign_outlined,
-        bg: RLTokens.crimsonTint,
-        fg: RLTokens.crimson,
-        route: '/more/announcements',
-      ),
-      const _RowItem(
-        label: 'Documents & e-sign',
-        sub: 'Agreements, audit trail',
-        icon: Icons.description_outlined,
-        bg: RLTokens.warningBg,
-        fg: RLTokens.warning,
-        route: '/more/documents',
-      ),
-      const _RowItem(
-        label: 'Reports',
-        sub: 'Workspace analytics',
-        icon: Icons.bar_chart_rounded,
-        bg: RLTokens.successBg,
-        fg: RLTokens.success,
-      ),
-    ];
-
-    final orgRows = [
-      const _RowItem(
-        label: 'General settings',
-        sub: 'Profile, company, location',
-        icon: Icons.settings_outlined,
-        bg: RLTokens.neutralBg,
-        fg: RLTokens.neutral,
-        route: '/more/settings',
-      ),
-      const _RowItem(
-        label: 'Members & roles',
-        sub: '5 members',
-        icon: Icons.person_outline_rounded,
-        bg: RLTokens.neutralBg,
-        fg: RLTokens.neutral,
-        route: '/more/members',
-      ),
-      const _RowItem(
-        label: 'Payment accounts',
-        sub: 'MoMo · Bank transfer',
-        icon: Icons.credit_card_outlined,
-        bg: RLTokens.successBg,
-        fg: RLTokens.success,
-        route: '/more/payment-accounts',
-      ),
-      _RowItem(
-        label: 'Rentloop x $workspaceName\'s Agreement',
-        sub: '3 templates',
-        icon: Icons.folder_outlined,
-        bg: RLTokens.infoBg,
-        fg: RLTokens.info,
-        route: '/more/agreement',
-      ),
-      const _RowItem(
-        label: 'Billing',
-        sub: 'Growth plan',
-        icon: Icons.receipt_long_outlined,
-        bg: RLTokens.warningBg,
-        fg: RLTokens.warning,
-        route: '/more/billing',
-      ),
-      const _RowItem(
-        label: 'Archived properties',
-        sub: 'Restore a deleted property',
-        icon: Icons.inventory_2_outlined,
-        bg: RLTokens.neutralBg,
-        fg: RLTokens.neutral,
-        route: '/more/archived-properties',
       ),
     ];
 
@@ -156,16 +86,6 @@ class MoreScreen extends ConsumerWidget {
           final uri = Uri.parse('https://wa.me/233201080802');
           if (await canLaunchUrl(uri))
             await launchUrl(uri, mode: LaunchMode.externalApplication);
-        },
-      ),
-      _RowItem(
-        label: 'Share Rentloop',
-        sub: 'Invite other managers',
-        icon: Icons.ios_share_rounded,
-        bg: RLTokens.neutralBg,
-        fg: RLTokens.neutral,
-        action: (_) async {
-          await Share.shareUri(Uri.parse('https://rentloopapp.com/managers'));
         },
       ),
     ];
@@ -192,8 +112,6 @@ class MoreScreen extends ConsumerWidget {
                 ],
                 RLLabel('Manage'),
                 _RowGroup(rows: manageRows),
-                RLLabel('Organisation settings'),
-                _RowGroup(rows: orgRows),
                 RLLabel('Account'),
                 _RowGroup(rows: accountRows),
                 const SizedBox(height: 6),

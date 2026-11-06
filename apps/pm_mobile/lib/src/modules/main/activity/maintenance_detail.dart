@@ -17,7 +17,7 @@ import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/toast.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
-/// Single maintenance request.
+/// Single repair.
 ///
 /// [propertyId] is a hint, not a requirement: every detail endpoint is
 /// property-scoped but the route carries only the request id, so the board
@@ -61,25 +61,11 @@ class _MaintenanceDetailScreenState
       body: Column(
         children: [
           RLBackHeader(
-            title: request != null ? '#${request.code}' : 'Request',
+            title: request != null ? '#${request.code}' : 'Repair',
             onBack: () async {
               await Haptics.vibrate(HapticsType.selection);
               if (context.mounted) Navigator.of(context).pop();
             },
-            trailing: RLIconBtn(
-              icon: Icons.more_horiz_rounded,
-              bg: Colors.transparent,
-              onTap: () async {
-                await Haptics.vibrate(HapticsType.selection);
-                if (!context.mounted) return;
-                showRLToast(
-                  ref,
-                  tone: RLToastTone.info,
-                  title: 'Coming soon',
-                  body: 'Editing a request is not available in the app yet.',
-                );
-              },
-            ),
           ),
           Expanded(
             child: showSkeleton
@@ -88,7 +74,7 @@ class _MaintenanceDetailScreenState
                 ? Padding(
                     padding: const EdgeInsets.all(RLTokens.gutter),
                     child: RLSectionError(
-                      title: "Couldn't load request",
+                      title: "Couldn't load repair",
                       body: _errorBody(requestAsync.error),
                       onRetry: () => ref.invalidate(provider),
                     ),
@@ -108,12 +94,6 @@ class _MaintenanceDetailScreenState
             _ActionBar(
               request: request,
               busy: _submittingStatus,
-              onAssign: () => showRLToast(
-                ref,
-                tone: RLToastTone.info,
-                title: 'Coming soon',
-                body: 'Assigning from the app is not available yet.',
-              ),
               onChangeStatus: () => _changeStatus(request),
             ),
         ],
@@ -195,7 +175,7 @@ class _MaintenanceDetailScreenState
         ref,
         tone: RLToastTone.success,
         title: 'Status updated',
-        body: 'Request moved to $target.',
+        body: 'Repair moved to $target.',
       );
     } else {
       showRLToast(
@@ -528,38 +508,21 @@ class _AssignmentsCard extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         children: [
-          _EditRow(
+          _ValueRow(
             label: 'Worker',
             value: request.assignedWorker?.name ?? 'Unassigned',
             unset: request.assignedWorker == null,
-            onTap: () => _editSoon(context, ref, 'Assigning a worker'),
           ),
-          _EditRow(
+          _ValueRow(
             label: 'Manager',
             value: request.assignedManager?.name ?? 'Unassigned',
             unset: request.assignedManager == null,
             last: true,
-            onTap: () => _editSoon(context, ref, 'Assigning a manager'),
           ),
         ],
       ),
     );
   }
-}
-
-/// Placeholder for the edit sheets that will eventually back every tokenized
-/// row. The rows are already built as tap targets so wiring each one is a
-/// matter of swapping this call for its sheet — nothing about the row
-/// treatment has to change then.
-Future<void> _editSoon(BuildContext context, WidgetRef ref, String what) async {
-  await Haptics.vibrate(HapticsType.selection);
-  if (!context.mounted) return;
-  showRLToast(
-    ref,
-    tone: RLToastTone.info,
-    title: 'Coming soon',
-    body: '$what is not available in the app yet.',
-  );
 }
 
 // ── Properties ────────────────────────────────────────────────────────────────
@@ -583,21 +546,18 @@ class _PropertiesCard extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         children: [
-          _EditRow(
+          _ValueRow(
             label: 'Priority',
             value: priority,
             tone: statusTone(priority),
-            onTap: () => _editSoon(context, ref, 'Changing priority'),
           ),
-          _EditRow(
+          _ValueRow(
             label: 'Category',
             value: mrCategoryLabelFromApi(request.category),
-            onTap: () => _editSoon(context, ref, 'Changing category'),
           ),
-          _EditRow(
+          _ValueRow(
             label: 'Visibility',
             value: mrVisibilityLabelFromApi(request.visibility),
-            onTap: () => _editSoon(context, ref, 'Changing visibility'),
             last: !canOpenLease,
           ),
           if (canOpenLease)
@@ -674,17 +634,13 @@ class _SpecRow extends StatelessWidget {
   }
 }
 
-/// A value the manager can change: plain text plus a chevron.
-///
-/// The chevron is what marks these rows as editable and separates them from
-/// the navigation rows below. Only Priority renders as a tag, via [tone] —
+/// A read-only label/value row. Only Priority renders as a tag, via [tone] —
 /// it's the one value with a status meaning, so it earns the colour. Names,
 /// categories and visibility stay plain strings.
-class _EditRow extends StatelessWidget {
-  const _EditRow({
+class _ValueRow extends StatelessWidget {
+  const _ValueRow({
     required this.label,
     required this.value,
-    required this.onTap,
     this.tone,
     this.unset = false,
     this.last = false,
@@ -692,7 +648,6 @@ class _EditRow extends StatelessWidget {
 
   final String label;
   final String value;
-  final VoidCallback onTap;
 
   /// Set only for Priority — the one value that carries a status meaning and
   /// so renders as a tag. Every other value is plain text: wrapping a name or
@@ -710,42 +665,27 @@ class _EditRow extends StatelessWidget {
     return _SpecRow(
       label: label,
       last: last,
-      onTap: onTap,
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Flexible(
-            child: t != null
-                ? RLPill(value, tone: t)
-                : Text(
-                    value,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.right,
-                    style: TextStyle(
-                      fontFamily: RLTokens.fontSans,
-                      fontSize: 13.5,
-                      fontWeight: RLTokens.semibold,
-                      color: unset ? RLTokens.mutedSoft : RLTokens.ink,
-                    ),
-                  ),
-          ),
-          const SizedBox(width: 6),
-          const Icon(
-            Icons.chevron_right_rounded,
-            size: 18,
-            color: RLTokens.micro,
-          ),
-        ],
-      ),
+      onTap: null,
+      trailing: t != null
+          ? RLPill(value, tone: t)
+          : Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontFamily: RLTokens.fontSans,
+                fontSize: 13.5,
+                fontWeight: RLTokens.semibold,
+                color: unset ? RLTokens.mutedSoft : RLTokens.ink,
+              ),
+            ),
     );
   }
 }
 
 /// A value that leaves this screen: crimson text plus a forward arrow, the
-/// app's existing "go somewhere" signal. Colour and glyph both differ from
-/// the rows above, which is the whole point — a chevron edits something here,
-/// an arrow navigates away.
+/// app's existing "go somewhere" signal.
 class _NavRow extends StatelessWidget {
   const _NavRow({
     required this.label,
@@ -841,13 +781,11 @@ class _ActionBar extends StatelessWidget {
   const _ActionBar({
     required this.request,
     required this.busy,
-    required this.onAssign,
     required this.onChangeStatus,
   });
 
   final MaintenanceRequestModel request;
   final bool busy;
-  final VoidCallback onAssign;
   final VoidCallback onChangeStatus;
 
   @override
@@ -866,13 +804,6 @@ class _ActionBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          RLBtn(
-            label: 'Assign',
-            kind: RLBtnKind.light,
-            icon: Icons.person_outline_rounded,
-            onPressed: busy ? null : onAssign,
-          ),
-          const SizedBox(width: 10),
           Expanded(
             child: RLBtn(
               label: busy ? 'Updating…' : 'Change status',

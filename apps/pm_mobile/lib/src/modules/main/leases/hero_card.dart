@@ -207,8 +207,7 @@ class LeaseHeroCard extends ConsumerWidget {
                         ),
                         const SizedBox(width: 5),
                         Text(
-                          'View Application'
-                          '${lease.tenantApplication != null ? ' (${lease.tenantApplication!.code})' : ''}',
+                          'View tenant setup',
                           style: const TextStyle(
                             fontFamily: RLTokens.fontSans,
                             fontSize: 12,

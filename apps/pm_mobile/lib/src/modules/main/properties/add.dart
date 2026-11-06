@@ -570,25 +570,9 @@ class _Step1 extends StatelessWidget {
         _RentalRow(
           icon: Icons.description_outlined,
           title: 'Long-term (Leases)',
-          desc: 'Monthly rent, applications, lease agreements.',
+          desc: 'Monthly rent, tenants, lease agreements.',
           selected: rental == 'Long-term (Leases)',
           onTap: () => onRental('Long-term (Leases)'),
-        ),
-        const SizedBox(height: 10),
-        _RentalRow(
-          icon: Icons.calendar_month_outlined,
-          title: 'Short-term (Bookings)',
-          desc: 'Nightly stays, booking link, availability calendar.',
-          selected: rental == 'Short-term (Bookings)',
-          onTap: () => onRental('Short-term (Bookings)'),
-        ),
-        const SizedBox(height: 10),
-        _RentalRow(
-          icon: Icons.grid_view_rounded,
-          title: 'Both',
-          desc: 'Some units long-term, others for short stays.',
-          selected: rental == 'Both',
-          onTap: () => onRental('Both'),
         ),
       ],
     );

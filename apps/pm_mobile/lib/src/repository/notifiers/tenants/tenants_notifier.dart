@@ -74,10 +74,8 @@ class TenantsState {
   }
 }
 
-/// Global tenants list — not property-scoped in construction (unlike
-/// UnitsNotifier/BlocksNotifier, which take a propertyId per load call);
-/// property is just one optional filter here, since GET .../tenants spans
-/// every property the caller can access.
+/// Keyed by the screen's entry property so the Tenants tab (null) and a
+/// property's pushed tenants screen never overwrite each other's list.
 @riverpod
 class TenantsNotifier extends _$TenantsNotifier {
   static const int _pageSize = 10;
@@ -85,7 +83,7 @@ class TenantsNotifier extends _$TenantsNotifier {
   TenantsQuery _currentQuery = const TenantsQuery();
 
   @override
-  TenantsState build() => const TenantsState();
+  TenantsState build(String? propertyId) => const TenantsState();
 
   String? get _clientId => ref.read(currentWorkspaceNotifierProvider)?.clientId;
 

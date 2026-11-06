@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-06 — Home and More reduced to v1
+- Home: removed the notifications bell and `ChecklistBanner`; quick actions are now Add tenant, Record payment, Repairs, Announcement.
+- More: Manage is Repairs / Announcements / Leases; removed Tenants, Documents, Reports, the Organisation settings section and Share Rentloop.
+- My account: removed Security and Sessions rows.
+- Modules affected: `modules/main/home`, `modules/main/more`, `modules/main/more/my_account`.
+
 ## 2026-08-01 — General Settings redesigned; reads are live, edits are not
 - `more/settings.dart` (1,571 lines, every value hardcoded, not one API call) deleted and replaced by `more/general/` — hub plus one page per category, matching the My Account redesign and the web portal's new five-tab Settings › General.
 - Categories: Profile · Company · Location · Branding · Preferences, with **Identity taking Company's slot for individual accounts** — the same type-dependent swap the web page makes, so neither account type sees a section that can't apply to it.

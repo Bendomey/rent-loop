@@ -20,14 +20,17 @@ apps/pm_mobile/
 │       ├── lib/                    # Utility helpers (storage primitives, error messages, workspace resolution)
 │       ├── modules/
 │       │   ├── auth/               # welcome, login, workspace_select
-│       │   └── main/               # home, properties, tenants, leases, activity, money, announcements, more
-│       ├── navigation/             # routes.dart (GoRouter), splash.dart
+│       │   └── main/               # home, properties, tenants, leases, repairs, activity, money, announcements, more
+│       ├── navigation/             # routes.dart (GoRouter; `appRoutes()` holds the shell + feature routes), splash.dart
 │       ├── repository/
 │       │   ├── api_state.dart      # ApiState base + ApiStatus enum
 │       │   ├── models/             # @JsonSerializable DTOs (UserModel, ClientUserModel, ClientModel)
 │       │   └── notifiers/          # Mutation state (auth/login_notifier.dart)
 │       └── shared/                 # theme.dart, tokens.dart, widgets.dart, dialogs.dart, toast.dart, coming_soon.dart
 ```
+
+## v1 Navigation
+Bottom tabs are Home / Properties / Tenants / Rent / More. Repairs lives in `modules/main/repairs/` (`RepairsScreen` at `/repairs`), reached from Home quick actions and More. Out-of-scope screens (notifications, bookings, property/unit settings, documents, members, payment accounts, archived properties, agreement, billing, general settings, security, sessions) have no route or entry point; their files stay on disk.
 
 ## Module Overview
 | Module/Package | Purpose |
