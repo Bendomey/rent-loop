@@ -19,6 +19,13 @@ void main() {
     'InvalidDueDate': 'Pick a valid due date.',
     'PaymentExceedsInvoiceBalance':
         'That is more than the bill has left on it.',
+    'PaymentNotFound': 'That payment no longer exists.',
+    'invoice is not in a valid state to accept payments':
+        "This bill can't take payments right now.",
+    'Payment is not in PENDING status': 'This payment was already handled.',
+    'payment is not in pending status': 'This payment was already handled.',
+    'can only verify offline payments': "This payment can't be confirmed here.",
+    'Can Only Verify Offline Payments': "This payment can't be confirmed here.",
     'ClaimExceedsChargeBalance': 'Part of that is already on a bill.',
     'AmountExceedsOutstandingCharges': 'That is more than the tenant owes.',
     'NoChargesSelected': 'Pick what they paid for.',

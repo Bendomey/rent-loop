@@ -13252,7 +13252,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Mark a PENDING offline payment as SUCCESSFUL or FAILED. Updates the invoice status accordingly.",
+                "description": "Mark a PENDING offline payment as SUCCESSFUL or FAILED. Updates the invoice status accordingly. is_successful must be sent explicitly; false declines the payment (FAILED) and leaves the invoice unchanged.",
                 "consumes": [
                     "application/json"
                 ],

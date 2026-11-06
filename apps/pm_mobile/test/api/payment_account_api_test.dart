@@ -55,6 +55,8 @@ void main() {
     expect(uri.path, '/api/v1/admin/clients/c1/payment-accounts');
     expect(uri.queryParametersAll['owner_types'], ['PROPERTY_OWNER', 'SYSTEM']);
     expect(uri.queryParameters['page_size'], '50');
+    expect(uri.queryParameters['rail'], 'OFFLINE');
+    expect(uri.queryParameters['status'], 'ACTIVE');
 
     final account = page.rows.single;
     expect(account.rail, 'OFFLINE');

@@ -43,11 +43,6 @@ void main() {
         'stay_duration_frequency': 'MONTHLY',
         'rent_fee': 300000,
         'payment_frequency': 'MONTHLY',
-        'application_payment_invoice': {
-          'id': 'inv-1',
-          'code': 'INV-1',
-          'status': 'PAID',
-        },
         'lease_agreement_document_mode': 'ONLINE',
         'lease_agreement_document_id': 'doc-1',
         'lease_agreement_document': {'id': 'doc-1', 'content': '{}'},
@@ -61,7 +56,6 @@ void main() {
       expect(model.status, 'TenantApplication.Status.InProgress');
       expect(model.firstName, 'Adjoa');
       expect(model.desiredUnit?.name, 'Unit 1C');
-      expect(model.applicationPaymentInvoice?.isPaid, isTrue);
       expect(model.leaseAgreementDocument?.content, '{}');
       expect(model.leaseAgreementDocumentSignatures?.single.role, 'TENANT');
       expect(model.stayDuration, 12);
@@ -77,7 +71,6 @@ void main() {
       expect(model.id, 'app-2');
       expect(model.firstName, isNull);
       expect(model.desiredUnit, isNull);
-      expect(model.applicationPaymentInvoice, isNull);
       expect(model.leaseAgreementDocumentSignatures, isNull);
       expect(model.fullName, '');
     });
@@ -91,19 +84,6 @@ void main() {
         'last_name': 'Frimpong',
       });
       expect(model.fullName, 'Adjoa Serwaa Frimpong');
-    });
-
-    test('an invoice without PAID status is not paid', () {
-      final model = TenantApplicationModel.fromJson({
-        'id': 'a',
-        'code': 'c',
-        'application_payment_invoice': {
-          'id': 'i',
-          'code': 'INV',
-          'status': 'ISSUED',
-        },
-      });
-      expect(model.applicationPaymentInvoice?.isPaid, isFalse);
     });
   });
 }

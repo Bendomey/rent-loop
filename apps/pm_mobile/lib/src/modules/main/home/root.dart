@@ -7,6 +7,7 @@ import 'package:rentloop_manager/src/architecture/current_workspace/current_work
 import 'package:rentloop_manager/src/lib/money.dart';
 import 'package:rentloop_manager/src/lib/workspace_resolution.dart';
 import 'package:rentloop_manager/src/modules/main/workspace_sheet.dart';
+import 'package:rentloop_manager/src/repository/providers/properties/my_property_roles_provider.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
@@ -508,7 +509,7 @@ class _CollectionTrendSection extends StatelessWidget {
 
 // ── Quick actions ──────────────────────────────────────────────────────────────
 
-class _QuickActionsSection extends StatelessWidget {
+class _QuickActionsSection extends ConsumerWidget {
   static const _actions = [
     _QuickAction(
       icon: Icons.person_add_alt_1_outlined,
@@ -533,7 +534,13 @@ class _QuickActionsSection extends StatelessWidget {
   ];
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final roles = ref.watch(myPropertyRolesProvider).valueOrNull;
+    final managesAny = roles?.values.any((r) => r == 'MANAGER') ?? false;
+    final actions = [
+      for (final a in _actions)
+        if (a.route != '/money/record-payment' || managesAny) a,
+    ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -542,13 +549,13 @@ class _QuickActionsSection extends StatelessWidget {
           scrollDirection: Axis.horizontal,
           clipBehavior: Clip.none,
           child: Row(
-            children: _actions
+            children: actions
                 .asMap()
                 .entries
                 .map(
                   (e) => Padding(
                     padding: EdgeInsets.only(
-                      right: e.key < _actions.length - 1 ? 10 : 0,
+                      right: e.key < actions.length - 1 ? 10 : 0,
                     ),
                     child: _QuickChip(action: e.value),
                   ),

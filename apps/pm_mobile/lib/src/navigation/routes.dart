@@ -197,7 +197,10 @@ List<RouteBase> appRoutes() => [
   // money routes
   GoRoute(
     path: '/money/invoices/:id',
-    builder: (_, state) => InvoiceDetailScreen(id: state.pathParameters['id']!),
+    builder: (_, state) => InvoiceDetailScreen(
+      id: state.pathParameters['id']!,
+      propertyId: state.uri.queryParameters['property_id'],
+    ),
   ),
   GoRoute(
     path: '/money/record-payment',

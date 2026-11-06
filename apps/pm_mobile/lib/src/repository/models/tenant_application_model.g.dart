@@ -6,19 +6,6 @@ part of 'tenant_application_model.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-InvoiceRef _$InvoiceRefFromJson(Map<String, dynamic> json) => InvoiceRef(
-  id: json['id'] as String,
-  code: json['code'] as String,
-  status: json['status'] as String?,
-);
-
-Map<String, dynamic> _$InvoiceRefToJson(InvoiceRef instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'code': instance.code,
-      'status': instance.status,
-    };
-
 ApprovedLeaseModel _$ApprovedLeaseModelFromJson(Map<String, dynamic> json) =>
     ApprovedLeaseModel(
       id: json['id'] as String,
@@ -147,11 +134,6 @@ TenantApplicationModel _$TenantApplicationModelFromJson(
   paymentFrequency: json['payment_frequency'] as String?,
   initialDepositFee: (json['initial_deposit_fee'] as num?)?.toInt(),
   securityDepositFee: (json['security_deposit_fee'] as num?)?.toInt(),
-  applicationPaymentInvoice: json['application_payment_invoice'] == null
-      ? null
-      : InvoiceRef.fromJson(
-          json['application_payment_invoice'] as Map<String, dynamic>,
-        ),
   leaseAgreementDocumentMode: json['lease_agreement_document_mode'] as String?,
   leaseAgreementDocumentUrl: json['lease_agreement_document_url'] as String?,
   leaseAgreementDocumentId: json['lease_agreement_document_id'] as String?,
@@ -230,7 +212,6 @@ Map<String, dynamic> _$TenantApplicationModelToJson(
   'payment_frequency': instance.paymentFrequency,
   'initial_deposit_fee': instance.initialDepositFee,
   'security_deposit_fee': instance.securityDepositFee,
-  'application_payment_invoice': instance.applicationPaymentInvoice,
   'lease_agreement_document_mode': instance.leaseAgreementDocumentMode,
   'lease_agreement_document_url': instance.leaseAgreementDocumentUrl,
   'lease_agreement_document_id': instance.leaseAgreementDocumentId,

@@ -15,7 +15,9 @@ Future<List<PaymentAccountModel>> paymentAccounts(
   final page = await ref
       .read(paymentAccountApiProvider)
       .getCollectionAccounts(clientId: clientId);
-  final active = page.rows.where((a) => a.status == 'ACTIVE').toList();
+  final active = page.rows
+      .where((a) => a.status == 'ACTIVE' && a.rail == 'OFFLINE')
+      .toList();
   return [
     ...active.where((a) => a.isDefault),
     ...active.where((a) => !a.isDefault),

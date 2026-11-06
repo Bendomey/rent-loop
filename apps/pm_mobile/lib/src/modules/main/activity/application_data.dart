@@ -262,8 +262,6 @@ class ApplicationFinancial {
     this.rentFee,
     this.paymentFrequency,
     this.securityDepositFee,
-    this.invoiceGenerated = false,
-    this.invoicePaid = false,
     this.hasFinancialAccount = false,
   });
 
@@ -273,14 +271,11 @@ class ApplicationFinancial {
 
   /// Pesewas.
   final int? securityDepositFee;
-  final bool invoiceGenerated;
-  final bool invoicePaid;
   final bool hasFinancialAccount;
 
   ApplicationFinancial copyWith({
     int? Function()? rentFee,
     String? Function()? paymentFrequency,
-    bool? invoicePaid,
   }) {
     return ApplicationFinancial(
       rentFee: rentFee != null ? rentFee() : this.rentFee,
@@ -288,8 +283,6 @@ class ApplicationFinancial {
           ? paymentFrequency()
           : this.paymentFrequency,
       securityDepositFee: securityDepositFee,
-      invoiceGenerated: invoiceGenerated,
-      invoicePaid: invoicePaid ?? this.invoicePaid,
       hasFinancialAccount: hasFinancialAccount,
     );
   }
@@ -477,14 +470,9 @@ class ApplicationDetailData {
   /// only offers them while the application is still in progress.
   bool get canChangeUnit => !isSingleUnitProperty && !approved;
 
-  bool get isUnitChangeLocked =>
-      financial.invoicePaid || doc.signers.any((s) => s.signed);
+  bool get isUnitChangeLocked => doc.signers.any((s) => s.signed);
 
   String? get unitChangeLockReason {
-    if (financial.invoicePaid) {
-      return 'The initial payment has been paid, so the unit can no longer be '
-          'changed.';
-    }
     if (doc.signers.any((s) => s.signed)) {
       return 'The lease document has been signed, so the unit can no longer '
           'be changed.';
@@ -572,13 +560,6 @@ class ApplicationDetailData {
       financialAccount: financial.hasFinancialAccount
           ? FinancialAccountSummaryModel(id: 'seed-account')
           : null,
-      applicationPaymentInvoice: financial.invoiceGenerated
-          ? InvoiceRef(
-              id: 'seed-invoice',
-              code: 'SEED',
-              status: financial.invoicePaid ? 'PAID' : 'ISSUED',
-            )
-          : null,
       leaseAgreementDocumentMode: doc.mode,
       leaseAgreementDocumentId: doc.attached ? docId : null,
       leaseAgreementDocumentUrl: doc.attached ? 'seed://lease.pdf' : null,
@@ -656,8 +637,6 @@ class ApplicationDetailData {
           ),
     ];
 
-    final invoice = a.applicationPaymentInvoice;
-
     return ApplicationDetailData(
       id: a.id,
       code: a.code,
@@ -704,8 +683,6 @@ class ApplicationDetailData {
         rentFee: a.rentFee,
         paymentFrequency: a.paymentFrequency,
         securityDepositFee: a.securityDepositFee,
-        invoiceGenerated: invoice != null,
-        invoicePaid: invoice?.isPaid ?? false,
         hasFinancialAccount: a.financialAccount != null,
       ),
       doc: ApplicationDoc(

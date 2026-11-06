@@ -4,6 +4,13 @@
 
 ---
 
+## Rent tab sums bills; tenant "owes" stays account-balance based (2026-11-06)
+**Why:** The Rent tab totals what is left on issued bills (`total_amount` minus SUCCESSFUL payments), because a bill is the thing a payment is recorded against. A tenant's "owes" figure elsewhere comes from the financial account balance (charges less payments), which also covers charges not yet billed. The two answer different questions, so each keeps its own source rather than being forced to agree.
+**Tradeoffs:** The Rent tab total can differ from the sum of tenants' "owes" until charges are billed. The API has no balance field, so the remainder is computed on the client.
+**Alternatives considered:** Deriving the Rent tab from account balances (loses per-bill payment and confirmation), or showing both numbers in one place (confusing).
+
+---
+
 ## Mobile attaches MANUAL lease documents only; ONLINE documents stay web-owned (2026-11-06)
 **Why:** A MANUAL document is just an uploaded file and one PATCH, which mobile can do safely. An ONLINE document is written in the web editor and signed there, and removing or replacing it also deletes the document record on the web. Mobile shows it read-only with an "Open on the web" link, and hides all writes once any document is SIGNED/SIGNING.
 **Tradeoffs:** A landlord who started an online document on the web must finish or change it there. No e-signing on mobile.

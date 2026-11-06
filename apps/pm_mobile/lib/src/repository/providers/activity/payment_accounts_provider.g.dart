@@ -6,7 +6,7 @@ part of 'payment_accounts_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$paymentAccountsHash() => r'33db44fe5ec88f327502e1c995f1add24ff3876c';
+String _$paymentAccountsHash() => r'b39418b8419e74594277824014d95e7782b9ef23';
 
 /// See also [paymentAccounts].
 @ProviderFor(paymentAccounts)

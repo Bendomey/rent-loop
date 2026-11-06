@@ -136,6 +136,7 @@ class FinancialAccountApi extends AbstractApi {
     required String paymentAccountId,
     required int amount,
     required String provider,
+    String? reference,
   }) async {
     await execute(
       method: 'POST',
@@ -144,6 +145,7 @@ class FinancialAccountApi extends AbstractApi {
         'payment_account_id': paymentAccountId,
         'amount': amount,
         'provider': provider,
+        if (reference != null) 'reference': reference,
       },
     );
   }

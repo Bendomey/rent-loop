@@ -1,473 +1,427 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:shimmer/shimmer.dart';
+
+import 'package:rentloop_manager/src/lib/financial/bill.dart';
+import 'package:rentloop_manager/src/lib/financial/financial_text.dart';
 import 'package:rentloop_manager/src/lib/money.dart';
+import 'package:rentloop_manager/src/lib/property_roles.dart';
+import 'package:rentloop_manager/src/modules/main/activity/document_picker.dart';
+import 'package:rentloop_manager/src/modules/main/money/record_bill_payment_sheet.dart';
+import 'package:rentloop_manager/src/modules/main/money/verify_payment_sheet.dart';
+import 'package:rentloop_manager/src/repository/models/invoice_model.dart';
+import 'package:rentloop_manager/src/repository/notifiers/money/record_bill_payment_notifier.dart';
+import 'package:rentloop_manager/src/repository/notifiers/money/verify_payment_notifier.dart';
+import 'package:rentloop_manager/src/repository/providers/money/bill_detail_provider.dart';
+import 'package:rentloop_manager/src/repository/providers/properties/my_property_roles_provider.dart';
+import 'package:rentloop_manager/src/shared/sheet_kit.dart';
+import 'package:rentloop_manager/src/shared/toast.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
-// ── Seed data (mirrors root.dart) ─────────────────────────────────────────────
+const _bodyStyle = TextStyle(
+  fontFamily: RLTokens.fontSans,
+  fontSize: 14,
+  color: RLTokens.ink,
+);
 
-class _InvData {
-  const _InvData({
-    required this.id,
-    required this.payer,
-    required this.unit,
-    required this.due,
-    required this.amount,
-    required this.paid,
-    required this.status,
-  });
+const _mutedStyle = TextStyle(
+  fontFamily: RLTokens.fontSans,
+  fontSize: 12.5,
+  color: RLTokens.muted,
+  height: 1.45,
+);
+
+class InvoiceDetailScreen extends ConsumerWidget {
+  const InvoiceDetailScreen({super.key, required this.id, this.propertyId});
+
   final String id;
-  final String payer;
-  final String unit;
-  final String due;
-  final int amount;
-  final int paid;
-  final String status;
-}
+  final String? propertyId;
 
-const _kInvoices = [
-  _InvData(
-    id: 'INV-2041',
-    payer: 'Ama Boateng',
-    unit: 'Unit 5A · Cantonments',
-    due: 'Jun 1',
-    amount: 4200,
-    paid: 0,
-    status: 'Overdue',
-  ),
-  _InvData(
-    id: 'INV-2042',
-    payer: 'Efua Sarpong',
-    unit: 'Unit 7 · Spintex',
-    due: 'Jun 1',
-    amount: 3500,
-    paid: 2000,
-    status: 'Partially Paid',
-  ),
-  _InvData(
-    id: 'INV-2039',
-    payer: 'Kwame Mensah',
-    unit: 'Unit 4B · Cantonments',
-    due: 'Jun 1',
-    amount: 4200,
-    paid: 4200,
-    status: 'Paid',
-  ),
-  _InvData(
-    id: 'INV-2043',
-    payer: 'Yaw Asante',
-    unit: 'Unit 3B · Cantonments',
-    due: 'Jun 5',
-    amount: 5500,
-    paid: 0,
-    status: 'Issued',
-  ),
-  _InvData(
-    id: 'INV-2044',
-    payer: 'Michael Tetteh',
-    unit: 'Suite 1 · Labadi',
-    due: 'Jun 3',
-    amount: 3200,
-    paid: 3200,
-    status: 'Paid',
-  ),
-  _InvData(
-    id: 'INV-2045',
-    payer: 'Daniel Ofori',
-    unit: 'Unit 12 · Spintex',
-    due: 'Jun 10',
-    amount: 3500,
-    paid: 0,
-    status: 'Draft',
-  ),
-];
+  Future<void> _refresh(WidgetRef ref) async {
+    final pid = propertyId;
+    ref.invalidate(myPropertyRolesProvider);
+    if (pid == null) return;
+    ref.invalidate(billDetailProvider(pid, id));
+    try {
+      await ref.read(billDetailProvider(pid, id).future);
+    } catch (_) {}
+  }
 
-// ── Screen ────────────────────────────────────────────────────────────────────
+  Future<void> _record(
+    BuildContext context,
+    WidgetRef ref,
+    InvoiceModel bill,
+  ) async {
+    await Haptics.vibrate(HapticsType.selection);
+    if (!context.mounted) return;
+    ref.read(recordBillPaymentNotifierProvider.notifier).reset();
+    showRLSheet(
+      context,
+      (close) => RecordBillPaymentSheet(
+        bill: bill,
+        propertyId: propertyId!,
+        onClose: close,
+      ),
+    );
+  }
 
-class InvoiceDetailScreen extends StatelessWidget {
-  const InvoiceDetailScreen({super.key, required this.id});
-  final String id;
+  Future<void> _verify(
+    BuildContext context,
+    WidgetRef ref,
+    InvoiceModel bill,
+    InvoicePaymentModel payment, {
+    required bool declined,
+  }) async {
+    await Haptics.vibrate(HapticsType.selection);
+    if (!context.mounted) return;
+    ref.read(verifyPaymentNotifierProvider.notifier).reset();
+    showRLSheet(
+      context,
+      (close) => VerifyPaymentSheet(
+        bill: bill,
+        payment: payment,
+        propertyId: propertyId!,
+        startDeclined: declined,
+        onClose: close,
+      ),
+    );
+  }
+
+  Future<void> _open(WidgetRef ref, Uri url) async {
+    await Haptics.vibrate(HapticsType.selection);
+    var opened = false;
+    try {
+      opened = await ref.read(urlOpenerProvider)(url);
+    } catch (_) {}
+    if (!opened) {
+      showRLToast(ref, tone: RLToastTone.error, title: "Couldn't open that.");
+    }
+  }
 
   @override
-  Widget build(BuildContext context) {
-    final inv = _kInvoices.firstWhere(
-      (x) => x.id == id,
-      orElse: () => _kInvoices.first,
-    );
-    final outstanding = inv.amount - inv.paid;
-    final lines = [
-      (desc: 'Monthly rent — June 2026', amount: inv.amount - 200),
-      (desc: 'Service charge', amount: 200),
-    ];
+  Widget build(BuildContext context, WidgetRef ref) {
+    final pid = propertyId;
+    final detail = pid == null ? null : ref.watch(billDetailProvider(pid, id));
+    final bill = detail?.valueOrNull;
+    final roles = ref.watch(myPropertyRolesProvider).valueOrNull;
+    final canManage = bill != null && canManageProperty(roles, pid);
 
     return Scaffold(
       backgroundColor: RLTokens.surface,
       body: Column(
         children: [
           RLBackHeader(
-            title: inv.id,
+            title: bill?.code ?? 'Bill',
             onBack: () async {
               await Haptics.vibrate(HapticsType.selection);
               if (context.mounted) Navigator.of(context).pop();
             },
-            trailing: GestureDetector(
-              onTap: () async => Haptics.vibrate(HapticsType.selection),
-              child: const Padding(
-                padding: EdgeInsets.all(10),
-                child: Icon(
-                  Icons.description_outlined,
-                  size: 22,
-                  color: RLTokens.ink,
-                ),
-              ),
-            ),
           ),
           Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            child: RefreshIndicator(
+              color: RLTokens.crimson,
+              onRefresh: () => _refresh(ref),
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
                 children: [
-                  // Hero: status pill + big amount + outstanding/paid message
-                  _Hero(inv: inv, outstanding: outstanding),
-
-                  // Billed to
-                  RLLabel('Billed to'),
-                  _BilledToCard(inv: inv),
-
-                  // Line items
-                  RLLabel('Line items'),
-                  _LineItemsCard(lines: lines, total: inv.amount),
-
-                  // Payment history
-                  RLLabel('Payment history'),
-                  _PaymentHistoryCard(inv: inv),
-
-                  const SizedBox(height: 8),
+                  if (bill != null)
+                    ..._content(context, ref, bill, canManage)
+                  else if (detail == null || detail.hasError)
+                    detail == null
+                        ? const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 40),
+                            child: Text(
+                              "We couldn't open this bill.",
+                              textAlign: TextAlign.center,
+                              style: _mutedStyle,
+                            ),
+                          )
+                        : RLSectionError(
+                            title: "Couldn't load this bill",
+                            onRetry: () => _refresh(ref),
+                          )
+                  else
+                    const _DetailSkeleton(),
                 ],
               ),
             ),
           ),
-          if (outstanding > 0) _ActionBar(),
         ],
       ),
     );
   }
-}
 
-// ── Hero ──────────────────────────────────────────────────────────────────────
+  List<Widget> _content(
+    BuildContext context,
+    WidgetRef ref,
+    InvoiceModel bill,
+    bool canManage,
+  ) {
+    final now = DateTime.now();
+    final remaining = billRemaining(bill);
+    final tenant = bill.payerLease?.tenant;
+    final unit = bill.payerLease?.unit;
+    final where = [
+      unit?.propertyBlock?.name,
+      unit?.name,
+    ].whereType<String>().where((v) => v.isNotEmpty).join(' · ');
+    final phone = tenant?.phone?.replaceAll(RegExp(r'[^\d+]'), '') ?? '';
+    final email = tenant?.email ?? '';
+    final successful = [
+      for (final p in bill.payments)
+        if (p.status == 'SUCCESSFUL') p,
+    ];
+    final others = [
+      for (final p in bill.payments)
+        if (p.status == 'PENDING' || p.status == 'FAILED') p,
+    ];
 
-class _Hero extends StatelessWidget {
-  const _Hero({required this.inv, required this.outstanding});
-  final _InvData inv;
-  final int outstanding;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 20),
-      child: Column(
+    return [
+      Text(
+        billHeadline(bill, payerName(bill)),
+        style: const TextStyle(
+          fontFamily: RLTokens.fontSerif,
+          fontSize: 22,
+          color: RLTokens.ink,
+          letterSpacing: -0.3,
+          height: 1.25,
+        ),
+      ),
+      const SizedBox(height: 10),
+      Row(
         children: [
-          Center(
-            child: RLPill(
-              inv.status,
-              tone: statusTone(inv.status),
-              large: true,
-            ),
+          RLPill(
+            billDueLabel(bill, now),
+            tone: isOverdue(bill, now) ? RLTone.danger : RLTone.neutral,
           ),
-          const SizedBox(height: 14),
-          Center(child: RLMoney(inv.amount, size: 46)),
-          const SizedBox(height: 8),
-          if (outstanding > 0)
-            Center(
-              child: Text(
-                'GH₵ ${_fmt(outstanding)} outstanding · due ${inv.due}',
-                style: const TextStyle(
-                  fontFamily: RLTokens.fontSans,
-                  fontSize: 13,
-                  fontWeight: RLTokens.semibold,
-                  color: RLTokens.crimson,
-                ),
-              ),
-            )
-          else
-            Center(
-              child: Text(
-                'Paid in full',
-                style: TextStyle(
-                  fontFamily: RLTokens.fontSans,
-                  fontSize: 13,
-                  fontWeight: RLTokens.semibold,
-                  color: RLTokens.success,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Billed to card ────────────────────────────────────────────────────────────
-
-class _BilledToCard extends StatelessWidget {
-  const _BilledToCard({required this.inv});
-  final _InvData inv;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-      decoration: BoxDecoration(
-        color: RLTokens.surface,
-        borderRadius: BorderRadius.circular(RLTokens.rLg),
-        border: Border.all(color: RLTokens.hairline),
-      ),
-      child: Row(
-        children: [
-          RLAvatar(inv.payer, size: 42),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  inv.payer,
-                  style: const TextStyle(
-                    fontFamily: RLTokens.fontSans,
-                    fontSize: 15,
-                    fontWeight: RLTokens.semibold,
-                    color: RLTokens.ink,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  inv.unit,
-                  style: const TextStyle(
-                    fontFamily: RLTokens.fontSans,
-                    fontSize: 12.5,
-                    color: RLTokens.muted,
-                  ),
-                ),
-              ],
+          const SizedBox(width: 10),
+          Text(
+            bill.code,
+            style: const TextStyle(
+              fontFamily: RLTokens.fontMono,
+              fontSize: 11,
+              color: RLTokens.mutedSoft,
             ),
           ),
         ],
       ),
-    );
-  }
-}
-
-// ── Line items card ───────────────────────────────────────────────────────────
-
-class _LineItemsCard extends StatelessWidget {
-  const _LineItemsCard({required this.lines, required this.total});
-  final List<({String desc, int amount})> lines;
-  final int total;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: RLTokens.surface,
-        borderRadius: BorderRadius.circular(RLTokens.rLg),
-        border: Border.all(color: RLTokens.hairline),
-      ),
-      child: Column(
-        children: [
-          ...lines.map(
-            (l) => Container(
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              decoration: const BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(color: RLTokens.hairlineSoft),
-                ),
+      RLLabel("What's on this bill"),
+      RLCard(
+        child: Column(
+          children: [
+            for (final item in bill.lineItems)
+              _line(
+                item.label,
+                formatPesewas(item.totalAmount, code: bill.currency),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    l.desc,
-                    style: const TextStyle(
-                      fontFamily: RLTokens.fontSans,
-                      fontSize: 13.5,
-                      color: RLTokens.inkSoft,
-                    ),
-                  ),
-                  Text(
-                    '${currencySymbol(defaultCurrencyCode)} ${_fmt(l.amount)}',
-                    style: const TextStyle(
-                      fontFamily: RLTokens.fontSans,
-                      fontSize: 13.5,
-                      fontWeight: RLTokens.semibold,
-                      color: RLTokens.ink,
-                    ),
-                  ),
-                ],
-              ),
+            _line(
+              'Total',
+              formatPesewas(bill.totalAmount, code: bill.currency),
+              bold: true,
             ),
-          ),
-          // Total row
-          Padding(
-            padding: const EdgeInsets.fromLTRB(0, 13, 0, 4),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Total',
-                  style: TextStyle(
-                    fontFamily: RLTokens.fontSans,
-                    fontSize: 14,
-                    fontWeight: RLTokens.bold,
-                    color: RLTokens.ink,
-                  ),
-                ),
-                Text(
-                  '${currencySymbol(defaultCurrencyCode)} ${_fmt(total)}',
-                  style: const TextStyle(
-                    fontFamily: RLTokens.fontSans,
-                    fontSize: 14,
-                    fontWeight: RLTokens.bold,
-                    color: RLTokens.ink,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
-    );
-  }
-}
-
-// ── Payment history card ──────────────────────────────────────────────────────
-
-class _PaymentHistoryCard extends StatelessWidget {
-  const _PaymentHistoryCard({required this.inv});
-  final _InvData inv;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: RLTokens.surface,
-        borderRadius: BorderRadius.circular(RLTokens.rLg),
-        border: Border.all(color: RLTokens.hairline),
-      ),
-      child: inv.paid > 0
-          ? Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-              child: Row(
-                children: [
-                  Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: RLTokens.successBg,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(
-                      Icons.check_rounded,
-                      size: 18,
-                      color: RLTokens.success,
-                    ),
+      RLLabel('What has been paid'),
+      RLCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (final p in successful)
+              _line(
+                [
+                  formatDay(
+                    DateTime.tryParse(p.successfulAt ?? p.createdAt) ?? now,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${currencySymbol(defaultCurrencyCode)} ${_fmt(inv.paid)} received',
-                          style: const TextStyle(
-                            fontFamily: RLTokens.fontSans,
-                            fontSize: 14,
-                            fontWeight: RLTokens.semibold,
-                            color: RLTokens.ink,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        const Text(
-                          'Mobile Money · MTN · Jun 2',
-                          style: TextStyle(
-                            fontFamily: RLTokens.fontSans,
-                            fontSize: 12,
-                            color: RLTokens.muted,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                  paymentProviderLabel(p.provider),
+                  if (p.reference != null && p.reference!.isNotEmpty)
+                    p.reference!,
+                ].join(' · '),
+                formatPesewas(p.amount, code: bill.currency),
               ),
-            )
-          : const Padding(
-              padding: EdgeInsets.symmetric(vertical: 18),
-              child: Center(
+            if (successful.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
                 child: Text(
-                  'No payments recorded yet.',
-                  style: TextStyle(
-                    fontFamily: RLTokens.fontSans,
-                    fontSize: 13,
-                    color: RLTokens.mutedSoft,
-                  ),
+                  '${successful.length} '
+                  '${successful.length == 1 ? 'payment' : 'payments'}, '
+                  '${formatPesewas(billPaid(bill), code: bill.currency)} in '
+                  'all — ${formatPesewas(remaining, code: bill.currency)} to '
+                  'go.',
+                  style: _mutedStyle,
                 ),
-              ),
+              )
+            else if (others.isEmpty)
+              const Text('Nothing has been paid yet.', style: _mutedStyle),
+            for (final p in others)
+              _otherPayment(context, ref, bill, p, canManage),
+          ],
+        ),
+      ),
+      RLLabel('Who is paying'),
+      RLCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              payerName(bill),
+              style: _bodyStyle.copyWith(fontWeight: FontWeight.w600),
             ),
-    );
+            if (where.isNotEmpty) Text(where, style: _mutedStyle),
+            if (phone.isNotEmpty) Text(tenant!.phone!, style: _mutedStyle),
+            if (email.isNotEmpty) Text(email, style: _mutedStyle),
+            if (phone.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: RLBtn(
+                      label: 'Call',
+                      kind: RLBtnKind.light,
+                      full: true,
+                      onPressed: () => _open(ref, Uri.parse('tel:$phone')),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: RLBtn(
+                      label: 'WhatsApp',
+                      kind: RLBtnKind.light,
+                      full: true,
+                      onPressed: () => _open(
+                        ref,
+                        Uri.parse('https://wa.me/${_waDigits(phone)}'),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+      if (canManage && remaining > 0) ...[
+        const SizedBox(height: 20),
+        if (awaitingConfirmation(bill).isNotEmpty)
+          const Text(
+            'Check the payment the tenant told you about first.',
+            style: _mutedStyle,
+          )
+        else
+          RLBtn(
+            label: 'They paid — record it',
+            full: true,
+            onPressed: () => _record(context, ref, bill),
+          ),
+      ],
+    ];
   }
-}
 
-// ── Bottom action bar ─────────────────────────────────────────────────────────
+  String _waDigits(String phone) {
+    final digits = phone.replaceAll(RegExp(r'\D'), '');
+    if (digits.startsWith('00')) return digits.substring(2);
+    return phone.startsWith('0') ? '233${digits.substring(1)}' : digits;
+  }
 
-class _ActionBar extends StatelessWidget {
-  const _ActionBar();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.fromLTRB(
-        20,
-        12,
-        20,
-        12 + MediaQuery.of(context).padding.bottom,
-      ),
-      decoration: BoxDecoration(
-        color: RLTokens.surface,
-        border: const Border(top: BorderSide(color: RLTokens.hairline)),
-        boxShadow: RLTokens.elevBar,
-      ),
+  Widget _line(String label, String amount, {bool bold = false}) {
+    final style = _bodyStyle.copyWith(
+      fontWeight: bold ? FontWeight.w700 : FontWeight.w400,
+    );
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
         children: [
-          RLBtn(
-            label: 'Send',
-            kind: RLBtnKind.light,
-            onPressed: () async => Haptics.vibrate(HapticsType.selection),
-          ),
-          const SizedBox(width: 10),
-          RLBtn(
-            label: 'Partial',
-            kind: RLBtnKind.light,
-            onPressed: () async => Haptics.vibrate(HapticsType.selection),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: RLBtn(
-              label: 'Mark paid',
-              kind: RLBtnKind.primary,
-              icon: Icons.check_rounded,
-              full: true,
-              onPressed: () async => Haptics.vibrate(HapticsType.medium),
+          Expanded(child: Text(label, style: style)),
+          const SizedBox(width: 12),
+          Text(amount, style: style),
+        ],
+      ),
+    );
+  }
+
+  Widget _otherPayment(
+    BuildContext context,
+    WidgetRef ref,
+    InvoiceModel bill,
+    InvoicePaymentModel p,
+    bool canManage,
+  ) {
+    final amount = formatPesewas(p.amount, code: bill.currency);
+    if (p.status == 'FAILED') {
+      return Padding(
+        padding: const EdgeInsets.only(top: 10),
+        child: Text('Not received · $amount', style: _mutedStyle),
+      );
+    }
+    if (p.rail != 'OFFLINE') {
+      return Padding(
+        padding: const EdgeInsets.only(top: 10),
+        child: Text('Processing · $amount', style: _mutedStyle),
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Waiting for you to confirm · $amount',
+            style: _bodyStyle.copyWith(
+              fontWeight: FontWeight.w600,
+              color: RLTokens.warning,
             ),
           ),
+          if (canManage) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: RLBtn(
+                    label: 'Payment received',
+                    full: true,
+                    onPressed: () =>
+                        _verify(context, ref, bill, p, declined: false),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: RLBtn(
+                    label: 'Not received',
+                    kind: RLBtnKind.light,
+                    full: true,
+                    onPressed: () =>
+                        _verify(context, ref, bill, p, declined: true),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
   }
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+class _DetailSkeleton extends StatelessWidget {
+  const _DetailSkeleton();
 
-String _fmt(int n) =>
-    n.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => ',');
+  @override
+  Widget build(BuildContext context) {
+    Widget block(double h) => Container(
+      height: h,
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(RLTokens.rLg),
+      ),
+    );
+    return Shimmer.fromColors(
+      baseColor: RLTokens.fill,
+      highlightColor: RLTokens.paper,
+      child: Column(children: [block(60), block(120), block(120), block(120)]),
+    );
+  }
+}

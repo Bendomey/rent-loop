@@ -161,14 +161,6 @@ void main() {
       expect(assigned.progress, greaterThan(none.progress));
     });
 
-    test('changes lock once the initial payment is paid', () {
-      final paid = a1.copyWith(
-        financial: a1.financial.copyWith(invoicePaid: true),
-      );
-      expect(paid.isUnitChangeLocked, isTrue);
-      expect(paid.unitChangeLockReason, contains('initial payment'));
-    });
-
     test('changes lock once anyone has signed the lease document', () {
       final signed = a1.copyWith(
         doc: ApplicationDoc(

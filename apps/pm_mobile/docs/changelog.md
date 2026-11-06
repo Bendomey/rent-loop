@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-06 — Rent tab: real bills, record and confirm payments (plan: pm-mobile-v1-rent)
+- The Rent tab (`money/root.dart`) shows real bills: an Owing total, "Needs your OK" for payments waiting on a manager, Owing and Paid lists with a property filter, and infinite scroll with pull-to-refresh.
+- Bill detail is read-only with line items and payments; managers can record a payment or confirm or decline a pending one. New `InvoiceApi`, `InvoiceModel`, `lib/financial/bill.dart`, `BillsNotifier`, `billDetailProvider`, `RecordBillPaymentNotifier`, `VerifyPaymentNotifier`, `bill_row`, `record_bill_payment_sheet`, `verify_payment_sheet`.
+- Home "Record payment" now opens a "Which bill did they pay?" picker (`add_payment.dart`) over the Owing list, with debounced code search; only managed properties are listed.
+- `paymentAccountsProvider` only offers ACTIVE accounts on the OFFLINE rail, which also fixes the 2b "{Name} paid me" sheet. New error mappings in `translateApiErrorMessage`.
+- Backend: `PATCH .../payments/{id}/verify` requires `is_successful` explicitly (`handlers/payment.go`, Swagger regenerated).
+- Removed dead code: `InvoiceRef`/`applicationPaymentInvoice`, the lease detail "Rent bill" row, and `ApplicationFinancial.invoiceGenerated`/`invoicePaid`.
+- Modules affected: `api/`, `lib/`, `repository/`, `modules/main/money/`, `modules/main/leases/detail.dart`, `modules/main/activity/application_data.dart`, `navigation/routes.dart`, `services/main/internal/handlers/payment.go`.
+
 ## 2026-11-06 — Lease document on a pending tenant (plan 2c)
 - A landlord can add, open, replace and remove a lease document (PDF or Word, up to 5MB) on a pending tenant; it is optional.
 - Online documents written on the web open on the web and cannot be changed from mobile; signed documents can only be opened.

@@ -6,7 +6,17 @@ String translateApiErrorMessage({
   String? errorMessage,
   String? defaultErrorMessage,
 }) {
+  switch (errorMessage?.toLowerCase()) {
+    case 'invoice is not in a valid state to accept payments':
+      return 'This bill can\'t take payments right now.';
+    case 'payment is not in pending status':
+      return 'This payment was already handled.';
+    case 'can only verify offline payments':
+      return 'This payment can\'t be confirmed here.';
+  }
   switch (errorMessage) {
+    case 'PaymentNotFound':
+      return 'That payment no longer exists.';
     case 'PasswordIncorrect':
     case 'UserNotFound':
       return 'Your credentials are incorrect. Please try again.';

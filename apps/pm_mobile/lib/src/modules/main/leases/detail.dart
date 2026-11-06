@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
@@ -341,17 +340,6 @@ List<Widget> _buildLeaseDetails(LeaseModel lease) {
                 ],
               ],
             ),
-            if (application.applicationPaymentInvoice != null) ...[
-              const SizedBox(height: 10),
-              _LinkFieldRow(
-                k: 'Rent bill',
-                label: application.applicationPaymentInvoice!.code,
-                last: true,
-                onTap: (context) => context.push(
-                  '/money/invoices/${application.applicationPaymentInvoice!.id}',
-                ),
-              ),
-            ],
           ],
         ],
       ),
@@ -808,13 +796,11 @@ class _LinkFieldRow extends StatelessWidget {
     required this.k,
     required this.label,
     this.last = false,
-    this.onTap,
     this.onExternalTap,
   });
   final String k;
   final String label;
   final bool last;
-  final void Function(BuildContext context)? onTap;
   final VoidCallback? onExternalTap;
 
   @override
@@ -841,7 +827,6 @@ class _LinkFieldRow extends StatelessWidget {
             onTap: () async {
               await Haptics.vibrate(HapticsType.selection);
               if (!context.mounted) return;
-              if (onTap != null) onTap!(context);
               onExternalTap?.call();
             },
             child: Row(

@@ -218,6 +218,7 @@ class _FinApi extends FinancialAccountApi {
     required String paymentAccountId,
     required int amount,
     required String provider,
+    String? reference,
   }) async {
     calls.add('pay:$amount');
     if (payError != null) throw payError!;

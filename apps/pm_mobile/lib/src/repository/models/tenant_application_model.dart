@@ -4,25 +4,6 @@ import 'package:rentloop_manager/src/repository/models/unit_model.dart';
 
 part 'tenant_application_model.g.dart';
 
-/// Minimal invoice reference nested on a tenant application's
-/// `application_payment_invoice`. [status] backs the checklist's "Invoice
-/// paid" item; the rest is what the lease detail screen links out to.
-@JsonSerializable()
-class InvoiceRef {
-  final String id;
-  final String code;
-  final String? status;
-
-  InvoiceRef({required this.id, required this.code, this.status});
-
-  factory InvoiceRef.fromJson(Map<String, dynamic> json) =>
-      _$InvoiceRefFromJson(json);
-
-  Map<String, dynamic> toJson() => _$InvoiceRefToJson(this);
-
-  bool get isPaid => status == 'PAID';
-}
-
 @JsonSerializable()
 class ApprovedLeaseModel {
   final String id;
@@ -210,8 +191,6 @@ class TenantApplicationModel {
   final int? initialDepositFee;
   @JsonKey(name: 'security_deposit_fee')
   final int? securityDepositFee;
-  @JsonKey(name: 'application_payment_invoice')
-  final InvoiceRef? applicationPaymentInvoice;
 
   // Lease agreement document
   @JsonKey(name: 'lease_agreement_document_mode')
@@ -279,7 +258,6 @@ class TenantApplicationModel {
     this.paymentFrequency,
     this.initialDepositFee,
     this.securityDepositFee,
-    this.applicationPaymentInvoice,
     this.leaseAgreementDocumentMode,
     this.leaseAgreementDocumentUrl,
     this.leaseAgreementDocumentId,

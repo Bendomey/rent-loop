@@ -34,10 +34,14 @@ class PaymentAccountApi extends AbstractApi {
     List<String>? ids,
     String? order,
     String? orderBy,
+    String? rail,
+    String? status,
   }) async {
     final query = <String, String>{'page': '$page', 'page_size': '$pageSize'};
     if (order != null) query['order'] = order;
     if (orderBy != null) query['order_by'] = orderBy;
+    if (rail != null) query['rail'] = rail;
+    if (status != null) query['status'] = status;
     if (isDefault != null) query['is_default'] = '$isDefault';
 
     final queryString = Uri(
@@ -63,13 +67,16 @@ class PaymentAccountApi extends AbstractApi {
     );
   }
 
-  /// Accounts a manager can record a received payment against.
+  /// Accounts a manager can record a received payment against. The backend
+  /// rejects any rail but OFFLINE for a manual payment.
   Future<PaymentAccountsPage> getCollectionAccounts({
     required String clientId,
   }) => getPaymentAccounts(
     clientId: clientId,
     pageSize: 50,
     ownerTypes: const ['PROPERTY_OWNER', 'SYSTEM'],
+    rail: 'OFFLINE',
+    status: 'ACTIVE',
   );
 }
 
