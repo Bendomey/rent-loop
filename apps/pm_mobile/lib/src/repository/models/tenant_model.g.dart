@@ -8,6 +8,7 @@ part of 'tenant_model.dart';
 
 TenantLeaseRef _$TenantLeaseRefFromJson(Map<String, dynamic> json) =>
     TenantLeaseRef(
+      id: json['id'] as String?,
       status: json['status'] as String,
       unit: json['unit'] == null
           ? null
@@ -21,6 +22,7 @@ TenantLeaseRef _$TenantLeaseRefFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$TenantLeaseRefToJson(TenantLeaseRef instance) =>
     <String, dynamic>{
+      'id': instance.id,
       'status': instance.status,
       'unit': instance.unit,
       'rent_fee': instance.rentFee,

@@ -20,4 +20,19 @@ void main() {
     expect(normalizePhone(null), isNull);
     expect(normalizePhone('abc'), isNull);
   });
+
+  test('whatsAppNumber normalises Ghana numbers', () {
+    expect(whatsAppNumber('024 455 1190'), '233244551190');
+    expect(whatsAppNumber('+233 24 455 1190'), '233244551190');
+    expect(whatsAppNumber('00233244551190'), '233244551190');
+    expect(whatsAppNumber('233244551190'), '233244551190');
+    expect(whatsAppNumber(''), isNull);
+    expect(whatsAppNumber(null), isNull);
+  });
+
+  test('callUri strips spaces', () {
+    expect(callUri('+233 24 455 1190').toString(), 'tel:+233244551190');
+    expect(callUri('024-455-1190').toString(), 'tel:0244551190');
+    expect(callUri('  '), isNull);
+  });
 }

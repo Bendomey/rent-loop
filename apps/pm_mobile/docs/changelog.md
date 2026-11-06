@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-06 — Tenant detail with real data (plan: pm-mobile-v1-tenant-detail)
+- `TenantDetailScreen` (`tenants/detail.dart`) now shows the real tenant: name, unit, Call and WhatsApp, what they owe, lease dates and rent, and contact details. All sample data and the placeholder Record card are gone.
+- "What they owe" is the lease's account balance, with credit shown as "You owe {name}". A failed lease read only affects that card.
+- Routes: `/more/tenants/:id?property_id=...`; the tenants list, lease hero card and "What's next" sheet pass the property id.
+- New: `tenantDetailProvider`, `RLContactButtons`, `tenantUnitLabel` (`lib/src/lib/tenant_label.dart`, shared with the tenants list row), `LeaseModel.financialAccount`, `TenantLeaseRef.id`.
+
 ## 2026-11-06 — Rent tab: real bills, record and confirm payments (plan: pm-mobile-v1-rent)
 - The Rent tab (`money/root.dart`) shows real bills: an Owing total, "Needs your OK" for payments waiting on a manager, Owing and Paid lists with a property filter, and infinite scroll with pull-to-refresh.
 - Bill detail is read-only with line items and payments; managers can record a payment or confirm or decline a pending one. New `InvoiceApi`, `InvoiceModel`, `lib/financial/bill.dart`, `BillsNotifier`, `billDetailProvider`, `RecordBillPaymentNotifier`, `VerifyPaymentNotifier`, `bill_row`, `record_bill_payment_sheet`, `verify_payment_sheet`.

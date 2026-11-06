@@ -228,8 +228,10 @@ List<RouteBase> appRoutes() => [
     routes: [
       GoRoute(
         path: ':id',
-        builder: (_, state) =>
-            TenantDetailScreen(id: state.pathParameters['id']!),
+        builder: (_, state) => TenantDetailScreen(
+          id: state.pathParameters['id']!,
+          propertyId: state.uri.queryParameters['property_id'],
+        ),
       ),
     ],
   ),

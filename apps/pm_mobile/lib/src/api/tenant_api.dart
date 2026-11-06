@@ -16,6 +16,9 @@ class TenantsPage {
   final PaginationMetaModel meta;
 }
 
+// Without it the backend omits recent_lease.unit, so screens lose the unit and property id.
+const _leaseUnitPopulate = 'Leases.Unit.Property';
+
 class TenantApi extends AbstractApi {
   TenantApi({required super.tokenManager});
 
@@ -33,7 +36,11 @@ class TenantApi extends AbstractApi {
     String? search,
     String? propertyId,
   }) async {
-    final query = <String, String>{'page': '$page', 'page_size': '$pageSize'};
+    final query = <String, String>{
+      'page': '$page',
+      'page_size': '$pageSize',
+      'populate': _leaseUnitPopulate,
+    };
     if (status != null) query['status'] = status;
     if (search != null && search.isNotEmpty) {
       query['query'] = search;
@@ -59,6 +66,21 @@ class TenantApi extends AbstractApi {
           .toList(),
       meta: PaginationMetaModel.fromJson(data['meta'] as Map<String, dynamic>),
     );
+  }
+
+  Future<TenantModel> getTenant({
+    required String clientId,
+    required String propertyId,
+    required String tenantId,
+  }) async {
+    final response = await execute(
+      method: 'GET',
+      path:
+          '/api/v1/admin/clients/$clientId/properties/$propertyId/tenants/$tenantId'
+          '?${Uri(queryParameters: {'populate': _leaseUnitPopulate}).query}',
+    );
+    final json = jsonDecode(response.body) as Map<String, dynamic>;
+    return TenantModel.fromJson(json['data'] as Map<String, dynamic>);
   }
 }
 

@@ -2058,7 +2058,7 @@ class _WhatsNextSheet extends StatelessWidget {
         (
           Icons.person_outline_rounded,
           'Visit tenant profile',
-          '/more/tenants/$tenantId',
+          '/more/tenants/$tenantId$query',
         ),
       (
         Icons.add_rounded,

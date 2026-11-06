@@ -7,7 +7,6 @@ import 'package:rentloop_manager/src/lib/financial/bill.dart';
 import 'package:rentloop_manager/src/lib/financial/financial_text.dart';
 import 'package:rentloop_manager/src/lib/money.dart';
 import 'package:rentloop_manager/src/lib/property_roles.dart';
-import 'package:rentloop_manager/src/modules/main/activity/document_picker.dart';
 import 'package:rentloop_manager/src/modules/main/money/record_bill_payment_sheet.dart';
 import 'package:rentloop_manager/src/modules/main/money/verify_payment_sheet.dart';
 import 'package:rentloop_manager/src/repository/models/invoice_model.dart';
@@ -15,8 +14,8 @@ import 'package:rentloop_manager/src/repository/notifiers/money/record_bill_paym
 import 'package:rentloop_manager/src/repository/notifiers/money/verify_payment_notifier.dart';
 import 'package:rentloop_manager/src/repository/providers/money/bill_detail_provider.dart';
 import 'package:rentloop_manager/src/repository/providers/properties/my_property_roles_provider.dart';
+import 'package:rentloop_manager/src/shared/contact_buttons.dart';
 import 'package:rentloop_manager/src/shared/sheet_kit.dart';
-import 'package:rentloop_manager/src/shared/toast.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
@@ -87,17 +86,6 @@ class InvoiceDetailScreen extends ConsumerWidget {
         onClose: close,
       ),
     );
-  }
-
-  Future<void> _open(WidgetRef ref, Uri url) async {
-    await Haptics.vibrate(HapticsType.selection);
-    var opened = false;
-    try {
-      opened = await ref.read(urlOpenerProvider)(url);
-    } catch (_) {}
-    if (!opened) {
-      showRLToast(ref, tone: RLToastTone.error, title: "Couldn't open that.");
-    }
   }
 
   @override
@@ -275,30 +263,7 @@ class InvoiceDetailScreen extends ConsumerWidget {
             if (email.isNotEmpty) Text(email, style: _mutedStyle),
             if (phone.isNotEmpty) ...[
               const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: RLBtn(
-                      label: 'Call',
-                      kind: RLBtnKind.light,
-                      full: true,
-                      onPressed: () => _open(ref, Uri.parse('tel:$phone')),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: RLBtn(
-                      label: 'WhatsApp',
-                      kind: RLBtnKind.light,
-                      full: true,
-                      onPressed: () => _open(
-                        ref,
-                        Uri.parse('https://wa.me/${_waDigits(phone)}'),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              RLContactButtons(phone: tenant!.phone),
             ],
           ],
         ),
@@ -318,12 +283,6 @@ class InvoiceDetailScreen extends ConsumerWidget {
           ),
       ],
     ];
-  }
-
-  String _waDigits(String phone) {
-    final digits = phone.replaceAll(RegExp(r'\D'), '');
-    if (digits.startsWith('00')) return digits.substring(2);
-    return phone.startsWith('0') ? '233${digits.substring(1)}' : digits;
   }
 
   Widget _line(String label, String amount, {bool bold = false}) {

@@ -116,7 +116,9 @@ class LeaseHeroCard extends ConsumerWidget {
                       ? () async {
                           await Haptics.vibrate(HapticsType.selection);
                           if (context.mounted) {
-                            context.push('/more/tenants/${tenant.id}');
+                            context.push(
+                              '/more/tenants/${tenant.id}?property_id=$propertyId',
+                            );
                           }
                         }
                       : null,

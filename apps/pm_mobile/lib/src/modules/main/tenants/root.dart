@@ -7,6 +7,7 @@ import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:shimmer/shimmer.dart';
 
 import 'package:rentloop_manager/src/lib/property_status.dart';
+import 'package:rentloop_manager/src/lib/tenant_label.dart';
 import 'package:rentloop_manager/src/repository/models/tenant_model.dart';
 import 'package:rentloop_manager/src/modules/main/tenants/pending_tenants_section.dart';
 import 'package:rentloop_manager/src/repository/notifiers/tenants/tenants_notifier.dart';
@@ -319,9 +320,14 @@ class _TenantsScreenState extends ConsumerState<TenantsScreen> {
                                 last: last,
                                 onTap: () async {
                                   await Haptics.vibrate(HapticsType.selection);
-                                  if (context.mounted) {
-                                    context.push('/more/tenants/${e.value.id}');
-                                  }
+                                  if (!context.mounted) return;
+                                  final propertyId =
+                                      e.value.recentLease?.unit?.propertyId;
+                                  context.push(
+                                    propertyId == null
+                                        ? '/more/tenants/${e.value.id}'
+                                        : '/more/tenants/${e.value.id}?property_id=$propertyId',
+                                  );
                                 },
                               );
                             }).toList(),
@@ -372,13 +378,7 @@ class _TenantRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final lease = tenant.recentLease;
-    final unit = lease?.unit;
-    final subtitle = unit != null
-        ? [
-            unit.name,
-            unit.property?.name,
-          ].whereType<String>().where((v) => v.isNotEmpty).join(' · ')
-        : tenant.phone;
+    final subtitle = tenantUnitLabel(lease) ?? tenant.phone;
     final statusLabel = lease != null
         ? propertyStatusLabel(lease.status)
         : 'Inactive';

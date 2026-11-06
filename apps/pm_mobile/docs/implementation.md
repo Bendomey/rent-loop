@@ -47,6 +47,12 @@
 - Sheets in `application_edit_sheets.dart`: upload-only add/replace document sheet and `showRemoveDocumentSheet` confirmation. The sample signing UI and "From Library" option are gone.
 - `ApplicationDocumentModel.title` added; the ONLINE row shows it.
 
+### Tenant detail (2026-11-06)
+- Route `/more/tenants/:id?property_id=`; without a property id the screen shows "We couldn't open this tenant." and reads nothing.
+- Data: `tenantDetailProvider(propertyId, tenantId)` (`GET .../tenants/{id}` with `populate=Leases.Unit.Property`) gives the tenant and `recentLease`. The owes card then reads `leaseDetailProvider(propertyId, recentLease.id)` and uses `financialAccount.outstandingAmount` (positive owes, zero paid up, negative credit, null or no lease "Rent not set up yet"). Lease read loading shows a shimmer card; failing shows a retry in that card only.
+- `RLContactButtons` (`shared/contact_buttons.dart`) opens `tel:` and `https://wa.me/<normalised>`; hidden without a phone.
+- Pull-to-refresh invalidates both providers. Entry points that pass `property_id`: tenants list row, lease hero card, "What's next" sheet.
+
 ### api/
 - **Entry point:** `lib/src/api/root.dart` — `AbstractApi` base class
 - **Key classes:** `AbstractApi` (`execute()`: GET/POST/PATCH/DELETE, attaches `Authorization: Bearer <token>` unless `authRequired: false`, throws `ApiException` on ≥400), `ApiException` (parses `json['errors']['message']`, `null`-safe on malformed bodies)

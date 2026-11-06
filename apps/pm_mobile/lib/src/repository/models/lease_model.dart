@@ -6,6 +6,28 @@ import 'package:rentloop_manager/src/repository/models/unit_model.dart';
 
 part 'lease_model.g.dart';
 
+@JsonSerializable()
+class LeaseFinancialRef {
+  final String id;
+  final String currency;
+  @JsonKey(name: 'outstanding_amount', defaultValue: 0)
+  final int outstandingAmount;
+  @JsonKey(name: 'available_credit', defaultValue: 0)
+  final int availableCredit;
+
+  LeaseFinancialRef({
+    required this.id,
+    required this.currency,
+    this.outstandingAmount = 0,
+    this.availableCredit = 0,
+  });
+
+  factory LeaseFinancialRef.fromJson(Map<String, dynamic> json) =>
+      _$LeaseFinancialRefFromJson(json);
+
+  Map<String, dynamic> toJson() => _$LeaseFinancialRefToJson(this);
+}
+
 /// A single rental agreement — `unit`/`tenant` reuse the existing
 /// `UnitModel`/`TenantModel` types directly rather than duplicating them,
 /// since the backend builds both nested objects with the exact same
@@ -66,6 +88,8 @@ class LeaseModel {
   final String? completedAt;
   @JsonKey(name: 'terminated_at')
   final String? terminatedAt;
+  @JsonKey(name: 'financial_account')
+  final LeaseFinancialRef? financialAccount;
   @JsonKey(name: 'created_at')
   final String? createdAt;
   @JsonKey(name: 'updated_at')
@@ -97,6 +121,7 @@ class LeaseModel {
     this.cancelledAt,
     this.completedAt,
     this.terminatedAt,
+    this.financialAccount,
     this.createdAt,
     this.updatedAt,
   });
