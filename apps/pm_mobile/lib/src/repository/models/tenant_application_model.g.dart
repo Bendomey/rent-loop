@@ -37,12 +37,17 @@ ApplicationDocumentModel _$ApplicationDocumentModelFromJson(
   Map<String, dynamic> json,
 ) => ApplicationDocumentModel(
   id: json['id'] as String,
+  title: json['title'] as String?,
   content: json['content'] as String?,
 );
 
 Map<String, dynamic> _$ApplicationDocumentModelToJson(
   ApplicationDocumentModel instance,
-) => <String, dynamic>{'id': instance.id, 'content': instance.content};
+) => <String, dynamic>{
+  'id': instance.id,
+  'title': instance.title,
+  'content': instance.content,
+};
 
 ApplicationDocumentSignatureModel _$ApplicationDocumentSignatureModelFromJson(
   Map<String, dynamic> json,

@@ -4,6 +4,13 @@
 
 ---
 
+## Mobile attaches MANUAL lease documents only; ONLINE documents stay web-owned (2026-11-06)
+**Why:** A MANUAL document is just an uploaded file and one PATCH, which mobile can do safely. An ONLINE document is written in the web editor and signed there, and removing or replacing it also deletes the document record on the web. Mobile shows it read-only with an "Open on the web" link, and hides all writes once any document is SIGNED/SIGNING.
+**Tradeoffs:** A landlord who started an online document on the web must finish or change it there. No e-signing on mobile.
+**Alternatives considered:** Clearing the ONLINE fields from mobile (leaves an orphaned document record), or a mobile editor (large, duplicates the web Lexical editor).
+
+---
+
 ## Money logic ported 1:1 from the web; refunds capped server-side net of prior reversals (2026-11-06)
 **Why:** Billing schedules, fee allocation and refundable amounts are ported from the web `lib/*.ts` into `lib/src/lib/financial/` so both clients show the same amounts for the same account. The client caps a refund using `refundableAmount` (settled minus prior reversals) for display only. The backend enforces the cap: `CreateAdHoc` reversals run in one transaction, lock the original charge, cap at settled minus prior reversals, and reject cross-account or voided originals (`financials.New` takes a `*gorm.DB`). `OutputChargeInstance` now exposes `reverses_charge_instance_id` so the client can net reversals.
 **Tradeoffs:** Allocation and schedule rules must be changed in both clients. Two concurrent refunds serialise on the row lock. A refund beyond what's still refundable is rejected with `ReversalExceedsSettledAmount`.

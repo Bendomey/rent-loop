@@ -31,7 +31,13 @@
 - `ChargeModel.reversesChargeInstanceId` (`reverses_charge_instance_id`) lets the client net prior refunds off a charge.
 - `ApplicationPaymentInvoice`/`InvoiceRef` stay on `TenantApplicationModel` because the seed data builds one. `LeaseApi.getLease` no longer populates `TenantApplication.ApplicationPaymentInvoice`, so the bill link in `leases/detail.dart` never renders now and is dead code.
 - `RLSheet(dismissible: false)` (`shared/sheet_kit.dart`) blocks the barrier, back, drag and close button; the approve, record-payment, refund, add-fee and remove-fee sheets pass `!pending`.
-- The Docs page still shows "Finish this step on the web for now." until plan 2c.
+
+### Lease document (2026-11-06)
+- `activity/document_picker.dart`: `LeaseDocumentPicker` (`FilePickerLeaseDocumentPicker` wraps `file_picker`, PDF/DOC/DOCX, bytes in memory), `uploadLeaseDocument` (rejects over 5,242,880 bytes before upload, then `R2UploadService.uploadBytes` with prefix `tenant-applications/lease-documents` and the real extension and content type), `urlOpenerProvider` (opens links externally; tests override it).
+- `ApplicationDocsPage` (`application_detail_pages.dart`) states: loading skeleton; no document (empty note, plus "Add the lease document" when writable); MANUAL upload (Open, Replace, Remove when writable); ONLINE document (title, "Open on the web", and the signed note if signed/signing or moved in, else "written on the web" note); SIGNED/SIGNING (Open only, signed note).
+- Writes show only when `canEditApplication`, the document is not SIGNED/SIGNING, and the mode is not ONLINE. Attach PATCH sets `lease_agreement_document_url`, mode `MANUAL`, and nulls document id and status; remove PATCH nulls all four fields.
+- Sheets in `application_edit_sheets.dart`: upload-only add/replace document sheet and `showRemoveDocumentSheet` confirmation. The sample signing UI and "From Library" option are gone.
+- `ApplicationDocumentModel.title` added; the ONLINE row shows it.
 
 ### api/
 - **Entry point:** `lib/src/api/root.dart` — `AbstractApi` base class

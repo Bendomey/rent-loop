@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-06 — Lease document on a pending tenant (plan 2c)
+- A landlord can add, open, replace and remove a lease document (PDF or Word, up to 5MB) on a pending tenant; it is optional.
+- Online documents written on the web open on the web and cannot be changed from mobile; signed documents can only be opened.
+- Removed the sample signing UI and the "From Library" and picker-coming-soon placeholders.
+- New dependency `file_picker` (and `http_parser` as a direct dependency).
+- Modules affected: `modules/main/activity/` (`document_picker.dart`, `application_detail_pages.dart`, `application_edit_sheets.dart`), `api/r2_upload_service.dart`, `ApplicationDocumentModel`.
+
 ## 2026-11-06 — Plan 2b final-review fixes
 - Prepaid rent: a card asks "Already been paid?" before the first automatic bill goes out; the record-payment sheet lists charges already on a bill apart; setup warns when the move-in date has passed.
 - "Still owes you" reads "You owe {Name}" for a credit and "{Name} is all paid up" at zero; typing more than is owed says only the total will be recorded; fees with no name or amount block "Save this and start billing".

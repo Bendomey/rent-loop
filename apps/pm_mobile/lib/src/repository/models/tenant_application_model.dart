@@ -42,14 +42,15 @@ class ApprovedLeaseModel {
   Map<String, dynamic> toJson() => _$ApprovedLeaseModelToJson(this);
 }
 
-/// The lease agreement document attached to an application. Only [content] is
-/// read — the checklist parses witness slots out of it.
+/// The lease agreement document attached to an application. [content] feeds
+/// the checklist's witness slots; [title] labels an online document.
 @JsonSerializable()
 class ApplicationDocumentModel {
   final String id;
+  final String? title;
   final String? content;
 
-  ApplicationDocumentModel({required this.id, this.content});
+  ApplicationDocumentModel({required this.id, this.title, this.content});
 
   factory ApplicationDocumentModel.fromJson(Map<String, dynamic> json) =>
       _$ApplicationDocumentModelFromJson(json);

@@ -47,12 +47,8 @@ class ApplicationDetailScreen extends ConsumerStatefulWidget {
 
 class _ApplicationDetailScreenState
     extends ConsumerState<ApplicationDetailScreen> {
-  ApplicationDetailData? _local;
-
   String? get _propertyId =>
       widget.propertyId ?? widget.application?.propertyId;
-
-  void _update(ApplicationDetailData next) => setState(() => _local = next);
 
   Future<void> _refresh(String propertyId) async {
     try {
@@ -75,12 +71,7 @@ class _ApplicationDetailScreenState
       'unit' => ApplicationUnitPage(data: d, propertyId: propertyId),
       'movein' => ApplicationMoveInPage(data: d, propertyId: propertyId),
       'financial' => ApplicationFinancialPage(data: d, propertyId: propertyId),
-      'docs' => ApplicationDocsPage(
-        data: d,
-        onChanged: _update,
-        readOnly: true,
-        propertyId: propertyId,
-      ),
+      'docs' => ApplicationDocsPage(data: d, propertyId: propertyId),
       _ => ApplicationTenantPage(data: d, propertyId: propertyId),
     };
 
@@ -137,20 +128,13 @@ class _ApplicationDetailScreenState
     final async = propertyId == null
         ? null
         : ref.watch(applicationDetailProvider(propertyId, widget.id));
-    if (propertyId != null) {
-      ref.listen(applicationDetailProvider(propertyId, widget.id), (_, next) {
-        if (next.hasValue && _local != null) setState(() => _local = null);
-      });
-    }
 
     final model = async?.valueOrNull ?? widget.application;
     final roles = ref.watch(myPropertyRolesProvider).valueOrNull;
     final editable = model != null && canEditApplication(model, roles);
-    final d =
-        _local ??
-        (model == null
-            ? null
-            : ApplicationDetailData.fromApplicationModel(model));
+    final d = model == null
+        ? null
+        : ApplicationDetailData.fromApplicationModel(model);
     final settled = model?.financialAccount?.totalSettled ?? 0;
 
     final showError = d == null && (propertyId == null || async!.hasError);

@@ -58,6 +58,7 @@ class _FailingUpload extends R2UploadService {
     List<int> bytes, {
     required String objectKeyPrefix,
     String ext = 'png',
+    String? contentType,
   }) async => throw Exception('nope');
 }
 

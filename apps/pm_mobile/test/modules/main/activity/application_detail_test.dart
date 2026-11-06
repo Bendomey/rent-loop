@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rentloop_manager/src/lib/application_utils.dart';
 import 'package:rentloop_manager/src/modules/main/activity/application_detail.dart';
-import 'package:rentloop_manager/src/modules/main/activity/application_detail_pages.dart';
 import 'package:rentloop_manager/src/modules/main/activity/financial/financial_page.dart';
 import 'package:rentloop_manager/src/repository/models/tenant_application_model.dart';
 import 'package:rentloop_manager/src/repository/notifiers/activity/cancel_application_notifier.dart';
@@ -196,7 +195,7 @@ void main() {
     ]);
   });
 
-  testWidgets('Approve and the document menu stay hidden for now', (
+  testWidgets('Approve stays hidden and Docs offers the lease document', (
     tester,
   ) async {
     await _pump(tester, fetch: () async => _app());
@@ -214,21 +213,20 @@ void main() {
 
     await tester.tap(find.text('Lease docs setup'));
     await tester.pumpAndSettle();
-    expect(find.byType(EditButton), findsNothing);
     expect(find.byIcon(Icons.more_horiz), findsNothing);
-    expect(find.text('Finish this step on the web for now.'), findsOneWidget);
+    expect(find.text('Add the lease document'), findsOneWidget);
   });
 
-  testWidgets('STAFF is not told to finish on the web', (tester) async {
+  testWidgets("STAFF sees no 'Add the lease document'", (tester) async {
     await _pump(
       tester,
       fetch: () async => _app(),
       roles: const {'p1': 'STAFF'},
     );
 
-    await tester.tap(find.text('Financial setup'));
+    await tester.tap(find.text('Lease docs setup'));
     await tester.pumpAndSettle();
-    expect(find.text('Finish this step on the web for now.'), findsNothing);
+    expect(find.text('Add the lease document'), findsNothing);
   });
 
   testWidgets('a section opened before roles load gains Edit once they do', (

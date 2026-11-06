@@ -13,17 +13,20 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:rentloop_manager/src/api/r2_upload_service.dart';
 import 'package:rentloop_manager/src/lib/phone.dart';
 import 'package:rentloop_manager/src/lib/money.dart';
 import 'package:rentloop_manager/src/lib/property_status.dart';
 import 'package:rentloop_manager/src/lib/unit_status.dart';
 import 'package:rentloop_manager/src/modules/main/activity/application_data.dart';
 import 'package:rentloop_manager/src/modules/main/activity/application_form_widgets.dart';
+import 'package:rentloop_manager/src/modules/main/activity/document_picker.dart';
 import 'package:rentloop_manager/src/repository/api_state.dart';
 import 'package:rentloop_manager/src/repository/models/unit_model.dart';
 import 'package:rentloop_manager/src/repository/notifiers/activity/update_application_notifier.dart';
 import 'package:rentloop_manager/src/repository/providers/activity/application_unit_options_provider.dart';
-import 'package:rentloop_manager/src/shared/sheet_kit.dart' show RLSheetNote;
+import 'package:rentloop_manager/src/shared/sheet_kit.dart'
+    show RLSheet, RLSheetNote;
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 import 'package:shimmer/shimmer.dart';
@@ -111,8 +114,30 @@ Future<void> showChangeUnitSheet(
   ),
 );
 
-Future<void> showAddDocumentSheet(BuildContext context) =>
-    _open<void>(context, (close) => _AddDocumentSheet(onClose: close));
+Future<void> showAddDocumentSheet(
+  BuildContext context,
+  String propertyId,
+  String id, {
+  bool replacing = false,
+}) => _open<void>(
+  context,
+  (close) => _AddDocumentSheet(
+    propertyId: propertyId,
+    id: id,
+    replacing: replacing,
+    onClose: close,
+  ),
+);
+
+Future<void> showRemoveDocumentSheet(
+  BuildContext context,
+  String propertyId,
+  String id,
+) => _open<void>(
+  context,
+  (close) =>
+      _RemoveDocumentSheet(propertyId: propertyId, id: id, onClose: close),
+);
 
 Future<void> showWhatsNextSheet(
   BuildContext context, {
@@ -326,6 +351,7 @@ Widget _saveCancel({
   required VoidCallback onCancel,
   required VoidCallback? onSave,
   String saveLabel = 'Save',
+  bool cancelEnabled = true,
 }) {
   return Row(
     children: [
@@ -334,10 +360,12 @@ Widget _saveCancel({
           label: 'Cancel',
           kind: RLBtnKind.light,
           full: true,
-          onPressed: () async {
-            await Haptics.vibrate(HapticsType.selection);
-            onCancel();
-          },
+          onPressed: cancelEnabled
+              ? () async {
+                  await Haptics.vibrate(HapticsType.selection);
+                  onCancel();
+                }
+              : null,
         ),
       ),
       const SizedBox(width: 10),
@@ -1650,239 +1678,270 @@ class _SelectionDot extends StatelessWidget {
   }
 }
 
-// ── 6. Add document ──────────────────────────────────────────────────────────
+// ── 6. Lease document ────────────────────────────────────────────────────────
 
-class _AddDocumentSheet extends StatefulWidget {
-  const _AddDocumentSheet({required this.onClose});
-  final void Function([void result]) onClose;
+const _kDocumentUploadFailed = 'Upload failed — try again';
+const _kDocumentPickFailed = "Couldn't open that file. Try another.";
+
+class _AddDocumentSheet extends ConsumerStatefulWidget {
+  const _AddDocumentSheet({
+    required this.propertyId,
+    required this.id,
+    required this.replacing,
+    required this.onClose,
+  });
+
+  final String propertyId;
+  final String id;
+  final bool replacing;
+  final VoidCallback onClose;
 
   @override
-  State<_AddDocumentSheet> createState() => _AddDocumentSheetState();
+  ConsumerState<_AddDocumentSheet> createState() => _AddDocumentSheetState();
 }
 
-class _AddDocumentSheetState extends State<_AddDocumentSheet> {
-  String _mode = 'library';
-  String _filter = 'All';
+class _AddDocumentSheetState extends ConsumerState<_AddDocumentSheet> {
+  String? _fileName;
+  String? _url;
+  String? _error;
+  bool _uploading = false;
+  PickedDocument? _lastPicked;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(
+      () => ref.read(updateApplicationNotifierProvider.notifier).reset(),
+    );
+  }
+
+  Future<void> _choose() async {
+    await Haptics.vibrate(HapticsType.selection);
+    final PickedDocument? picked;
+    try {
+      picked = await ref.read(leaseDocumentPickerProvider).pick();
+    } catch (_) {
+      if (mounted) setState(() => _error = _kDocumentPickFailed);
+      return;
+    }
+    if (picked == null || !mounted) return;
+    _lastPicked = picked;
+    await _upload(picked);
+  }
+
+  Future<void> _retry() async {
+    await Haptics.vibrate(HapticsType.selection);
+    final picked = _lastPicked;
+    if (picked == null || !mounted) return;
+    await _upload(picked);
+  }
+
+  Future<void> _upload(PickedDocument picked) async {
+    setState(() {
+      _uploading = true;
+      _error = null;
+    });
+    try {
+      final result = await uploadLeaseDocument(
+        ref.read(r2UploadServiceProvider),
+        picked,
+      );
+      if (!mounted) return;
+      setState(() {
+        _uploading = false;
+        _error = result.error;
+        _url = result.url;
+        _fileName = result.url == null ? null : picked.name;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _uploading = false;
+        _url = null;
+        _fileName = null;
+        _error = _kDocumentUploadFailed;
+      });
+    }
+  }
+
+  Future<void> _attach() async {
+    final saved = await _savePatch(
+      ref,
+      propertyId: widget.propertyId,
+      id: widget.id,
+      patch: {
+        'lease_agreement_document_url': _url,
+        'lease_agreement_document_mode': 'MANUAL',
+        'lease_agreement_document_id': null,
+        'lease_agreement_document_status': null,
+      },
+    );
+    if (saved && mounted) widget.onClose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return _Sheet(
-      title: 'Add document',
-      desc: 'Upload your own or select from the library.',
-      onDismiss: widget.onClose,
+    final state = ref.watch(updateApplicationNotifierProvider);
+    final saving = state.status.isLoading();
+    final busy = _uploading || saving;
+
+    return RLSheet(
+      title: widget.replacing
+          ? 'Replace the lease document'
+          : 'Add the lease document',
+      onClose: widget.onClose,
+      dismissible: !busy,
       footer: _saveCancel(
         onCancel: widget.onClose,
-        onSave: () => widget.onClose(),
+        cancelEnabled: !busy,
+        onSave: _url == null || busy ? null : _attach,
+        saveLabel: 'Attach',
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          RLSegmented(
-            value: _mode,
-            items: const [
-              RLSegmentItem(key: 'upload', label: 'Manual Upload'),
-              RLSegmentItem(key: 'library', label: 'From Library'),
-            ],
-            onChanged: (v) => setState(() => _mode = v),
-          ),
-          const SizedBox(height: 16),
-          if (_mode == 'upload') ..._uploadMode() else ..._libraryMode(),
-        ],
-      ),
-    );
-  }
-
-  List<Widget> _uploadMode() => [
-    Container(
-      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
-      decoration: BoxDecoration(
-        color: RLTokens.fill,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: const Text(
-        'Upload your own lease or tenancy document. PDF or Word, up to 5MB.',
-        style: TextStyle(
-          fontFamily: RLTokens.fontSans,
-          fontSize: 12.5,
-          color: RLTokens.muted,
-          height: 1.5,
-        ),
-      ),
-    ),
-    const SizedBox(height: 12),
-    DottedBorderBox(
-      child: Column(
-        children: [
-          const Icon(
-            Icons.description_outlined,
-            size: 30,
-            color: RLTokens.mutedSoft,
+          const RLSheetNote(
+            text:
+                'Upload your own lease or tenancy document. PDF or Word, up to 5MB.',
+            tone: RLTone.neutral,
           ),
           const SizedBox(height: 12),
-          RLBtn(
-            label: 'Choose document',
-            kind: RLBtnKind.light,
-            large: false,
-            onPressed: () async {
-              await Haptics.vibrate(HapticsType.selection);
-              if (!mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Document picker coming soon')),
-              );
-            },
-          ),
-        ],
-      ),
-    ),
-  ];
-
-  List<Widget> _libraryMode() => [
-    Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: RLTokens.hairline),
-      ),
-      child: const Row(
-        children: [
-          Icon(Icons.search_rounded, size: 18, color: RLTokens.micro),
-          SizedBox(width: 9),
-          Text(
-            'Search documents…',
-            style: TextStyle(
-              fontFamily: RLTokens.fontSans,
-              fontSize: 14,
-              color: RLTokens.micro,
-            ),
-          ),
-        ],
-      ),
-    ),
-    const SizedBox(height: 12),
-    // Wrap, not Row: three chips plus their padding outrun a 375pt screen.
-    Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        for (final f in ['All', 'Global', 'Property'])
-          GestureDetector(
-            onTap: () {
-              Haptics.vibrate(HapticsType.selection);
-              setState(() => _filter = f);
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-              decoration: BoxDecoration(
-                color: _filter == f ? RLTokens.crimsonTint : RLTokens.surface,
-                borderRadius: BorderRadius.circular(RLTokens.rPill),
-                border: Border.all(
-                  color: _filter == f
-                      ? RLTokens.crimsonTint2
-                      : RLTokens.hairline,
+          DottedBorderBox(
+            child: Column(
+              children: [
+                const Icon(
+                  Icons.description_outlined,
+                  size: 30,
+                  color: RLTokens.mutedSoft,
                 ),
-              ),
-              child: Text(
-                f,
-                style: TextStyle(
-                  fontFamily: RLTokens.fontSans,
-                  fontSize: 13,
-                  fontWeight: RLTokens.semibold,
-                  color: _filter == f ? RLTokens.crimson : RLTokens.muted,
-                ),
-              ),
-            ),
-          ),
-      ],
-    ),
-    const SizedBox(height: 14),
-    // Both cards should match the taller one's height. `stretch` alone can't
-    // do that here: the sheet body is an unbounded-height scroll view, so
-    // stretching asks the children for infinite height and fails layout.
-    // IntrinsicHeight bounds the row to its tallest child first.
-    IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: DottedBorderBox(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 22),
-              child: Column(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: RLTokens.micro,
-                        width: 1.5,
-                        strokeAlign: BorderSide.strokeAlignInside,
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.add_rounded,
-                      size: 20,
-                      color: RLTokens.muted,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  const Text(
-                    'Empty Document',
+                const SizedBox(height: 12),
+                if (_fileName != null) ...[
+                  Text(
+                    _fileName!,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontFamily: RLTokens.fontSans,
                       fontSize: 13.5,
                       fontWeight: RLTokens.bold,
                       color: RLTokens.ink,
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  const Text(
-                    'Start from scratch',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontFamily: RLTokens.fontSans,
-                      fontSize: 11.5,
-                      color: RLTokens.muted,
-                    ),
-                  ),
+                  const SizedBox(height: 12),
                 ],
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 18),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: RLTokens.hairline),
-              ),
-              child: Column(
-                children: [
-                  const DocxTile(),
-                  const SizedBox(height: 10),
-                  const Text(
-                    'basic-lease-agreement',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontFamily: RLTokens.fontSans,
-                      fontSize: 13,
-                      fontWeight: RLTokens.bold,
-                      color: RLTokens.ink,
-                      height: 1.25,
-                    ),
+                if (_uploading)
+                  const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      SizedBox(width: 10),
+                      Text(
+                        'Uploading…',
+                        style: TextStyle(
+                          fontFamily: RLTokens.fontSans,
+                          fontSize: 13.5,
+                          color: RLTokens.muted,
+                        ),
+                      ),
+                    ],
+                  )
+                else if (_error == _kDocumentUploadFailed &&
+                    _lastPicked != null) ...[
+                  RLBtn(
+                    label: 'Try again',
+                    kind: RLBtnKind.light,
+                    large: false,
+                    onPressed: saving ? null : _retry,
                   ),
                   const SizedBox(height: 8),
-                  RLPill('Global', tone: RLTone.success),
-                ],
-              ),
+                  RLBtn(
+                    label: 'Choose another file',
+                    kind: RLBtnKind.light,
+                    large: false,
+                    onPressed: saving ? null : _choose,
+                  ),
+                ] else
+                  RLBtn(
+                    label: _url == null ? 'Choose document' : 'Choose another',
+                    kind: RLBtnKind.light,
+                    large: false,
+                    onPressed: saving ? null : _choose,
+                  ),
+              ],
             ),
           ),
+          if (_error != null) ...[
+            const SizedBox(height: 12),
+            RLSheetNote(text: _error!, tone: RLTone.danger),
+          ],
+          _saveError(state),
         ],
       ),
-    ),
-  ];
+    );
+  }
+}
+
+class _RemoveDocumentSheet extends ConsumerStatefulWidget {
+  const _RemoveDocumentSheet({
+    required this.propertyId,
+    required this.id,
+    required this.onClose,
+  });
+
+  final String propertyId;
+  final String id;
+  final VoidCallback onClose;
+
+  @override
+  ConsumerState<_RemoveDocumentSheet> createState() =>
+      _RemoveDocumentSheetState();
+}
+
+class _RemoveDocumentSheetState extends ConsumerState<_RemoveDocumentSheet> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(
+      () => ref.read(updateApplicationNotifierProvider.notifier).reset(),
+    );
+  }
+
+  Future<void> _remove() async {
+    final saved = await _savePatch(
+      ref,
+      propertyId: widget.propertyId,
+      id: widget.id,
+      patch: {
+        'lease_agreement_document_url': null,
+        'lease_agreement_document_mode': null,
+        'lease_agreement_document_id': null,
+        'lease_agreement_document_status': null,
+      },
+    );
+    if (saved && mounted) widget.onClose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = ref.watch(updateApplicationNotifierProvider);
+    final saving = state.status.isLoading();
+
+    return RLSheet(
+      title: 'Remove the lease document?',
+      desc: 'You can add another one later.',
+      onClose: widget.onClose,
+      dismissible: !saving,
+      footer: _saveCancel(
+        onCancel: saving ? () {} : widget.onClose,
+        onSave: saving ? null : _remove,
+        saveLabel: 'Remove',
+      ),
+      child: _saveError(state),
+    );
+  }
 }
 
 /// Dashed-outline container used by the document picker states.

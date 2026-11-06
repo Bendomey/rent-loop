@@ -309,8 +309,7 @@ class ApplicationSigner {
   final String label;
   final bool signed;
 
-  /// True for the slot the signed-in manager fills themselves — that row
-  /// gets "Sign document" instead of "Prompt to sign".
+  /// True for the slot the signed-in manager fills themselves.
   final bool isSelf;
 
   ApplicationSigner copyWith({bool? signed}) => ApplicationSigner(

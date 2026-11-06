@@ -6,6 +6,9 @@ Flutter / Dart 3.8.1+ mobile app (property-manager / landlord-facing client for 
 ### Session metadata
 `lib/src/lib/session_metadata.dart` describes the device to the backend at login (`platform`, `device_type`, `device`, `os`, `app`, `locale`). **`flutter_timezone`** supplies the IANA zone, which is the app's only location signal that needs no permission and no paid lookup — the backend reads a city out of it and records the result as client-reported.
 
+### Lease document upload
+**`file_picker`** lets a landlord pick a PDF or Word file for a pending tenant's lease document (`modules/main/activity/document_picker.dart`); the bytes go to R2 through `R2UploadService`. `http_parser` is a direct dependency for the upload's content type.
+
 ## Directory Map
 ```
 apps/pm_mobile/
