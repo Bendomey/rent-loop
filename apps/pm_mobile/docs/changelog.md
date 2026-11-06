@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-06 — Post-now announcement form (plan: pm-mobile-v1-announcements, task 3)
+- "New announcement" (`announcements/add.dart`) now posts a real announcement to tenants: property, title (60), message (2,000), type, priority, and "Who should get it?" (Whole property / One block / Some units). The sample lists, schedule, expiry and "Save as draft" are gone.
+- Posting creates then publishes. If publishing fails after the draft is saved, the form locks, shows "Saved, but not sent yet." and the button becomes "Send now", which retries publish only.
+- Says "You need manager access to a property to post an announcement." when the user manages none. `/more/announcements/add?property_id=` pre-selects a property.
+- Home's Announcement shortcut shows only for users who manage a property, like Record payment.
+- Modules affected: `modules/main/announcements/`, `modules/main/home/`, `navigation/routes.dart`.
+
 ## 2026-11-06 — Add repair connected to real data (plan: pm-mobile-v1-add-repair)
 - "New repair" (`activity/add_maintenance.dart`) now lists the manager's real properties, blocks and units, uploads real photos (up to 5, via `ApplicationUploadTile`) and creates the repair. On success it opens the new repair's detail and shows "Repair added". The sample blocks, units and photo counter are gone.
 - The form shows a shimmer while properties load, says "You need manager access to a property to add a repair." when there are none, and keeps its fields on a server error.

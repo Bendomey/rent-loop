@@ -65,6 +65,8 @@ String translateApiErrorMessage({
     case 'ApplicationMissingStayDuration':
     case 'ApplicationMissingStayDurationFrequency':
       return 'Set how long they\'re staying first.';
+    case 'AnnouncementNotPublishable':
+      return 'This announcement was already sent.';
     case 'UnitNoLongerAvailable':
       return 'That unit is no longer available. Pick another unit.';
     // No specific error codes confirmed for the login flow yet — add

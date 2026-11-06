@@ -67,4 +67,20 @@ void main() {
 
     expect(find.text('Record payment'), findsNothing);
   });
+
+  testWidgets('Announcement shortcut is hidden for STAFF-only users', (
+    tester,
+  ) async {
+    await _pump(tester, () async => {'p1': 'STAFF'});
+
+    expect(find.text('Announcement'), findsNothing);
+  });
+
+  testWidgets('Announcement shortcut stays hidden while roles load', (
+    tester,
+  ) async {
+    await _pump(tester, () => Completer<Map<String, String>>().future);
+
+    expect(find.text('Announcement'), findsNothing);
+  });
 }

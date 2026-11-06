@@ -216,9 +216,16 @@ List<RouteBase> appRoutes() => [
   ),
   GoRoute(
     path: '/more/announcements',
-    builder: (_, __) => const AnnouncementsScreen(),
+    builder: (_, state) => AnnouncementsScreen(
+      propertyId: state.uri.queryParameters['property_id'],
+    ),
     routes: [
-      GoRoute(path: 'add', builder: (_, __) => const AddAnnouncementScreen()),
+      GoRoute(
+        path: 'add',
+        builder: (_, state) => AddAnnouncementScreen(
+          propertyId: state.uri.queryParameters['property_id'],
+        ),
+      ),
     ],
   ),
   GoRoute(

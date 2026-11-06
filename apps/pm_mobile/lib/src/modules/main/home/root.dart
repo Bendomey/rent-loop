@@ -399,6 +399,11 @@ class _StatCard extends StatelessWidget {
 }
 
 class _QuickActionsSection extends ConsumerWidget {
+  static const _managerOnlyRoutes = {
+    '/money/record-payment',
+    '/more/announcements/add',
+  };
+
   static const _actions = [
     _QuickAction(
       icon: Icons.person_add_alt_1_outlined,
@@ -428,7 +433,7 @@ class _QuickActionsSection extends ConsumerWidget {
     final managesAny = roles?.values.any((r) => r == 'MANAGER') ?? false;
     final actions = [
       for (final a in _actions)
-        if (a.route != '/money/record-payment' || managesAny) a,
+        if (!_managerOnlyRoutes.contains(a.route) || managesAny) a,
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
