@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-11-06 — Plan 2b final-review fixes
+- Prepaid rent: a card asks "Already been paid?" before the first automatic bill goes out; the record-payment sheet lists charges already on a bill apart; setup warns when the move-in date has passed.
+- "Still owes you" reads "You owe {Name}" for a credit and "{Name} is all paid up" at zero; typing more than is owed says only the total will be recorded; fees with no name or amount block "Save this and start billing".
+- Start billing recovers from `ChargesAlreadyPrepared`; every financial write refreshes on failure; write sheets can't be dismissed while saving; refunds are listed apart from the rent count; manual plans get their own subtitle.
+- Modules affected: `lib/financial/`, `lib/money.dart`, `shared/sheet_kit.dart`, `modules/main/activity/financial/`, `activity/approve_sheet.dart`, financial notifiers.
+
+## 2026-11-06 — Tenant billing, fees, payments, refunds and Approve (plan 2b)
+- The tenant financial page now follows the web model: set up billing (rent, deposit, schedule, fees), then a live view with what the tenant owes, charges and billing plan.
+- Add or remove a fee, record a payment (including prepaid rent), refund, and Approve & move in, all shown only to a MANAGER on an in-progress tenant.
+- New error codes translate to plain English (`ChargesAlreadyPrepared`, `ChargeAlreadyBilled`, `ReversalExceedsSettledAmount` and others).
+- Backend: refunds are capped at settled minus prior reversals inside a locked transaction; charge instances expose `reverses_charge_instance_id`.
+- Fixed `lease_api` populate, and test fixtures no longer use null-aware map entries, so `build_runner` completes.
+- Modules affected: `api/`, `lib/financial/`, `repository/`, `modules/main/activity/`, `services/main` financials.
+
 ## 2026-11-06 — Add tenant wired to the real API (plan 2a)
 - Add tenant now creates a real tenant application: phone lookup prefills returning tenants, uploads go to R2, and the invite sheet shares a setup link.
 - Tenant setup detail loads live data, with edit sheets, unit and move-in changes, and Cancel tenant setup, all gated on the caller's property role (MANAGER).

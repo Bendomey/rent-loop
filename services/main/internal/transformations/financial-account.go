@@ -59,6 +59,8 @@ type OutputChargeInstance struct {
 	VoidedReason       *string    `json:"voided_reason,omitempty"`
 	CreatedAt          time.Time  `json:"created_at"`
 	UpdatedAt          time.Time  `json:"updated_at"`
+
+	ReversesChargeInstanceID *string `json:"reverses_charge_instance_id,omitempty"`
 }
 
 func DBChargeInstanceToRest(m *models.ChargeInstance) *OutputChargeInstance {
@@ -85,6 +87,8 @@ func DBChargeInstanceToRest(m *models.ChargeInstance) *OutputChargeInstance {
 		VoidedReason:       m.VoidedReason,
 		CreatedAt:          m.CreatedAt,
 		UpdatedAt:          m.UpdatedAt,
+
+		ReversesChargeInstanceID: m.ReversesChargeInstanceID,
 	}
 }
 

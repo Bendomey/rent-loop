@@ -82,7 +82,7 @@ class LeaseApi extends AbstractApi {
       method: 'GET',
       path:
           '/api/v1/admin/clients/$clientId/properties/$propertyId/leases/$leaseId'
-          '?populate=Tenant,Unit,TenantApplication,TenantApplication.ApplicationPaymentInvoice',
+          '?populate=Tenant,Unit,TenantApplication',
     );
     final json = jsonDecode(response.body) as Map<String, dynamic>;
     return LeaseModel.fromJson(json['data'] as Map<String, dynamic>);

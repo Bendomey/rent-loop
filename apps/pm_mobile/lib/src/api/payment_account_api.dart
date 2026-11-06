@@ -62,6 +62,15 @@ class PaymentAccountApi extends AbstractApi {
       meta: PaginationMetaModel.fromJson(data['meta'] as Map<String, dynamic>),
     );
   }
+
+  /// Accounts a manager can record a received payment against.
+  Future<PaymentAccountsPage> getCollectionAccounts({
+    required String clientId,
+  }) => getPaymentAccounts(
+    clientId: clientId,
+    pageSize: 50,
+    ownerTypes: const ['PROPERTY_OWNER', 'SYSTEM'],
+  );
 }
 
 @riverpod

@@ -34,7 +34,6 @@ ApplicationDetailData _inProgress() => ApplicationDetailData(
   financial: const ApplicationFinancial(
     rentFee: 50000,
     paymentFrequency: 'MONTHLY',
-    unitDefaultRentFee: 50000,
   ),
   doc: const ApplicationDoc(
     name: 'Lease Agreement',
@@ -83,7 +82,7 @@ ApplicationDetailData _bare() => ApplicationDetailData(
   identity: const ApplicationIdentity(),
   background: const ApplicationBackground(),
   moveIn: const ApplicationMoveIn(),
-  financial: const ApplicationFinancial(unitDefaultRentFee: 350000),
+  financial: const ApplicationFinancial(),
   doc: const ApplicationDoc(),
 );
 
@@ -134,47 +133,6 @@ void main() {
       final docs = a4.stepFor(ChecklistSection.docs);
       expect(docs.totalItems, 0);
       expect(docs.isSatisfied, isFalse);
-    });
-  });
-
-  group('financial totals', () {
-    test('full-stay payment covers every period of the stay', () {
-      const f = ApplicationFinancial(
-        rentFee: 50000,
-        paymentFrequency: 'MONTHLY',
-      );
-      expect(f.periodsFor(12), 12);
-      expect(f.initialTotalFor(12), 600000);
-    });
-
-    test('custom mode uses the chosen number of periods', () {
-      const f = ApplicationFinancial(
-        rentFee: 50000,
-        paymentMode: 'CUSTOM',
-        customPeriods: 2,
-      );
-      expect(f.initialTotalFor(12), 100000);
-    });
-
-    test('an enabled security deposit is added on top', () {
-      const f = ApplicationFinancial(
-        rentFee: 50000,
-        paymentMode: 'CUSTOM',
-        customPeriods: 1,
-        securityDepositEnabled: true,
-        securityDepositFee: 25000,
-      );
-      expect(f.initialTotalFor(12), 75000);
-    });
-
-    test('a disabled deposit is ignored even when an amount lingers', () {
-      const f = ApplicationFinancial(
-        rentFee: 50000,
-        paymentMode: 'CUSTOM',
-        customPeriods: 1,
-        securityDepositFee: 25000,
-      );
-      expect(f.initialTotalFor(12), 50000);
     });
   });
 

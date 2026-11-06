@@ -15,10 +15,13 @@ import 'package:rentloop_manager/src/lib/unit_status.dart';
 import 'package:rentloop_manager/src/modules/main/activity/application_data.dart';
 import 'package:rentloop_manager/src/modules/main/activity/application_detail_pages.dart';
 import 'package:rentloop_manager/src/modules/main/activity/application_edit_sheets.dart';
+import 'package:rentloop_manager/src/modules/main/activity/approve_sheet.dart';
 import 'package:rentloop_manager/src/modules/main/activity/cancel_application_sheet.dart';
+import 'package:rentloop_manager/src/modules/main/activity/financial/financial_page.dart';
 import 'package:rentloop_manager/src/repository/models/tenant_application_model.dart';
 import 'package:rentloop_manager/src/repository/providers/activity/application_detail_provider.dart';
 import 'package:rentloop_manager/src/repository/providers/properties/my_property_roles_provider.dart';
+import 'package:rentloop_manager/src/shared/toast.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 import 'package:shimmer/shimmer.dart';
@@ -71,12 +74,7 @@ class _ApplicationDetailScreenState
     Widget page(ApplicationDetailData d) => switch (key) {
       'unit' => ApplicationUnitPage(data: d, propertyId: propertyId),
       'movein' => ApplicationMoveInPage(data: d, propertyId: propertyId),
-      'financial' => ApplicationFinancialPage(
-        data: d,
-        onChanged: _update,
-        readOnly: true,
-        propertyId: propertyId,
-      ),
+      'financial' => ApplicationFinancialPage(data: d, propertyId: propertyId),
       'docs' => ApplicationDocsPage(
         data: d,
         onChanged: _update,
@@ -100,6 +98,37 @@ class _ApplicationDetailScreenState
       id: widget.id,
     );
     if (cancelled && mounted) Navigator.of(context).pop();
+  }
+
+  Future<void> _approve(
+    String propertyId,
+    ApplicationDetailData d,
+    TenantApplicationModel model,
+  ) async {
+    await Haptics.vibrate(HapticsType.selection);
+    if (!mounted) return;
+    final lease = await showApproveSheet(
+      context,
+      propertyId: propertyId,
+      id: widget.id,
+      tenantName: d.applicant.fullName,
+      unitName: d.desiredUnit?.name,
+      noDocument: model.leaseAgreementDocumentMode == null,
+    );
+    if (lease == null || !mounted) return;
+    showRLToast(
+      ref,
+      tone: RLToastTone.success,
+      title: '${d.applicant.fullName} has moved in',
+    );
+    await showWhatsNextSheet(
+      context,
+      tenantName: d.applicant.fullName,
+      propertyId: propertyId,
+      leaseId: lease.id,
+      tenantId: lease.tenantId,
+      leasePending: lease.status.endsWith('Pending'),
+    );
   }
 
   @override
@@ -189,12 +218,21 @@ class _ApplicationDetailScreenState
           if (d != null && (editable || d.approved))
             _ActionBar(
               approved: d.approved,
+              showApprove: editable,
+              approveBlocker: editable
+                  ? approveBlocker(model, computeApplicationChecklist(model))
+                  : null,
+              onApprove: () => _approve(propertyId!, d, model!),
               onCancel: settled > 0 ? null : () => _cancel(propertyId!),
               cancelBlocked: settled > 0,
               onWhatsNext: () async {
                 await Haptics.vibrate(HapticsType.selection);
                 if (context.mounted) {
-                  await showWhatsNextSheet(context, d.applicant.fullName);
+                  await showWhatsNextSheet(
+                    context,
+                    tenantName: d.applicant.fullName,
+                    propertyId: propertyId,
+                  );
                 }
               },
             ),
@@ -578,12 +616,18 @@ class _CountBadge extends StatelessWidget {
 class _ActionBar extends StatelessWidget {
   const _ActionBar({
     required this.approved,
+    required this.showApprove,
+    required this.approveBlocker,
+    required this.onApprove,
     required this.onCancel,
     required this.cancelBlocked,
     required this.onWhatsNext,
   });
 
   final bool approved;
+  final bool showApprove;
+  final String? approveBlocker;
+  final VoidCallback onApprove;
   final VoidCallback? onCancel;
   final bool cancelBlocked;
   final VoidCallback onWhatsNext;
@@ -613,6 +657,28 @@ class _ActionBar extends StatelessWidget {
           : Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                if (showApprove) ...[
+                  RLBtn(
+                    label: 'Approve & move in',
+                    kind: RLBtnKind.primary,
+                    full: true,
+                    onPressed: approveBlocker == null ? onApprove : null,
+                  ),
+                  if (approveBlocker != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        approveBlocker!,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontFamily: RLTokens.fontSans,
+                          fontSize: 12.5,
+                          color: RLTokens.muted,
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 10),
+                ],
                 RLBtn(
                   label: 'Cancel tenant setup',
                   kind: RLBtnKind.danger,

@@ -30,7 +30,7 @@ TenantApplicationModel _app({String? docStatus}) =>
       'employer': 'Bollore',
       'id_front_url': 'https://cdn.test/front.jpg',
       'id_back_url': 'https://cdn.test/back.jpg',
-      'lease_agreement_document_status': ?docStatus,
+      if (docStatus != null) 'lease_agreement_document_status': docStatus,
     });
 
 class _FakeUpdate extends UpdateApplicationNotifier {
@@ -41,6 +41,7 @@ class _FakeUpdate extends UpdateApplicationNotifier {
     required String propertyId,
     required String id,
     required Map<String, dynamic> patch,
+    String? accountId,
   }) async {
     patches.add(patch);
     state = UpdateApplicationState(status: ApiStatus.success);

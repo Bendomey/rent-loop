@@ -6,6 +6,7 @@ import 'package:rentloop_manager/src/architecture/current_workspace/current_work
 import 'package:rentloop_manager/src/lib/api_error_messages.dart';
 import 'package:rentloop_manager/src/repository/api_state.dart';
 import 'package:rentloop_manager/src/repository/providers/activity/application_detail_provider.dart';
+import 'package:rentloop_manager/src/repository/providers/activity/financial_account_provider.dart';
 import 'package:rentloop_manager/src/repository/providers/tenants/pending_tenants_provider.dart';
 
 part 'update_application_notifier.g.dart';
@@ -23,6 +24,7 @@ class UpdateApplicationNotifier extends _$UpdateApplicationNotifier {
     required String propertyId,
     required String id,
     required Map<String, dynamic> patch,
+    String? accountId,
   }) async {
     final clientId = ref.read(currentWorkspaceNotifierProvider)?.clientId;
     if (clientId == null) {
@@ -45,8 +47,12 @@ class UpdateApplicationNotifier extends _$UpdateApplicationNotifier {
           );
       ref.invalidate(applicationDetailProvider(propertyId, id));
       ref.invalidate(pendingTenantsProvider);
+      _refreshAccount(propertyId, accountId);
       state = UpdateApplicationState(status: ApiStatus.success);
     } on ApiException catch (e) {
+      if (e.message == 'ChargesAlreadyBilled') {
+        _refreshAccount(propertyId, accountId);
+      }
       state = UpdateApplicationState(
         status: ApiStatus.failed,
         errorMessage: translateApiErrorMessage(errorMessage: e.message),
@@ -57,6 +63,11 @@ class UpdateApplicationNotifier extends _$UpdateApplicationNotifier {
         errorMessage: translateApiErrorMessage(),
       );
     }
+  }
+
+  void _refreshAccount(String propertyId, String? accountId) {
+    if (accountId == null) return;
+    ref.invalidate(financialAccountProvider(propertyId, accountId));
   }
 
   void reset() => state = UpdateApplicationState();

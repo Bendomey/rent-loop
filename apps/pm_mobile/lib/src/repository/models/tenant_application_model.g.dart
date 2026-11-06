@@ -19,6 +19,20 @@ Map<String, dynamic> _$InvoiceRefToJson(InvoiceRef instance) =>
       'status': instance.status,
     };
 
+ApprovedLeaseModel _$ApprovedLeaseModelFromJson(Map<String, dynamic> json) =>
+    ApprovedLeaseModel(
+      id: json['id'] as String,
+      status: json['status'] as String,
+      tenantId: json['tenant_id'] as String,
+    );
+
+Map<String, dynamic> _$ApprovedLeaseModelToJson(ApprovedLeaseModel instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'status': instance.status,
+      'tenant_id': instance.tenantId,
+    };
+
 ApplicationDocumentModel _$ApplicationDocumentModelFromJson(
   Map<String, dynamic> json,
 ) => ApplicationDocumentModel(

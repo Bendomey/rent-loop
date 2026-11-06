@@ -43,20 +43,6 @@ const kStayFrequencyOptions = {
   'MONTHLY': 'Monthly',
 };
 
-const kPaymentFrequencyOptions = {
-  'DAILY': 'Daily',
-  'WEEKLY': 'Weekly',
-  'MONTHLY': 'Monthly',
-  'QUARTERLY': 'Quarterly',
-  'BIANNUALLY': 'Biannually',
-  'ANNUALLY': 'Annually',
-};
-
-const kPaymentModeOptions = {
-  'ONE_TIME_PAYMENT': 'Full stay payment',
-  'CUSTOM': 'Custom periods',
-};
-
 /// Singular/plural period noun for a stay frequency — mirrors the web's
 /// `getPaymentFrequencyPeriodLabel`.
 String periodLabel(String? frequency, int count) {
@@ -275,70 +261,36 @@ class ApplicationFinancial {
   const ApplicationFinancial({
     this.rentFee,
     this.paymentFrequency,
-    this.securityDepositEnabled = false,
     this.securityDepositFee,
-    this.paymentMode = 'ONE_TIME_PAYMENT',
-    this.customPeriods = 1,
     this.invoiceGenerated = false,
     this.invoicePaid = false,
     this.hasFinancialAccount = false,
-    this.unitDefaultRentFee,
   });
 
   /// Pesewas.
   final int? rentFee;
   final String? paymentFrequency;
-  final bool securityDepositEnabled;
 
   /// Pesewas.
   final int? securityDepositFee;
-  final String paymentMode;
-  final int customPeriods;
   final bool invoiceGenerated;
   final bool invoicePaid;
   final bool hasFinancialAccount;
 
-  /// Pesewas — the unit's own rent, shown as "Unit default" on the web form.
-  final int? unitDefaultRentFee;
-
-  /// Number of rent periods the initial payment covers.
-  int periodsFor(int? stayDuration) =>
-      paymentMode == 'CUSTOM' ? customPeriods : (stayDuration ?? 1);
-
-  /// Initial payment total in pesewas: rent × periods (+ deposit when on).
-  int? initialTotalFor(int? stayDuration) {
-    if (rentFee == null) return null;
-    final base = rentFee! * periodsFor(stayDuration);
-    return base + (securityDepositEnabled ? (securityDepositFee ?? 0) : 0);
-  }
-
   ApplicationFinancial copyWith({
     int? Function()? rentFee,
     String? Function()? paymentFrequency,
-    bool? securityDepositEnabled,
-    int? Function()? securityDepositFee,
-    String? paymentMode,
-    int? customPeriods,
-    bool? invoiceGenerated,
     bool? invoicePaid,
-    bool? hasFinancialAccount,
   }) {
     return ApplicationFinancial(
       rentFee: rentFee != null ? rentFee() : this.rentFee,
       paymentFrequency: paymentFrequency != null
           ? paymentFrequency()
           : this.paymentFrequency,
-      securityDepositEnabled:
-          securityDepositEnabled ?? this.securityDepositEnabled,
-      securityDepositFee: securityDepositFee != null
-          ? securityDepositFee()
-          : this.securityDepositFee,
-      paymentMode: paymentMode ?? this.paymentMode,
-      customPeriods: customPeriods ?? this.customPeriods,
-      invoiceGenerated: invoiceGenerated ?? this.invoiceGenerated,
+      securityDepositFee: securityDepositFee,
+      invoiceGenerated: invoiceGenerated,
       invoicePaid: invoicePaid ?? this.invoicePaid,
-      hasFinancialAccount: hasFinancialAccount ?? this.hasFinancialAccount,
-      unitDefaultRentFee: unitDefaultRentFee,
+      hasFinancialAccount: hasFinancialAccount,
     );
   }
 }
@@ -753,7 +705,6 @@ class ApplicationDetailData {
         rentFee: a.rentFee,
         paymentFrequency: a.paymentFrequency,
         securityDepositFee: a.securityDepositFee,
-        securityDepositEnabled: a.securityDepositFee != null,
         invoiceGenerated: invoice != null,
         invoicePaid: invoice?.isPaid ?? false,
         hasFinancialAccount: a.financialAccount != null,

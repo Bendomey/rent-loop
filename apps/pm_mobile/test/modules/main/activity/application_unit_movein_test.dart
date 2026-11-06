@@ -48,7 +48,7 @@ TenantApplicationModel _app({
     'rent_terms_locked': locked,
     'charge_count': chargeCount,
   },
-  'lease_agreement_document_status': ?docStatus,
+  if (docStatus != null) 'lease_agreement_document_status': docStatus,
 });
 
 UnitModel _unit(String id, String name, String frequency) => UnitModel(
@@ -70,6 +70,7 @@ class _FakeUpdate extends UpdateApplicationNotifier {
     required String propertyId,
     required String id,
     required Map<String, dynamic> patch,
+    String? accountId,
   }) async {
     patches.add(patch);
     state = UpdateApplicationState(status: ApiStatus.success);

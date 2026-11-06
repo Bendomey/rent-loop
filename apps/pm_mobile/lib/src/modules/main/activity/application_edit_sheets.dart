@@ -11,6 +11,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:rentloop_manager/src/lib/phone.dart';
 import 'package:rentloop_manager/src/lib/money.dart';
@@ -93,21 +94,6 @@ Future<void> showMoveInSheet(
   ),
 );
 
-Future<ApplicationFinancial?> showFinancialSheet(
-  BuildContext context,
-  ApplicationFinancial financial, {
-  required int? stayDuration,
-  required String? stayDurationFrequency,
-}) => _open<ApplicationFinancial>(
-  context,
-  (close) => _FinancialSheet(
-    financial: financial,
-    stayDuration: stayDuration,
-    stayDurationFrequency: stayDurationFrequency,
-    onClose: close,
-  ),
-);
-
 Future<void> showChangeUnitSheet(
   BuildContext context, {
   required String propertyId,
@@ -128,11 +114,24 @@ Future<void> showChangeUnitSheet(
 Future<void> showAddDocumentSheet(BuildContext context) =>
     _open<void>(context, (close) => _AddDocumentSheet(onClose: close));
 
-Future<void> showWhatsNextSheet(BuildContext context, String tenantName) =>
-    _open<void>(
-      context,
-      (close) => _WhatsNextSheet(tenantName: tenantName, onClose: close),
-    );
+Future<void> showWhatsNextSheet(
+  BuildContext context, {
+  required String tenantName,
+  required String? propertyId,
+  String? leaseId,
+  String? tenantId,
+  bool leasePending = false,
+}) => _open<void>(
+  context,
+  (close) => _WhatsNextSheet(
+    tenantName: tenantName,
+    propertyId: propertyId,
+    leaseId: leaseId,
+    tenantId: tenantId,
+    leasePending: leasePending,
+    onClose: close,
+  ),
+);
 
 // ── Launcher ─────────────────────────────────────────────────────────────────
 
@@ -419,7 +418,6 @@ class _TextInput extends StatelessWidget {
     this.inputFormatters,
     this.textCapitalization = TextCapitalization.none,
     this.maxLines = 1,
-    this.prefixText,
     this.onChanged,
   });
 
@@ -429,7 +427,6 @@ class _TextInput extends StatelessWidget {
   final List<TextInputFormatter>? inputFormatters;
   final TextCapitalization textCapitalization;
   final int maxLines;
-  final String? prefixText;
   final ValueChanged<String>? onChanged;
 
   @override
@@ -452,13 +449,6 @@ class _TextInput extends StatelessWidget {
           fontFamily: RLTokens.fontSans,
           fontSize: 15,
           color: RLTokens.mutedSoft,
-        ),
-        prefixText: prefixText,
-        prefixStyle: const TextStyle(
-          fontFamily: RLTokens.fontSans,
-          fontSize: 15,
-          fontWeight: RLTokens.semibold,
-          color: RLTokens.muted,
         ),
         filled: true,
         fillColor: RLTokens.surface,
@@ -1394,393 +1384,7 @@ class _InlineError extends StatelessWidget {
   }
 }
 
-// ── 5. Financial Setup ───────────────────────────────────────────────────────
-
-class _FinancialSheet extends StatefulWidget {
-  const _FinancialSheet({
-    required this.financial,
-    required this.stayDuration,
-    required this.stayDurationFrequency,
-    required this.onClose,
-  });
-
-  final ApplicationFinancial financial;
-  final int? stayDuration;
-  final String? stayDurationFrequency;
-  final void Function([ApplicationFinancial? result]) onClose;
-
-  @override
-  State<_FinancialSheet> createState() => _FinancialSheetState();
-}
-
-class _FinancialSheetState extends State<_FinancialSheet> {
-  late final _rent = TextEditingController(
-    text: widget.financial.rentFee == null
-        ? ''
-        : pesewasToCedis(widget.financial.rentFee!).toStringAsFixed(2),
-  );
-  late final _deposit = TextEditingController(
-    text: widget.financial.securityDepositFee == null
-        ? ''
-        : pesewasToCedis(
-            widget.financial.securityDepositFee!,
-          ).toStringAsFixed(2),
-  );
-  late final _periods = TextEditingController(
-    text: widget.financial.customPeriods.toString(),
-  );
-  late String? _frequency = widget.financial.paymentFrequency;
-  late bool _depositEnabled = widget.financial.securityDepositEnabled;
-  late String _mode = widget.financial.paymentMode;
-
-  @override
-  void dispose() {
-    _rent.dispose();
-    _deposit.dispose();
-    _periods.dispose();
-    super.dispose();
-  }
-
-  int? _pesewasFrom(TextEditingController c) {
-    final v = double.tryParse(c.text.trim());
-    return v == null ? null : cedisToPesewas(v);
-  }
-
-  int get _maxPeriods => widget.stayDuration ?? 1;
-
-  int get _periodsValue {
-    final n = int.tryParse(_periods.text.trim()) ?? 1;
-    return n.clamp(1, _maxPeriods < 1 ? 1 : _maxPeriods);
-  }
-
-  bool get _valid {
-    final rent = _pesewasFrom(_rent);
-    if (rent == null || rent <= 0) return false;
-    if (_frequency == null) return false;
-    if (_depositEnabled) {
-      final d = _pesewasFrom(_deposit);
-      if (d == null || d < 0) return false;
-    }
-    return true;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final rentPesewas = _pesewasFrom(_rent);
-    final periods = _mode == 'CUSTOM' ? _periodsValue : _maxPeriods;
-    final subtotal = rentPesewas == null ? null : rentPesewas * periods;
-    final depositPesewas = _depositEnabled ? (_pesewasFrom(_deposit) ?? 0) : 0;
-    final total = subtotal == null ? null : subtotal + depositPesewas;
-    final unitLabel = periodLabel(widget.stayDurationFrequency, periods);
-
-    return _Sheet(
-      title: 'Financial Setup',
-      desc: 'Rent, deposit and the payment the tenant makes upfront.',
-      onDismiss: widget.onClose,
-      footer: _saveCancel(
-        onCancel: widget.onClose,
-        onSave: _valid
-            ? () => widget.onClose(
-                widget.financial.copyWith(
-                  rentFee: () => _pesewasFrom(_rent),
-                  paymentFrequency: () => _frequency,
-                  securityDepositEnabled: _depositEnabled,
-                  securityDepositFee: () =>
-                      _depositEnabled ? _pesewasFrom(_deposit) : null,
-                  paymentMode: _mode,
-                  customPeriods: _periodsValue,
-                ),
-              )
-            : null,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const _SheetSectionLabel('Rent'),
-          if (widget.financial.unitDefaultRentFee != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Text(
-                'Unit default: ${formatPesewas(widget.financial.unitDefaultRentFee)}'
-                '${widget.financial.paymentFrequency != null ? ' / ${kPaymentFrequencyOptions[widget.financial.paymentFrequency]?.toLowerCase()}' : ''}',
-                style: const TextStyle(
-                  fontFamily: RLTokens.fontSans,
-                  fontSize: 12.5,
-                  color: RLTokens.muted,
-                ),
-              ),
-            ),
-          _Field(
-            label: 'Agreed rent fee',
-            child: _TextInput(
-              controller: _rent,
-              placeholder: '0.00',
-              prefixText: 'GH₵ ',
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
-              ],
-              onChanged: (_) => setState(() {}),
-            ),
-          ),
-          _Field(
-            label: 'Payment frequency',
-            child: _SelectInput(
-              value: _frequency,
-              options: kPaymentFrequencyOptions,
-              onChanged: (v) => setState(() => _frequency = v),
-            ),
-          ),
-          const Divider(color: RLTokens.hairlineSoft, height: 28),
-          const _SheetSectionLabel('Security deposit'),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 14),
-            child: Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    'Require a refundable security deposit from the tenant.',
-                    style: TextStyle(
-                      fontFamily: RLTokens.fontSans,
-                      fontSize: 12.5,
-                      color: RLTokens.muted,
-                      height: 1.45,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Switch.adaptive(
-                  value: _depositEnabled,
-                  activeTrackColor: RLTokens.crimson,
-                  onChanged: (v) {
-                    Haptics.vibrate(HapticsType.selection);
-                    setState(() => _depositEnabled = v);
-                  },
-                ),
-              ],
-            ),
-          ),
-          if (_depositEnabled)
-            _Field(
-              label: 'Deposit amount',
-              child: _TextInput(
-                controller: _deposit,
-                placeholder: '0.00',
-                prefixText: 'GH₵ ',
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
-                ],
-                onChanged: (_) => setState(() {}),
-              ),
-            ),
-          const Divider(color: RLTokens.hairlineSoft, height: 28),
-          const _SheetSectionLabel('Initial payment'),
-          const Padding(
-            padding: EdgeInsets.only(bottom: 14),
-            child: Text(
-              'How much should the tenant pay upfront before move-in? A full '
-              'payment for the entire stay, or a custom number of periods.',
-              style: TextStyle(
-                fontFamily: RLTokens.fontSans,
-                fontSize: 12.5,
-                color: RLTokens.muted,
-                height: 1.5,
-              ),
-            ),
-          ),
-          _Field(
-            label: 'Mode',
-            child: _SelectInput(
-              value: _mode,
-              options: kPaymentModeOptions,
-              onChanged: (v) => setState(() => _mode = v ?? 'ONE_TIME_PAYMENT'),
-            ),
-          ),
-          if (_mode == 'CUSTOM')
-            _Field(
-              label:
-                  'Number of ${periodLabel(widget.stayDurationFrequency, 2)} (max $_maxPeriods)',
-              child: _TextInput(
-                controller: _periods,
-                placeholder: '1',
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                onChanged: (_) => setState(() {}),
-              ),
-            )
-          else
-            _Field(
-              label: 'Periods',
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 15,
-                ),
-                decoration: BoxDecoration(
-                  color: RLTokens.fill,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: RLTokens.hairline, width: 1.5),
-                ),
-                child: Text(
-                  '$_maxPeriods $unitLabel',
-                  style: const TextStyle(
-                    fontFamily: RLTokens.fontSans,
-                    fontSize: 15,
-                    fontWeight: RLTokens.semibold,
-                    color: RLTokens.muted,
-                  ),
-                ),
-              ),
-            ),
-          _InvoicePreview(
-            frequencyLabel: kPaymentFrequencyOptions[_frequency] ?? '—',
-            periods: periods,
-            unitLabel: unitLabel,
-            subtotal: subtotal,
-            deposit: _depositEnabled ? depositPesewas : null,
-            total: total,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _InvoicePreview extends StatelessWidget {
-  const _InvoicePreview({
-    required this.frequencyLabel,
-    required this.periods,
-    required this.unitLabel,
-    required this.subtotal,
-    required this.deposit,
-    required this.total,
-  });
-
-  final String frequencyLabel;
-  final int periods;
-  final String unitLabel;
-  final int? subtotal;
-  final int? deposit;
-  final int? total;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: RLTokens.surface,
-        borderRadius: BorderRadius.circular(13),
-        border: Border.all(color: RLTokens.hairline),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              Icon(Icons.receipt_long_rounded, size: 17, color: RLTokens.ink),
-              SizedBox(width: 8),
-              Text(
-                'Invoice Summary',
-                style: TextStyle(
-                  fontFamily: RLTokens.fontSans,
-                  fontSize: 14.5,
-                  fontWeight: RLTokens.bold,
-                  color: RLTokens.ink,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          _InvoiceRow(
-            label: 'Rent ($frequencyLabel) × $periods $unitLabel',
-            value: formatPesewas(subtotal),
-          ),
-          if (deposit != null) ...[
-            const SizedBox(height: 10),
-            _InvoiceRow(
-              label: 'Security deposit',
-              value: formatPesewas(deposit),
-            ),
-          ],
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 12),
-            child: Divider(color: RLTokens.hairlineSoft, height: 1),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Total',
-                style: TextStyle(
-                  fontFamily: RLTokens.fontSans,
-                  fontSize: 14.5,
-                  fontWeight: RLTokens.bold,
-                  color: RLTokens.ink,
-                ),
-              ),
-              Expanded(
-                child: Text(
-                  formatPesewas(total),
-                  textAlign: TextAlign.right,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontFamily: RLTokens.fontSerif,
-                    fontSize: 19,
-                    color: RLTokens.ink,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _InvoiceRow extends StatelessWidget {
-  const _InvoiceRow({required this.label, required this.value});
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Expanded(
-          child: Text(
-            label,
-            style: const TextStyle(
-              fontFamily: RLTokens.fontSans,
-              fontSize: 13.5,
-              color: RLTokens.muted,
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Text(
-          value,
-          style: const TextStyle(
-            fontFamily: RLTokens.fontSans,
-            fontSize: 14,
-            fontWeight: RLTokens.semibold,
-            color: RLTokens.ink,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ── 6. Change unit ───────────────────────────────────────────────────────────
+// ── 5. Change unit ───────────────────────────────────────────────────────────
 
 class _ChangeUnitSheet extends ConsumerStatefulWidget {
   const _ChangeUnitSheet({
@@ -2046,7 +1650,7 @@ class _SelectionDot extends StatelessWidget {
   }
 }
 
-// ── 7. Add document ──────────────────────────────────────────────────────────
+// ── 6. Add document ──────────────────────────────────────────────────────────
 
 class _AddDocumentSheet extends StatefulWidget {
   const _AddDocumentSheet({required this.onClose});
@@ -2366,21 +1970,42 @@ class DocxTile extends StatelessWidget {
   }
 }
 
-// ── 8. What's next ───────────────────────────────────────────────────────────
+// ── 7. What's next ───────────────────────────────────────────────────────────
 
 class _WhatsNextSheet extends StatelessWidget {
-  const _WhatsNextSheet({required this.tenantName, required this.onClose});
+  const _WhatsNextSheet({
+    required this.tenantName,
+    required this.propertyId,
+    required this.leaseId,
+    required this.tenantId,
+    required this.leasePending,
+    required this.onClose,
+  });
   final String tenantName;
+  final String? propertyId;
+  final String? leaseId;
+  final String? tenantId;
+  final bool leasePending;
   final void Function([void result]) onClose;
 
   @override
   Widget build(BuildContext context) {
-    const items = [
-      (Icons.home_outlined, 'Go to the lease'),
-      (Icons.account_balance_wallet_outlined, 'Add a charge to this lease'),
-      (Icons.checklist_rounded, 'Create a move-in inspection checklist'),
-      (Icons.person_outline_rounded, 'Visit tenant profile'),
-      (Icons.add_rounded, 'Add another tenant'),
+    final router = GoRouter.of(context);
+    final query = propertyId == null ? '' : '?property_id=$propertyId';
+    final items = [
+      if (leaseId != null)
+        (Icons.home_outlined, 'Go to the lease', '/more/leases/$leaseId$query'),
+      if (tenantId != null)
+        (
+          Icons.person_outline_rounded,
+          'Visit tenant profile',
+          '/more/tenants/$tenantId',
+        ),
+      (
+        Icons.add_rounded,
+        'Add another tenant',
+        '/activity/applications/add$query',
+      ),
     ];
 
     final bottom = MediaQuery.of(context).padding.bottom;
@@ -2420,7 +2045,7 @@ class _WhatsNextSheet extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(28, 6, 28, 0),
             child: Text(
-              "$tenantName's lease is active. Here's what you can do next.",
+              "$tenantName's lease is ${leasePending ? 'ready' : 'active'}. Here's what you can do next.",
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontFamily: RLTokens.fontSans,
@@ -2441,7 +2066,10 @@ class _WhatsNextSheet extends StatelessWidget {
                       icon: items[i].$1,
                       label: items[i].$2,
                       last: i == items.length - 1,
-                      onTap: onClose,
+                      onTap: () {
+                        onClose();
+                        router.push(items[i].$3);
+                      },
                     ),
                 ],
               ),

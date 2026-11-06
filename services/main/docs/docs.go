@@ -27328,6 +27328,9 @@ const docTemplate = `{
                 "period_start": {
                     "type": "string"
                 },
+                "reverses_charge_instance_id": {
+                    "type": "string"
+                },
                 "settled_amount": {
                     "type": "integer",
                     "example": 0

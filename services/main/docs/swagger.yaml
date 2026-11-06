@@ -3970,6 +3970,8 @@ definitions:
         type: string
       period_start:
         type: string
+      reverses_charge_instance_id:
+        type: string
       settled_amount:
         example: 0
         type: integer

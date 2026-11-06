@@ -5,6 +5,11 @@
 - `ApplicationUploadTile` (`activity/application_form_widgets.dart`) is the one tile for photo, ID and proof-of-income uploads: it picks a file, uploads via `r2UploadServiceProvider.uploadBytes(objectKeyPrefix: ...)`, shows progress and failure inline, and a failed upload blocks the form until cleared. `isAdult` guards date of birth (18 or older).
 - Role gating uses `canManageProperty(roles, propertyId)` (`lib/src/lib/property_roles.dart`) with `myPropertyRolesProvider`; `canEditApplication` adds the in-progress check.
 
+## Money logic and financial writes (plan 2b)
+- Billing, allocation and refund rules are ported 1:1 from the web `lib/*.ts` into `lib/src/lib/financial/` as pure functions over `ChargeModel` lists, with unit tests in `test/lib/financial/`. Change a rule on both clients together. Amounts stay integer pesewas end to end; convert only at the edges (`cedisToPesewas` in, `formatPesewas`/`RLMoney`/`cedisInputText` out).
+- Every financial write notifier calls `invalidateFinancials(ref, propertyId:, applicationId:, accountId:)` after the write, on failure as well as success. A failed write often means the client's copy is stale (already billed, already prepared), and refetching stops the same error from coming back.
+- A sheet that runs a write passes `dismissible: !pending` to `RLSheet` and `cancelEnabled: !pending` to `rlSheetFooter`, so it can't be closed halfway through.
+
 ## Naming Conventions
 - Files: `snake_case.dart`; screen root files are named `root.dart` inside their feature folder
 - Classes: `PascalCase`; screens suffix with `Screen`, notifiers with `Notifier`, states with `State`

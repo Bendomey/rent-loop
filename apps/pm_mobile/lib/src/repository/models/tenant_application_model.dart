@@ -23,6 +23,25 @@ class InvoiceRef {
   bool get isPaid => status == 'PAID';
 }
 
+@JsonSerializable()
+class ApprovedLeaseModel {
+  final String id;
+  final String status;
+  @JsonKey(name: 'tenant_id')
+  final String tenantId;
+
+  ApprovedLeaseModel({
+    required this.id,
+    required this.status,
+    required this.tenantId,
+  });
+
+  factory ApprovedLeaseModel.fromJson(Map<String, dynamic> json) =>
+      _$ApprovedLeaseModelFromJson(json);
+
+  Map<String, dynamic> toJson() => _$ApprovedLeaseModelToJson(this);
+}
+
 /// The lease agreement document attached to an application. Only [content] is
 /// read — the checklist parses witness slots out of it.
 @JsonSerializable()

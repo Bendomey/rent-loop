@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:rentloop_manager/src/lib/application_utils.dart';
 import 'package:rentloop_manager/src/modules/main/activity/application_detail.dart';
 import 'package:rentloop_manager/src/modules/main/activity/application_detail_pages.dart';
+import 'package:rentloop_manager/src/modules/main/activity/financial/financial_page.dart';
 import 'package:rentloop_manager/src/repository/models/tenant_application_model.dart';
 import 'package:rentloop_manager/src/repository/notifiers/activity/cancel_application_notifier.dart';
 import 'package:rentloop_manager/src/repository/providers/activity/application_detail_provider.dart';
@@ -206,9 +207,8 @@ void main() {
 
     await tester.tap(find.text('Financial setup'));
     await tester.pumpAndSettle();
-    expect(find.byType(EditButton), findsNothing);
-    expect(find.text('Generate Invoice'), findsNothing);
-    expect(find.text('Finish this step on the web for now.'), findsOneWidget);
+    expect(find.text('Set the move-in date first'), findsOneWidget);
+    expect(find.text('Finish this step on the web for now.'), findsNothing);
     Navigator.of(tester.element(find.byType(ApplicationFinancialPage))).pop();
     await tester.pumpAndSettle();
 

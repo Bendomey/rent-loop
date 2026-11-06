@@ -95,6 +95,35 @@ class TenantApplicationApi extends AbstractApi {
     );
   }
 
+  Future<String> prepareCharges({
+    required String clientId,
+    required String propertyId,
+    required String id,
+  }) async {
+    final response = await execute(
+      method: 'POST',
+      path: '${_base(clientId, propertyId)}/$id/charges:prepare',
+    );
+    return ((jsonDecode(response.body) as Map<String, dynamic>)['data']
+            as Map<String, dynamic>)['id']
+        as String;
+  }
+
+  Future<ApprovedLeaseModel> approveApplication({
+    required String clientId,
+    required String propertyId,
+    required String id,
+  }) async {
+    final response = await execute(
+      method: 'PATCH',
+      path: '${_base(clientId, propertyId)}/$id/approve',
+    );
+    return ApprovedLeaseModel.fromJson(
+      (jsonDecode(response.body) as Map<String, dynamic>)['data']
+          as Map<String, dynamic>,
+    );
+  }
+
   Future<void> inviteTenant({
     required String clientId,
     required String propertyId,

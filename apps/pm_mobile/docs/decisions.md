@@ -4,6 +4,13 @@
 
 ---
 
+## Money logic ported 1:1 from the web; refunds capped server-side net of prior reversals (2026-11-06)
+**Why:** Billing schedules, fee allocation and refundable amounts are ported from the web `lib/*.ts` into `lib/src/lib/financial/` so both clients show the same amounts for the same account. The client caps a refund using `refundableAmount` (settled minus prior reversals) for display only. The backend enforces the cap: `CreateAdHoc` reversals run in one transaction, lock the original charge, cap at settled minus prior reversals, and reject cross-account or voided originals (`financials.New` takes a `*gorm.DB`). `OutputChargeInstance` now exposes `reverses_charge_instance_id` so the client can net reversals.
+**Tradeoffs:** Allocation and schedule rules must be changed in both clients. Two concurrent refunds serialise on the row lock. A refund beyond what's still refundable is rejected with `ReversalExceedsSettledAmount`.
+**Alternatives considered:** Trusting the client cap alone, or checking the cap outside a transaction. Both let double-submits refund more than was paid.
+
+---
+
 ## Tenant checklist ported 1:1 from the web; Ghana-default phone normalisation (2026-11-06)
 **Why:** `computeApplicationChecklist` mirrors the web portal's tenant-setup checklist step for step, so a landlord sees the same blockers on both clients and the backend stays the single source of truth for what "ready" means. Phones are normalised to E.164 on the client because the lookup, create and invite endpoints all key on E.164, and landlords type local numbers (`024 123 4567`); a bare national number is assumed Ghanaian (+233) rather than rejected.
 **Tradeoffs:** A landlord typing a non-Ghana number must include the `+` country code. Checklist changes on the web must be repeated here.

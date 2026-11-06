@@ -33,6 +33,7 @@ class RLSheet extends StatelessWidget {
     required this.onClose,
     required this.child,
     required this.footer,
+    this.dismissible = true,
   });
 
   final String title;
@@ -41,8 +42,26 @@ class RLSheet extends StatelessWidget {
   final Widget child;
   final Widget footer;
 
+  /// False while a write is in flight. The bottom sheet's own drag-to-close
+  /// pops the route directly, past PopScope, so drags are swallowed here too.
+  final bool dismissible;
+
   @override
   Widget build(BuildContext context) {
+    final sheet = _sheet(context);
+    if (dismissible) return sheet;
+    return PopScope(
+      canPop: false,
+      child: GestureDetector(
+        onVerticalDragStart: (_) {},
+        onVerticalDragUpdate: (_) {},
+        onVerticalDragEnd: (_) {},
+        child: sheet,
+      ),
+    );
+  }
+
+  Widget _sheet(BuildContext context) {
     final bottom = MediaQuery.of(context).padding.bottom;
     return AnimatedPadding(
       duration: const Duration(milliseconds: 150),
@@ -111,10 +130,12 @@ class RLSheet extends StatelessWidget {
                   ),
                   const SizedBox(width: 10),
                   GestureDetector(
-                    onTap: () async {
-                      await Haptics.vibrate(HapticsType.selection);
-                      onClose();
-                    },
+                    onTap: dismissible
+                        ? () async {
+                            await Haptics.vibrate(HapticsType.selection);
+                            onClose();
+                          }
+                        : null,
                     child: Container(
                       width: 36,
                       height: 36,
@@ -155,6 +176,7 @@ Widget rlSheetFooter({
   required VoidCallback onCancel,
   required VoidCallback onConfirm,
   bool enabled = true,
+  bool cancelEnabled = true,
   RLBtnKind confirmKind = RLBtnKind.primary,
 }) {
   return Row(
@@ -164,7 +186,7 @@ Widget rlSheetFooter({
           label: 'Cancel',
           kind: RLBtnKind.light,
           full: true,
-          onPressed: onCancel,
+          onPressed: cancelEnabled ? onCancel : null,
         ),
       ),
       const SizedBox(width: 10),

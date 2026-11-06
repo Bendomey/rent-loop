@@ -298,4 +298,53 @@ void main() {
       );
     });
   });
+
+  group('prepareCharges / approveApplication', () {
+    test(
+      'prepareCharges posts with no body and returns the account id',
+      () async {
+        final api = _RecordingApi()..nextData = {'id': 'acct1'};
+        final id = await api.prepareCharges(
+          clientId: 'c1',
+          propertyId: 'p1',
+          id: 'app1',
+        );
+
+        expect(id, 'acct1');
+        expect(api.methods.single, 'POST');
+        expect(
+          api.paths.single,
+          '/api/v1/admin/clients/c1/properties/p1/tenant-applications/app1/charges:prepare',
+        );
+        expect(api.bodies.single, isNull);
+      },
+    );
+
+    test(
+      'approveApplication patches with no body and parses the lease',
+      () async {
+        final api = _RecordingApi()
+          ..nextData = {
+            'id': 'lease1',
+            'status': 'Lease.Status.Pending',
+            'tenant_id': 'ten1',
+          };
+        final lease = await api.approveApplication(
+          clientId: 'c1',
+          propertyId: 'p1',
+          id: 'app1',
+        );
+
+        expect(lease.id, 'lease1');
+        expect(lease.tenantId, 'ten1');
+        expect(lease.status, 'Lease.Status.Pending');
+        expect(api.methods.single, 'PATCH');
+        expect(
+          api.paths.single,
+          '/api/v1/admin/clients/c1/properties/p1/tenant-applications/app1/approve',
+        );
+        expect(api.bodies.single, isNull);
+      },
+    );
+  });
 }
