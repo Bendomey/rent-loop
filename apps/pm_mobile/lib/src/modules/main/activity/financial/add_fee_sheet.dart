@@ -198,7 +198,7 @@ class _AddFeeSheetState extends ConsumerState<AddFeeSheet> {
           ),
           const SizedBox(height: 16),
           RLSheetField(
-            label: 'How much? ($_currency)',
+            label: 'How much? (${currencySymbol(_currency)})',
             controller: _amount,
             hint: '0.00',
             keyboardType: const TextInputType.numberWithOptions(decimal: true),

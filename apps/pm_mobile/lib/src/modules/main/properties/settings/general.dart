@@ -28,6 +28,7 @@ class PropertyGeneralSettingsScreen extends StatelessWidget {
                   'General settings',
                   style: TextStyle(
                     fontFamily: RLTokens.fontSerif,
+                    fontWeight: RLTokens.headingWeight,
                     fontSize: 24,
                     color: RLTokens.ink,
                     letterSpacing: -0.4,
@@ -197,6 +198,7 @@ class _SetCard extends StatelessWidget {
                   title,
                   style: const TextStyle(
                     fontFamily: RLTokens.fontSerif,
+                    fontWeight: RLTokens.headingWeight,
                     fontSize: 18,
                     color: RLTokens.ink,
                     letterSpacing: -0.2,

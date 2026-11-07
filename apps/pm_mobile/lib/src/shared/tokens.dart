@@ -74,10 +74,11 @@ abstract final class RLTokens {
   static const FontWeight medium = FontWeight.w500;
   static const FontWeight semibold = FontWeight.w600;
   static const FontWeight bold = FontWeight.w700;
+  static const FontWeight headingWeight = FontWeight.w600;
 
   // ── Font families (bundled assets) ────────────────────────────────────────
-  static const String fontSans = 'DMSans'; // body, UI, buttons
-  static const String fontSerif = 'DMSerifDisplay'; // headings, numbers
+  static const String fontSans = 'Inter'; // body, UI, buttons
+  static const String fontSerif = 'Geist'; // headings, numbers
   static const String fontMono = 'JetBrainsMono'; // labels, metadata
   static const List<String> fontFallback = ['InterCurrency'];
 

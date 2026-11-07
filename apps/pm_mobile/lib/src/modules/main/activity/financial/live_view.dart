@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:rentloop_manager/src/lib/financial/account_view.dart';
 import 'package:rentloop_manager/src/lib/financial/allocation.dart';
 import 'package:rentloop_manager/src/lib/financial/financial_mode.dart';
+import 'package:rentloop_manager/src/lib/financial/financial_text.dart';
 import 'package:rentloop_manager/src/modules/main/activity/financial/live_charges_card.dart';
 import 'package:rentloop_manager/src/modules/main/activity/financial/live_owed_header.dart';
 import 'package:rentloop_manager/src/modules/main/activity/financial/live_plan_cards.dart';
@@ -34,6 +35,7 @@ class FinancialLiveView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final next = nextBill(detail, DateTime.now());
     final editable = canEdit && mode != FinancialMode.readonly;
     final canRefund = editable && refundableCharges(detail.charges).isNotEmpty;
     final askPaid = editable && firstBillDueSoon(detail, DateTime.now());
@@ -44,7 +46,8 @@ class FinancialLiveView extends StatelessWidget {
         if (askPaid) ...[
           _PaidAlreadyCard(
             name: application.firstName ?? 'The tenant',
-            onRecordPayment: onRecordPayment,
+            sendDate: next?.sendDate,
+            tonight: next?.tonight ?? false,
           ),
           const SizedBox(height: 14),
         ],
@@ -111,10 +114,15 @@ class FinancialLiveView extends StatelessWidget {
 }
 
 class _PaidAlreadyCard extends StatelessWidget {
-  const _PaidAlreadyCard({required this.name, this.onRecordPayment});
+  const _PaidAlreadyCard({
+    required this.name,
+    this.sendDate,
+    this.tonight = false,
+  });
 
   final String name;
-  final VoidCallback? onRecordPayment;
+  final DateTime? sendDate;
+  final bool tonight;
 
   @override
   Widget build(BuildContext context) {
@@ -130,23 +138,20 @@ class _PaidAlreadyCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Already been paid? Record it now — the first bill goes out tonight.',
-            style: TextStyle(
+          Text(
+            'Already been paid? Tap “$name paid me” below before the first '
+            'bill goes out${tonight
+                ? ' tonight'
+                : sendDate == null
+                ? ''
+                : ' on ${formatDay(sendDate!)}'}.',
+            style: const TextStyle(
               fontFamily: RLTokens.fontSans,
               fontSize: 14.5,
               fontWeight: FontWeight.w600,
               color: RLTokens.ink,
               height: 1.45,
             ),
-          ),
-          const SizedBox(height: 12),
-          RLBtn(
-            label: '$name paid me',
-            kind: RLBtnKind.primary,
-            icon: Icons.check_rounded,
-            full: true,
-            onPressed: onRecordPayment,
           ),
         ],
       ),

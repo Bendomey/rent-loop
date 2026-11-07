@@ -54,6 +54,7 @@ class _State extends State<AddPropertyMemberScreen> {
                     'Create new member',
                     style: TextStyle(
                       fontFamily: RLTokens.fontSerif,
+                      fontWeight: RLTokens.headingWeight,
                       fontSize: 25,
                       color: RLTokens.ink,
                       letterSpacing: -0.4,

@@ -18,6 +18,7 @@ Future<void> showWorkspaceSheet(BuildContext context) {
     backgroundColor: Colors.transparent,
     barrierColor: const Color.fromRGBO(17, 17, 16, 0.35),
     isScrollControlled: true,
+    useSafeArea: true,
     builder: (_) => const _WorkspaceSheet(),
   );
 }
@@ -64,6 +65,7 @@ class _WorkspaceSheet extends ConsumerWidget {
                     'Switch workspace',
                     style: TextStyle(
                       fontFamily: RLTokens.fontSerif,
+                      fontWeight: RLTokens.headingWeight,
                       fontSize: 21,
                       letterSpacing: -0.3,
                       color: RLTokens.ink,
@@ -273,6 +275,7 @@ class _WsTile extends StatelessWidget {
           initial,
           style: TextStyle(
             fontFamily: RLTokens.fontSerif,
+            fontWeight: RLTokens.headingWeight,
             fontSize: size * 0.36,
             color: RLTokens.crimson,
             letterSpacing: 0.3,

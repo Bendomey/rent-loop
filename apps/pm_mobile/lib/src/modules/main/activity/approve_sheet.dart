@@ -39,6 +39,7 @@ Future<ApprovedLeaseModel?> showApproveSheet(
 }) => showModalBottomSheet<ApprovedLeaseModel>(
   context: context,
   isScrollControlled: true,
+  useSafeArea: true,
   backgroundColor: Colors.transparent,
   builder: (ctx) => _ApproveSheet(
     propertyId: propertyId,
@@ -131,8 +132,7 @@ class _ApproveSheetState extends ConsumerState<_ApproveSheet> {
           if (widget.noDocument)
             const RLSheetNote(
               text:
-                  'No lease document is attached. You can add one on the '
-                  'lease later.',
+                  'No lease document is attached. You can add one on the web.',
               tone: RLTone.warning,
             ),
           if (state.status == ApiStatus.failed) ...[

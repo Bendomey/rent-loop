@@ -99,6 +99,7 @@ class _AgreementScreenState extends State<AgreementScreen> {
                     'Legal agreements',
                     style: TextStyle(
                       fontFamily: RLTokens.fontSerif,
+                      fontWeight: RLTokens.headingWeight,
                       fontSize: 25,
                       color: RLTokens.ink,
                       letterSpacing: -0.4,
@@ -351,6 +352,7 @@ class _AgreementBody extends StatelessWidget {
           'RENTLOOP PROPERTY OWNER AGREEMENT\n(LANDLORD AGREEMENT)',
           style: TextStyle(
             fontFamily: RLTokens.fontSerif,
+            fontWeight: RLTokens.headingWeight,
             fontSize: 19,
             color: RLTokens.ink,
             letterSpacing: -0.3,

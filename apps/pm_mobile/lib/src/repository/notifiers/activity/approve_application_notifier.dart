@@ -44,7 +44,9 @@ class ApproveApplicationNotifier extends _$ApproveApplicationNotifier {
       invalidateFinancials(ref, propertyId: propertyId, applicationId: id);
       state = ApproveApplicationState(status: ApiStatus.success, lease: lease);
       ref.invalidate(propertyStatsProvider);
-      ref.invalidate(homeStatsProvider);
+      for (final p in homeStatsProviders) {
+        ref.invalidate(p);
+      }
     } on ApiException catch (e) {
       state = ApproveApplicationState(
         status: ApiStatus.failed,

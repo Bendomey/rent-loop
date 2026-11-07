@@ -506,6 +506,7 @@ class _Step1 extends StatelessWidget {
           'What type of property is this?',
           style: TextStyle(
             fontFamily: RLTokens.fontSerif,
+            fontWeight: RLTokens.headingWeight,
             fontSize: 25,
             color: RLTokens.ink,
             letterSpacing: -0.4,
@@ -839,6 +840,7 @@ class _Step2 extends StatelessWidget {
           'Basic information',
           style: TextStyle(
             fontFamily: RLTokens.fontSerif,
+            fontWeight: RLTokens.headingWeight,
             fontSize: 25,
             color: RLTokens.ink,
             letterSpacing: -0.4,
@@ -1229,6 +1231,7 @@ class _Step3 extends StatelessWidget {
           'Where is it located?',
           style: TextStyle(
             fontFamily: RLTokens.fontSerif,
+            fontWeight: RLTokens.headingWeight,
             fontSize: 25,
             color: RLTokens.ink,
             letterSpacing: -0.4,
@@ -1289,6 +1292,7 @@ class _Step4 extends StatelessWidget {
           'Review & submit',
           style: TextStyle(
             fontFamily: RLTokens.fontSerif,
+            fontWeight: RLTokens.headingWeight,
             fontSize: 25,
             color: RLTokens.ink,
             letterSpacing: -0.4,

@@ -13,11 +13,13 @@ class InvoiceApi extends AbstractApi {
   InvoiceApi({required super.tokenManager});
 
   static const _listPopulate =
-      'Property,PayerLease.Tenant,PayerLease.Unit,Payments';
+      'Property,PayerLease.Tenant,PayerLease.Unit,Payments,'
+      'FinancialAccount.TenantApplication';
 
   // ContextTenantApplication is deliberately absent: populating it 500s.
   static const _detailPopulate =
       'Payments,LineItems,Property,PayerClient,'
+      'FinancialAccount.TenantApplication,'
       'PayerLease.Tenant,PayerLease.Unit.PropertyBlock';
 
   static String _client(String clientId) => '/api/v1/admin/clients/$clientId';

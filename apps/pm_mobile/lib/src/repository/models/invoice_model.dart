@@ -20,6 +20,7 @@ class InvoiceTenantModel {
     required this.id,
     required this.firstName,
     required this.lastName,
+    this.otherNames,
     this.phone,
     this.email,
   });
@@ -29,6 +30,7 @@ class InvoiceTenantModel {
         id: json['id'] as String,
         firstName: json['first_name'] as String? ?? '',
         lastName: json['last_name'] as String? ?? '',
+        otherNames: json['other_names'] as String?,
         phone: json['phone'] as String?,
         email: json['email'] as String?,
       );
@@ -36,6 +38,7 @@ class InvoiceTenantModel {
   final String id;
   final String firstName;
   final String lastName;
+  final String? otherNames;
   final String? phone;
   final String? email;
 }
@@ -67,21 +70,36 @@ class InvoiceUnitModel {
 }
 
 class InvoiceLeaseModel {
-  InvoiceLeaseModel({required this.id, this.tenant, this.unit});
+  InvoiceLeaseModel({required this.id, this.code, this.tenant, this.unit});
 
   factory InvoiceLeaseModel.fromJson(Map<String, dynamic> json) {
     final tenant = _map(json['tenant']);
     final unit = _map(json['unit']);
     return InvoiceLeaseModel(
       id: json['id'] as String,
+      code: json['code'] as String?,
       tenant: tenant == null ? null : InvoiceTenantModel.fromJson(tenant),
       unit: unit == null ? null : InvoiceUnitModel.fromJson(unit),
     );
   }
 
   final String id;
+  final String? code;
   final InvoiceTenantModel? tenant;
   final InvoiceUnitModel? unit;
+}
+
+class InvoiceApplicantModel {
+  InvoiceApplicantModel({required this.firstName, required this.lastName});
+
+  factory InvoiceApplicantModel.fromJson(Map<String, dynamic> json) =>
+      InvoiceApplicantModel(
+        firstName: json['first_name'] as String? ?? '',
+        lastName: json['last_name'] as String? ?? '',
+      );
+
+  final String firstName;
+  final String lastName;
 }
 
 class InvoiceLineItemModel {
@@ -162,7 +180,12 @@ class InvoiceModel {
     required this.code,
     required this.status,
     required this.totalAmount,
+    this.subTotal,
+    this.taxes = 0,
     required this.currency,
+    this.payerType = '',
+    this.allowedPaymentRails = const [],
+    this.voidedReason,
     this.dueDate,
     this.issuedAt,
     this.paidAt,
@@ -171,6 +194,7 @@ class InvoiceModel {
     this.payerLeaseId,
     this.payerLease,
     this.financialAccountId,
+    this.applicant,
     this.lineItems = const [],
     this.payments = const [],
     required this.contextType,
@@ -179,12 +203,24 @@ class InvoiceModel {
   factory InvoiceModel.fromJson(Map<String, dynamic> json) {
     final property = _map(json['property']);
     final lease = _map(json['payer_lease']);
+    final applicant = _map(
+      _map(json['financial_account'])?['tenant_application'],
+    );
     return InvoiceModel(
       id: json['id'] as String,
       code: json['code'] as String? ?? '',
       status: json['status'] as String,
       totalAmount: (json['total_amount'] as num).toInt(),
+      subTotal: (json['sub_total'] as num?)?.toInt(),
+      taxes: (json['taxes'] as num?)?.toInt() ?? 0,
       currency: json['currency'] as String? ?? 'GHS',
+      payerType: json['payer_type'] as String? ?? '',
+      allowedPaymentRails: [
+        for (final r
+            in (json['allowed_payment_rails'] as List<dynamic>? ?? const []))
+          r as String,
+      ],
+      voidedReason: json['voided_reason'] as String?,
       dueDate: json['due_date'] as String?,
       issuedAt: json['issued_at'] as String?,
       paidAt: json['paid_at'] as String?,
@@ -195,6 +231,9 @@ class InvoiceModel {
       payerLeaseId: json['payer_lease_id'] as String?,
       payerLease: lease == null ? null : InvoiceLeaseModel.fromJson(lease),
       financialAccountId: json['financial_account_id'] as String?,
+      applicant: applicant == null
+          ? null
+          : InvoiceApplicantModel.fromJson(applicant),
       lineItems: [
         for (final e in (json['line_items'] as List<dynamic>? ?? const []))
           InvoiceLineItemModel.fromJson(e as Map<String, dynamic>),
@@ -211,7 +250,14 @@ class InvoiceModel {
   final String code;
   final String status;
   final int totalAmount;
+
+  /// Null when the payload omits it; fall back to [totalAmount] less [taxes].
+  final int? subTotal;
+  final int taxes;
   final String currency;
+  final String payerType;
+  final List<String> allowedPaymentRails;
+  final String? voidedReason;
   final String? dueDate;
   final String? issuedAt;
   final String? paidAt;
@@ -220,6 +266,7 @@ class InvoiceModel {
   final String? payerLeaseId;
   final InvoiceLeaseModel? payerLease;
   final String? financialAccountId;
+  final InvoiceApplicantModel? applicant;
   final List<InvoiceLineItemModel> lineItems;
   final List<InvoicePaymentModel> payments;
   final String contextType;

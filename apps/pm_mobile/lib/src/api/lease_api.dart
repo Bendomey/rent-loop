@@ -33,6 +33,7 @@ class LeaseApi extends AbstractApi {
     String? status, // full dotted Lease.Status.* value, or null for "all"
     String? search,
     String? propertyId,
+    bool endingSoon = false,
   }) async {
     final query = <String, String>{
       'page': '$page',
@@ -40,6 +41,10 @@ class LeaseApi extends AbstractApi {
       'populate': 'Unit,Tenant',
     };
     if (status != null) query['status'] = status;
+    if (endingSoon) {
+      query['expiring'] = 'true';
+      query['exclude_renewed'] = 'true';
+    }
     if (search != null && search.isNotEmpty) {
       query['query'] = search;
       query['search_fields'] = 'code';

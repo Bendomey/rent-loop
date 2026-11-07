@@ -30,7 +30,7 @@ ThemeData buildTheme() {
           displayLarge: TextStyle(
             fontFamily: serif,
             fontSize: RLTokens.textDisplay,
-            fontWeight: RLTokens.regular,
+            fontWeight: RLTokens.headingWeight,
             letterSpacing: -0.6,
             color: RLTokens.ink,
             height: 1,
@@ -38,7 +38,7 @@ ThemeData buildTheme() {
           displayMedium: TextStyle(
             fontFamily: serif,
             fontSize: RLTokens.textTitle,
-            fontWeight: RLTokens.regular,
+            fontWeight: RLTokens.headingWeight,
             letterSpacing: -0.4,
             color: RLTokens.ink,
             height: 1,
@@ -46,7 +46,7 @@ ThemeData buildTheme() {
           displaySmall: TextStyle(
             fontFamily: serif,
             fontSize: RLTokens.textCardHead,
-            fontWeight: RLTokens.regular,
+            fontWeight: RLTokens.headingWeight,
             color: RLTokens.ink,
             height: 1.15,
           ),

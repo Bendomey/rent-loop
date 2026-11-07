@@ -98,6 +98,7 @@ class _CreateChecklistDialogState
             'Create $label',
             style: TextStyle(
               fontFamily: RLTokens.fontSerif,
+              fontWeight: RLTokens.headingWeight,
               fontSize: 20,
               letterSpacing: -0.3,
               color: RLTokens.ink,

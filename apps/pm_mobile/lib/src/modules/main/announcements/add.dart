@@ -362,6 +362,7 @@ class _AddAnnouncementScreenState extends ConsumerState<AddAnnouncementScreen> {
                                     'New announcement',
                                     style: TextStyle(
                                       fontFamily: RLTokens.fontSerif,
+                                      fontWeight: RLTokens.headingWeight,
                                       fontSize: 25,
                                       color: RLTokens.ink,
                                       letterSpacing: -0.4,
@@ -482,6 +483,7 @@ class _AddAnnouncementScreenState extends ConsumerState<AddAnnouncementScreen> {
                                     'Who should get it?',
                                     style: TextStyle(
                                       fontFamily: RLTokens.fontSerif,
+                                      fontWeight: RLTokens.headingWeight,
                                       fontSize: 19,
                                       color: RLTokens.ink,
                                       letterSpacing: -0.3,
@@ -1012,6 +1014,7 @@ class _PickerSheet extends StatelessWidget {
                             title,
                             style: const TextStyle(
                               fontFamily: RLTokens.fontSerif,
+                              fontWeight: RLTokens.headingWeight,
                               fontSize: 20,
                               color: RLTokens.ink,
                               letterSpacing: -0.3,

@@ -13,9 +13,11 @@ import 'package:rentloop_manager/src/repository/models/invoice_model.dart';
 import 'package:rentloop_manager/src/repository/notifiers/money/record_bill_payment_notifier.dart';
 import 'package:rentloop_manager/src/repository/notifiers/money/verify_payment_notifier.dart';
 import 'package:rentloop_manager/src/repository/providers/money/bill_detail_provider.dart';
+import 'package:rentloop_manager/src/repository/providers/money/bill_printer_provider.dart';
 import 'package:rentloop_manager/src/repository/providers/properties/my_property_roles_provider.dart';
 import 'package:rentloop_manager/src/shared/contact_buttons.dart';
 import 'package:rentloop_manager/src/shared/sheet_kit.dart';
+import 'package:rentloop_manager/src/shared/toast.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
@@ -100,11 +102,12 @@ class InvoiceDetailScreen extends ConsumerWidget {
       body: Column(
         children: [
           RLBackHeader(
-            title: bill?.code ?? 'Bill',
+            title: 'Bill',
             onBack: () async {
               await Haptics.vibrate(HapticsType.selection);
               if (context.mounted) Navigator.of(context).pop();
             },
+            trailing: bill == null ? null : _PrintButton(bill: bill),
           ),
           Expanded(
             child: RefreshIndicator(
@@ -171,6 +174,7 @@ class InvoiceDetailScreen extends ConsumerWidget {
         billHeadline(bill, payerName(bill)),
         style: const TextStyle(
           fontFamily: RLTokens.fontSerif,
+          fontWeight: RLTokens.headingWeight,
           fontSize: 22,
           color: RLTokens.ink,
           letterSpacing: -0.3,
@@ -178,22 +182,21 @@ class InvoiceDetailScreen extends ConsumerWidget {
         ),
       ),
       const SizedBox(height: 10),
-      Row(
-        children: [
-          RLPill(
-            billDueLabel(bill, now),
-            tone: isOverdue(bill, now) ? RLTone.danger : RLTone.neutral,
-          ),
-          const SizedBox(width: 10),
-          Text(
-            bill.code,
-            style: const TextStyle(
-              fontFamily: RLTokens.fontMono,
-              fontSize: 11,
-              color: RLTokens.mutedSoft,
-            ),
-          ),
-        ],
+      Align(
+        alignment: Alignment.centerLeft,
+        child: RLPill(
+          billDueLabel(bill, now),
+          tone: isOverdue(bill, now) ? RLTone.danger : RLTone.neutral,
+        ),
+      ),
+      const SizedBox(height: 8),
+      Text(
+        'Bill number · ${bill.code}',
+        style: const TextStyle(
+          fontFamily: RLTokens.fontMono,
+          fontSize: 11,
+          color: RLTokens.mutedSoft,
+        ),
       ),
       RLLabel("What's on this bill"),
       RLCard(
@@ -358,6 +361,72 @@ class InvoiceDetailScreen extends ConsumerWidget {
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+class _PrintButton extends ConsumerStatefulWidget {
+  const _PrintButton({required this.bill});
+
+  final InvoiceModel bill;
+
+  @override
+  ConsumerState<_PrintButton> createState() => _PrintButtonState();
+}
+
+class _PrintButtonState extends ConsumerState<_PrintButton> {
+  bool _busy = false;
+
+  Future<void> _print() async {
+    if (_busy) return;
+    await Haptics.vibrate(HapticsType.selection);
+    setState(() => _busy = true);
+    try {
+      await ref.read(billPrinterProvider)(widget.bill);
+    } catch (_) {
+      if (mounted) {
+        showRLToast(
+          ref,
+          tone: RLToastTone.error,
+          title: "Couldn't make the bill to print.",
+          body: 'Try again in a moment.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: 'Print bill',
+      excludeSemantics: true,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: _print,
+        child: SizedBox(
+          width: 50,
+          height: 42,
+          child: Center(
+            child: _busy
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: RLTokens.crimson,
+                    ),
+                  )
+                : const Icon(
+                    Icons.print_outlined,
+                    size: 22,
+                    color: RLTokens.ink,
+                  ),
+          ),
+        ),
       ),
     );
   }

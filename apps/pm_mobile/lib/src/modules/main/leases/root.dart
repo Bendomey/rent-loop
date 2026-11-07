@@ -12,22 +12,38 @@ import 'package:rentloop_manager/src/repository/notifiers/leases/leases_notifier
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
+const leasesEndingSoonFilter = 'Ending soon';
+
 const _kLeaseStatusFilters = [
   'All',
   'Pending',
   'Active',
+  leasesEndingSoonFilter,
   'Completed',
   'Cancelled',
   'Terminated',
 ];
 
-String? _leaseStatusApiValue(String label) =>
-    label == 'All' ? null : 'Lease.Status.$label';
+LeasesQuery _withStatusFilter(LeasesQuery query, String label) {
+  if (label == leasesEndingSoonFilter) {
+    return query.copyWith(status: 'Lease.Status.Active', endingSoon: true);
+  }
+  return query.copyWith(
+    status: 'Lease.Status.$label',
+    clearStatus: label == 'All',
+    endingSoon: false,
+  );
+}
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 class LeasesScreen extends ConsumerStatefulWidget {
-  const LeasesScreen({super.key, this.propertyId, this.propertyName});
+  const LeasesScreen({
+    super.key,
+    this.propertyId,
+    this.propertyName,
+    this.initialFilter,
+  });
 
   /// Pre-applied property filter — set when arriving from a property's
   /// detail page (Manage-grid "Leases" tile), via GoRouter query params.
@@ -36,6 +52,9 @@ class LeasesScreen extends ConsumerStatefulWidget {
   /// `tenants/root.dart`.
   final String? propertyId;
   final String? propertyName;
+
+  /// One of the filter chip labels, e.g. [leasesEndingSoonFilter].
+  final String? initialFilter;
 
   @override
   ConsumerState<LeasesScreen> createState() => _LeasesScreenState();
@@ -52,6 +71,11 @@ class _LeasesScreenState extends ConsumerState<LeasesScreen> {
   void initState() {
     super.initState();
     _query = LeasesQuery(propertyId: widget.propertyId);
+    final initial = widget.initialFilter;
+    if (initial != null && _kLeaseStatusFilters.contains(initial)) {
+      _statusFilter = initial;
+      _query = _withStatusFilter(_query, initial);
+    }
     _searchController = TextEditingController();
     _scrollController = ScrollController()..addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -86,10 +110,9 @@ class _LeasesScreenState extends ConsumerState<LeasesScreen> {
 
   Future<void> _onSelectStatus(String label) async {
     await Haptics.vibrate(HapticsType.selection);
-    final apiValue = _leaseStatusApiValue(label);
     setState(() {
       _statusFilter = label;
-      _query = _query.copyWith(status: apiValue, clearStatus: apiValue == null);
+      _query = _withStatusFilter(_query, label);
     });
     ref.read(leasesNotifierProvider.notifier).loadFirstPage(_query);
   }

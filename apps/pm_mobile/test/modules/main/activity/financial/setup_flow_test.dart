@@ -56,6 +56,28 @@ void main() {
     expect(find.widgetWithText(TextField, '2000'), findsOneWidget);
   });
 
+  testWidgets('the empty rent box already shows the cedi sign', (tester) async {
+    await pumpFinancialPage(tester, application());
+
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('rent-input')),
+        matching: find.text('GH₵'),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('a fee amount box uses the cedi sign, not GHS', (tester) async {
+    await pumpFinancialPage(tester, application());
+
+    await tester.tap(find.text('Security deposit'));
+    await tester.pump();
+
+    expect(find.text('GHS'), findsNothing);
+    expect(find.text('GH₵'), findsNWidgets(2));
+  });
+
   testWidgets('a saved rent prefills the input', (tester) async {
     await pumpFinancialPage(tester, application(rentFee: 180000));
 
@@ -81,6 +103,31 @@ void main() {
     expect(find.text(formatPesewas(total)), findsWidgets);
     expect(find.text(formatPesewas(150000 + 50000)), findsWidgets);
     expect(find.text('Most landlords pick this'), findsOneWidget);
+  });
+
+  testWidgets('plain words give the grace rule and end at the lease end', (
+    tester,
+  ) async {
+    await pumpFinancialPage(
+      tester,
+      application(
+        extra: {
+          'desired_move_in_date': '2026-11-07T00:00:00Z',
+          'stay_duration': 6,
+        },
+      ),
+    );
+    await tester.enterText(find.byKey(const ValueKey('rent-input')), '1200');
+    await tester.pump();
+
+    expect(
+      find.textContaining(
+        'rent each month, due on the 14th, 7 days after each month of the '
+        'stay starts. The lease runs to 7 May 2027.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.textContaining('That runs to'), findsNothing);
   });
 
   const pastHint =

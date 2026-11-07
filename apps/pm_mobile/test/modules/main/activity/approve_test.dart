@@ -200,9 +200,7 @@ void main() {
       findsOneWidget,
     );
     expect(
-      find.text(
-        'No lease document is attached. You can add one on the lease later.',
-      ),
+      find.text('No lease document is attached. You can add one on the web.'),
       findsOneWidget,
     );
 

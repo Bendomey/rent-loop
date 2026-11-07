@@ -206,6 +206,7 @@ class _ProfileCard extends ConsumerWidget {
                     name,
                     style: TextStyle(
                       fontFamily: RLTokens.fontSerif,
+                      fontWeight: RLTokens.headingWeight,
                       fontSize: 20,
                       color: RLTokens.ink,
                       height: 1.1,

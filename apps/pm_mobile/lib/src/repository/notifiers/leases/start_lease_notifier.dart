@@ -52,7 +52,9 @@ class StartLeaseNotifier extends _$StartLeaseNotifier {
           );
       state = StartLeaseState(status: ApiStatus.success);
       ref.invalidate(propertyStatsProvider);
-      ref.invalidate(homeStatsProvider);
+      for (final p in homeStatsProviders) {
+        ref.invalidate(p);
+      }
     } on ApiException catch (e) {
       state = StartLeaseState(
         status: ApiStatus.failed,
@@ -99,7 +101,9 @@ class StartLeaseNotifier extends _$StartLeaseNotifier {
       );
       state = StartLeaseState(status: ApiStatus.success);
       ref.invalidate(propertyStatsProvider);
-      ref.invalidate(homeStatsProvider);
+      for (final p in homeStatsProviders) {
+        ref.invalidate(p);
+      }
     } on ApiException catch (e) {
       state = StartLeaseState(
         status: ApiStatus.failed,

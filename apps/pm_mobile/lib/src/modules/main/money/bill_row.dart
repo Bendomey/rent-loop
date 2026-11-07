@@ -13,12 +13,14 @@ class BillRow extends StatelessWidget {
     required this.paidView,
     required this.now,
     required this.onTap,
+    this.showCode = false,
   });
 
   final InvoiceModel bill;
   final bool paidView;
   final DateTime now;
   final VoidCallback onTap;
+  final bool showCode;
 
   @override
   Widget build(BuildContext context) {
@@ -86,15 +88,17 @@ class BillRow extends StatelessWidget {
                   size: 20,
                   currency: currencySymbol(bill.currency),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  bill.code,
-                  style: const TextStyle(
-                    fontFamily: RLTokens.fontMono,
-                    fontSize: 11,
-                    color: RLTokens.mutedSoft,
+                if (showCode) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    bill.code,
+                    style: const TextStyle(
+                      fontFamily: RLTokens.fontMono,
+                      fontSize: 11,
+                      color: RLTokens.mutedSoft,
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ],

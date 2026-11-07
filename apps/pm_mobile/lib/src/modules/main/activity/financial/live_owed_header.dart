@@ -86,7 +86,8 @@ class LiveOwedHeader extends StatelessWidget {
           _Line('Paid ${money(detail.totalSettled)}'),
           if (next != null)
             _Line(
-              'Next bill ${money(next.amount)} · sent ${formatDay(next.sendDate)}',
+              'Next bill ${money(next.amount)} · sent '
+              '${next.tonight ? 'tonight' : formatDay(next.sendDate)}',
             ),
           if (canEdit) ...[
             const SizedBox(height: 16),

@@ -248,6 +248,7 @@ class _DelPropCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontFamily: RLTokens.fontSerif,
+                    fontWeight: RLTokens.headingWeight,
                     fontSize: 17,
                     color: RLTokens.ink,
                     height: 1.1,
@@ -821,6 +822,7 @@ class _DoneStage extends StatelessWidget {
                     'Property deleted',
                     style: TextStyle(
                       fontFamily: RLTokens.fontSerif,
+                      fontWeight: RLTokens.headingWeight,
                       fontSize: 25,
                       color: RLTokens.ink,
                       letterSpacing: -0.4,

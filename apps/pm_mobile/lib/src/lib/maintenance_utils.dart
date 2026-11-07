@@ -1,11 +1,11 @@
 /// Bidirectional label <-> API-enum-value mapping for maintenance request
-/// status/priority/category. The UI (maintenance_board.dart) works entirely
-/// in display labels (e.g. "Cancelled", "Emergency", "Safety & Fire"); API
-/// calls/responses use the backend's exact enum strings (e.g. "CANCELED" —
-/// single L — "EMERGENCY", "SAFETY_FIRE"). All API boundary code goes
-/// through these functions so the rest of the app never has to know the
-/// difference.
+/// status/priority/category/visibility. The board and detail work in display
+/// labels; API calls use the backend's enum strings (e.g. "CANCELED" — single
+/// L — "EMERGENCY", "SAFETY_FIRE"). Priority, category and visibility labels
+/// come from [repair_labels.dart] so the add form, board and detail agree.
 library;
+
+import 'package:rentloop_manager/src/lib/repair_labels.dart';
 
 const kMaintenanceStatusOrder = [
   'New',
@@ -29,77 +29,36 @@ String mrStatusApiValue(String label) => _kStatusToApi[label] ?? label;
 
 String mrStatusLabel(String apiValue) => _kApiToStatus[apiValue] ?? apiValue;
 
-const _kPriorityToApi = {
-  'Low': 'LOW',
-  'Medium': 'MEDIUM',
-  'High': 'HIGH',
-  'Emergency': 'EMERGENCY',
-};
+final _kPriorityToApi = {for (final p in repairPriorities) p.$2: p.$1};
 
-final _kApiToPriority = {
-  for (final e in _kPriorityToApi.entries) e.value: e.key,
-};
+final _kApiToPriority = {for (final p in repairPriorities) p.$1: p.$2};
+
+/// Lowest to highest, as the board's priority filter lists them.
+final kMaintenancePriorityLabels = [
+  for (final p in repairPriorities.reversed) p.$2,
+];
+
+const kUrgentPriorityLabel = 'Urgent';
 
 String mrPriorityApiValue(String label) => _kPriorityToApi[label] ?? label;
 
 String mrPriorityLabelFromApi(String apiValue) =>
     _kApiToPriority[apiValue] ?? apiValue;
 
-const kMaintenanceCategoryLabels = [
-  'Plumbing',
-  'Electrical',
-  'HVAC',
-  'Appliance',
-  'Structural',
-  'Roofing',
-  'Pest Control',
-  'Landscaping & Grounds',
-  'Locks & Security',
-  'Painting',
-  'Flooring',
-  'Windows & Doors',
-  'Safety & Fire',
-  'Cleaning',
-  'Utilities',
-  'Other',
-];
+final kMaintenanceCategoryLabels = [for (final c in repairCategories) c.$2];
 
-const _kCategoryToApi = {
-  'Plumbing': 'PLUMBING',
-  'Electrical': 'ELECTRICAL',
-  'HVAC': 'HVAC',
-  'Appliance': 'APPLIANCE',
-  'Structural': 'STRUCTURAL',
-  'Roofing': 'ROOFING',
-  'Pest Control': 'PEST_CONTROL',
-  'Landscaping & Grounds': 'LANDSCAPING',
-  'Locks & Security': 'LOCKS_SECURITY',
-  'Painting': 'PAINTING',
-  'Flooring': 'FLOORING',
-  'Windows & Doors': 'WINDOWS_DOORS',
-  'Safety & Fire': 'SAFETY_FIRE',
-  'Cleaning': 'CLEANING',
-  'Utilities': 'UTILITIES',
-  'Other': 'OTHER',
-};
+final _kCategoryToApi = {for (final c in repairCategories) c.$2: c.$1};
 
-final _kApiToCategory = {
-  for (final e in _kCategoryToApi.entries) e.value: e.key,
-};
+final _kApiToCategory = {for (final c in repairCategories) c.$1: c.$2};
 
 String mrCategoryApiValue(String label) => _kCategoryToApi[label] ?? label;
 
 String mrCategoryLabelFromApi(String apiValue) =>
     _kApiToCategory[apiValue] ?? apiValue;
 
-const _kVisibilityToApi = {
-  'Tenant Visible': 'TENANT_VISIBLE',
-  'Internal Only': 'INTERNAL_ONLY',
-};
+final _kVisibilityToApi = {for (final v in repairVisibilities) v.$2: v.$1};
 
-final _kApiToVisibility = {
-  for (final e in _kVisibilityToApi.entries) e.value: e.key,
-};
+final _kApiToVisibility = {for (final v in repairVisibilities) v.$1: v.$2};
 
 String mrVisibilityApiValue(String label) => _kVisibilityToApi[label] ?? label;
 

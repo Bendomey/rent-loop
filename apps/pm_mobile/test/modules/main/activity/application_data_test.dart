@@ -284,4 +284,18 @@ void main() {
       });
     }
   });
+
+  test('submittedByLabel never shows a raw source enum', () {
+    expect(submittedByLabel('SELF'), isNull);
+    expect(submittedByLabel('ADMIN'), isNull);
+    expect(submittedByLabel(null), isNull);
+    expect(submittedByLabel('CSV_BULK'), 'from a file upload');
+  });
+
+  test('idTypeDisplay shows Ghana Card for the national ID value', () {
+    expect(idTypeDisplay('NATIONAL_ID'), 'Ghana Card');
+    expect(idTypeDisplay('GHANA_CARD'), 'Ghana Card');
+    expect(idTypeDisplay('PASSPORT'), 'Passport');
+    expect(idTypeDisplay(null), isNull);
+  });
 }

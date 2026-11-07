@@ -23,13 +23,13 @@ import 'package:rentloop_manager/src/shared/widgets.dart';
 // one for filter options but priority's 4 values are small enough to keep
 // inline here, matching the original mock's convention) ──────────────────
 
-const _kPriorities = ['Low', 'Medium', 'High', 'Emergency'];
+final _kPriorities = kMaintenancePriorityLabels;
 
 /// Priority-only tone override — `statusTone()`'s neutral fallback for
 /// unmapped strings is deliberate (see docs/implementation.md), so
 /// "Emergency" is resolved here instead of editing the shared switch.
 RLTone _priorityTone(String priority) =>
-    priority == 'Emergency' ? RLTone.danger : statusTone(priority);
+    priority == kUrgentPriorityLabel ? RLTone.danger : statusTone(priority);
 
 String _ageLabel(String? createdAt) {
   if (createdAt == null) return '';
@@ -152,6 +152,7 @@ class _CardBody extends StatelessWidget {
             m.title,
             style: const TextStyle(
               fontFamily: RLTokens.fontSerif,
+              fontWeight: RLTokens.headingWeight,
               fontSize: 17,
               color: RLTokens.ink,
               height: 1.15,
@@ -759,6 +760,7 @@ class _MaintenanceBoardState extends ConsumerState<MaintenanceBoard> {
     final result = await showModalBottomSheet<RLFilterPickResult>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (_) =>
           RLFilterSheet(title: title, options: options, selected: selected),
@@ -776,6 +778,7 @@ class _MaintenanceBoardState extends ConsumerState<MaintenanceBoard> {
     final result = await showModalBottomSheet<RLFilterPickResult>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (_) => _PersonFilterSheet(
         title: title,
@@ -939,6 +942,7 @@ class _MaintenanceBoardState extends ConsumerState<MaintenanceBoard> {
   Widget build(BuildContext context) {
     // Keeps the auto-dispose notifier alive while the sheet is opening.
     ref.watch(maintenanceAssigneesNotifierProvider);
+    ref.listen(maintenanceRequestStatusNotifierProvider, (_, _) {});
     final propertyOptions = propertyOptionsNotifierProvider();
     final unitOptions = unitOptionsNotifierProvider(const UnitOptionsQuery());
 

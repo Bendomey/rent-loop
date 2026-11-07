@@ -243,7 +243,7 @@ void main() {
     expect(find.text('2 days late'), findsOneWidget);
     expect(find.text('Due in 3 days'), findsOneWidget);
     expect(find.text('1,000.00'), findsOneWidget);
-    expect(find.text('INV-1'), findsOneWidget);
+    expect(find.text('INV-1'), findsNothing);
   });
 
   testWidgets('the summary sums the remaining amounts', (t) async {
@@ -251,6 +251,11 @@ void main() {
 
     expect(find.text('3,500.00'), findsOneWidget);
     expect(find.text('2 bills not paid yet · 1 late'), findsOneWidget);
+    expect(find.text('UNPAID BILLS'), findsOneWidget);
+    expect(
+      find.text("Rent not billed yet isn't counted here."),
+      findsOneWidget,
+    );
   });
 
   testWidgets('switching to Paid shows the paid rows', (t) async {
@@ -282,7 +287,7 @@ void main() {
   testWidgets('empty states', (t) async {
     _StubBills.items = {};
     await _pump(t);
-    expect(find.text('Nothing owed right now.'), findsOneWidget);
+    expect(find.text('No unpaid bills right now.'), findsOneWidget);
 
     await t.tap(find.text('Paid'));
     await t.pumpAndSettle();
@@ -304,7 +309,7 @@ void main() {
     await _pump(t);
 
     expect(find.byType(Shimmer), findsWidgets);
-    expect(find.text('Nothing owed right now.'), findsNothing);
+    expect(find.text('No unpaid bills right now.'), findsNothing);
   });
 
   testWidgets('a failed next page shows an inline retry', (t) async {

@@ -204,14 +204,20 @@ void main() {
     expect(find.textContaining('Ama'), findsOneWidget);
     expect(find.text('No name yet'), findsOneWidget);
     expect(find.text('Active tenants'), findsOneWidget);
-    expect(find.text('Add tenant'), findsOneWidget);
+    expect(
+      find.widgetWithText(FloatingActionButton, 'Add tenant'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('hides the section when there are none', (tester) async {
     await _pump(tester, const []);
 
     expect(find.textContaining('Pending tenants'), findsNothing);
-    expect(find.text('Add tenant'), findsOneWidget);
+    expect(
+      find.widgetWithText(FloatingActionButton, 'Add tenant'),
+      findsOneWidget,
+    );
   });
 
   test('pendingTenants asks for in-progress applications', () async {

@@ -139,5 +139,45 @@ void main() {
       expect(payerName(bill(lease: lease)), 'Ama Mensah');
       expect(payerName(bill()), 'Tenant');
     });
+
+    test('names the applicant when the bill has no lease yet', () {
+      final b = InvoiceModel.fromJson({
+        'id': 'i',
+        'code': 'INV-1',
+        'status': 'ISSUED',
+        'total_amount': 100,
+        'financial_account': {
+          'id': 'fa',
+          'tenant_application': {
+            'id': 'ta',
+            'first_name': 'Ama',
+            'last_name': 'Boateng',
+          },
+        },
+      });
+      expect(payerName(b), 'Ama Boateng');
+    });
+
+    test('falls back to the applicant when the lease tenant has no name', () {
+      final b = InvoiceModel.fromJson({
+        'id': 'i',
+        'code': 'INV-1',
+        'status': 'ISSUED',
+        'total_amount': 100,
+        'payer_lease': {
+          'id': 'l',
+          'tenant': {'id': 't', 'first_name': '', 'last_name': ''},
+        },
+        'financial_account': {
+          'id': 'fa',
+          'tenant_application': {
+            'id': 'ta',
+            'first_name': 'Ama',
+            'last_name': 'Boateng',
+          },
+        },
+      });
+      expect(payerName(b), 'Ama Boateng');
+    });
   });
 }

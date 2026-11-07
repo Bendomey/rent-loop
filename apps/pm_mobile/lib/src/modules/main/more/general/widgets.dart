@@ -93,6 +93,7 @@ class GeneralCard extends StatelessWidget {
                       title,
                       style: const TextStyle(
                         fontFamily: RLTokens.fontSerif,
+                        fontWeight: RLTokens.headingWeight,
                         fontSize: 17,
                         color: RLTokens.ink,
                         letterSpacing: -0.2,

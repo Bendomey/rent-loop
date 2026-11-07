@@ -33,6 +33,7 @@ class AccountProfilePage extends ConsumerWidget {
                 initials,
                 style: const TextStyle(
                   fontFamily: RLTokens.fontSerif,
+                  fontWeight: RLTokens.headingWeight,
                   fontSize: 31,
                   color: Colors.white,
                   height: 1,

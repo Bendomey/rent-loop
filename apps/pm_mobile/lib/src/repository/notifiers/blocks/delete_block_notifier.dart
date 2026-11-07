@@ -5,6 +5,7 @@ import 'package:rentloop_manager/src/api/root.dart';
 import 'package:rentloop_manager/src/architecture/current_workspace/current_workspace_notifier.dart';
 import 'package:rentloop_manager/src/lib/api_error_messages.dart';
 import 'package:rentloop_manager/src/repository/api_state.dart';
+import 'package:rentloop_manager/src/repository/providers/properties/property_detail_provider.dart';
 
 part 'delete_block_notifier.g.dart';
 
@@ -40,6 +41,7 @@ class DeleteBlockNotifier extends _$DeleteBlockNotifier {
             blockId: blockId,
           );
       state = DeleteBlockState(status: ApiStatus.success);
+      ref.invalidate(propertyDetailProvider);
     } on ApiException catch (e) {
       state = DeleteBlockState(
         status: ApiStatus.failed,

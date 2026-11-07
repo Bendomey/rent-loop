@@ -61,7 +61,9 @@ class UpdateUnitNotifier extends _$UpdateUnitNotifier {
           );
       state = UpdateUnitState(status: ApiStatus.success);
       ref.invalidate(propertyStatsProvider);
-      ref.invalidate(homeStatsProvider);
+      for (final p in homeStatsProviders) {
+        ref.invalidate(p);
+      }
     } on ApiException catch (e) {
       state = UpdateUnitState(
         status: ApiStatus.failed,

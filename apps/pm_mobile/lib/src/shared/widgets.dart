@@ -3,6 +3,7 @@
 
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:rentloop_manager/src/lib/money.dart';
 import 'tokens.dart';
 
@@ -50,11 +51,15 @@ class RLPill extends StatelessWidget {
     super.key,
     this.tone = RLTone.neutral,
     this.large = false,
+    this.onImage = false,
   });
 
   final String label;
   final RLTone tone;
   final bool large;
+
+  /// Solid white so the pill stays readable over a coloured hero or photo.
+  final bool onImage;
 
   @override
   Widget build(BuildContext context) {
@@ -64,8 +69,11 @@ class RLPill extends StatelessWidget {
         vertical: large ? 5 : 3,
       ),
       decoration: BoxDecoration(
-        color: tone.bg,
+        color: onImage ? Colors.white : tone.bg,
         borderRadius: BorderRadius.circular(RLTokens.rPill),
+        boxShadow: onImage
+            ? [BoxShadow(color: Colors.black.withAlpha(40), blurRadius: 6)]
+            : null,
       ),
       child: Text(
         label,
@@ -199,6 +207,7 @@ class RLAvatar extends StatelessWidget {
           initials,
           style: TextStyle(
             fontFamily: RLTokens.fontSerif,
+            fontWeight: RLTokens.headingWeight,
             fontSize: size * 0.36,
             color: RLTokens.crimson,
             height: 1,
@@ -247,6 +256,7 @@ class RLMoney extends StatelessWidget {
           _format(amount),
           style: TextStyle(
             fontFamily: RLTokens.fontSerif,
+            fontWeight: RLTokens.headingWeight,
             fontSize: size,
             color: color,
             letterSpacing: -0.6,
@@ -285,6 +295,7 @@ class RLMetric extends StatelessWidget {
           value,
           style: TextStyle(
             fontFamily: RLTokens.fontSerif,
+            fontWeight: RLTokens.headingWeight,
             fontSize: 24,
             color: RLTokens.ink,
             letterSpacing: -0.4,
@@ -861,6 +872,7 @@ class RLTopHeader extends StatelessWidget {
                         title,
                         style: TextStyle(
                           fontFamily: RLTokens.fontSerif,
+                          fontWeight: RLTokens.headingWeight,
                           fontSize: RLTokens.textTitle,
                           letterSpacing: -0.4,
                           color: RLTokens.ink,
@@ -1523,6 +1535,112 @@ class _RLStepCircle extends StatelessWidget {
                   color: active ? RLTokens.crimson : RLTokens.micro,
                 ),
               ),
+      ),
+    );
+  }
+}
+
+/// A round back button that floats over a full-bleed hero image.
+class RLFloatingBack extends StatelessWidget {
+  const RLFloatingBack({super.key, required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: 'Back',
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: Colors.white.withAlpha(235),
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(color: Colors.black.withAlpha(40), blurRadius: 8),
+            ],
+          ),
+          child: const Icon(Icons.chevron_left, size: 26, color: RLTokens.ink),
+        ),
+      ),
+    );
+  }
+}
+
+/// A full-bleed hero that runs under the status bar: pulling down stretches
+/// it, scrolling up collapses it into a pinned bar in [color] with [title].
+class RLHeroSliverAppBar extends StatelessWidget {
+  const RLHeroSliverAppBar({
+    super.key,
+    required this.title,
+    required this.color,
+    required this.background,
+    required this.onBack,
+    this.expandedHeight = 170,
+  });
+
+  final String title;
+  final Color color;
+  final Widget background;
+  final VoidCallback onBack;
+  final double expandedHeight;
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverAppBar(
+      pinned: true,
+      stretch: true,
+      expandedHeight: expandedHeight,
+      backgroundColor: color,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      automaticallyImplyLeading: false,
+      systemOverlayStyle: SystemUiOverlayStyle.light,
+      leadingWidth: 66,
+      leading: Center(child: RLFloatingBack(onTap: onBack)),
+      flexibleSpace: LayoutBuilder(
+        builder: (context, constraints) {
+          final top = MediaQuery.paddingOf(context).top;
+          final collapsed = constraints.maxHeight <= top + kToolbarHeight + 12;
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              FlexibleSpaceBar(
+                stretchModes: const [StretchMode.zoomBackground],
+                background: background,
+              ),
+              Positioned(
+                left: 66,
+                right: 66,
+                bottom: 0,
+                height: kToolbarHeight,
+                child: IgnorePointer(
+                  child: AnimatedOpacity(
+                    opacity: collapsed ? 1 : 0,
+                    duration: const Duration(milliseconds: 150),
+                    child: Center(
+                      child: Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontFamily: RLTokens.fontSans,
+                          fontSize: 16,
+                          fontWeight: RLTokens.semibold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

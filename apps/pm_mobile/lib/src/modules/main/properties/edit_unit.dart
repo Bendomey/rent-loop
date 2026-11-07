@@ -228,6 +228,7 @@ class _EditUnitScreenState extends ConsumerState<EditUnitScreen> {
                     unit.name,
                     style: TextStyle(
                       fontFamily: RLTokens.fontSerif,
+                      fontWeight: RLTokens.headingWeight,
                       fontSize: 24,
                       color: RLTokens.ink,
                       letterSpacing: -0.4,
@@ -286,6 +287,7 @@ class _EditUnitScreenState extends ConsumerState<EditUnitScreen> {
                     'Basic Information',
                     style: TextStyle(
                       fontFamily: RLTokens.fontSerif,
+                      fontWeight: RLTokens.headingWeight,
                       fontSize: 21,
                       color: RLTokens.ink,
                       letterSpacing: -0.3,
@@ -382,6 +384,7 @@ class _EditUnitScreenState extends ConsumerState<EditUnitScreen> {
                       'Rental Information',
                       style: TextStyle(
                         fontFamily: RLTokens.fontSerif,
+                        fontWeight: RLTokens.headingWeight,
                         fontSize: 21,
                         color: RLTokens.ink,
                         letterSpacing: -0.3,

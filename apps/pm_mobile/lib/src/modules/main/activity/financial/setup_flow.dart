@@ -111,6 +111,12 @@ class _FinancialSetupFlowState extends ConsumerState<FinancialSetupFlow> {
     paymentFrequency: _frequency,
   );
 
+  DateTime get _leaseEnd => termEndDate(
+    _app.desiredMoveInDate!.toUtc(),
+    _app.stayDuration ?? 12,
+    _frequency,
+  );
+
   String _money(int minor) => formatPesewas(minor, code: _currency);
 
   @override
@@ -212,6 +218,8 @@ class _FinancialSetupFlowState extends ConsumerState<FinancialSetupFlow> {
           rentMinor: _rentMinor,
           feeTotal: _feeTotal,
           periods: periods,
+          graceDays: graceDays(_frequency),
+          leaseEnd: _leaseEnd,
           choice: _choice,
           name: _name,
           noun: noun,
@@ -407,8 +415,13 @@ InputDecoration _inputDecoration({
   );
   return InputDecoration(
     hintText: hint,
-    prefixText: prefix == null ? null : '$prefix  ',
-    prefixStyle: affix,
+    prefixIcon: prefix == null
+        ? null
+        : Padding(
+            padding: const EdgeInsets.only(left: 14, right: 8),
+            child: Text(currencySymbol(prefix), style: affix),
+          ),
+    prefixIconConstraints: const BoxConstraints(),
     suffixText: suffix,
     suffixStyle: affix,
     filled: true,
@@ -439,6 +452,7 @@ class _Heading extends StatelessWidget {
     text,
     style: const TextStyle(
       fontFamily: RLTokens.fontSerif,
+      fontWeight: RLTokens.headingWeight,
       fontSize: 19,
       color: RLTokens.ink,
       letterSpacing: -0.2,
@@ -687,6 +701,8 @@ class _Summary extends StatelessWidget {
     required this.rentMinor,
     required this.feeTotal,
     required this.periods,
+    required this.graceDays,
+    required this.leaseEnd,
     required this.choice,
     required this.name,
     required this.noun,
@@ -702,6 +718,8 @@ class _Summary extends StatelessWidget {
   final int rentMinor;
   final int feeTotal;
   final List<SchedulePeriod> periods;
+  final int graceDays;
+  final DateTime leaseEnd;
   final BillingChoice choice;
   final String name;
   final String noun;
@@ -726,7 +744,6 @@ class _Summary extends StatelessWidget {
   Widget build(BuildContext context) {
     final ready = rentMinor > 0 && periods.isNotEmpty;
     final first = periods.isEmpty ? null : periods.first;
-    final last = periods.isEmpty ? null : periods.last;
     final total = rentMinor * periods.length + feeTotal;
 
     const base = TextStyle(
@@ -766,7 +783,7 @@ class _Summary extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    if (ready && first != null && last != null)
+                    if (ready && first != null)
                       Text.rich(
                         TextSpan(
                           style: base,
@@ -779,11 +796,14 @@ class _Summary extends StatelessWidget {
                               text: ordinal(first.dueDate.toUtc().day),
                               style: _bold,
                             ),
-                            const TextSpan(text: '. That runs to '),
-                            TextSpan(
-                              text: formatDay(last.dueDate),
-                              style: _bold,
-                            ),
+                            if (graceDays > 0)
+                              TextSpan(
+                                text:
+                                    ', $graceDays ${graceDays == 1 ? 'day' : 'days'} '
+                                    'after each $noun of the stay starts',
+                              ),
+                            const TextSpan(text: '. The lease runs to '),
+                            TextSpan(text: formatDay(leaseEnd), style: _bold),
                             const TextSpan(text: '.'),
                             if (feeTotal > 0) ...[
                               const TextSpan(text: ' On top of that they pay '),

@@ -120,18 +120,26 @@ UnitModel _unit(String id, String name, String property) => UnitModel(
   property: UnitPropertyRef(id: 'p1', name: property),
 );
 
-TenantLookupModel _returning() => TenantLookupModel(
-  id: 't1',
-  firstName: 'Ama',
-  lastName: 'Mensah',
-  phone: '+233241234567',
-  gender: 'FEMALE',
-  dateOfBirth: DateTime.utc(1990, 5, 17),
-  nationality: 'Ghanaian',
-  currentAddress: '12 Palm Street',
-  occupation: 'STUDENT',
-  employer: 'Legon',
-);
+TenantLookupModel _returning({String? idNumber = 'G1234567'}) =>
+    TenantLookupModel(
+      id: 't1',
+      firstName: 'Ama',
+      lastName: 'Mensah',
+      phone: '+233241234567',
+      gender: 'FEMALE',
+      dateOfBirth: DateTime.utc(1990, 5, 17),
+      nationality: 'Ghanaian',
+      currentAddress: '12 Palm Street',
+      maritalStatus: 'SINGLE',
+      idType: 'PASSPORT',
+      idNumber: idNumber,
+      emergencyContactName: 'Akosua Mensah',
+      emergencyContactPhone: '+233201234567',
+      relationshipToEmergencyContact: 'Sister',
+      occupation: 'STUDENT',
+      employer: 'Legon',
+      occupationAddress: 'Legon Campus',
+    );
 
 final _units = [_unit('u1', 'A1', 'Palm Court'), _unit('u2', 'B2', 'Oak Row')];
 
@@ -291,6 +299,49 @@ void main() {
     expect(find.textContaining('pplication'), findsNothing);
   });
 
+  testWidgets('marital status is marked required alongside the rest', (
+    tester,
+  ) async {
+    await _pump(tester);
+    await _enterPhoneAndNext(tester);
+    expect(find.text(' *'), findsNWidgets(6));
+  });
+
+  testWidgets('Next on a blank Identity step names what is missing', (
+    tester,
+  ) async {
+    await _pump(tester);
+    await _enterPhoneAndNext(tester);
+    await tester.enterText(find.widgetWithText(TextField, 'First'), 'Kofi');
+    await tester.enterText(find.widgetWithText(TextField, 'Last'), 'Mensah');
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Street, city'),
+      '12 Palm Street',
+    );
+    await tester.tap(find.text('Select').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Male').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Select date'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('OK'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Select').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Single').last);
+    await tester.pumpAndSettle();
+    await _tapNext(tester);
+    expect(find.text('Identity verification'), findsOneWidget);
+
+    await tester.enterText(find.widgetWithText(TextField, 'Country'), '');
+    await _tapNext(tester);
+
+    expect(find.text('Identity verification'), findsOneWidget);
+    expect(find.text('Enter a nationality.'), findsOneWidget);
+    expect(find.text('Choose one.'), findsOneWidget);
+    expect(find.text('Enter the ID number.'), findsOneWidget);
+  });
+
   testWidgets('an unknown number continues to Basic information', (
     tester,
   ) async {
@@ -299,6 +350,40 @@ void main() {
     await _enterPhoneAndNext(tester);
 
     expect(find.text('Basic information'), findsOneWidget);
+  });
+
+  testWidgets('the nine digits typed beside +233 reach Basic information', (
+    tester,
+  ) async {
+    final api = await _pump(tester);
+    await _pickUnit(tester, 'A1 · Palm Court');
+
+    await tester.enterText(find.byType(TextField).first, '244551190');
+    await _tapNext(tester);
+
+    expect(find.text('Basic information'), findsOneWidget);
+    expect(api.lookups, ['+233244551190']);
+  });
+
+  testWidgets('an invalid phone closes the keyboard and shows the error', (
+    tester,
+  ) async {
+    await _pump(tester);
+    await _pickUnit(tester, 'A1 · Palm Court');
+    tester.view.physicalSize = const Size(800, 700);
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField).first, '2445');
+    await tester.showKeyboard(find.byType(TextField).first);
+    await _tapNext(tester);
+
+    final field = tester.widget<EditableText>(find.byType(EditableText).first);
+    expect(field.focusNode.hasFocus, isFalse);
+    final error = find.text('Enter a valid phone number.');
+    expect(error, findsOneWidget);
+    final bottom = tester.getBottomLeft(error).dy;
+    final footerTop = tester.getTopLeft(find.text('Next')).dy;
+    expect(bottom, lessThan(footerTop));
   });
 
   testWidgets('Next stays on the unit step until a unit and phone are set', (
@@ -335,6 +420,27 @@ void main() {
     expect(find.text('Emergency contact & background'), findsOneWidget);
   });
 
+  testWidgets(
+    'a prefilled +233 number shows as nine digits and submits whole',
+    (tester) async {
+      final api = await _pump(tester, lookup: _returning());
+      await _enterPhoneAndNext(tester);
+
+      for (var i = 0; i < 4; i++) {
+        await tester.tap(find.text('Back'));
+        await tester.pumpAndSettle();
+      }
+      expect(find.text('241234567'), findsOneWidget);
+      expect(find.textContaining('+233241'), findsNothing);
+
+      await _tapNext(tester);
+      await tester.tap(find.text('Add tenant'));
+      await tester.pumpAndSettle();
+
+      expect(api.created.single.phone, '+233241234567');
+    },
+  );
+
   testWidgets('Add tenant creates the tenant and opens its setup', (
     tester,
   ) async {
@@ -352,6 +458,22 @@ void main() {
     expect(input.employerType, 'STUDENT');
     expect(input.dateOfBirth, DateTime.utc(1990, 5, 17));
     expect(find.text('detail new1 p1'), findsOneWidget);
+  });
+
+  testWidgets('Review bounces to the step with a missing field and shows it', (
+    tester,
+  ) async {
+    await _pump(tester, lookup: _returning(idNumber: null));
+    await _enterPhoneAndNext(tester);
+
+    await tester.tap(find.text('Add tenant'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Identity verification'), findsOneWidget);
+    expect(find.text('Enter the ID number.'), findsOneWidget);
+    final error = tester.getRect(find.text('Enter the ID number.'));
+    expect(error.top, greaterThan(0));
+    expect(error.bottom, lessThan(2400 / 2));
   });
 
   testWidgets('a student is sent as STUDENT with no course field', (

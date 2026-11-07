@@ -168,7 +168,8 @@ void main() {
     expect(q['page'], ['2']);
     expect(q['page_size'], ['20']);
     expect(q['populate'], [
-      'Property,PayerLease.Tenant,PayerLease.Unit,Payments',
+      'Property,PayerLease.Tenant,PayerLease.Unit,Payments,'
+          'FinancialAccount.TenantApplication',
     ]);
     expect(q.containsKey('query'), isFalse);
     expect(page.rows.single.code, 'INV-2024-0001');
@@ -203,6 +204,7 @@ void main() {
     expect(
       populate,
       'Payments,LineItems,Property,PayerClient,'
+      'FinancialAccount.TenantApplication,'
       'PayerLease.Tenant,PayerLease.Unit.PropertyBlock',
     );
     expect(populate, isNot(contains('ContextTenantApplication')));

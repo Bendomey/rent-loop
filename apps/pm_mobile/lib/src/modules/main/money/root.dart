@@ -14,6 +14,7 @@ import 'package:rentloop_manager/src/modules/main/money/bill_row.dart';
 import 'package:rentloop_manager/src/repository/models/invoice_model.dart';
 import 'package:rentloop_manager/src/repository/notifiers/money/bills_notifier.dart';
 import 'package:rentloop_manager/src/repository/notifiers/options/property_options_notifier.dart';
+import 'package:rentloop_manager/src/repository/providers/money/rent_focus_provider.dart';
 import 'package:rentloop_manager/src/repository/providers/properties/my_property_roles_provider.dart';
 import 'package:rentloop_manager/src/shared/paged_picker_sheet.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
@@ -32,12 +33,22 @@ class _MoneyScreenState extends ConsumerState<MoneyScreen> {
   BillsView _view = BillsView.owing;
   FilterOption? _property;
   bool? _multipleProperties;
+  int? _appliedFocus;
   late final ScrollController _scrollController;
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController()..addListener(_onScroll);
+    final focus = ref.read(rentFocusNotifierProvider);
+    if (focus != null) _applyFocus(focus);
+  }
+
+  void _applyFocus(RentFocus focus) {
+    if (focus.seq == _appliedFocus) return;
+    _appliedFocus = focus.seq;
+    _view = BillsView.owing;
+    _property = focus.property;
   }
 
   @override
@@ -136,6 +147,9 @@ class _MoneyScreenState extends ConsumerState<MoneyScreen> {
     final roles = ref.watch(myPropertyRolesProvider).valueOrNull;
     final properties = ref.watch(propertyOptionsNotifierProvider());
     final now = DateTime.now();
+    ref.listen(rentFocusNotifierProvider, (_, next) {
+      if (next != null) setState(() => _applyFocus(next));
+    });
     ref.listen(currentWorkspaceNotifierProvider, (_, __) {
       setState(() {
         _property = null;
@@ -384,7 +398,7 @@ class _SummaryCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            state.hasNextPage ? 'OWING · SO FAR' : 'OWING',
+            state.hasNextPage ? 'UNPAID BILLS · SO FAR' : 'UNPAID BILLS',
             style: const TextStyle(
               fontFamily: RLTokens.fontMono,
               fontSize: 10.5,
@@ -406,6 +420,15 @@ class _SummaryCard extends StatelessWidget {
               fontFamily: RLTokens.fontSans,
               fontSize: 12.5,
               color: Color(0xB3FFFFFF),
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            "Rent not billed yet isn't counted here.",
+            style: TextStyle(
+              fontFamily: RLTokens.fontSans,
+              fontSize: 11.5,
+              color: Color(0x8CFFFFFF),
             ),
           ),
         ],
@@ -546,7 +569,7 @@ class _EmptyBills extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(RLTokens.gutter),
         child: Text(
-          paidView ? 'No paid bills yet.' : 'Nothing owed right now.',
+          paidView ? 'No paid bills yet.' : 'No unpaid bills right now.',
           style: const TextStyle(
             fontFamily: RLTokens.fontSans,
             fontSize: 15,

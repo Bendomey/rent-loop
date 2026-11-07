@@ -112,21 +112,41 @@ void main() {
     expect(patch['other_names'], isNull);
   });
 
-  testWidgets('clearing employer sends an empty string, not null', (
+  testWidgets('a blank email saves, and a bad one says why Save is off', (
+    tester,
+  ) async {
+    await _openTenantPage(tester, _app());
+    await tester.tap(find.text('Edit').first);
+    await tester.pumpAndSettle();
+    final email = find.byType(TextField).at(3);
+
+    await tester.enterText(email, 'ama@');
+    await tester.pump();
+    expect(find.text('Enter a valid email or leave it blank.'), findsOneWidget);
+    await tester.tap(find.text('Save'), warnIfMissed: false);
+    await tester.pumpAndSettle();
+    expect(_FakeUpdate.patches, isEmpty);
+
+    await tester.enterText(email, '');
+    await tester.pump();
+    expect(find.text('Enter a valid email or leave it blank.'), findsNothing);
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+    expect(_FakeUpdate.patches.single['email'], isNull);
+  });
+
+  testWidgets('employment details are required and Save says what is missing', (
     tester,
   ) async {
     await _openTenantPage(tester, _app());
     await tester.tap(find.text('Edit').at(2));
     await tester.pumpAndSettle();
-    await tester.enterText(find.widgetWithText(TextField, 'Bollore'), '');
-    await tester.pump();
-    await tester.tap(find.text('Save'));
-    await tester.pumpAndSettle();
 
-    final patch = _FakeUpdate.patches.single;
-    expect(patch['employer'], '');
-    expect(patch['occupation_address'], '');
-    expect(patch['proof_of_income_url'], isNull);
+    expect(find.text('Optional'), findsOneWidget);
+    expect(find.text('Fill in every field to save.'), findsOneWidget);
+    await tester.tap(find.text('Save'), warnIfMissed: false);
+    await tester.pumpAndSettle();
+    expect(_FakeUpdate.patches, isEmpty);
   });
 
   testWidgets('a signed lease agreement hides every Edit button', (

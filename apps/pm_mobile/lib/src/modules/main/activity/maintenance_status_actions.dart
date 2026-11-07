@@ -45,6 +45,7 @@ Future<String?> promptMaintenanceCancelReason(
   final reason = await showModalBottomSheet<String>(
     context: context,
     isScrollControlled: true,
+    useSafeArea: true,
     backgroundColor: Colors.transparent,
     builder: (_) => MaintenanceCancelReasonSheet(title: requestTitle),
   );
@@ -91,6 +92,7 @@ Future<String?> pickMaintenanceStatus(
               'Change status',
               style: TextStyle(
                 fontFamily: RLTokens.fontSerif,
+                fontWeight: RLTokens.headingWeight,
                 fontSize: RLTokens.textCardHead,
                 color: RLTokens.ink,
               ),
@@ -170,6 +172,7 @@ class _MaintenanceCancelReasonSheetState
               'Cancel repair',
               style: TextStyle(
                 fontFamily: RLTokens.fontSerif,
+                fontWeight: RLTokens.headingWeight,
                 fontSize: RLTokens.textCardHead,
                 color: RLTokens.ink,
               ),

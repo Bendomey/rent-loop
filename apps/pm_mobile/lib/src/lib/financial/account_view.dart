@@ -10,37 +10,56 @@ bool _isLive(ChargeModel c) => c.voidedAt == null;
 
 int _uninvoiced(ChargeModel c) => c.amount - c.invoicedAmount;
 
-/// Past due and not paid, whether or not a bill went out for it.
-int lateAmount(List<ChargeModel> charges, DateTime now) => charges
-    .where(
-      (c) => _isLive(c) && c.settledAmount < c.amount && _due(c).isBefore(now),
-    )
-    .fold<int>(0, (sum, c) => sum + (c.amount - c.settledAmount));
+/// Past due and not paid, whether or not a bill went out for it. A charge is
+/// only late from the day after its due date, compared as calendar days.
+int lateAmount(List<ChargeModel> charges, DateTime now) {
+  final today = DateTime.utc(now.year, now.month, now.day);
+  return charges
+      .where(
+        (c) =>
+            _isLive(c) &&
+            c.settledAmount < c.amount &&
+            DateTime.utc(
+              _due(c).year,
+              _due(c).month,
+              _due(c).day,
+            ).isBefore(today),
+      )
+      .fold<int>(0, (sum, c) => sum + (c.amount - c.settledAmount));
+}
 
-/// Null for a MANUAL cadence, where nothing is sent automatically. The amount
-/// is the next uninvoiced rent plus every fee already due by then, since those
-/// ride along on the same bill.
-({int amount, DateTime sendDate})? nextBill(
+/// Mirrors the server's selection: a due one-off is enough to issue a bill, so
+/// the send date is the earliest of the one-offs and the next rent, less the
+/// lead. It is clamped to today, and `tonight` says the nightly run takes it.
+/// Null for a MANUAL cadence, where nothing is sent automatically.
+({int amount, DateTime sendDate, bool tonight})? nextBill(
   FinancialAccountDetailModel detail,
   DateTime now,
 ) {
   if (detail.account.rentBillingCadence == 'MANUAL') return null;
 
-  final live = detail.charges.where(_isLive);
-  final rents =
-      live.where((c) => c.category == _rent && _uninvoiced(c) > 0).toList()
-        ..sort(_byDue);
-  if (rents.isEmpty) return null;
+  bool billable(ChargeModel c) =>
+      _isLive(c) && _uninvoiced(c) > 0 && c.settledAmount < c.amount;
+  final live = detail.charges.where(billable).toList()..sort(_byDue);
+  final rents = live.where((c) => c.category == _rent).toList();
+  final oneOffs = live.where((c) => c.category != _rent).toList();
+  if (rents.isEmpty && oneOffs.isEmpty) return null;
 
-  final next = rents.first;
-  final dueOn = _due(next);
-  final fees = live.where(
-    (c) => c.category != _rent && _uninvoiced(c) > 0 && !_due(c).isAfter(dueOn),
-  );
+  final lead = Duration(days: detail.account.autoIssueDaysBefore);
+  final today = DateTime.utc(now.year, now.month, now.day);
+  final firstDue = [
+    if (rents.isNotEmpty) _due(rents.first),
+    if (oneOffs.isNotEmpty) _due(oneOffs.first),
+  ].reduce((a, b) => a.isBefore(b) ? a : b);
+  final raw = firstDue.subtract(lead);
+  final sendDate = raw.isAfter(today) ? raw : today;
+
+  final cutoff = sendDate.add(lead);
+  final included = oneOffs.where((c) => !_due(c).isAfter(cutoff));
   final amount =
-      _uninvoiced(next) + fees.fold<int>(0, (sum, c) => sum + _uninvoiced(c));
-  final lead = detail.account.autoIssueDaysBefore;
-  return (amount: amount, sendDate: dueOn.subtract(Duration(days: lead)));
+      (rents.isEmpty ? 0 : _uninvoiced(rents.first)) +
+      included.fold<int>(0, (sum, c) => sum + _uninvoiced(c));
+  return (amount: amount, sendDate: sendDate, tonight: !raw.isAfter(today));
 }
 
 /// True when the nightly run is about to send the very first bill: nothing is

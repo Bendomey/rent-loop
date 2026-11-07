@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-11-07 — Print a bill
+- The bill detail screen has a Print button in its header. It makes an A4 PDF that matches the web portal's printed bill (stamp, billed to, what it is for, dates, items, totals, Still owed, how they may pay, the after-the-due-date terms) and opens the system print sheet, which on iOS can also save or share it. Anyone who can see the bill can print it.
+- New: `lib/financial/bill_sheet.dart` (the web's bill state and copy, ported), `lib/financial/bill_pdf.dart`, `billPrinterProvider`. `InvoiceModel` now reads sub-total, taxes, payer type, allowed payment rails, voided reason, the lease code and the tenant's other names.
+- Added `pdf` 3.11.3 and `printing` 5.14.3 (the newest that resolve on this Flutter). This pulled the transitive `image` package down from 4.8.0 to 4.5.4.
+- Modules affected: `modules/main/money/`, `lib/financial/`, `repository/models/invoice_model.dart`, `repository/providers/money/`.
+
+## 2026-11-07 — Home v2: closer to the web Insights overview
+- Home now has a property switcher ("All properties" or one property); every number follows it.
+- New sections: "Needs your attention" (late rent with how many properties, leases ending soon, open repairs with urgent count; each opens a filtered list; rows at 0 hide, "Nothing needs your attention." when all clear), a 2×2 of occupied %, empty units, active leases and pending tenants, a 6-month rent bar chart (tap a bar to see its amount), and "Your properties this month" (highest first, All only).
+- The money card gains a "▲/▼ N% vs {last month}" badge, hidden when last month was 0.
+- Each section loads and fails on its own ("Couldn't load this." + Try again); pull-to-refresh reloads everything.
+- Leases list: new "Ending soon" filter (Active, not renewed, inside the expiring window — the backend `expiring`/`exclude_renewed` params). `/more/leases?filter=` preselects a chip.
+- Rent tab: Home's late-rent row opens it on Owing for the chosen property (`rentFocusNotifierProvider`).
+- Replaced `homeStatsProvider`/`HomeStats` with per-cube Home slices; Home no longer reads `activityCountsProvider`. Expenses and net income are left out (hidden in mobile v1).
+- Modules affected: `modules/main/home/`, `modules/main/leases/`, `modules/main/money/`, `repository/providers/home/`, `repository/providers/money/`, `repository/notifiers/leases/`, `api/lease_api.dart`, `lib/home_stats_logic.dart`, `navigation/routes.dart`, and the notifiers that invalidate Home.
+
 ## 2026-11-06 — Pickers page 20 with server search (plan: pm-mobile-api-efficiency, task 4)
 - Every property, block and unit picker or filter now loads 20 at a time, searches on the server and loads more on scroll: maintenance board and applications filters, Rent property filter, Add tenant and Change unit, Add repair, New announcement.
 - Rent tab: the property chip row is one "Property: {name}" chip that opens the picker, with "All properties" to reset.

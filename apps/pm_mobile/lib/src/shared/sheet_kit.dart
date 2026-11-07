@@ -18,6 +18,7 @@ void showRLSheet(
   showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
+    useSafeArea: true,
     backgroundColor: Colors.transparent,
     builder: (ctx) => builder(() => Navigator.of(ctx).pop()),
   );
@@ -62,16 +63,13 @@ class RLSheet extends StatelessWidget {
   }
 
   Widget _sheet(BuildContext context) {
-    final bottom = MediaQuery.of(context).padding.bottom;
+    final mq = MediaQuery.of(context);
+    final bottom = mq.padding.bottom;
     return AnimatedPadding(
       duration: const Duration(milliseconds: 150),
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
+      padding: EdgeInsets.only(bottom: mq.viewInsets.bottom),
       child: Container(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.9,
-        ),
+        constraints: BoxConstraints(maxHeight: mq.size.height * 0.9),
         decoration: const BoxDecoration(
           color: RLTokens.surface,
           borderRadius: BorderRadius.vertical(
@@ -108,6 +106,7 @@ class RLSheet extends StatelessWidget {
                           title,
                           style: const TextStyle(
                             fontFamily: RLTokens.fontSerif,
+                            fontWeight: RLTokens.headingWeight,
                             fontSize: 21,
                             color: RLTokens.ink,
                             letterSpacing: -0.3,

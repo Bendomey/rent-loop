@@ -217,7 +217,7 @@ Future<void> _tapText(WidgetTester tester, String text) async {
 }
 
 Future<void> _pickUnit(WidgetTester tester, String name) async {
-  await _tapText(tester, 'Select units');
+  await _tapText(tester, 'Add units');
   await tester.tap(find.text(name));
   await tester.pumpAndSettle();
   await tester.tap(_doneButton);
@@ -259,7 +259,7 @@ void main() {
       properties: [_prop('p1', 'Palm Court'), _prop('p2', 'Oak Row')],
     );
     expect(find.text('Select property'), findsOneWidget);
-    expect(find.text('Pick a property first'), findsNWidgets(2));
+    expect(find.text('Pick a property first.'), findsOneWidget);
     await _tapText(tester, 'Select property');
     expect(find.text('Oak Row'), findsOneWidget);
   });
@@ -271,7 +271,7 @@ void main() {
       propertyId: 'p2',
     );
     expect(find.text('Oak Row'), findsOneWidget);
-    expect(find.text('Pick a property first'), findsNothing);
+    expect(find.text('Pick a property first.'), findsNothing);
   });
 
   testWidgets('no managed property shows the manager-access message', (
@@ -292,14 +292,14 @@ void main() {
       propertyId: 'p1',
     );
     await _pickUnit(tester, 'Unit 1');
-    expect(find.text('Unit 1'), findsOneWidget);
+    expect(find.textContaining('Unit 1 '), findsOneWidget);
 
     await _tapText(tester, 'Palm Court');
     await tester.tap(find.text('Oak Row'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Unit 1'), findsNothing);
-    expect(find.text('Select units'), findsOneWidget);
+    expect(find.textContaining('Unit 1 '), findsNothing);
+    expect(find.text('Add units'), findsOneWidget);
   });
 
   testWidgets('submits ids, mapped values and photo urls once', (tester) async {
@@ -333,7 +333,7 @@ void main() {
   ) async {
     final searches = <String>[];
     final fake = await _pump(tester, unitSearches: searches);
-    await _tapText(tester, 'Select units');
+    await _tapText(tester, 'Add units');
     await tester.tap(find.text('Unit 1'));
     await tester.pump();
 
@@ -353,7 +353,8 @@ void main() {
     await tester.pump();
     await tester.tap(find.text('Done (2)'));
     await tester.pumpAndSettle();
-    expect(find.text('2 units selected'), findsOneWidget);
+    expect(find.textContaining('Unit 1 '), findsOneWidget);
+    expect(find.textContaining('Unit 3'), findsOneWidget);
 
     await _fillRest(tester);
     await _tapText(tester, 'Create repair');
@@ -424,7 +425,7 @@ void main() {
 
   testWidgets('a block forces "Only staff can see this"', (tester) async {
     final fake = await _pump(tester);
-    await _tapText(tester, 'Select blocks');
+    await _tapText(tester, 'Add blocks');
     await tester.tap(find.text('Block A'));
     await tester.pumpAndSettle();
     await tester.tap(_doneButton);
@@ -509,17 +510,17 @@ void main() {
     tester,
   ) async {
     await _pump(tester, units: <UnitModel>[]);
-    await _tapText(tester, 'Select units');
+    await _tapText(tester, 'Add units');
     expect(find.text('No units in this property'), findsOneWidget);
     await tester.tap(_doneButton);
     await tester.pumpAndSettle();
-    await _tapText(tester, 'Select blocks');
+    await _tapText(tester, 'Add blocks');
     expect(find.text('Block A'), findsOneWidget);
   });
 
   testWidgets('empty blocks show the empty copy', (tester) async {
     await _pump(tester, blocks: <PropertyBlockModel>[]);
-    await _tapText(tester, 'Select blocks');
+    await _tapText(tester, 'Add blocks');
     expect(find.text('No blocks in this property'), findsOneWidget);
   });
 
@@ -530,7 +531,7 @@ void main() {
     await _tapText(tester, 'Tenant can see this');
     await tester.tap(find.text('Only staff can see this'));
     await tester.pumpAndSettle();
-    await _tapText(tester, 'Select blocks');
+    await _tapText(tester, 'Add blocks');
     await tester.tap(find.text('Block A').last);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Block A').last);
@@ -543,15 +544,15 @@ void main() {
     await _tapText(tester, 'Only staff can see this');
     await tester.tap(find.text('Tenant can see this'));
     await tester.pumpAndSettle();
-    await _tapText(tester, 'Unit 1');
+    await _tapText(tester, 'Add units');
     await tester.tap(find.text('Unit 2'));
     await tester.pumpAndSettle();
     await tester.tap(_doneButton);
     await tester.pumpAndSettle();
     expect(find.text('Only staff can see this'), findsOneWidget);
 
-    await _tapText(tester, '2 units selected');
-    await tester.tap(find.text('Unit 2'));
+    await _tapText(tester, 'Add units');
+    await tester.tap(find.text('Unit 2').last);
     await tester.pumpAndSettle();
     await tester.tap(_doneButton);
     await tester.pumpAndSettle();
@@ -564,7 +565,7 @@ void main() {
     await _pickUnit(tester, 'Unit 1');
     expect(find.textContaining('No tenant lives here yet'), findsNothing);
 
-    await _tapText(tester, 'Unit 1');
+    await _tapText(tester, 'Add units');
     await tester.tap(find.text('Unit 1').last);
     await tester.tap(find.text('Unit 3'));
     await tester.pumpAndSettle();

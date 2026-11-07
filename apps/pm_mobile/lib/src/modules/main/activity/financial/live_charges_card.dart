@@ -93,6 +93,7 @@ class _LiveChargesCardState extends State<LiveChargesCard> {
             'What they’re paying',
             style: TextStyle(
               fontFamily: RLTokens.fontSerif,
+              fontWeight: RLTokens.headingWeight,
               fontSize: 20,
               color: RLTokens.ink,
             ),
@@ -150,7 +151,7 @@ class _LiveChargesCardState extends State<LiveChargesCard> {
                         style: _bold,
                       ),
                       Text(
-                        '${_day(rent.first.dueDate)} to '
+                        'Due ${_day(rent.first.dueDate)} to '
                         '${_day(rent.last.dueDate)}',
                         style: _small,
                       ),

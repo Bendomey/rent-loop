@@ -65,6 +65,7 @@ void _openSheet(
   showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
+    useSafeArea: true,
     backgroundColor: Colors.transparent,
     builder: (ctx) => builder(() => Navigator.of(ctx).pop()),
   );
@@ -135,6 +136,7 @@ class _AccountSheet extends StatelessWidget {
                           title,
                           style: const TextStyle(
                             fontFamily: RLTokens.fontSerif,
+                            fontWeight: RLTokens.headingWeight,
                             fontSize: 21,
                             color: RLTokens.ink,
                             letterSpacing: -0.3,

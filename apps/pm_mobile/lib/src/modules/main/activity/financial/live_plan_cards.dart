@@ -17,6 +17,7 @@ import 'package:rentloop_manager/src/shared/widgets.dart';
 
 const _title = TextStyle(
   fontFamily: RLTokens.fontSerif,
+  fontWeight: RLTokens.headingWeight,
   fontSize: 18,
   color: RLTokens.ink,
 );

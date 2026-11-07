@@ -4433,6 +4433,12 @@ definitions:
       due_date:
         example: "2024-07-01T00:00:00Z"
         type: string
+      financial_account:
+        allOf:
+        - $ref: '#/definitions/transformations.OutputInvoiceFinancialAccount'
+        description: |-
+          Only when populated with FinancialAccount.TenantApplication; lets clients
+          name the payer of a bill that has no lease yet.
       financial_account_id:
         description: Present on account-backed invoices — the tenant ledger this bills
           against.
@@ -4518,6 +4524,26 @@ definitions:
       voided_reason:
         example: Associated expense was deleted
         type: string
+    type: object
+  transformations.OutputInvoiceApplicantReference:
+    properties:
+      first_name:
+        example: Ama
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      last_name:
+        example: Boateng
+        type: string
+    type: object
+  transformations.OutputInvoiceFinancialAccount:
+    properties:
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      tenant_application:
+        $ref: '#/definitions/transformations.OutputInvoiceApplicantReference'
     type: object
   transformations.OutputInvoiceLineItem:
     properties:

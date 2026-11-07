@@ -134,6 +134,7 @@ class _MembersScreenState extends State<MembersScreen> {
                         'Manage members',
                         style: TextStyle(
                           fontFamily: RLTokens.fontSerif,
+                          fontWeight: RLTokens.headingWeight,
                           fontSize: 25,
                           color: RLTokens.ink,
                           letterSpacing: -0.4,

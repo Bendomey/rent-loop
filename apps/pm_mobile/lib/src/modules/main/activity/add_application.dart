@@ -161,8 +161,10 @@ class _AddApplicationScreenState extends ConsumerState<AddApplicationScreen> {
           _errors.remove('gender');
         case 'marital':
           _marital = value;
+          _errors.remove('marital');
         case 'idType':
           _idType = value;
+          _errors.remove('idType');
       }
       _picker = null;
     });
@@ -219,17 +221,43 @@ class _AddApplicationScreenState extends ConsumerState<AddApplicationScreen> {
         if (email.isNotEmpty && !_emailPattern.hasMatch(email)) {
           errors['email'] = 'Enter a valid email.';
         }
+        if (_marital.isEmpty) errors['marital'] = 'Choose one.';
+      case 3:
+        if (_natCtrl.text.trim().isEmpty) {
+          errors['nationality'] = 'Enter a nationality.';
+        }
+        if (_idType.isEmpty) errors['idType'] = 'Choose one.';
+        if (_idNumCtrl.text.trim().isEmpty) {
+          errors['idNumber'] = 'Enter the ID number.';
+        }
       case 4:
-        final ec = _ecPhoneCtrl.text.trim();
-        if (ec.isNotEmpty && normalizePhone(ec) == null) {
+        if (_ecNameCtrl.text.trim().isEmpty) {
+          errors['ecName'] = 'Enter a name.';
+        }
+        if (_ecRelCtrl.text.trim().isEmpty) {
+          errors['ecRel'] = 'Enter a relationship.';
+        }
+        if (normalizePhone(_ecPhoneCtrl.text) == null) {
           errors['ecPhone'] = 'Enter a valid phone number.';
+        }
+        if (!_isStudent && _occupationCtrl.text.trim().isEmpty) {
+          errors['occupation'] = 'Enter an occupation.';
+        }
+        if (_employerCtrl.text.trim().isEmpty) {
+          errors['employer'] = _isStudent
+              ? 'Enter a school.'
+              : 'Enter an employer.';
+        }
+        if (_workAddrCtrl.text.trim().isEmpty) {
+          errors['workAddr'] = 'Enter an address.';
         }
     }
     setState(() {
       const keysByStep = {
         1: ['unit', 'phone'],
-        2: ['first', 'last', 'gender', 'dob', 'address', 'email'],
-        4: ['ecPhone'],
+        2: ['first', 'last', 'gender', 'dob', 'address', 'email', 'marital'],
+        3: ['nationality', 'idType', 'idNumber'],
+        4: ['ecName', 'ecRel', 'ecPhone', 'occupation', 'employer', 'workAddr'],
       };
       _errors.removeWhere((k, _) => (keysByStep[step] ?? []).contains(k));
       _errors.addAll(errors);
@@ -238,7 +266,7 @@ class _AddApplicationScreenState extends ConsumerState<AddApplicationScreen> {
   }
 
   int? _firstInvalidStep() {
-    for (final step in [1, 2, 4]) {
+    for (final step in [1, 2, 3, 4]) {
       if (!_validateStep(step)) return step;
     }
     return null;
@@ -249,7 +277,7 @@ class _AddApplicationScreenState extends ConsumerState<AddApplicationScreen> {
     _otherCtrl.text = t.otherNames ?? '';
     _lastCtrl.text = t.lastName ?? '';
     _emailCtrl.text = t.email ?? '';
-    if (t.phone != null) _phoneCtrl.text = t.phone!;
+    if (t.phone != null) _phoneCtrl.text = nationalDigits(t.phone!);
     _addressCtrl.text = t.currentAddress ?? '';
     _gender = applicationGenderLabel(t.gender) ?? '';
     _marital = applicationMaritalStatusLabel(t.maritalStatus) ?? '';
@@ -260,7 +288,7 @@ class _AddApplicationScreenState extends ConsumerState<AddApplicationScreen> {
     _idNumCtrl.text = t.idNumber ?? '';
     _ecNameCtrl.text = t.emergencyContactName ?? '';
     _ecRelCtrl.text = t.relationshipToEmergencyContact ?? '';
-    _ecPhoneCtrl.text = t.emergencyContactPhone ?? '';
+    _ecPhoneCtrl.text = nationalDigits(t.emergencyContactPhone ?? '');
     _employment = t.occupation == 'STUDENT' ? 'Student' : 'Worker';
     _occupationCtrl.text = t.occupation == 'STUDENT' ? '' : t.occupation ?? '';
     _employerCtrl.text = t.employer ?? '';
@@ -326,7 +354,7 @@ class _AddApplicationScreenState extends ConsumerState<AddApplicationScreen> {
         _prefill(tenant);
         _step = 5;
       } else {
-        _phoneCtrl.text = e164;
+        _phoneCtrl.text = nationalDigits(e164);
         _step = 2;
       }
     });
@@ -336,6 +364,8 @@ class _AddApplicationScreenState extends ConsumerState<AddApplicationScreen> {
     final invalid = _firstInvalidStep();
     if (invalid != null) {
       setState(() => _step = invalid);
+      FocusManager.instance.primaryFocus?.unfocus();
+      WidgetsBinding.instance.addPostFrameCallback((_) => _revealFirstError());
       return;
     }
     final unit = _unit!;
@@ -386,7 +416,11 @@ class _AddApplicationScreenState extends ConsumerState<AddApplicationScreen> {
   Future<void> _next() async {
     await Haptics.vibrate(HapticsType.selection);
     if (!mounted || _looking) return;
-    if (!_validateStep(_step)) return;
+    if (!_validateStep(_step)) {
+      FocusManager.instance.primaryFocus?.unfocus();
+      WidgetsBinding.instance.addPostFrameCallback((_) => _revealFirstError());
+      return;
+    }
     if (_step == 1) {
       if (_fillIn) {
         await _lookup();
@@ -400,6 +434,29 @@ class _AddApplicationScreenState extends ConsumerState<AddApplicationScreen> {
       return;
     }
     setState(() => _step = _step + 1);
+  }
+
+  void _revealFirstError() {
+    if (!mounted) return;
+    BuildContext? first;
+    void visit(Element e) {
+      if (first != null) return;
+      if (e.widget is _FieldError) {
+        first = e;
+        return;
+      }
+      e.visitChildren(visit);
+    }
+
+    (context as Element).visitChildren(visit);
+    final target = first;
+    if (target == null) return;
+    Scrollable.ensureVisible(
+      target,
+      alignment: 0.3,
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
+    );
   }
 
   void _prev() async {
@@ -533,6 +590,7 @@ class _AddApplicationScreenState extends ConsumerState<AddApplicationScreen> {
         natCtrl: _natCtrl,
         idType: _idType,
         idNumCtrl: _idNumCtrl,
+        errors: _errors,
         frontUrl: _idFrontUrl,
         backUrl: _idBackUrl,
         onFrontChanged: (u) => setState(() => _idFrontUrl = u),
@@ -544,7 +602,7 @@ class _AddApplicationScreenState extends ConsumerState<AddApplicationScreen> {
         ecNameCtrl: _ecNameCtrl,
         ecRelCtrl: _ecRelCtrl,
         ecPhoneCtrl: _ecPhoneCtrl,
-        ecPhoneError: _errors['ecPhone'],
+        errors: _errors,
         employment: _employment,
         occupationCtrl: _occupationCtrl,
         employerCtrl: _employerCtrl,
@@ -1021,7 +1079,7 @@ class _Step2 extends StatelessWidget {
             Expanded(
               child: _FormField(
                 label: 'Marital status',
-                required: false,
+                error: errors['marital'],
                 child: _SelectField(
                   value: marital,
                   placeholder: 'Select',
@@ -1082,6 +1140,7 @@ class _Step3 extends StatelessWidget {
     required this.natCtrl,
     required this.idType,
     required this.idNumCtrl,
+    required this.errors,
     required this.frontUrl,
     required this.backUrl,
     required this.onFrontChanged,
@@ -1090,6 +1149,7 @@ class _Step3 extends StatelessWidget {
     required this.onOpenIdTypePicker,
   });
   final TextEditingController natCtrl, idNumCtrl;
+  final Map<String, String> errors;
   final String idType;
   final String? frontUrl, backUrl;
   final ValueChanged<String?> onFrontChanged, onBackChanged;
@@ -1112,7 +1172,7 @@ class _Step3 extends StatelessWidget {
             Expanded(
               child: _FormField(
                 label: 'Nationality',
-                required: false,
+                error: errors['nationality'],
                 child: _InputField(controller: natCtrl, placeholder: 'Country'),
               ),
             ),
@@ -1120,7 +1180,7 @@ class _Step3 extends StatelessWidget {
             Expanded(
               child: _FormField(
                 label: 'ID type',
-                required: false,
+                error: errors['idType'],
                 child: _SelectField(
                   value: idType,
                   placeholder: 'Select',
@@ -1133,7 +1193,7 @@ class _Step3 extends StatelessWidget {
         const SizedBox(height: 16),
         _FormField(
           label: 'ID number',
-          required: false,
+          error: errors['idNumber'],
           child: _InputField(controller: idNumCtrl, placeholder: 'ID number'),
         ),
         const SizedBox(height: 24),
@@ -1168,7 +1228,7 @@ class _Step4 extends StatelessWidget {
     required this.ecNameCtrl,
     required this.ecRelCtrl,
     required this.ecPhoneCtrl,
-    required this.ecPhoneError,
+    required this.errors,
     required this.employment,
     required this.occupationCtrl,
     required this.employerCtrl,
@@ -1184,7 +1244,7 @@ class _Step4 extends StatelessWidget {
       occupationCtrl,
       employerCtrl,
       workAddrCtrl;
-  final String? ecPhoneError;
+  final Map<String, String> errors;
   final String employment;
   final String? proofUrl;
   final ValueChanged<String?> onProofChanged;
@@ -1205,7 +1265,7 @@ class _Step4 extends StatelessWidget {
         const _SubHead(title: 'Emergency contact'),
         _FormField(
           label: 'Full name',
-          required: false,
+          error: errors['ecName'],
           child: _InputField(
             controller: ecNameCtrl,
             placeholder: 'Enter full name',
@@ -1214,7 +1274,7 @@ class _Step4 extends StatelessWidget {
         const SizedBox(height: 16),
         _FormField(
           label: 'Relationship',
-          required: false,
+          error: errors['ecRel'],
           child: _InputField(
             controller: ecRelCtrl,
             placeholder: 'e.g. Sibling, Parent, Friend',
@@ -1223,8 +1283,7 @@ class _Step4 extends StatelessWidget {
         const SizedBox(height: 16),
         _FormField(
           label: 'Phone number',
-          required: false,
-          error: ecPhoneError,
+          error: errors['ecPhone'],
           child: _PhoneField(controller: ecPhoneCtrl),
         ),
         const SizedBox(height: 26),
@@ -1260,7 +1319,7 @@ class _Step4 extends StatelessWidget {
         if (!isStudent) ...[
           _FormField(
             label: 'Occupation',
-            required: false,
+            error: errors['occupation'],
             child: _InputField(
               controller: occupationCtrl,
               placeholder: 'e.g. Accountant',
@@ -1270,7 +1329,7 @@ class _Step4 extends StatelessWidget {
         ],
         _FormField(
           label: isStudent ? 'School' : 'Employer',
-          required: false,
+          error: errors['employer'],
           child: _InputField(
             controller: employerCtrl,
             placeholder: isStudent
@@ -1281,7 +1340,7 @@ class _Step4 extends StatelessWidget {
         const SizedBox(height: 16),
         _FormField(
           label: 'Address',
-          required: false,
+          error: errors['workAddr'],
           child: _InputField(
             controller: workAddrCtrl,
             placeholder: 'e.g. 123 Business St, City',
@@ -1537,6 +1596,7 @@ class _StepHead extends StatelessWidget {
           title,
           style: const TextStyle(
             fontFamily: RLTokens.fontSerif,
+            fontWeight: RLTokens.headingWeight,
             fontSize: 25,
             color: RLTokens.ink,
             letterSpacing: -0.4,
@@ -1576,6 +1636,7 @@ class _SubHead extends StatelessWidget {
             title,
             style: const TextStyle(
               fontFamily: RLTokens.fontSerif,
+              fontWeight: RLTokens.headingWeight,
               fontSize: 18,
               color: RLTokens.ink,
               letterSpacing: -0.2,
@@ -1654,18 +1715,25 @@ class _FormField extends StatelessWidget {
         _FieldLabel(text: label, required: required),
         const SizedBox(height: 8),
         child,
-        if (error != null) ...[
-          const SizedBox(height: 6),
-          Text(
-            error!,
-            style: const TextStyle(
-              fontFamily: RLTokens.fontSans,
-              fontSize: 12,
-              color: RLTokens.danger,
-            ),
-          ),
-        ],
+        if (error != null) ...[const SizedBox(height: 6), _FieldError(error!)],
       ],
+    );
+  }
+}
+
+class _FieldError extends StatelessWidget {
+  const _FieldError(this.message);
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      message,
+      style: const TextStyle(
+        fontFamily: RLTokens.fontSans,
+        fontSize: 12,
+        color: RLTokens.danger,
+      ),
     );
   }
 }
@@ -2189,6 +2257,7 @@ class _PickerSheet extends StatelessWidget {
                             title,
                             style: const TextStyle(
                               fontFamily: RLTokens.fontSerif,
+                              fontWeight: RLTokens.headingWeight,
                               fontSize: 20,
                               color: RLTokens.ink,
                               letterSpacing: -0.3,
@@ -2411,6 +2480,7 @@ class _InviteTenantSheetState extends ConsumerState<InviteTenantSheet> {
                             'Send ${widget.unit.name} setup link to the tenant',
                             style: const TextStyle(
                               fontFamily: RLTokens.fontSerif,
+                              fontWeight: RLTokens.headingWeight,
                               fontSize: 21,
                               color: RLTokens.ink,
                               letterSpacing: -0.3,

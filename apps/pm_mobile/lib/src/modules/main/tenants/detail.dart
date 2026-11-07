@@ -163,6 +163,7 @@ class _Hero extends StatelessWidget {
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontFamily: RLTokens.fontSerif,
+                fontWeight: RLTokens.headingWeight,
                 fontSize: 24,
                 color: RLTokens.ink,
               ),
@@ -287,6 +288,7 @@ class _StatCard extends StatelessWidget {
             value,
             style: TextStyle(
               fontFamily: RLTokens.fontSerif,
+              fontWeight: RLTokens.headingWeight,
               fontSize: 24,
               color: valueColor,
               letterSpacing: -0.4,

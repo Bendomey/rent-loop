@@ -123,42 +123,50 @@ void main() {
     addTearDown(container.dispose);
 
     await expectLater(
-      container.read(homeStatsProvider.future),
+      container.read(homeChargesProvider(null).future),
       throwsA(anything),
     );
     fail = false;
-    container.invalidate(homeStatsProvider);
-    await container.read(homeStatsProvider.future);
+    container.invalidate(homeChargesProvider);
+    await container.read(homeChargesProvider(null).future);
 
     expect(analytics.clients.length, lessThanOrEqualTo(3));
   });
 
-  test('token fetched once across homeStats + activityCounts', () async {
+  test('token fetched once across Home slices + activityCounts', () async {
     final analytics = _FakeAnalytics(_validToken);
     final container = _container(analytics, _FakeCube());
     addTearDown(container.dispose);
 
-    await container.read(homeStatsProvider.future);
+    await Future.wait([
+      container.read(homeChargesProvider(null).future),
+      container.read(homePaymentsProvider(null).future),
+      container.read(homeUnitsProvider('p1').future),
+    ]);
     await container.read(activityCountsProvider.future);
 
     expect(analytics.clients, ['c1']);
   });
 
-  test('homeStats is cached across re-reads until invalidated', () async {
+  test('Home slices are cached across re-reads until invalidated', () async {
     final cube = _FakeCube();
     final container = _container(_FakeAnalytics(_validToken), cube);
     addTearDown(container.dispose);
 
-    var sub = container.listen(homeStatsProvider, (_, __) {});
-    await container.read(homeStatsProvider.future);
+    var sub = container.listen(homeChargesProvider(null), (_, __) {});
+    await container.read(homeChargesProvider(null).future);
     sub.close();
-    sub = container.listen(homeStatsProvider, (_, __) {});
-    await container.read(homeStatsProvider.future);
-    expect(cube.queries, hasLength(3));
+    sub = container.listen(homeChargesProvider(null), (_, __) {});
+    await container.read(homeChargesProvider(null).future);
+    await container.read(homeChargesProvider('p1').future);
+    expect(cube.queries, hasLength(2));
 
-    container.invalidate(homeStatsProvider);
-    await container.read(homeStatsProvider.future);
-    expect(cube.queries, hasLength(6));
+    for (final p in homeStatsProviders) {
+      container.invalidate(p);
+    }
+    await container.read(homeChargesProvider(null).future);
+    await container.read(homeChargesProvider('p1').future);
+    expect(cube.queries, hasLength(4));
     sub.close();
   });
 
@@ -220,7 +228,7 @@ void main() {
     final container = _container(analytics, cube);
     addTearDown(container.dispose);
 
-    await container.read(homeStatsProvider.future);
+    await container.read(homeChargesProvider(null).future);
 
     expect(analytics.clients, hasLength(2));
   });
@@ -232,25 +240,25 @@ void main() {
     addTearDown(container.dispose);
 
     await expectLater(
-      container.read(homeStatsProvider.future),
+      container.read(homeChargesProvider(null).future),
       throwsA(isA<Exception>()),
     );
     expect(analytics.clients, hasLength(2));
   });
 
-  test('switching workspace refetches homeStats', () async {
+  test('switching workspace refetches Home slices', () async {
     final analytics = _FakeAnalytics(_validToken);
     final cube = _FakeCube();
     final container = _container(analytics, cube);
     addTearDown(container.dispose);
-    container.listen(homeStatsProvider, (_, __) {});
+    container.listen(homeLeasesProvider(null), (_, __) {});
 
-    final first = await container.read(homeStatsProvider.future);
+    final first = await container.read(homeLeasesProvider(null).future);
     expect(first.clientId, 'c1');
 
     (container.read(currentWorkspaceNotifierProvider.notifier) as _Workspace)
         .switchTo(_cu('c2'));
-    final second = await container.read(homeStatsProvider.future);
+    final second = await container.read(homeLeasesProvider(null).future);
 
     expect(second.clientId, 'c2');
     expect(analytics.clients, ['c1', 'c2']);

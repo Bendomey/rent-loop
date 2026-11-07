@@ -162,6 +162,7 @@ Future<void> showChecklistSheet(BuildContext context) {
     backgroundColor: Colors.transparent,
     barrierColor: const Color.fromRGBO(17, 17, 16, 0.38),
     isScrollControlled: true,
+    useSafeArea: true,
     builder: (_) => _ChecklistSheet(
       onNavigate: (route) {
         Navigator.of(context).pop();
@@ -222,6 +223,7 @@ class _ChecklistSheet extends ConsumerWidget {
                           'Complete your profile',
                           style: TextStyle(
                             fontFamily: RLTokens.fontSerif,
+                            fontWeight: RLTokens.headingWeight,
                             fontSize: 23,
                             letterSpacing: -0.4,
                             color: RLTokens.ink,

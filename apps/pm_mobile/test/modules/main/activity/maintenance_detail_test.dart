@@ -132,7 +132,7 @@ void main() {
     expect(find.text('Benjamin Domey'), findsOneWidget);
     expect(find.text('Medium'), findsOneWidget);
     expect(find.text('Electrical'), findsOneWidget);
-    expect(find.text('Tenant Visible'), findsOneWidget);
+    expect(find.text('Tenant can see this'), findsOneWidget);
     expect(find.text("Domey's Residence"), findsOneWidget);
     expect(find.text('View lease'), findsOneWidget);
   });
@@ -144,7 +144,7 @@ void main() {
       'Gideon Bempong',
       'Benjamin Domey',
       'Electrical',
-      'Tenant Visible',
+      'Tenant can see this',
     ].map((t) => tester.getBottomRight(find.text(t)).dx).toList();
     for (final edge in edges) {
       expect(edge, moreOrLessEquals(edges.first, epsilon: 0.5));

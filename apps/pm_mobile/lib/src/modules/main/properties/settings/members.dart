@@ -111,6 +111,7 @@ class PropertyMembersScreen extends StatelessWidget {
                   'Manage members',
                   style: TextStyle(
                     fontFamily: RLTokens.fontSerif,
+                    fontWeight: RLTokens.headingWeight,
                     fontSize: 24,
                     color: RLTokens.ink,
                     letterSpacing: -0.4,

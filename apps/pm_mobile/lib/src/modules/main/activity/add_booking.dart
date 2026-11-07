@@ -216,6 +216,7 @@ class _AddBookingScreenState extends State<AddBookingScreen> {
                               unitName.isEmpty ? '—' : unitName,
                               style: const TextStyle(
                                 fontFamily: RLTokens.fontSerif,
+                                fontWeight: RLTokens.headingWeight,
                                 fontSize: 20,
                                 color: RLTokens.ink,
                                 letterSpacing: -0.3,
@@ -351,6 +352,7 @@ class _AddBookingScreenState extends State<AddBookingScreen> {
                         'Stay details',
                         style: TextStyle(
                           fontFamily: RLTokens.fontSerif,
+                          fontWeight: RLTokens.headingWeight,
                           fontSize: 19,
                           color: RLTokens.ink,
                           letterSpacing: -0.3,
@@ -417,6 +419,7 @@ class _AddBookingScreenState extends State<AddBookingScreen> {
                                       '${_kMonths[_viewMonth]} $_viewYear',
                                       style: const TextStyle(
                                         fontFamily: RLTokens.fontSerif,
+                                        fontWeight: RLTokens.headingWeight,
                                         fontSize: 17,
                                         color: RLTokens.ink,
                                       ),
@@ -547,6 +550,7 @@ class _AddBookingScreenState extends State<AddBookingScreen> {
                               'Guest information',
                               style: TextStyle(
                                 fontFamily: RLTokens.fontSerif,
+                                fontWeight: RLTokens.headingWeight,
                                 fontSize: 19,
                                 color: RLTokens.ink,
                                 letterSpacing: -0.3,
@@ -845,6 +849,7 @@ class _StayStat extends StatelessWidget {
           v,
           style: const TextStyle(
             fontFamily: RLTokens.fontSerif,
+            fontWeight: RLTokens.headingWeight,
             fontSize: 17,
             color: RLTokens.ink,
             letterSpacing: -0.2,
@@ -1369,6 +1374,7 @@ class _FindGuestSheetState extends State<_FindGuestSheet> {
                               'Find existing guest',
                               style: TextStyle(
                                 fontFamily: RLTokens.fontSerif,
+                                fontWeight: RLTokens.headingWeight,
                                 fontSize: 20,
                                 color: RLTokens.ink,
                                 letterSpacing: -0.3,
@@ -1661,6 +1667,7 @@ class _NewBookingTypeSheet extends StatelessWidget {
                         'New booking',
                         style: TextStyle(
                           fontFamily: RLTokens.fontSerif,
+                          fontWeight: RLTokens.headingWeight,
                           fontSize: 20,
                           color: RLTokens.ink,
                           letterSpacing: -0.3,
@@ -1780,6 +1787,7 @@ class _GuestLinkSheet extends StatelessWidget {
                                   'Guest booking link',
                                   style: TextStyle(
                                     fontFamily: RLTokens.fontSerif,
+                                    fontWeight: RLTokens.headingWeight,
                                     fontSize: 20,
                                     color: RLTokens.ink,
                                     letterSpacing: -0.3,
@@ -1994,6 +2002,7 @@ class _PickerSheet extends StatelessWidget {
                             title,
                             style: const TextStyle(
                               fontFamily: RLTokens.fontSerif,
+                              fontWeight: RLTokens.headingWeight,
                               fontSize: 20,
                               color: RLTokens.ink,
                               letterSpacing: -0.3,

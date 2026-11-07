@@ -178,6 +178,7 @@ class _GuestCard extends StatelessWidget {
                   b.guest,
                   style: const TextStyle(
                     fontFamily: RLTokens.fontSerif,
+                    fontWeight: RLTokens.headingWeight,
                     fontSize: 20,
                     color: RLTokens.ink,
                     height: 1.1,
@@ -239,6 +240,7 @@ class _StayCard extends StatelessWidget {
                   b.inDate,
                   style: const TextStyle(
                     fontFamily: RLTokens.fontSerif,
+                    fontWeight: RLTokens.headingWeight,
                     fontSize: 20,
                     color: RLTokens.ink,
                   ),
@@ -285,6 +287,7 @@ class _StayCard extends StatelessWidget {
                   b.outDate,
                   style: const TextStyle(
                     fontFamily: RLTokens.fontSerif,
+                    fontWeight: RLTokens.headingWeight,
                     fontSize: 20,
                     color: RLTokens.ink,
                   ),

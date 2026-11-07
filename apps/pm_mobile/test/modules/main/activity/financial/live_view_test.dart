@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:rentloop_manager/src/shared/widgets.dart';
 import 'package:rentloop_manager/src/lib/financial/cadence.dart';
 import 'package:rentloop_manager/src/repository/api_state.dart';
 import 'package:rentloop_manager/src/repository/models/financial_account_model.dart';
@@ -329,8 +330,7 @@ void main() {
     );
   });
 
-  const paidAlready =
-      'Already been paid? Record it now — the first bill goes out tonight.';
+  final paidAlready = find.textContaining('Already been paid?');
 
   Map<String, dynamic> dueSoon() => _charge(
     'soon',
@@ -348,24 +348,25 @@ void main() {
       detail: account(extra: [dueSoon()], billedFee: false),
     );
 
-    expect(find.text(paidAlready), findsOneWidget);
-    expect(find.text('Ama paid me'), findsNWidgets(2));
-
-    final cardButton = find.descendant(
-      of: find.byKey(const ValueKey('paid-already')),
-      matching: find.text('Ama paid me'),
+    expect(paidAlready, findsOneWidget);
+    expect(
+      find.textContaining('before the first bill goes out tonight'),
+      findsOne,
     );
-    await tester.ensureVisible(cardButton);
-    await tester.pump();
-    await tester.tap(cardButton);
-    await tester.pumpAndSettle();
-    expect(find.text('What did Ama pay for?'), findsOneWidget);
+    expect(find.text('Ama paid me'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('paid-already')),
+        matching: find.byType(RLBtn),
+      ),
+      findsNothing,
+    );
   });
 
   testWidgets('no prepaid prompt when nothing is due soon', (tester) async {
     await pumpLive(tester);
 
-    expect(find.text(paidAlready), findsNothing);
+    expect(paidAlready, findsNothing);
   });
 
   testWidgets('staff never see the prepaid prompt', (tester) async {
@@ -375,7 +376,13 @@ void main() {
       roles: const {'p1': 'STAFF'},
     );
 
-    expect(find.text(paidAlready), findsNothing);
+    expect(paidAlready, findsNothing);
+  });
+
+  testWidgets('the rent row says its dates are due dates', (tester) async {
+    await pumpLive(tester);
+
+    expect(find.text('Due 1 Jan 2030 to 1 Jun 2030'), findsOneWidget);
   });
 
   testWidgets('a refund sits apart from the rent count', (tester) async {

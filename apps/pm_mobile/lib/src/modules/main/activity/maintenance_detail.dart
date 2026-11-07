@@ -46,6 +46,7 @@ class _MaintenanceDetailScreenState
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(maintenanceRequestStatusNotifierProvider, (_, _) {});
     final provider = maintenanceRequestDetailProvider(
       widget.id,
       widget.propertyId,
@@ -294,6 +295,7 @@ class _HeroCard extends StatelessWidget {
             request.title,
             style: const TextStyle(
               fontFamily: RLTokens.fontSerif,
+              fontWeight: RLTokens.headingWeight,
               fontSize: 22,
               color: RLTokens.ink,
               letterSpacing: -0.3,

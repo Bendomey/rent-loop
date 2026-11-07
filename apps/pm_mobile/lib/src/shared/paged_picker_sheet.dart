@@ -30,6 +30,7 @@ Future<List<T>?> showPagedPickerSheet<T>({
   return showModalBottomSheet<List<T>>(
     context: context,
     isScrollControlled: true,
+    useSafeArea: true,
     backgroundColor: Colors.transparent,
     builder: (_) => _PagedPickerSheet<T>(
       title: title,
@@ -161,6 +162,7 @@ class _PagedPickerSheetState<T> extends ConsumerState<_PagedPickerSheet<T>> {
                       widget.title,
                       style: const TextStyle(
                         fontFamily: RLTokens.fontSerif,
+                        fontWeight: RLTokens.headingWeight,
                         fontSize: 20,
                         color: RLTokens.ink,
                         letterSpacing: -0.3,

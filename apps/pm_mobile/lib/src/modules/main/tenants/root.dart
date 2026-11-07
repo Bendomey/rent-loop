@@ -274,9 +274,12 @@ class _TenantsScreenState extends ConsumerState<TenantsScreen> {
                       ),
                     )
                   else if (showEmpty)
-                    const SliverFillRemaining(
+                    SliverFillRemaining(
                       hasScrollBody: false,
-                      child: _EmptyTenantsList(),
+                      child: TenantsEmptyState(
+                        filtered:
+                            _query.search != null || _query.status != null,
+                      ),
                     )
                   else ...[
                     SliverToBoxAdapter(
@@ -451,8 +454,10 @@ class _TenantsListSkeleton extends StatelessWidget {
 
 // ── Empty state ───────────────────────────────────────────────────────────────
 
-class _EmptyTenantsList extends StatelessWidget {
-  const _EmptyTenantsList();
+class TenantsEmptyState extends StatelessWidget {
+  const TenantsEmptyState({super.key, required this.filtered});
+
+  final bool filtered;
 
   @override
   Widget build(BuildContext context) {
@@ -477,7 +482,7 @@ class _EmptyTenantsList extends StatelessWidget {
             ),
             const SizedBox(height: 11),
             Text(
-              'No tenants found',
+              filtered ? 'No tenants found' : 'No tenants yet',
               style: TextStyle(
                 fontFamily: RLTokens.fontSans,
                 fontSize: 15,
@@ -488,7 +493,9 @@ class _EmptyTenantsList extends StatelessWidget {
             ),
             const SizedBox(height: 3),
             Text(
-              'Try a different search or filter.',
+              filtered
+                  ? 'Try a different search or filter.'
+                  : 'Add your first tenant.',
               style: TextStyle(
                 fontFamily: RLTokens.fontSans,
                 fontSize: 12.5,

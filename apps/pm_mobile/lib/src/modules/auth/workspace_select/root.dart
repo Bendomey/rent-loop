@@ -85,6 +85,7 @@ class WorkspaceSelectScreen extends ConsumerWidget {
                 'Choose a workspace',
                 style: TextStyle(
                   fontFamily: RLTokens.fontSerif,
+                  fontWeight: RLTokens.headingWeight,
                   fontSize: 30,
                   letterSpacing: -0.6,
                   color: RLTokens.ink,
@@ -219,6 +220,7 @@ class _WorkspaceCard extends StatelessWidget {
                       name,
                       style: TextStyle(
                         fontFamily: RLTokens.fontSerif,
+                        fontWeight: RLTokens.headingWeight,
                         fontSize: 18,
                         color: RLTokens.ink,
                         height: 1.15,
@@ -287,6 +289,7 @@ class _WsTile extends StatelessWidget {
           initial,
           style: TextStyle(
             fontFamily: RLTokens.fontSerif,
+            fontWeight: RLTokens.headingWeight,
             fontSize: size * 0.36,
             color: RLTokens.crimson,
             letterSpacing: 0.3,

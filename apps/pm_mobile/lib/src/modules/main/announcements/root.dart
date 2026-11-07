@@ -236,6 +236,7 @@ class _AnnCard extends StatelessWidget {
                     a.title,
                     style: const TextStyle(
                       fontFamily: RLTokens.fontSerif,
+                      fontWeight: RLTokens.headingWeight,
                       fontSize: 17,
                       color: RLTokens.ink,
                       height: 1.2,
@@ -378,6 +379,7 @@ class _Empty extends StatelessWidget {
               'No announcements yet.',
               style: TextStyle(
                 fontFamily: RLTokens.fontSerif,
+                fontWeight: RLTokens.headingWeight,
                 fontSize: 18,
                 color: RLTokens.ink,
               ),

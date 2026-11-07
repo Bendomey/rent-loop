@@ -101,6 +101,7 @@ class _BillingScreenState extends State<BillingScreen> {
                     'Manage billing',
                     style: TextStyle(
                       fontFamily: RLTokens.fontSerif,
+                      fontWeight: RLTokens.headingWeight,
                       fontSize: 25,
                       color: RLTokens.ink,
                       letterSpacing: -0.4,
@@ -144,6 +145,7 @@ class _BillingScreenState extends State<BillingScreen> {
                                   'Growth',
                                   style: TextStyle(
                                     fontFamily: RLTokens.fontSerif,
+                                    fontWeight: RLTokens.headingWeight,
                                     fontSize: 22,
                                     color: Colors.white,
                                   ),
@@ -295,6 +297,7 @@ class _InvoiceCard extends StatelessWidget {
             '${currencySymbol(defaultCurrencyCode)} ${invoice.amount}',
             style: const TextStyle(
               fontFamily: RLTokens.fontSerif,
+              fontWeight: RLTokens.headingWeight,
               fontSize: 19,
               color: RLTokens.ink,
               letterSpacing: -0.3,

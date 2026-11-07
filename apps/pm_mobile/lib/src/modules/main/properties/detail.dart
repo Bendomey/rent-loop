@@ -7,6 +7,7 @@ import 'package:shimmer/shimmer.dart';
 
 import 'package:rentloop_manager/src/api/unit_api.dart';
 import 'package:rentloop_manager/src/lib/money.dart';
+import 'package:rentloop_manager/src/lib/property_location.dart';
 import 'package:rentloop_manager/src/lib/property_status.dart';
 import 'package:rentloop_manager/src/lib/unit_status.dart';
 import 'package:rentloop_manager/src/repository/models/property_model.dart';
@@ -33,41 +34,50 @@ class PropertyDetailScreen extends ConsumerWidget {
     final showSkeleton = !propertyAsync.hasValue && propertyAsync.isLoading;
     final showError = propertyAsync.hasError && !propertyAsync.hasValue;
 
+    Future<void> back() async {
+      await Haptics.vibrate(HapticsType.selection);
+      if (context.mounted) Navigator.of(context).pop();
+    }
+
+    if (!showSkeleton && !showError) {
+      return Scaffold(
+        backgroundColor: RLTokens.surface,
+        body: RefreshIndicator(
+          color: RLTokens.crimson,
+          edgeOffset: MediaQuery.of(context).padding.top,
+          onRefresh: () async {
+            await Future.wait([
+              ref.refresh(propertyDetailProvider(id).future),
+              ref.refresh(propertyStatsProvider(id).future),
+              ref.refresh(propertyUnitsPreviewProvider(id).future),
+            ]);
+          },
+          child: _DetailContent(
+            id: id,
+            property: propertyAsync.value!,
+            statsAsync: statsAsync,
+            unitsAsync: unitsAsync,
+            onBack: back,
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: RLTokens.surface,
       body: Column(
         children: [
           RLBackHeader(
             title: propertyAsync.valueOrNull?.name ?? '',
-            onBack: () async {
-              await Haptics.vibrate(HapticsType.selection);
-              if (context.mounted) Navigator.of(context).pop();
-            },
+            onBack: back,
           ),
           Expanded(
             child: showSkeleton
                 ? const _DetailSkeleton()
-                : showError
-                ? Padding(
+                : Padding(
                     padding: const EdgeInsets.all(RLTokens.gutter),
                     child: RLSectionError(
                       onRetry: () => ref.invalidate(propertyDetailProvider(id)),
-                    ),
-                  )
-                : RefreshIndicator(
-                    color: RLTokens.crimson,
-                    onRefresh: () async {
-                      await Future.wait([
-                        ref.refresh(propertyDetailProvider(id).future),
-                        ref.refresh(propertyStatsProvider(id).future),
-                        ref.refresh(propertyUnitsPreviewProvider(id).future),
-                      ]);
-                    },
-                    child: _DetailContent(
-                      id: id,
-                      property: propertyAsync.value!,
-                      statsAsync: statsAsync,
-                      unitsAsync: unitsAsync,
                     ),
                   ),
           ),
@@ -118,8 +128,10 @@ class _DetailContent extends ConsumerWidget {
     required this.property,
     required this.statsAsync,
     required this.unitsAsync,
+    required this.onBack,
   });
 
+  final VoidCallback onBack;
   final String id;
   final PropertyModel property;
   final AsyncValue<PropertyStats> statsAsync;
@@ -132,16 +144,16 @@ class _DetailContent extends ConsumerWidget {
     final modes = property.modes ?? const [];
     final isLease = modes.contains('LEASE');
     final isBooking = modes.contains('BOOKING');
-    final location = [
-      property.address,
-      property.city,
-    ].whereType<String>().where((v) => v.isNotEmpty).join(', ');
+    final location = propertyLocation(property.address, property.city);
 
     return CustomScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
-        SliverToBoxAdapter(
-          child: _HeroCarousel(
+        RLHeroSliverAppBar(
+          title: property.name,
+          color: _HeroPlaceholder._bg(property.type),
+          onBack: onBack,
+          background: _HeroCarousel(
             images: property.images ?? const [],
             type: property.type,
             name: property.name,
@@ -319,9 +331,7 @@ class _HeroCarouselState extends State<_HeroCarousel> {
     final images = widget.images;
     final typeLabel = propertyTypeLabel(widget.type);
 
-    return SizedBox(
-      height: 170,
-      width: double.infinity,
+    return SizedBox.expand(
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -381,6 +391,7 @@ class _HeroCarouselState extends State<_HeroCarousel> {
                   widget.name,
                   style: TextStyle(
                     fontFamily: RLTokens.fontSerif,
+                    fontWeight: FontWeight.w800,
                     fontSize: 22,
                     color: Colors.white.withAlpha(230),
                     letterSpacing: -0.3,
@@ -468,6 +479,7 @@ class _StatsCard extends StatelessWidget {
                   '${stats.occupancyPercent.toInt()}%',
                   style: const TextStyle(
                     fontFamily: RLTokens.fontSerif,
+                    fontWeight: RLTokens.headingWeight,
                     fontSize: 23,
                     color: RLTokens.ink,
                     height: 1,
@@ -670,13 +682,18 @@ class _ManageCell extends StatelessWidget {
             children: [
               Icon(action.icon, size: 21, color: RLTokens.crimson),
               const Spacer(),
-              Text(
-                action.label,
-                style: TextStyle(
-                  fontFamily: RLTokens.fontSans,
-                  fontSize: 13,
-                  fontWeight: RLTokens.semibold,
-                  color: RLTokens.ink,
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  action.label,
+                  maxLines: 1,
+                  style: TextStyle(
+                    fontFamily: RLTokens.fontSans,
+                    fontSize: 13,
+                    fontWeight: RLTokens.semibold,
+                    color: RLTokens.ink,
+                  ),
                 ),
               ),
               if (action.count != null)
@@ -762,6 +779,7 @@ class _SingleUnitCard extends StatelessWidget {
                           unit.name,
                           style: TextStyle(
                             fontFamily: RLTokens.fontSerif,
+                            fontWeight: RLTokens.headingWeight,
                             fontSize: 17,
                             color: RLTokens.ink,
                             letterSpacing: -0.3,

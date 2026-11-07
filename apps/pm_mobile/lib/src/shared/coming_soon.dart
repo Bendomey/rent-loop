@@ -36,6 +36,7 @@ class RLComingSoon extends StatelessWidget {
                     'Coming soon',
                     style: TextStyle(
                       fontFamily: RLTokens.fontSerif,
+                      fontWeight: RLTokens.headingWeight,
                       fontSize: 20,
                       color: RLTokens.muted,
                     ),

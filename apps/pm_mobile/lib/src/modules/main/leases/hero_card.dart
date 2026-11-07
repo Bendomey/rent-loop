@@ -71,6 +71,7 @@ class LeaseHeroCard extends ConsumerWidget {
                     statusLabel,
                     tone: statusTone(statusLabel),
                     large: true,
+                    onImage: true,
                   ),
                 ),
               ],

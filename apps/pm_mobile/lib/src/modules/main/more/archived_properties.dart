@@ -164,6 +164,7 @@ class _ArchivedPropertiesScreenState
                         'Archived properties',
                         style: TextStyle(
                           fontFamily: RLTokens.fontSerif,
+                          fontWeight: RLTokens.headingWeight,
                           fontSize: 25,
                           color: RLTokens.ink,
                           letterSpacing: -0.4,
@@ -380,6 +381,7 @@ class _ArchivedCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               fontFamily: RLTokens.fontSerif,
+                              fontWeight: RLTokens.headingWeight,
                               fontSize: 16.5,
                               color: RLTokens.ink,
                               height: 1.15,
@@ -496,6 +498,7 @@ class _RestoreSheet extends ConsumerWidget {
                     'Restore ${property.name}?',
                     style: const TextStyle(
                       fontFamily: RLTokens.fontSerif,
+                      fontWeight: RLTokens.headingWeight,
                       fontSize: 22,
                       color: RLTokens.ink,
                       letterSpacing: -0.3,

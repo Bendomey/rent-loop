@@ -38,6 +38,10 @@ type OutputInvoice struct {
 	// Present on account-backed invoices — the tenant ledger this bills against.
 	FinancialAccountID *string `json:"financial_account_id,omitempty" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
 
+	// Only when populated with FinancialAccount.TenantApplication; lets clients
+	// name the payer of a bill that has no lease yet.
+	FinancialAccount *OutputInvoiceFinancialAccount `json:"financial_account,omitempty"`
+
 	ContextLeaseTerminationID *string                 `json:"context_lease_termination_id,omitempty" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
 	ContextLeaseTermination   *OutputLeaseTermination `json:"context_lease_termination,omitempty"`
 
@@ -92,6 +96,7 @@ func DBInvoiceToRest(i *models.Invoice) any {
 		"payee_tenant":                   DBTenantToRest(i.PayeeTenant),
 		"context_type":                   i.ContextType,
 		"financial_account_id":           i.FinancialAccountID,
+		"financial_account":              dbInvoiceFinancialAccountToRest(i.FinancialAccount),
 		"context_lease_termination_id":   i.ContextLeaseTerminationID,
 		"context_lease_termination":      DBAdminLeaseTerminationToRest(i.ContextLeaseTermination),
 		"context_maintenance_request_id": i.ContextMaintenanceRequestID,
@@ -115,6 +120,34 @@ func DBInvoiceToRest(i *models.Invoice) any {
 	}
 
 	return data
+}
+
+type OutputInvoiceFinancialAccount struct {
+	ID                string                           `json:"id"                 example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
+	TenantApplication *OutputInvoiceApplicantReference `json:"tenant_application,omitempty"`
+}
+
+type OutputInvoiceApplicantReference struct {
+	ID        string  `json:"id"                   example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
+	FirstName *string `json:"first_name,omitempty" example:"Ama"`
+	LastName  *string `json:"last_name,omitempty"  example:"Boateng"`
+}
+
+func dbInvoiceFinancialAccountToRest(a *models.FinancialAccount) any {
+	if a == nil || a.ID == uuid.Nil {
+		return nil
+	}
+
+	out := map[string]any{"id": a.ID}
+	if a.TenantApplication.ID != uuid.Nil {
+		out["tenant_application"] = map[string]any{
+			"id":         a.TenantApplication.ID,
+			"first_name": a.TenantApplication.FirstName,
+			"last_name":  a.TenantApplication.LastName,
+		}
+	}
+
+	return out
 }
 
 func DBInvoiceLineItemsToRest(items []models.InvoiceLineItem) []any {

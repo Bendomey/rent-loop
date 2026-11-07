@@ -15,12 +15,22 @@ class LeasesQuery {
   final String? status; // full dotted Lease.Status.* value, or null for "all"
   final String? propertyId;
 
-  const LeasesQuery({this.search, this.status, this.propertyId});
+  /// Active, not yet renewed, and inside the expiring window for the length
+  /// of the stay — the same leases the Home "ending soon" count reads.
+  final bool endingSoon;
+
+  const LeasesQuery({
+    this.search,
+    this.status,
+    this.propertyId,
+    this.endingSoon = false,
+  });
 
   LeasesQuery copyWith({
     String? search,
     String? status,
     String? propertyId,
+    bool? endingSoon,
     bool clearSearch = false,
     bool clearStatus = false,
     bool clearPropertyId = false,
@@ -29,6 +39,7 @@ class LeasesQuery {
       search: clearSearch ? null : (search ?? this.search),
       status: clearStatus ? null : (status ?? this.status),
       propertyId: clearPropertyId ? null : (propertyId ?? this.propertyId),
+      endingSoon: endingSoon ?? this.endingSoon,
     );
   }
 }
@@ -108,6 +119,7 @@ class LeasesNotifier extends _$LeasesNotifier {
             search: query.search,
             status: query.status,
             propertyId: query.propertyId,
+            endingSoon: query.endingSoon,
           );
       state = LeasesState(
         items: result.rows,
@@ -147,6 +159,7 @@ class LeasesNotifier extends _$LeasesNotifier {
             search: _currentQuery.search,
             status: _currentQuery.status,
             propertyId: _currentQuery.propertyId,
+            endingSoon: _currentQuery.endingSoon,
           );
       state = state.copyWith(
         items: [...state.items, ...result.rows],

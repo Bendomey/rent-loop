@@ -48,6 +48,9 @@ String billHeadline(InvoiceModel b, String name) {
 
 String payerName(InvoiceModel b) {
   final t = b.payerLease?.tenant;
-  final name = t == null ? '' : '${t.firstName} ${t.lastName}'.trim();
+  final a = b.applicant;
+  final tenant = t == null ? '' : '${t.firstName} ${t.lastName}'.trim();
+  final applicant = a == null ? '' : '${a.firstName} ${a.lastName}'.trim();
+  final name = tenant.isNotEmpty ? tenant : applicant;
   return name.isEmpty ? 'Tenant' : name;
 }

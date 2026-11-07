@@ -31,6 +31,18 @@ void main() {
       final charges = [charge(dueDate: '2026-10-01T00:00:00Z', invoiced: 0)];
       expect(lateAmount(charges, now), 100000);
     });
+
+    test('is not late on the due day itself, whatever the time', () {
+      final afternoon = DateTime(2026, 10, 15, 14, 30);
+      final charges = [charge(dueDate: '2026-10-15T00:00:00Z')];
+      expect(lateAmount(charges, afternoon), 0);
+    });
+
+    test('is late from the day after it was due', () {
+      final nextMorning = DateTime(2026, 10, 16, 0, 5);
+      final charges = [charge(dueDate: '2026-10-15T00:00:00Z')];
+      expect(lateAmount(charges, nextMorning), 100000);
+    });
   });
 
   group('nextBill', () {
@@ -50,9 +62,10 @@ void main() {
         charge(id: 'first', dueDate: '2026-10-08T00:00:00Z', invoiced: 30000),
         charge(id: 'billed', dueDate: '2026-09-08T00:00:00Z', invoiced: 100000),
       ], leadDays: 5);
-      final next = nextBill(d, now)!;
+      final next = nextBill(d, DateTime.utc(2026, 9, 20))!;
       expect(next.amount, 70000);
       expect(next.sendDate, DateTime.utc(2026, 10, 3));
+      expect(next.tonight, isFalse);
     });
 
     test('adds every fee due on or before the rent, not later ones', () {
@@ -75,7 +88,7 @@ void main() {
           id: 'later',
           category: 'FEE',
           amount: 9000,
-          dueDate: '2026-10-09T00:00:00Z',
+          dueDate: '2026-10-30T00:00:00Z',
         ),
         charge(
           id: 'gone',
@@ -86,6 +99,52 @@ void main() {
         ),
       ]);
       expect(nextBill(d, now)!.amount, 100000 + 50000 + 1500);
+    });
+
+    test('a deposit due today sends tonight even with rent a week away', () {
+      final d = detail([
+        charge(id: 'rent', dueDate: '2026-10-22T00:00:00Z'),
+        charge(
+          id: 'dep',
+          category: 'DEPOSIT',
+          amount: 50000,
+          dueDate: '2026-10-15T00:00:00Z',
+        ),
+      ], leadDays: 5);
+      final next = nextBill(d, now)!;
+      expect(next.tonight, isTrue);
+      expect(next.sendDate, DateTime.utc(2026, 10, 15));
+      expect(next.amount, 150000);
+    });
+
+    test('a one-off past due with no rent left still sends tonight', () {
+      final d = detail([
+        charge(id: 'rent', invoiced: 100000),
+        charge(
+          id: 'fee',
+          category: 'FEE',
+          amount: 2000,
+          dueDate: '2026-10-01T00:00:00Z',
+        ),
+      ]);
+      final next = nextBill(d, now)!;
+      expect(next.tonight, isTrue);
+      expect(next.amount, 2000);
+    });
+
+    test('a one-off outside the window waits for its own send date', () {
+      final d = detail([
+        charge(id: 'rent', dueDate: '2026-11-08T00:00:00Z'),
+        charge(
+          id: 'fee',
+          category: 'FEE',
+          amount: 2000,
+          dueDate: '2026-10-30T00:00:00Z',
+        ),
+      ], leadDays: 5);
+      final next = nextBill(d, now)!;
+      expect(next.tonight, isFalse);
+      expect(next.sendDate, DateTime.utc(2026, 10, 25));
     });
   });
 

@@ -120,5 +120,6 @@ None of the three brand families ships a glyph for the Ghana cedi (`₵`, U+20B5
 | `validatorless` | Form field validators |
 | `url_launcher` | Opening external links (e.g. PM portal deep links from `constants.dart`) |
 | `share_plus` | Native share sheet |
+| `pdf` + `printing` | Bill print: `buildBillPdf` lays out the PDF, `Printing.layoutPdf` opens the system print sheet (iOS: also save/share). iOS needs `pod install`; no Info.plist keys |
 | `image_picker` | Camera/photo-library access for `UImagePicker` (Add/Edit Unit forms) — first real image upload in this app |
 | `freezed` + `json_serializable` + `build_runner` + `riverpod_generator` | DTO/provider code generation — now in active use (`UserModel`, `ClientUserModel`, `ClientModel`, and every `@riverpod` provider) |

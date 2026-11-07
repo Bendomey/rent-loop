@@ -345,6 +345,7 @@ class _HeroCard extends StatelessWidget {
             'Tenant setup #${data.code}',
             style: TextStyle(
               fontFamily: RLTokens.fontSerif,
+              fontWeight: RLTokens.headingWeight,
               fontSize: 21,
               color: RLTokens.ink,
               letterSpacing: -0.3,
@@ -352,7 +353,9 @@ class _HeroCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Submitted ${data.submittedOn} · by ${data.submittedBy}',
+            data.submittedBy == null
+                ? 'Started ${data.submittedOn}'
+                : 'Started ${data.submittedOn} · ${data.submittedBy}',
             style: const TextStyle(
               fontFamily: RLTokens.fontSans,
               fontSize: 12.5,
@@ -446,6 +449,7 @@ class _ChecklistCard extends StatelessWidget {
             'Complete tenant setup',
             style: TextStyle(
               fontFamily: RLTokens.fontSerif,
+              fontWeight: RLTokens.headingWeight,
               fontSize: 19,
               color: RLTokens.ink,
               letterSpacing: -0.2,
@@ -468,6 +472,7 @@ class _ChecklistCard extends StatelessWidget {
                   '${data.progress.round()}%',
                   style: const TextStyle(
                     fontFamily: RLTokens.fontSerif,
+                    fontWeight: RLTokens.headingWeight,
                     fontSize: 26,
                     color: RLTokens.ink,
                   ),

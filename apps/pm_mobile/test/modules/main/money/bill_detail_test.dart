@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -7,7 +9,9 @@ import 'package:rentloop_manager/src/modules/main/activity/document_picker.dart'
 import 'package:rentloop_manager/src/modules/main/money/invoice_detail.dart';
 import 'package:rentloop_manager/src/repository/models/invoice_model.dart';
 import 'package:rentloop_manager/src/repository/providers/money/bill_detail_provider.dart';
+import 'package:rentloop_manager/src/repository/providers/money/bill_printer_provider.dart';
 import 'package:rentloop_manager/src/repository/providers/properties/my_property_roles_provider.dart';
+import 'package:rentloop_manager/src/shared/toast.dart';
 
 import 'bill_fixtures.dart';
 
@@ -17,6 +21,7 @@ Future<List<Uri>> _pump(
   Future<InvoiceModel> Function()? bill,
   String? propertyId = 'p1',
   Future<Map<String, String>> Function()? roles,
+  BillPrinter? printer,
 }) async {
   mockHaptics();
   tester.view.physicalSize = const Size(800, 4000);
@@ -33,6 +38,7 @@ Future<List<Uri>> _pump(
         myPropertyRolesProvider.overrideWith(
           (ref) => (roles ?? () async => {'p1': role})(),
         ),
+        billPrinterProvider.overrideWithValue(printer ?? (_) async {}),
         urlOpenerProvider.overrideWithValue((url) async {
           opened.add(url);
           return true;
@@ -49,6 +55,12 @@ Future<List<Uri>> _pump(
 }
 
 void main() {
+  testWidgets('the bill code shows only as a Bill number line', (tester) async {
+    await _pump(tester);
+    expect(find.text('Bill number · INV-2041'), findsOneWidget);
+    expect(find.text('INV-2041'), findsNothing);
+  });
+
   testWidgets('shows the headline, line items and payments', (tester) async {
     await _pump(tester);
     expect(
@@ -224,5 +236,65 @@ void main() {
     );
     expect(find.text('Processing · GH₵ 50.00'), findsOneWidget);
     expect(find.text('Payment received'), findsNothing);
+  });
+
+  group('Print', () {
+    final printButton = find.byWidgetPredicate(
+      (w) => w is Semantics && w.properties.label == 'Print bill',
+    );
+
+    testWidgets('is announced as Print bill', (tester) async {
+      final semantics = tester.ensureSemantics();
+      await _pump(tester);
+      expect(find.bySemanticsLabel('Print bill'), findsOneWidget);
+      semantics.dispose();
+    });
+
+    testWidgets('prints the loaded bill through the injected printer', (
+      tester,
+    ) async {
+      final printed = <String>[];
+      await _pump(tester, printer: (bill) async => printed.add(bill.code));
+      expect(printButton, findsOneWidget);
+      expect(find.byIcon(Icons.print_outlined), findsOneWidget);
+      await tester.tap(find.byIcon(Icons.print_outlined));
+      await tester.pump();
+      expect(printed, ['INV-2041']);
+    });
+
+    testWidgets('staff can print too', (tester) async {
+      await _pump(tester, role: 'STAFF');
+      expect(printButton, findsOneWidget);
+    });
+
+    testWidgets('shows a spinner while the PDF builds', (tester) async {
+      final done = Completer<void>();
+      await _pump(tester, printer: (_) => done.future);
+      await tester.tap(find.byIcon(Icons.print_outlined));
+      await tester.pump();
+      expect(find.byIcon(Icons.print_outlined), findsNothing);
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      done.complete();
+      await tester.pump();
+      expect(find.byIcon(Icons.print_outlined), findsOneWidget);
+    });
+
+    testWidgets('a failed build shows a toast', (tester) async {
+      await _pump(tester, printer: (_) async => throw Exception('no font'));
+      await tester.tap(find.byIcon(Icons.print_outlined));
+      await tester.pump();
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(InvoiceDetailScreen)),
+      );
+      expect(container.read(rlToastProvider)?.tone, RLToastTone.error);
+      expect(find.byIcon(Icons.print_outlined), findsOneWidget);
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('no print button until the bill loads', (tester) async {
+      final pending = Completer<InvoiceModel>();
+      await _pump(tester, bill: () => pending.future);
+      expect(printButton, findsNothing);
+    });
   });
 }

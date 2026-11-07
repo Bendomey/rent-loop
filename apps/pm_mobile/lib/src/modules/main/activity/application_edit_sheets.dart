@@ -171,6 +171,7 @@ Future<T?> _open<T>(
   return showModalBottomSheet<T>(
     context: context,
     isScrollControlled: true,
+    useSafeArea: true,
     backgroundColor: Colors.transparent,
     builder: (ctx) => builder(([T? result]) => Navigator.of(ctx).pop(result)),
   );
@@ -229,6 +230,7 @@ class _Sheet extends StatelessWidget {
                           title,
                           style: const TextStyle(
                             fontFamily: RLTokens.fontSerif,
+                            fontWeight: RLTokens.headingWeight,
                             fontSize: 21,
                             color: RLTokens.ink,
                             letterSpacing: -0.3,
@@ -356,8 +358,9 @@ Widget _saveCancel({
   required VoidCallback? onSave,
   String saveLabel = 'Save',
   bool cancelEnabled = true,
+  String? blockedReason,
 }) {
-  return Row(
+  final row = Row(
     children: [
       Expanded(
         child: RLBtn(
@@ -390,6 +393,22 @@ Widget _saveCancel({
           ),
         ),
       ),
+    ],
+  );
+  if (onSave != null || blockedReason == null) return row;
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        blockedReason,
+        style: const TextStyle(
+          fontFamily: RLTokens.fontSans,
+          fontSize: 12.5,
+          color: RLTokens.danger,
+        ),
+      ),
+      const SizedBox(height: 10),
+      row,
     ],
   );
 }
@@ -558,14 +577,12 @@ class _DateInput extends StatelessWidget {
     required this.onChanged,
     required this.placeholder,
     this.lastDate,
-    this.firstDate,
   });
 
   final DateTime? value;
   final ValueChanged<DateTime> onChanged;
   final String placeholder;
   final DateTime? lastDate;
-  final DateTime? firstDate;
 
   @override
   Widget build(BuildContext context) {
@@ -573,7 +590,7 @@ class _DateInput extends StatelessWidget {
       onTap: () async {
         await Haptics.vibrate(HapticsType.selection);
         if (!context.mounted) return;
-        final first = firstDate ?? DateTime(1900);
+        final first = DateTime(1900);
         final last = lastDate ?? DateTime(DateTime.now().year + 10);
         // showDatePicker asserts initialDate sits within the range, and
         // `last` may be a hair behind "now" for past-only fields like DOB.
@@ -724,7 +741,24 @@ class _BasicInfoSheetState extends ConsumerState<_BasicInfoSheet> {
       _last.text.trim().isNotEmpty &&
       normalizePhone(_phone.text) != null &&
       _adult &&
-      RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(_email.text.trim());
+      _emailOk;
+
+  bool get _emailOk {
+    final v = _email.text.trim();
+    return v.isEmpty || RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(v);
+  }
+
+  String? get _blockedReason {
+    if (_first.text.trim().isEmpty || _last.text.trim().isEmpty) {
+      return 'Enter the first and last name to save.';
+    }
+    if (normalizePhone(_phone.text) == null) {
+      return 'Enter a valid phone number to save.';
+    }
+    if (!_adult) return 'The tenant must be 18 or older.';
+    if (!_emailOk) return 'Enter a valid email or leave it blank.';
+    return null;
+  }
 
   String? _nullIfEmpty(String v) => v.trim().isEmpty ? null : v.trim();
 
@@ -739,7 +773,7 @@ class _BasicInfoSheetState extends ConsumerState<_BasicInfoSheet> {
         'other_names': _nullIfEmpty(_other.text),
         'gender': _gender,
         'marital_status': _marital,
-        'email': _email.text.trim(),
+        'email': _nullIfEmpty(_email.text),
         'phone': normalizePhone(_phone.text),
         'date_of_birth': _dob == null ? null : _dateOnly(_dob!),
         'profile_photo_url': _photoUrl,
@@ -760,6 +794,7 @@ class _BasicInfoSheetState extends ConsumerState<_BasicInfoSheet> {
         onCancel: widget.onClose,
         saveLabel: pending ? 'Saving…' : 'Save',
         onSave: _valid && !pending && !_uploading ? _save : null,
+        blockedReason: _valid ? null : _blockedReason,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -821,6 +856,7 @@ class _BasicInfoSheetState extends ConsumerState<_BasicInfoSheet> {
           ),
           _Field(
             label: 'Email',
+            optional: true,
             child: _TextInput(
               controller: _email,
               placeholder: 'name@example.com',
@@ -886,7 +922,9 @@ class _IdentitySheetState extends ConsumerState<_IdentitySheet> {
   late final _address = TextEditingController(
     text: widget.identity.currentAddress ?? '',
   );
-  late String? _idType = widget.identity.idType;
+  late String? _idType = widget.identity.idType == 'NATIONAL_ID'
+      ? 'GHANA_CARD'
+      : widget.identity.idType;
   late String? _frontUrl = widget.identity.idFrontUrl;
   late String? _backUrl = widget.identity.idBackUrl;
   bool _frontBusy = false;
@@ -943,6 +981,7 @@ class _IdentitySheetState extends ConsumerState<_IdentitySheet> {
         onCancel: widget.onClose,
         saveLabel: pending ? 'Saving…' : 'Save',
         onSave: _valid && !pending && !_frontBusy && !_backBusy ? _save : null,
+        blockedReason: _valid ? null : 'Fill in every field to save.',
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1072,7 +1111,10 @@ class _BackgroundSheetState extends ConsumerState<_BackgroundSheet> {
       _name.text.trim().length >= 2 &&
       _relationship.text.trim().length >= 2 &&
       normalizePhone(_phone.text) != null &&
-      _employerType != null;
+      _employerType != null &&
+      (_isStudent || _occupation.text.trim().isNotEmpty) &&
+      _employer.text.trim().isNotEmpty &&
+      _occupationAddress.text.trim().isNotEmpty;
 
   Future<void> _save() async {
     final ok = await _savePatch(
@@ -1108,6 +1150,7 @@ class _BackgroundSheetState extends ConsumerState<_BackgroundSheet> {
         onCancel: widget.onClose,
         saveLabel: pending ? 'Saving…' : 'Save',
         onSave: _valid && !pending && !_uploading ? _save : null,
+        blockedReason: _valid ? null : 'Fill in every field to save.',
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1155,18 +1198,18 @@ class _BackgroundSheetState extends ConsumerState<_BackgroundSheet> {
           if (!_isStudent)
             _Field(
               label: 'Occupation',
-              optional: true,
               child: _TextInput(
                 controller: _occupation,
                 placeholder: 'e.g. Software Engineer',
+                onChanged: (_) => setState(() {}),
                 textCapitalization: TextCapitalization.words,
               ),
             ),
           _Field(
             label: _isStudent ? 'Institution/School' : 'Employer',
-            optional: true,
             child: _TextInput(
               controller: _employer,
+              onChanged: (_) => setState(() {}),
               placeholder: _isStudent
                   ? 'e.g. University of Ghana'
                   : 'e.g. Bollore Transport',
@@ -1175,9 +1218,9 @@ class _BackgroundSheetState extends ConsumerState<_BackgroundSheet> {
           ),
           _Field(
             label: 'Address',
-            optional: true,
             child: _TextInput(
               controller: _occupationAddress,
+              onChanged: (_) => setState(() {}),
               placeholder: 'e.g. 123 Business St, City, Country',
               maxLines: 2,
               textCapitalization: TextCapitalization.words,
@@ -1242,11 +1285,6 @@ class _MoveInSheetState extends ConsumerState<_MoveInSheet> {
     super.dispose();
   }
 
-  DateTime get _today {
-    final n = DateTime.now();
-    return DateTime(n.year, n.month, n.day);
-  }
-
   int? get _durationValue {
     final n = int.tryParse(_duration.text.trim());
     return (n != null && n >= 1) ? n : null;
@@ -1262,10 +1300,7 @@ class _MoveInSheetState extends ConsumerState<_MoveInSheet> {
   bool get _changed =>
       _dateChanged || _durationValue != widget.moveIn.stayDuration;
 
-  bool get _datePast =>
-      _dateChanged && _date != null && _date!.isBefore(_today);
-
-  bool get _valid => _date != null && !_datePast && _durationValue != null;
+  bool get _valid => _date != null && _durationValue != null;
 
   Future<bool> _confirmRecalculation() async {
     final ok = await showDialog<bool>(
@@ -1341,12 +1376,9 @@ class _MoveInSheetState extends ConsumerState<_MoveInSheet> {
             child: _DateInput(
               value: _date,
               placeholder: 'Select a date',
-              firstDate: _today,
               onChanged: (d) => setState(() => _date = d),
             ),
           ),
-          if (_datePast)
-            const _InlineError("Move-in date can't be in the past."),
           _Field(
             label: 'Stay duration frequency',
             child: _ReadOnlyValue(kStayFrequencyOptions[_frequency] ?? '—'),
@@ -2166,6 +2198,7 @@ class _WhatsNextSheet extends StatelessWidget {
             "What's next?",
             style: TextStyle(
               fontFamily: RLTokens.fontSerif,
+              fontWeight: RLTokens.headingWeight,
               fontSize: 23,
               color: RLTokens.ink,
             ),

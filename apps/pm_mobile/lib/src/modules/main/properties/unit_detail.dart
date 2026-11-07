@@ -29,35 +29,39 @@ class UnitDetailScreen extends ConsumerWidget {
     final showSkeleton = !unitAsync.hasValue && unitAsync.isLoading;
     final showError = unitAsync.hasError && !unitAsync.hasValue;
 
+    Future<void> back() async {
+      await Haptics.vibrate(HapticsType.selection);
+      if (context.mounted) Navigator.of(context).pop();
+    }
+
+    if (!showSkeleton && !showError) {
+      return Scaffold(
+        backgroundColor: RLTokens.surface,
+        body: RefreshIndicator(
+          color: RLTokens.crimson,
+          edgeOffset: MediaQuery.of(context).padding.top,
+          onRefresh: () =>
+              ref.refresh(unitDetailProvider(propertyId, unitId).future),
+          child: _UnitDetailContent(unit: unitAsync.value!, onBack: back),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: RLTokens.surface,
       body: Column(
         children: [
-          RLBackHeader(
-            title: unitAsync.valueOrNull?.name ?? '',
-            onBack: () async {
-              await Haptics.vibrate(HapticsType.selection);
-              if (context.mounted) Navigator.of(context).pop();
-            },
-          ),
+          RLBackHeader(title: unitAsync.valueOrNull?.name ?? '', onBack: back),
           Expanded(
             child: showSkeleton
                 ? const _DetailSkeleton()
-                : showError
-                ? Padding(
+                : Padding(
                     padding: const EdgeInsets.all(RLTokens.gutter),
                     child: RLSectionError(
                       onRetry: () => ref.invalidate(
                         unitDetailProvider(propertyId, unitId),
                       ),
                     ),
-                  )
-                : RefreshIndicator(
-                    color: RLTokens.crimson,
-                    onRefresh: () => ref.refresh(
-                      unitDetailProvider(propertyId, unitId).future,
-                    ),
-                    child: _UnitDetailContent(unit: unitAsync.value!),
                   ),
           ),
         ],
@@ -102,8 +106,9 @@ class _DetailSkeleton extends StatelessWidget {
 // ── Body ──────────────────────────────────────────────────────────────────────
 
 class _UnitDetailContent extends StatelessWidget {
-  const _UnitDetailContent({required this.unit});
+  const _UnitDetailContent({required this.unit, required this.onBack});
   final UnitModel unit;
+  final VoidCallback onBack;
 
   @override
   Widget build(BuildContext context) {
@@ -113,8 +118,11 @@ class _UnitDetailContent extends StatelessWidget {
     return CustomScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
-        SliverToBoxAdapter(
-          child: _UnitHero(
+        RLHeroSliverAppBar(
+          title: unit.name,
+          color: _UnitHeroPlaceholder._bg(unit.type),
+          onBack: onBack,
+          background: _UnitHero(
             images: unit.images ?? const [],
             type: unit.type,
             name: unit.name,
@@ -228,9 +236,7 @@ class _UnitHeroState extends State<_UnitHero> {
     final images = widget.images;
     final typeLabel = unitTypeLabel(widget.type);
 
-    return SizedBox(
-      height: 170,
-      width: double.infinity,
+    return SizedBox.expand(
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -291,6 +297,7 @@ class _UnitHeroState extends State<_UnitHero> {
                   widget.name,
                   style: TextStyle(
                     fontFamily: RLTokens.fontSerif,
+                    fontWeight: FontWeight.w800,
                     fontSize: 22,
                     color: Colors.white.withAlpha(230),
                     letterSpacing: -0.3,

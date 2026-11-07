@@ -18,6 +18,7 @@ Future<bool> showCancelApplicationSheet(
   final cancelled = await showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
+    useSafeArea: true,
     backgroundColor: Colors.transparent,
     builder: (ctx) => _CancelApplicationSheet(
       propertyId: propertyId,

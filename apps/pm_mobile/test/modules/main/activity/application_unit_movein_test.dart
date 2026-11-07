@@ -266,6 +266,44 @@ void main() {
     );
   });
 
+  testWidgets('a move-in date in the past can be picked and saved', (
+    tester,
+  ) async {
+    final past = DateTime.now().subtract(const Duration(days: 90));
+    await _pump(tester, _app(), _moveInPage);
+    await tester.tap(find.text('Edit'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.calendar_today_rounded));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Switch to input'));
+    await tester.pumpAndSettle();
+    final typed =
+        '${past.month.toString().padLeft(2, '0')}/'
+        '${past.day.toString().padLeft(2, '0')}/${past.year}';
+    await tester.enterText(
+      find.descendant(
+        of: find.byType(DatePickerDialog),
+        matching: find.byType(TextField),
+      ),
+      typed,
+    );
+    await tester.tap(find.text('OK'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(DatePickerDialog), findsNothing);
+    expect(find.text("Move-in date can't be in the past."), findsNothing);
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+
+    final sent = DateTime.parse(
+      _FakeUpdate.patches.single['desired_move_in_date'] as String,
+    );
+    expect(
+      [sent.year, sent.month, sent.day],
+      [past.year, past.month, past.day],
+    );
+  });
+
   testWidgets('saving unchanged terms skips the recalculation question', (
     tester,
   ) async {

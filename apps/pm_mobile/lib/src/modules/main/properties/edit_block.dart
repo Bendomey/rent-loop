@@ -213,6 +213,7 @@ class _EditBlockScreenState extends ConsumerState<EditBlockScreen> {
                     unit.name,
                     style: TextStyle(
                       fontFamily: RLTokens.fontSerif,
+                      fontWeight: RLTokens.headingWeight,
                       fontSize: 24,
                       color: RLTokens.ink,
                       letterSpacing: -0.4,

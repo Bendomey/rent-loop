@@ -52,7 +52,6 @@ bool canEditApplication(TenantApplicationModel a, Map<String, String>? roles) =>
 
 const List<String> kApplicationIdTypeLabels = [
   'Ghana Card',
-  'National ID',
   'Passport',
   "Driver's licence",
 ];
@@ -68,15 +67,13 @@ String? applicationMaritalStatusLabel(String? apiValue) =>
 
 String applicationIdTypeApiValue(String label) => switch (label) {
   'Ghana Card' => 'GHANA_CARD',
-  'National ID' => 'NATIONAL_ID',
   'Passport' => 'PASSPORT',
   "Driver's licence" => 'DRIVER_LICENSE',
   _ => label,
 };
 
 String? applicationIdTypeLabel(String? apiValue) => switch (apiValue) {
-  'GHANA_CARD' => 'Ghana Card',
-  'NATIONAL_ID' => 'National ID',
+  'GHANA_CARD' || 'NATIONAL_ID' => 'Ghana Card',
   'PASSPORT' => 'Passport',
   'DRIVER_LICENSE' => "Driver's licence",
   _ => null,

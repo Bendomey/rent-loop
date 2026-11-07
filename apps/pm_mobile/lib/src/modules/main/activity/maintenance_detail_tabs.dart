@@ -574,6 +574,7 @@ class _FinancialList extends StatelessWidget {
                   _money(total, currency),
                   style: const TextStyle(
                     fontFamily: RLTokens.fontSerif,
+                    fontWeight: RLTokens.headingWeight,
                     fontSize: 18,
                     color: RLTokens.ink,
                     letterSpacing: -0.3,

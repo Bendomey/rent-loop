@@ -278,18 +278,9 @@ class _AddMaintenanceScreenState extends ConsumerState<AddMaintenanceScreen> {
     }
   }
 
-  String _assetSummary<T>(
-    Map<String, T> selection,
-    String plural,
-    String Function(T) nameOf,
-  ) {
-    if (selection.isEmpty) return '';
-    if (selection.length == 1) return nameOf(selection.values.first);
-    return '${selection.length} $plural selected';
-  }
-
   @override
   Widget build(BuildContext context) {
+    ref.listen(createMaintenanceRequestNotifierProvider, (_, _) {});
     final options = ref.watch(
       propertyOptionsNotifierProvider(managerOnly: true),
     );
@@ -344,6 +335,7 @@ class _AddMaintenanceScreenState extends ConsumerState<AddMaintenanceScreen> {
                               'New repair',
                               style: TextStyle(
                                 fontFamily: RLTokens.fontSerif,
+                                fontWeight: RLTokens.headingWeight,
                                 fontSize: 25,
                                 color: RLTokens.ink,
                                 letterSpacing: -0.4,
@@ -377,40 +369,28 @@ class _AddMaintenanceScreenState extends ConsumerState<AddMaintenanceScreen> {
                                     ),
                             ),
                             const SizedBox(height: 18),
-                            _FormField(
-                              label: 'Blocks',
-                              required: false,
-                              child: _SelectField(
-                                value: _assetSummary(
-                                  _blocks,
-                                  'blocks',
-                                  (b) => b.name,
-                                ),
-                                placeholder: propertyId == null
-                                    ? 'Pick a property first'
-                                    : 'Select blocks',
-                                enabled: propertyId != null,
-                                hasError: _showErrors && _assetCount == 0,
-                                onTap: () => _pickBlocks(propertyId!),
-                              ),
-                            ),
-                            const SizedBox(height: 18),
-                            _FormField(
-                              label: 'Units',
-                              required: false,
-                              child: _SelectField(
-                                value: _assetSummary(
-                                  _units,
-                                  'units',
-                                  (u) => u.name,
-                                ),
-                                placeholder: propertyId == null
-                                    ? 'Pick a property first'
-                                    : 'Select units',
-                                enabled: propertyId != null,
-                                hasError: _showErrors && _assetCount == 0,
-                                onTap: () => _pickUnits(propertyId!),
-                              ),
+                            _WhereSection(
+                              enabled: propertyId != null,
+                              hasError: _showErrors && _assetCount == 0,
+                              units: [
+                                for (final u in _units.values)
+                                  (
+                                    id: u.id,
+                                    label: u.propertyBlock?.name == null
+                                        ? u.name
+                                        : '${u.name} · ${u.propertyBlock!.name}',
+                                  ),
+                              ],
+                              blocks: [
+                                for (final b in _blocks.values)
+                                  (id: b.id, label: '${b.name} (whole block)'),
+                              ],
+                              onAddUnits: () => _pickUnits(propertyId!),
+                              onAddBlocks: () => _pickBlocks(propertyId!),
+                              onRemoveUnit: (id) =>
+                                  setState(() => _units.remove(id)),
+                              onRemoveBlock: (id) =>
+                                  setState(() => _blocks.remove(id)),
                             ),
                             if (_showErrors && _assetCount == 0) ...[
                               const SizedBox(height: 8),
@@ -484,6 +464,7 @@ class _AddMaintenanceScreenState extends ConsumerState<AddMaintenanceScreen> {
                               'Photos (optional)',
                               style: TextStyle(
                                 fontFamily: RLTokens.fontSerif,
+                                fontWeight: RLTokens.headingWeight,
                                 fontSize: 19,
                                 color: RLTokens.ink,
                                 letterSpacing: -0.3,
@@ -528,6 +509,7 @@ class _AddMaintenanceScreenState extends ConsumerState<AddMaintenanceScreen> {
                               'Visibility',
                               style: TextStyle(
                                 fontFamily: RLTokens.fontSerif,
+                                fontWeight: RLTokens.headingWeight,
                                 fontSize: 19,
                                 color: RLTokens.ink,
                                 letterSpacing: -0.3,
@@ -742,20 +724,219 @@ class _FieldSkeleton extends StatelessWidget {
 
 // ── Form field label wrapper ──────────────────────────────────────────────────
 
-class _FormField extends StatelessWidget {
-  const _FormField({
-    required this.label,
-    required this.child,
-    this.required = true,
-    this.error,
+typedef _Picked = ({String id, String label});
+
+/// Says plainly that a repair can cover several places, and lists each picked
+/// unit or block as its own removable chip rather than a filter-style field.
+class _WhereSection extends StatelessWidget {
+  const _WhereSection({
+    required this.enabled,
+    required this.hasError,
+    required this.units,
+    required this.blocks,
+    required this.onAddUnits,
+    required this.onAddBlocks,
+    required this.onRemoveUnit,
+    required this.onRemoveBlock,
   });
+
+  final bool enabled;
+  final bool hasError;
+  final List<_Picked> units;
+  final List<_Picked> blocks;
+  final VoidCallback onAddUnits;
+  final VoidCallback onAddBlocks;
+  final ValueChanged<String> onRemoveUnit;
+  final ValueChanged<String> onRemoveBlock;
+
+  @override
+  Widget build(BuildContext context) {
+    final empty = units.isEmpty && blocks.isEmpty;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: RLTokens.surface,
+        borderRadius: BorderRadius.circular(RLTokens.rLg),
+        border: Border.all(
+          color: hasError ? RLTokens.crimson : RLTokens.hairline,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Where is the repair? *',
+            style: TextStyle(
+              fontFamily: RLTokens.fontSans,
+              fontSize: 13.5,
+              fontWeight: RLTokens.semibold,
+              color: RLTokens.ink,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            enabled
+                ? 'Add one or more units, whole blocks, or both. One repair can cover them all.'
+                : 'Pick a property first.',
+            style: const TextStyle(
+              fontFamily: RLTokens.fontSans,
+              fontSize: 12.5,
+              color: RLTokens.muted,
+              height: 1.4,
+            ),
+          ),
+          if (!empty) ...[
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final u in units)
+                  _PickedChip(
+                    icon: Icons.door_front_door_outlined,
+                    label: u.label,
+                    onRemove: () => onRemoveUnit(u.id),
+                  ),
+                for (final b in blocks)
+                  _PickedChip(
+                    icon: Icons.apartment_outlined,
+                    label: b.label,
+                    onRemove: () => onRemoveBlock(b.id),
+                  ),
+              ],
+            ),
+          ],
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _AddButton(
+                  label: 'Add units',
+                  enabled: enabled,
+                  onTap: onAddUnits,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _AddButton(
+                  label: 'Add blocks',
+                  enabled: enabled,
+                  onTap: onAddBlocks,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PickedChip extends StatelessWidget {
+  const _PickedChip({
+    required this.icon,
+    required this.label,
+    required this.onRemove,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(10, 6, 4, 6),
+      decoration: BoxDecoration(
+        color: RLTokens.fill,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 15, color: RLTokens.ink),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              label,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontFamily: RLTokens.fontSans,
+                fontSize: 13,
+                color: RLTokens.ink,
+              ),
+            ),
+          ),
+          Semantics(
+            button: true,
+            label: 'Remove $label',
+            child: GestureDetector(
+              onTap: onRemove,
+              behavior: HitTestBehavior.opaque,
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 6),
+                child: Icon(Icons.close, size: 15, color: RLTokens.muted),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AddButton extends StatelessWidget {
+  const _AddButton({
+    required this.label,
+    required this.enabled,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = enabled ? RLTokens.crimson : RLTokens.mutedSoft;
+    return GestureDetector(
+      onTap: enabled ? onTap : null,
+      child: Container(
+        height: 42,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(RLTokens.rMd),
+          border: Border.all(color: color),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.add, size: 17, color: color),
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontFamily: RLTokens.fontSans,
+                  fontSize: 13.5,
+                  fontWeight: RLTokens.semibold,
+                  color: color,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FormField extends StatelessWidget {
+  const _FormField({required this.label, required this.child, this.error});
   final String label;
   final Widget child;
   final String? error;
-
-  /// Blocks and units are each optional on their own — one of the two is
-  /// required, so neither carries the asterisk.
-  final bool required;
 
   @override
   Widget build(BuildContext context) {
@@ -773,16 +954,15 @@ class _FormField extends StatelessWidget {
                 color: RLTokens.ink,
               ),
             ),
-            if (required)
-              const Text(
-                ' *',
-                style: TextStyle(
-                  fontFamily: RLTokens.fontSans,
-                  fontSize: 13.5,
-                  fontWeight: RLTokens.bold,
-                  color: RLTokens.crimson,
-                ),
+            const Text(
+              ' *',
+              style: TextStyle(
+                fontFamily: RLTokens.fontSans,
+                fontSize: 13.5,
+                fontWeight: RLTokens.bold,
+                color: RLTokens.crimson,
               ),
+            ),
           ],
         ),
         const SizedBox(height: 8),
@@ -815,13 +995,11 @@ class _SelectField extends StatelessWidget {
     required this.value,
     required this.placeholder,
     this.onTap,
-    this.hasError = false,
     this.enabled = true,
   });
   final String value;
   final String placeholder;
   final VoidCallback? onTap;
-  final bool hasError;
   final bool enabled;
 
   @override
@@ -838,10 +1016,7 @@ class _SelectField extends StatelessWidget {
         decoration: BoxDecoration(
           color: enabled ? RLTokens.surface : RLTokens.fill,
           borderRadius: BorderRadius.circular(RLTokens.rMd),
-          border: Border.all(
-            color: hasError ? RLTokens.danger : RLTokens.hairline,
-            width: 1.5,
-          ),
+          border: Border.all(color: RLTokens.hairline, width: 1.5),
         ),
         child: Row(
           children: [
@@ -1036,6 +1211,7 @@ class _PickerSheet extends StatelessWidget {
                             title,
                             style: const TextStyle(
                               fontFamily: RLTokens.fontSerif,
+                              fontWeight: RLTokens.headingWeight,
                               fontSize: 20,
                               color: RLTokens.ink,
                               letterSpacing: -0.3,

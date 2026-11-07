@@ -105,6 +105,7 @@ class _ApplicationsListState extends ConsumerState<ApplicationsList> {
     final result = await showModalBottomSheet<RLFilterPickResult>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (_) =>
           RLFilterSheet(title: title, options: options, selected: selected),
@@ -439,6 +440,7 @@ class _MessageState extends StatelessWidget {
           textAlign: TextAlign.center,
           style: const TextStyle(
             fontFamily: RLTokens.fontSerif,
+            fontWeight: RLTokens.headingWeight,
             fontSize: 18,
             color: RLTokens.ink,
           ),

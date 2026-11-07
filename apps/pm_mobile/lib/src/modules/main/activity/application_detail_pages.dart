@@ -123,6 +123,7 @@ class AppSectionCard extends StatelessWidget {
                     title,
                     style: const TextStyle(
                       fontFamily: RLTokens.fontSerif,
+                      fontWeight: RLTokens.headingWeight,
                       fontSize: 17,
                       color: RLTokens.ink,
                       letterSpacing: -0.2,
@@ -537,6 +538,7 @@ class _SelectedUnitCard extends StatelessWidget {
                         unit.name,
                         style: const TextStyle(
                           fontFamily: RLTokens.fontSerif,
+                          fontWeight: RLTokens.headingWeight,
                           fontSize: 20,
                           color: RLTokens.ink,
                           letterSpacing: -0.2,
@@ -686,6 +688,7 @@ class _NoUnitSelected extends StatelessWidget {
             'No unit assigned yet',
             style: TextStyle(
               fontFamily: RLTokens.fontSerif,
+              fontWeight: RLTokens.headingWeight,
               fontSize: 18,
               color: RLTokens.ink,
             ),
@@ -791,7 +794,7 @@ class ApplicationTenantPage extends ConsumerWidget {
 
     return _SectionScaffold(
       title: 'Tenant Details',
-      description: "Applicant's personal, identity and background details.",
+      description: "Tenant's personal, identity and background details.",
       children: [
         AppSectionCard(
           title: 'Basic Information',
@@ -844,13 +847,14 @@ class ApplicationTenantPage extends ConsumerWidget {
                           a.fullName,
                           style: const TextStyle(
                             fontFamily: RLTokens.fontSerif,
+                            fontWeight: RLTokens.headingWeight,
                             fontSize: 20,
                             color: RLTokens.ink,
                           ),
                         ),
                         const SizedBox(height: 2),
                         const Text(
-                          'Applicant',
+                          'Tenant',
                           style: TextStyle(
                             fontFamily: RLTokens.fontSans,
                             fontSize: 12.5,
@@ -899,7 +903,7 @@ class ApplicationTenantPage extends ConsumerWidget {
             children: [
               KVGrid([
                 KVEntry('Nationality', id.nationality),
-                KVEntry('ID type', kIdTypeOptions[id.idType]),
+                KVEntry('ID type', idTypeDisplay(id.idType)),
                 KVEntry('ID number', id.idNumber),
                 KVEntry('Current address', id.currentAddress),
               ]),

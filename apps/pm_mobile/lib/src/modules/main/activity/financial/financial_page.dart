@@ -338,6 +338,7 @@ class _MoveInGate extends StatelessWidget {
             'Set the move-in date first',
             style: TextStyle(
               fontFamily: RLTokens.fontSerif,
+              fontWeight: RLTokens.headingWeight,
               fontSize: 20,
               color: RLTokens.ink,
             ),

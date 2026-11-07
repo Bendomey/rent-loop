@@ -129,6 +129,7 @@ class _Header extends ConsumerWidget {
                   'Activity',
                   style: const TextStyle(
                     fontFamily: RLTokens.fontSerif,
+                    fontWeight: RLTokens.headingWeight,
                     fontSize: RLTokens.textTitle,
                     color: RLTokens.ink,
                     letterSpacing: -0.4,
@@ -311,6 +312,7 @@ class _WeekStrip extends StatelessWidget {
                 'June 2026',
                 style: TextStyle(
                   fontFamily: RLTokens.fontSerif,
+                  fontWeight: RLTokens.headingWeight,
                   fontSize: 17,
                   color: RLTokens.ink,
                 ),

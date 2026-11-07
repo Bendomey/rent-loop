@@ -28,11 +28,18 @@ const kMaritalStatusOptions = {
 };
 
 const kIdTypeOptions = {
-  'NATIONAL_ID': 'National ID',
   'PASSPORT': 'Passport',
   'DRIVER_LICENSE': "Driver's License",
   'GHANA_CARD': 'Ghana Card',
 };
+
+String? idTypeDisplay(String? apiValue) =>
+    kIdTypeOptions[apiValue == 'NATIONAL_ID' ? 'GHANA_CARD' : apiValue];
+
+/// The backend stamps SELF on every non-bulk application, including ones a
+/// manager enters, so only a file upload can be named.
+String? submittedByLabel(String? source) =>
+    source == 'CSV_BULK' ? 'from a file upload' : null;
 
 const kEmployerTypeOptions = {'STUDENT': 'Student', 'WORKER': 'Worker'};
 
@@ -391,7 +398,7 @@ class ApplicationDetailData {
     required this.code,
     required this.status,
     required this.submittedOn,
-    required this.submittedBy,
+    this.submittedBy,
     required this.applicant,
     required this.identity,
     required this.background,
@@ -407,7 +414,7 @@ class ApplicationDetailData {
   final String code;
   final String status;
   final String submittedOn;
-  final String submittedBy;
+  final String? submittedBy;
   final ApplicationApplicant applicant;
   final ApplicationIdentity identity;
   final ApplicationBackground background;
@@ -644,7 +651,7 @@ class ApplicationDetailData {
       submittedOn: a.createdAt == null
           ? '—'
           : formatApplicationDate(a.createdAt!),
-      submittedBy: a.source ?? '—',
+      submittedBy: submittedByLabel(a.source),
       applicant: ApplicationApplicant(
         firstName: a.firstName ?? '',
         lastName: a.lastName ?? '',

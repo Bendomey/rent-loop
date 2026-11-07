@@ -31,6 +31,8 @@ dependencies:
   flutter_timezone: ^5.1.0
   file_picker: ^11.0.3
   http_parser: ^4.1.2
+  pdf: ^3.11.3
+  printing: ^5.14.3
 
 dev_dependencies:
   flutter_test:
@@ -63,25 +65,25 @@ flutter:
     - .env
 
   fonts:
-    - family: DMSans
+    - family: Inter
       fonts:
-        - asset: "assets/fonts/DMSans[opsz,wght].ttf"
+        - asset: "assets/fonts/Inter[opsz,wght].ttf"
           weight: 100
-        - asset: "assets/fonts/DMSans[opsz,wght].ttf"
+        - asset: "assets/fonts/Inter[opsz,wght].ttf"
           weight: 200
-        - asset: "assets/fonts/DMSans[opsz,wght].ttf"
+        - asset: "assets/fonts/Inter[opsz,wght].ttf"
           weight: 300
-        - asset: "assets/fonts/DMSans[opsz,wght].ttf"
+        - asset: "assets/fonts/Inter[opsz,wght].ttf"
           weight: 400
-        - asset: "assets/fonts/DMSans[opsz,wght].ttf"
+        - asset: "assets/fonts/Inter[opsz,wght].ttf"
           weight: 500
-        - asset: "assets/fonts/DMSans[opsz,wght].ttf"
+        - asset: "assets/fonts/Inter[opsz,wght].ttf"
           weight: 600
-        - asset: "assets/fonts/DMSans[opsz,wght].ttf"
+        - asset: "assets/fonts/Inter[opsz,wght].ttf"
           weight: 700
-        - asset: "assets/fonts/DMSans[opsz,wght].ttf"
+        - asset: "assets/fonts/Inter[opsz,wght].ttf"
           weight: 800
-        - asset: "assets/fonts/DMSans[opsz,wght].ttf"
+        - asset: "assets/fonts/Inter[opsz,wght].ttf"
           weight: 900
 
     # Currency-only subset of Inter — glyph fallback for symbols the families
@@ -107,13 +109,28 @@ flutter:
         - asset: "assets/fonts/InterCurrency[opsz,wght].ttf"
           weight: 900
 
-    - family: DMSerifDisplay
+    # Static weights: Flutter does not drive this family's variable wght axis,
+    # so every weight rendered the same from the variable file.
+    - family: Geist
       fonts:
-        - asset: assets/fonts/DMSerifDisplay-Regular.ttf
+        - asset: assets/fonts/Geist-Thin.ttf
+          weight: 100
+        - asset: assets/fonts/Geist-ExtraLight.ttf
+          weight: 200
+        - asset: assets/fonts/Geist-Light.ttf
+          weight: 300
+        - asset: assets/fonts/Geist-Regular.ttf
           weight: 400
-        - asset: assets/fonts/DMSerifDisplay-Italic.ttf
-          weight: 400
-          style: italic
+        - asset: assets/fonts/Geist-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Geist-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Geist-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Geist-ExtraBold.ttf
+          weight: 800
+        - asset: assets/fonts/Geist-Black.ttf
+          weight: 900
 
     - family: JetBrainsMono
       fonts:

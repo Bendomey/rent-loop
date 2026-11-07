@@ -67,6 +67,7 @@ class MyAccountScreen extends ConsumerWidget {
                             initials,
                             style: const TextStyle(
                               fontFamily: RLTokens.fontSerif,
+                              fontWeight: RLTokens.headingWeight,
                               fontSize: 21,
                               color: Colors.white,
                               height: 1,
@@ -83,6 +84,7 @@ class MyAccountScreen extends ConsumerWidget {
                               name,
                               style: const TextStyle(
                                 fontFamily: RLTokens.fontSerif,
+                                fontWeight: RLTokens.headingWeight,
                                 fontSize: 20,
                                 color: RLTokens.ink,
                                 letterSpacing: -0.2,

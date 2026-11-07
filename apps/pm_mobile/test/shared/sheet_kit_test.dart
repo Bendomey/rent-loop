@@ -73,4 +73,51 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('A sheet'), findsNothing);
   });
+
+  testWidgets(
+    'a tall sheet stays below the top safe area with the keyboard up',
+    (tester) async {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+            const MethodChannel('haptic_feedback'),
+            (_) async => null,
+          );
+      tester.view.physicalSize = const Size(400, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(
+              padding: const EdgeInsets.only(top: 59, bottom: 34),
+              viewInsets: const EdgeInsets.only(bottom: 300),
+            ),
+            child: child!,
+          ),
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: TextButton(
+                onPressed: () => showRLSheet(
+                  context,
+                  (close) => RLSheet(
+                    title: 'A sheet',
+                    onClose: close,
+                    footer: const SizedBox(height: 40),
+                    child: const SizedBox(height: 2000),
+                  ),
+                ),
+                child: const Text('open'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      final top = tester.getTopLeft(find.byType(RLSheet)).dy;
+      expect(top, greaterThanOrEqualTo(59));
+    },
+  );
 }

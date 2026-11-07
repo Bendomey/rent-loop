@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:rentloop_manager/src/shared/keyboard_done_bar.dart';
 import 'package:rentloop_manager/src/architecture/app_startup/app_startup_notifier.dart';
 import 'package:rentloop_manager/src/modules/auth/login/root.dart';
 import 'package:rentloop_manager/src/modules/auth/welcome/root.dart';
@@ -249,6 +250,7 @@ List<RouteBase> appRoutes() => [
     builder: (_, state) => LeasesScreen(
       propertyId: state.uri.queryParameters['property_id'],
       propertyName: state.uri.queryParameters['property_name'],
+      initialFilter: state.uri.queryParameters['filter'],
     ),
     routes: [
       GoRoute(
@@ -268,6 +270,7 @@ GoRouter buildRoutes(WidgetRef ref) {
   final router = GoRouter(
     initialLocation: '/splash',
     refreshListenable: notifier,
+    observers: [KeyboardUnfocusObserver()],
     redirect: (context, state) {
       final startup = ref.read(appStartupNotifierProvider);
       final loc = state.matchedLocation;

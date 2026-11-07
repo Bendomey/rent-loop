@@ -240,6 +240,7 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
                         itemCount: bills.length,
                         separatorBuilder: (_, __) => const SizedBox(height: 10),
                         itemBuilder: (_, i) => BillRow(
+                          showCode: true,
                           bill: bills[i],
                           paidView: false,
                           now: now,
