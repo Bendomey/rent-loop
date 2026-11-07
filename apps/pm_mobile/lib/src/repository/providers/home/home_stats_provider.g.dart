@@ -6,7 +6,7 @@ part of 'home_stats_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$homeStatsHash() => r'8401ff73638b403bde696ad249bcde19f40e8ce0';
+String _$homeStatsHash() => r'81249bf38c287bdc9a615171e0a40b2f53f87b52';
 
 /// The Home screen's money and unit numbers, read from Cube.
 ///
@@ -15,16 +15,15 @@ String _$homeStatsHash() => r'8401ff73638b403bde696ad249bcde19f40e8ce0';
 ///
 /// Copied from [homeStats].
 @ProviderFor(homeStats)
-final homeStatsProvider = AutoDisposeFutureProvider<HomeStats>.internal(
+final homeStatsProvider = FutureProvider<HomeStats>.internal(
   homeStats,
   name: r'homeStatsProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$homeStatsHash,
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$homeStatsHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef HomeStatsRef = AutoDisposeFutureProviderRef<HomeStats>;
+typedef HomeStatsRef = FutureProviderRef<HomeStats>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

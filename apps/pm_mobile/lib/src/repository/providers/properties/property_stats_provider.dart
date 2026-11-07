@@ -7,9 +7,11 @@ import 'package:rentloop_manager/src/lib/api_error_messages.dart';
 import 'package:rentloop_manager/src/lib/property_stats_logic.dart';
 import 'package:rentloop_manager/src/repository/models/property_stats_model.dart';
 
+import 'package:rentloop_manager/src/repository/providers/analytics_token_provider.dart';
+
 part 'property_stats_provider.g.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 Future<PropertyStats> propertyStats(
   PropertyStatsRef ref,
   String propertyId,
@@ -20,9 +22,6 @@ Future<PropertyStats> propertyStats(
   }
 
   try {
-    final token = await ref
-        .read(analyticsApiProvider)
-        .getToken(clientId: clientId);
     final cube = ref.read(cubeApiProvider);
     final monthRange = currentMonthDateRange(DateTime.now());
 
@@ -32,57 +31,60 @@ Future<PropertyStats> propertyStats(
       'values': [propertyId],
     };
 
-    final results = await Future.wait([
-      cube.load(
-        token: token,
-        query: {
-          'measures': [
-            'Units.count',
-            'Units.occupiedCount',
-            'Units.availableCount',
-            'Units.maintenanceCount',
-            'Units.draftCount',
-            'Units.partiallyOccupiedCount',
-          ],
-          'filters': [propertyFilter('Units.propertyId')],
-        },
-      ),
-      cube.load(
-        token: token,
-        query: {
-          'measures': ['Invoices.paidAmount'],
-          'timeDimensions': [
-            {
-              'dimension': 'Invoices.paidAt',
-              'granularity': 'month',
-              'dateRange': monthRange,
-            },
-          ],
-          'filters': [propertyFilter('Invoices.propertyId')],
-        },
-      ),
-      cube.load(
-        token: token,
-        query: {
-          'measures': ['Leases.activeCount'],
-          'filters': [propertyFilter('Leases.propertyId')],
-        },
-      ),
-      cube.load(
-        token: token,
-        query: {
-          'measures': ['Bookings.confirmedCount', 'Bookings.checkedInCount'],
-          'filters': [propertyFilter('Bookings.propertyId')],
-        },
-      ),
-      cube.load(
-        token: token,
-        query: {
-          'measures': ['TenantApplications.inProgressCount'],
-          'filters': [propertyFilter('TenantApplications.propertyId')],
-        },
-      ),
-    ]);
+    final results = await withCubeToken(
+      ref,
+      (token) => Future.wait([
+        cube.load(
+          token: token,
+          query: {
+            'measures': [
+              'Units.count',
+              'Units.occupiedCount',
+              'Units.availableCount',
+              'Units.maintenanceCount',
+              'Units.draftCount',
+              'Units.partiallyOccupiedCount',
+            ],
+            'filters': [propertyFilter('Units.propertyId')],
+          },
+        ),
+        cube.load(
+          token: token,
+          query: {
+            'measures': ['Invoices.paidAmount'],
+            'timeDimensions': [
+              {
+                'dimension': 'Invoices.paidAt',
+                'granularity': 'month',
+                'dateRange': monthRange,
+              },
+            ],
+            'filters': [propertyFilter('Invoices.propertyId')],
+          },
+        ),
+        cube.load(
+          token: token,
+          query: {
+            'measures': ['Leases.activeCount'],
+            'filters': [propertyFilter('Leases.propertyId')],
+          },
+        ),
+        cube.load(
+          token: token,
+          query: {
+            'measures': ['Bookings.confirmedCount', 'Bookings.checkedInCount'],
+            'filters': [propertyFilter('Bookings.propertyId')],
+          },
+        ),
+        cube.load(
+          token: token,
+          query: {
+            'measures': ['TenantApplications.inProgressCount'],
+            'filters': [propertyFilter('TenantApplications.propertyId')],
+          },
+        ),
+      ]),
+    );
 
     return computePropertyStats(
       unitsRows: results[0],

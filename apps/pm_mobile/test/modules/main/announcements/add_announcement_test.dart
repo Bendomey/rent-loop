@@ -12,9 +12,15 @@ import 'package:rentloop_manager/src/repository/models/property_block_model.dart
 import 'package:rentloop_manager/src/repository/models/property_model.dart';
 import 'package:rentloop_manager/src/repository/models/unit_model.dart';
 import 'package:rentloop_manager/src/repository/notifiers/announcements/post_announcement_notifier.dart';
-import 'package:rentloop_manager/src/repository/providers/activity/repair_form_options_provider.dart';
+import 'package:rentloop_manager/src/repository/notifiers/options/block_options_notifier.dart';
+import 'package:rentloop_manager/src/repository/notifiers/options/options_state.dart';
+import 'package:rentloop_manager/src/repository/notifiers/options/property_options_notifier.dart';
+import 'package:rentloop_manager/src/repository/notifiers/options/unit_options_notifier.dart';
+import 'package:rentloop_manager/src/repository/providers/properties/my_property_roles_provider.dart';
 import 'package:rentloop_manager/src/shared/toast.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
+
+import '../../../support/options_fakes.dart';
 
 class _FakePost extends PostAnnouncementNotifier {
   _FakePost({this.outcome = 'sent'});
@@ -85,6 +91,8 @@ Future<_FakePost> _pump(
   List<PropertyModel>? properties,
   String? propertyId,
   String outcome = 'sent',
+  bool hasMoreProperties = false,
+  bool staleOnClear = false,
 }) async {
   tester.view.physicalSize = const Size(800, 3200);
   tester.view.devicePixelRatio = 2;
@@ -112,25 +120,36 @@ Future<_FakePost> _pump(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
-        repairPropertyOptionsProvider.overrideWith(
-          (ref) async => properties ?? [_prop('p1', 'Palm Court')],
-        ),
-        repairAssetOptionsProvider('p2').overrideWith(
-          (ref) async =>
-              (blocks: <PropertyBlockModel>[], units: [_unit('u9', 'Unit 9')]),
-        ),
-        repairAssetOptionsProvider('p1').overrideWith(
-          (ref) async => (
-            blocks: [
-              PropertyBlockModel(
-                id: 'b1',
-                name: 'Block A',
-                status: 'ACTIVE',
-                unitsCount: 1,
-              ),
-            ],
-            units: [_unit('u1', 'Unit 1'), _unit('u2', 'Unit 2')],
+        propertyOptionsNotifierProvider(managerOnly: true).overrideWith(
+          () => FakePropertyOptions(
+            properties ?? [_prop('p1', 'Palm Court')],
+            hasNextPage: hasMoreProperties,
+            staleOnClear: staleOnClear,
           ),
+        ),
+        myPropertyRolesProvider.overrideWith(
+          (ref) async => {'p1': 'MANAGER', 'p2': 'MANAGER'},
+        ),
+        blockOptionsNotifierProvider(
+          'p2',
+        ).overrideWith(() => FakeBlockOptions(const [])),
+        unitOptionsNotifierProvider(
+          const UnitOptionsQuery(propertyIds: ['p2']),
+        ).overrideWith(() => FakeUnitOptions([_unit('u9', 'Unit 9')])),
+        blockOptionsNotifierProvider('p1').overrideWith(
+          () => FakeBlockOptions([
+            PropertyBlockModel(
+              id: 'b1',
+              name: 'Block A',
+              status: 'ACTIVE',
+              unitsCount: 1,
+            ),
+          ]),
+        ),
+        unitOptionsNotifierProvider(
+          const UnitOptionsQuery(propertyIds: ['p1']),
+        ).overrideWith(
+          () => FakeUnitOptions([_unit('u1', 'Unit 1'), _unit('u2', 'Unit 2')]),
         ),
         postAnnouncementNotifierProvider.overrideWith(() => fake),
       ],
@@ -167,10 +186,7 @@ Future<void> _post(WidgetTester tester, [String label = 'Post now']) async {
   await tester.pump(const Duration(seconds: 5));
 }
 
-final _doneButton = find.descendant(
-  of: find.byType(RLIconBtn),
-  matching: find.byIcon(Icons.check_rounded),
-);
+final _doneButton = find.textContaining('Done (');
 
 void main() {
   setUp(() {
@@ -491,19 +507,49 @@ void main() {
     );
   });
 
+  testWidgets('a cancelled one-hit search does not preselect that property', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      properties: [_prop('p1', 'Palm Court'), _prop('p2', 'Oak Row')],
+      staleOnClear: true,
+    );
+    await _tapText(tester, 'Select property');
+    await tester.enterText(
+      find.descendant(
+        of: find.byType(RLSearchBar),
+        matching: find.byType(TextField),
+      ),
+      'Oak',
+    );
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pumpAndSettle();
+    expect(find.text('Palm Court'), findsNothing);
+    await tester.tap(find.byIcon(Icons.close).last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Select property'), findsOneWidget);
+    expect(find.text('Oak Row'), findsNothing);
+  });
+
+  testWidgets('a lone property is not preselected while more pages exist', (
+    tester,
+  ) async {
+    await _pump(tester, hasMoreProperties: true);
+    expect(find.text('Select property'), findsOneWidget);
+  });
+
   testWidgets('a property list failure offers Try again', (tester) async {
-    var loads = 0;
     tester.view.physicalSize = const Size(800, 3200);
     tester.view.devicePixelRatio = 2;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          repairPropertyOptionsProvider.overrideWith((ref) async {
-            loads++;
-            if (loads == 1) throw Exception('offline');
-            return [_prop('p1', 'Palm Court')];
-          }),
+          propertyOptionsNotifierProvider(
+            managerOnly: true,
+          ).overrideWith(_FailsOnce.new),
         ],
         child: const MaterialApp(home: AddAnnouncementScreen()),
       ),
@@ -515,4 +561,15 @@ void main() {
     expect(find.text("Couldn't load your properties."), findsNothing);
     expect(find.text('Palm Court'), findsOneWidget);
   });
+}
+
+class _FailsOnce extends PropertyOptionsNotifier {
+  @override
+  OptionsState<PropertyModel> build({bool managerOnly = false}) =>
+      const OptionsState(hasLoaded: true, error: 'offline');
+
+  @override
+  Future<void> refresh() async {
+    state = OptionsState(items: [_prop('p1', 'Palm Court')], hasLoaded: true);
+  }
 }

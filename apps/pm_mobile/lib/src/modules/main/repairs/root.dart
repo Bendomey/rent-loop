@@ -62,7 +62,10 @@ class RepairsScreen extends ConsumerWidget {
             },
           ),
           Expanded(
-            child: MaintenanceBoard(initialPropertyIds: [if (id != null) id]),
+            child: MaintenanceBoard(
+              initialPropertyIds: [if (id != null) id],
+              initialPropertyName: propertyName,
+            ),
           ),
         ],
       ),

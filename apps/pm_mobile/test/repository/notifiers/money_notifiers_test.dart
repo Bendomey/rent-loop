@@ -14,7 +14,9 @@ import 'package:rentloop_manager/src/repository/models/client_user_model.dart';
 import 'package:rentloop_manager/src/repository/models/financial_account_model.dart';
 import 'package:rentloop_manager/src/repository/models/invoice_model.dart';
 import 'package:rentloop_manager/src/repository/models/pagination_meta_model.dart';
+import 'package:rentloop_manager/src/repository/models/property_stats_model.dart';
 import 'package:rentloop_manager/src/repository/notifiers/money/bills_notifier.dart';
+import 'package:rentloop_manager/src/repository/providers/properties/property_stats_provider.dart';
 import 'package:rentloop_manager/src/repository/notifiers/money/record_bill_payment_notifier.dart';
 import 'package:rentloop_manager/src/repository/notifiers/money/verify_payment_notifier.dart';
 import 'package:rentloop_manager/src/repository/providers/activity/financial_account_provider.dart';
@@ -168,8 +170,10 @@ void main() {
   late _InvoiceApi invoiceApi;
   late _FinApi finApi;
   late ProviderContainer container;
+  var statsBuilds = 0;
 
   setUp(() {
+    statsBuilds = 0;
     invoiceApi = _InvoiceApi();
     finApi = _FinApi();
     container = ProviderContainer(
@@ -177,6 +181,10 @@ void main() {
         invoiceApiProvider.overrideWithValue(invoiceApi),
         financialAccountApiProvider.overrideWithValue(finApi),
         currentWorkspaceNotifierProvider.overrideWith(_SignedInWorkspace.new),
+        propertyStatsProvider('p1').overrideWith((ref) async {
+          statsBuilds++;
+          return const PropertyStats();
+        }),
       ],
     );
     addTearDown(container.dispose);
@@ -357,6 +365,28 @@ void main() {
       invoiceApi.listCalls.clear();
       finApi.accountFetches = 0;
     }
+
+    test('recording a payment invalidates the property stats', () async {
+      await seed();
+      container.listen(propertyStatsProvider('p1'), (_, __) {});
+      await settle();
+      final before = statsBuilds;
+
+      await container
+          .read(recordBillPaymentNotifierProvider.notifier)
+          .submit(
+            propertyId: 'p1',
+            invoiceId: 'b1',
+            amount: 500,
+            paymentAccountId: 'pa1',
+            provider: 'CASH',
+            reference: 'r',
+            financialAccountId: 'fa1',
+          );
+      await settle();
+
+      expect(statsBuilds, before + 1);
+    });
 
     test('recording a payment refreshes the lists, bill and account', () async {
       await seed();

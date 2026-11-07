@@ -11,9 +11,11 @@ import 'package:rentloop_manager/src/repository/models/tenant_application_model.
 import 'package:rentloop_manager/src/repository/models/unit_model.dart';
 import 'package:rentloop_manager/src/repository/notifiers/activity/update_application_notifier.dart';
 import 'package:rentloop_manager/src/repository/providers/activity/application_detail_provider.dart';
-import 'package:rentloop_manager/src/repository/providers/activity/application_unit_options_provider.dart';
+import 'package:rentloop_manager/src/repository/notifiers/options/unit_options_notifier.dart';
 import 'package:rentloop_manager/src/repository/providers/properties/my_property_roles_provider.dart';
 import 'package:rentloop_manager/src/repository/providers/properties/property_detail_provider.dart';
+
+import '../../../support/options_fakes.dart';
 
 TenantApplicationModel _app({
   bool locked = false,
@@ -105,11 +107,13 @@ Future<void> _pump(
     ProviderScope(
       overrides: [
         applicationDetailProvider('p1', 'a1').overrideWith((ref) async => app),
-        applicationUnitOptionsProvider('p1').overrideWith(
-          (ref) async => [
+        unitOptionsNotifierProvider(
+          const UnitOptionsQuery(propertyIds: ['p1'], bookableOnly: true),
+        ).overrideWith(
+          () => FakeUnitOptions([
             _unit('u1', 'Unit One', 'MONTHLY'),
             _unit('u2', 'Unit Two', 'WEEKLY'),
-          ],
+          ]),
         ),
         propertyDetailProvider('p1').overrideWith(
           (ref) async => PropertyModel(

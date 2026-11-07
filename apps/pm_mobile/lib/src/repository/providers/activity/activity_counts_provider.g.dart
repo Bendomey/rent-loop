@@ -6,7 +6,7 @@ part of 'activity_counts_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$activityCountsHash() => r'7a76c2e7dd526f5d3a801d71b425c73bfd8a03cf';
+String _$activityCountsHash() => r'4420ca128ab2b71ae44d024fcc205b19c9afa792';
 
 /// The Maintenance / Applications / Bookings badge numbers on the Activity
 /// screen, read from Cube in one round of parallel queries.
@@ -27,17 +27,16 @@ String _$activityCountsHash() => r'7a76c2e7dd526f5d3a801d71b425c73bfd8a03cf';
 ///
 /// Copied from [activityCounts].
 @ProviderFor(activityCounts)
-final activityCountsProvider =
-    AutoDisposeFutureProvider<ActivityCounts>.internal(
-      activityCounts,
-      name: r'activityCountsProvider',
-      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-          ? null
-          : _$activityCountsHash,
-      dependencies: null,
-      allTransitiveDependencies: null,
-    );
+final activityCountsProvider = FutureProvider<ActivityCounts>.internal(
+  activityCounts,
+  name: r'activityCountsProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$activityCountsHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
 
-typedef ActivityCountsRef = AutoDisposeFutureProviderRef<ActivityCounts>;
+typedef ActivityCountsRef = FutureProviderRef<ActivityCounts>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

@@ -17,7 +17,9 @@ import 'package:rentloop_manager/src/repository/models/tenant_application_model.
 import 'package:rentloop_manager/src/repository/models/unit_model.dart';
 import 'package:rentloop_manager/src/repository/notifiers/activity/create_application_notifier.dart';
 import 'package:rentloop_manager/src/repository/notifiers/activity/invite_tenant_notifier.dart';
-import 'package:rentloop_manager/src/repository/providers/activity/application_unit_options_provider.dart';
+import 'package:rentloop_manager/src/repository/notifiers/options/unit_options_notifier.dart';
+import 'package:rentloop_manager/src/repository/providers/properties/my_property_roles_provider.dart';
+import 'package:rentloop_manager/src/shared/paged_picker_sheet.dart';
 import 'package:rentloop_manager/src/shared/toast.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
@@ -119,12 +121,41 @@ class _AddApplicationScreenState extends ConsumerState<AddApplicationScreen> {
     super.dispose();
   }
 
-  void _pick(String key, String value, List<UnitModel> units) {
+  List<String> _managedIds(Map<String, String> roles) => [
+    for (final e in roles.entries)
+      if (e.value == 'MANAGER' &&
+          (widget.propertyId == null || e.key == widget.propertyId))
+        e.key,
+  ];
+
+  Future<void> _pickUnit() async {
+    final managed = ref.read(myPropertyRolesProvider).valueOrNull;
+    if (managed == null) return;
+    final options = unitOptionsNotifierProvider(
+      UnitOptionsQuery(propertyIds: _managedIds(managed), bookableOnly: true),
+    );
+    final picked = await showPagedPickerSheet<UnitModel>(
+      context: context,
+      title: 'Select unit',
+      state: options,
+      onSearch: (v) => ref.read(options.notifier).setSearch(v),
+      onLoadMore: () => ref.read(options.notifier).loadNextPage(),
+      onRetry: () => ref.read(options.notifier).refresh(),
+      label: _unitLabel,
+      id: (u) => u.id,
+      initial: [?_unit],
+      emptyText: 'No available units',
+    );
+    if (picked == null || picked.isEmpty || !mounted) return;
+    setState(() {
+      _unit = picked.first;
+      _errors.remove('unit');
+    });
+  }
+
+  void _pick(String key, String value) {
     setState(() {
       switch (key) {
-        case 'unit':
-          _unit = units.firstWhere((u) => u.id == value);
-          _errors.remove('unit');
         case 'gender':
           _gender = value;
           _errors.remove('gender');
@@ -383,10 +414,9 @@ class _AddApplicationScreenState extends ConsumerState<AddApplicationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final unitsAsync = ref.watch(
-      applicationUnitOptionsProvider(widget.propertyId),
-    );
-    final units = unitsAsync.valueOrNull ?? const <UnitModel>[];
+    final managedAsync = ref
+        .watch(myPropertyRolesProvider)
+        .whenData(_managedIds);
     final submitting = ref
         .watch(createApplicationNotifierProvider)
         .status
@@ -403,7 +433,7 @@ class _AddApplicationScreenState extends ConsumerState<AddApplicationScreen> {
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(20, 14, 20, 140),
-                  child: _buildStep(unitsAsync),
+                  child: _buildStep(managedAsync),
                 ),
               ),
             ],
@@ -422,16 +452,6 @@ class _AddApplicationScreenState extends ConsumerState<AddApplicationScreen> {
             ),
           ),
 
-          if (_picker == 'unit')
-            _PickerSheet(
-              title: 'Select unit',
-              options: units
-                  .map((u) => _PickerOption(label: _unitLabel(u), value: u.id))
-                  .toList(),
-              selected: _unit?.id ?? '',
-              onPick: (v) => _pick('unit', v, units),
-              onClose: () => setState(() => _picker = null),
-            ),
           if (_picker == 'gender')
             _PickerSheet(
               title: 'Gender',
@@ -439,7 +459,7 @@ class _AddApplicationScreenState extends ConsumerState<AddApplicationScreen> {
                   .map((l) => _PickerOption(label: l))
                   .toList(),
               selected: _gender,
-              onPick: (v) => _pick('gender', v, units),
+              onPick: (v) => _pick('gender', v),
               onClose: () => setState(() => _picker = null),
             ),
           if (_picker == 'marital')
@@ -449,7 +469,7 @@ class _AddApplicationScreenState extends ConsumerState<AddApplicationScreen> {
                   .map((l) => _PickerOption(label: l))
                   .toList(),
               selected: _marital,
-              onPick: (v) => _pick('marital', v, units),
+              onPick: (v) => _pick('marital', v),
               onClose: () => setState(() => _picker = null),
             ),
           if (_picker == 'idType')
@@ -459,7 +479,7 @@ class _AddApplicationScreenState extends ConsumerState<AddApplicationScreen> {
                   .map((l) => _PickerOption(label: l))
                   .toList(),
               selected: _idType,
-              onPick: (v) => _pick('idType', v, units),
+              onPick: (v) => _pick('idType', v),
               onClose: () => setState(() => _picker = null),
             ),
 
@@ -479,18 +499,17 @@ class _AddApplicationScreenState extends ConsumerState<AddApplicationScreen> {
     setState(() => _picker = key);
   }
 
-  Widget _buildStep(AsyncValue<List<UnitModel>> unitsAsync) {
+  Widget _buildStep(AsyncValue<List<String>> managedAsync) {
     return switch (_step) {
       1 => _Step1(
-        unitsAsync: unitsAsync,
+        managedAsync: managedAsync,
         unit: _unit == null ? '' : _unitLabel(_unit!),
         method: _method,
         phoneCtrl: _phoneCtrl,
         unitError: _errors['unit'],
         phoneError: _errors['phone'],
-        onOpenUnitPicker: () => _openPicker('unit'),
-        onRetryUnits: () =>
-            ref.invalidate(applicationUnitOptionsProvider(widget.propertyId)),
+        onOpenUnitPicker: _pickUnit,
+        onRetryUnits: () => ref.invalidate(myPropertyRolesProvider),
         onMethodChanged: (v) => setState(() => _method = v),
       ),
       2 => _Step2(
@@ -764,7 +783,7 @@ class _Footer extends StatelessWidget {
 
 class _Step1 extends StatelessWidget {
   const _Step1({
-    required this.unitsAsync,
+    required this.managedAsync,
     required this.unit,
     required this.method,
     required this.phoneCtrl,
@@ -774,7 +793,7 @@ class _Step1 extends StatelessWidget {
     required this.onRetryUnits,
     required this.onMethodChanged,
   });
-  final AsyncValue<List<UnitModel>> unitsAsync;
+  final AsyncValue<List<String>> managedAsync;
   final String unit;
   final String method;
   final TextEditingController phoneCtrl;
@@ -796,7 +815,7 @@ class _Step1 extends StatelessWidget {
         _FormField(
           label: 'Unit',
           error: unitError,
-          child: unitsAsync.when(
+          child: managedAsync.when(
             loading: () => const _SelectField(
               value: '',
               placeholder: 'Loading units…',
@@ -813,7 +832,7 @@ class _Step1 extends StatelessWidget {
                 ),
               ),
             ),
-            data: (units) => units.isEmpty
+            data: (managed) => managed.isEmpty
                 ? const Text(
                     'You can only add tenants to properties you manage.',
                     style: TextStyle(

@@ -265,7 +265,7 @@ void main() {
     expect(find.text('STUDENT'), findsNothing);
   });
 
-  testWidgets('pull-to-refresh reloads my property roles', (tester) async {
+  testWidgets('pull-to-refresh leaves my property roles alone', (tester) async {
     var builds = 0;
     await _pump(
       tester,
@@ -282,6 +282,6 @@ void main() {
         .onRefresh();
     await tester.pumpAndSettle();
 
-    expect(builds, 2);
+    expect(builds, 1);
   });
 }

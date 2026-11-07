@@ -8,8 +8,11 @@ import 'package:shimmer/shimmer.dart';
 import 'package:rentloop_manager/src/modules/main/money/root.dart';
 import 'package:rentloop_manager/src/repository/models/invoice_model.dart';
 import 'package:rentloop_manager/src/repository/notifiers/money/bills_notifier.dart';
-import 'package:rentloop_manager/src/repository/providers/activity/activity_filter_options_provider.dart';
+import 'package:rentloop_manager/src/repository/models/property_model.dart';
+import 'package:rentloop_manager/src/repository/notifiers/options/property_options_notifier.dart';
 import 'package:rentloop_manager/src/repository/providers/properties/my_property_roles_provider.dart';
+
+import '../../../support/options_fakes.dart';
 
 class _StubBills extends BillsNotifier {
   static Map<BillsView, List<InvoiceModel>> items = {};
@@ -104,6 +107,7 @@ Future<void> _pump(
   WidgetTester tester, {
   String role = 'MANAGER',
   List<GoRoute> extraRoutes = const [],
+  List<PropertyModel> properties = const [],
 }) async {
   final router = GoRouter(
     routes: [
@@ -123,8 +127,18 @@ Future<void> _pump(
           BillsView.paid,
           null,
         ).overrideWith(_StubBills.new),
+        billsNotifierProvider(
+          BillsView.owing,
+          'p2',
+        ).overrideWith(_StubBills.new),
+        billsNotifierProvider(
+          BillsView.paid,
+          'p2',
+        ).overrideWith(_StubBills.new),
         myPropertyRolesProvider.overrideWith((ref) async => {'p1': role}),
-        activityFilterPropertiesProvider.overrideWith((ref) async => []),
+        propertyOptionsNotifierProvider().overrideWith(
+          () => FakePropertyOptions(properties),
+        ),
       ],
       child: MaterialApp.router(routerConfig: router),
     ),
@@ -167,6 +181,58 @@ void main() {
           const MethodChannel('haptic_feedback'),
           (_) async => null,
         );
+  });
+
+  testWidgets('Rent property chip opens the picker and keeps the chosen name', (
+    t,
+  ) async {
+    await _pump(
+      t,
+      properties: [
+        PropertyModel(
+          id: 'p1',
+          name: 'Cantonments',
+          type: 'Apartment',
+          status: 'ACTIVE',
+        ),
+        PropertyModel(
+          id: 'p2',
+          name: 'Oak Row',
+          type: 'Apartment',
+          status: 'ACTIVE',
+        ),
+      ],
+    );
+    expect(find.text('All properties'), findsNothing);
+
+    await t.tap(find.text('Property: All properties'));
+    await t.pumpAndSettle();
+    await t.enterText(find.byType(TextField), 'oak');
+    await t.pumpAndSettle();
+    expect(find.text('Cantonments'), findsNothing);
+    await t.tap(find.text('Oak Row'));
+    await t.pumpAndSettle();
+
+    expect(find.text('Property: Oak Row'), findsOneWidget);
+
+    await t.tap(find.text('All properties'));
+    await t.pumpAndSettle();
+    expect(find.text('Property: All properties'), findsOneWidget);
+  });
+
+  testWidgets('a single property hides the property chip', (t) async {
+    await _pump(
+      t,
+      properties: [
+        PropertyModel(
+          id: 'p1',
+          name: 'Cantonments',
+          type: 'Apartment',
+          status: 'ACTIVE',
+        ),
+      ],
+    );
+    expect(find.text('Property: All properties'), findsNothing);
   });
 
   testWidgets('owing rows show the remaining amount and how late', (t) async {

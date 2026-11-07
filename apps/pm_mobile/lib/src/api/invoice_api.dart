@@ -13,7 +13,7 @@ class InvoiceApi extends AbstractApi {
   InvoiceApi({required super.tokenManager});
 
   static const _listPopulate =
-      'Property,PayerLease.Tenant,PayerLease.Unit.PropertyBlock,Payments';
+      'Property,PayerLease.Tenant,PayerLease.Unit,Payments';
 
   // ContextTenantApplication is deliberately absent: populating it 500s.
   static const _detailPopulate =

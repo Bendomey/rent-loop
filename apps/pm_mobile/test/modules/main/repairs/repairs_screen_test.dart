@@ -56,7 +56,7 @@ void main() {
     );
     await _pumpRouter(tester, router);
 
-    expect(find.text('1 Property'), findsOneWidget);
+    expect(find.text('East Legon'), findsOneWidget);
     expect(find.text('Repairs · East Legon'), findsOneWidget);
   });
 

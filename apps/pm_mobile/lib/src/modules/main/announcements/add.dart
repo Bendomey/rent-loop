@@ -6,9 +6,17 @@ import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:shimmer/shimmer.dart';
 
 import 'package:rentloop_manager/src/lib/announcement_labels.dart';
+import 'package:rentloop_manager/src/repository/models/property_block_model.dart';
 import 'package:rentloop_manager/src/repository/models/property_model.dart';
+import 'package:rentloop_manager/src/repository/models/unit_model.dart';
 import 'package:rentloop_manager/src/repository/notifiers/announcements/post_announcement_notifier.dart';
-import 'package:rentloop_manager/src/repository/providers/activity/repair_form_options_provider.dart';
+import 'package:rentloop_manager/src/repository/notifiers/options/block_options_notifier.dart';
+import 'package:rentloop_manager/src/repository/notifiers/options/options_state.dart';
+import 'package:rentloop_manager/src/repository/notifiers/options/property_options_notifier.dart';
+import 'package:rentloop_manager/src/repository/notifiers/options/unit_options_notifier.dart';
+import 'package:rentloop_manager/src/repository/providers/properties/my_property_roles_provider.dart';
+import 'package:rentloop_manager/src/repository/providers/properties/property_detail_provider.dart';
+import 'package:rentloop_manager/src/shared/paged_picker_sheet.dart';
 import 'package:rentloop_manager/src/shared/sheet_kit.dart';
 import 'package:rentloop_manager/src/shared/toast.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
@@ -48,9 +56,11 @@ class AddAnnouncementScreen extends ConsumerStatefulWidget {
 class _AddAnnouncementScreenState extends ConsumerState<AddAnnouncementScreen> {
   final _titleCtrl = TextEditingController();
   final _contentCtrl = TextEditingController();
-  final _units = <String>{};
-  String? _pickedPropertyId;
-  String? _blockId;
+  final _units = <String, UnitModel>{};
+  PropertyModel? _pickedProperty;
+  PropertyModel? _soleProperty;
+  bool _soleDecided = false;
+  PropertyBlockModel? _block;
   String _type = '';
   String _priority = 'NORMAL';
   _Audience _audience = _Audience.property;
@@ -58,14 +68,28 @@ class _AddAnnouncementScreenState extends ConsumerState<AddAnnouncementScreen> {
   bool _posting = false;
   bool _showErrors = false;
 
-  String? _propertyFor(List<PropertyModel> options) {
-    final picked = _pickedPropertyId;
-    if (picked != null && options.any((p) => p.id == picked)) return picked;
+  PropertyModel? _propertyFor(OptionsState<PropertyModel> options) {
+    final picked = _pickedProperty;
+    if (picked != null) return picked;
     final scoped = widget.propertyId;
     if (scoped != null) {
-      return options.any((p) => p.id == scoped) ? scoped : null;
+      final listed = options.items.where((p) => p.id == scoped).firstOrNull;
+      if (listed != null) return listed;
+      final roles = ref.watch(myPropertyRolesProvider).valueOrNull;
+      if (roles?[scoped] != 'MANAGER') return null;
+      return ref.watch(propertyDetailProvider(scoped)).valueOrNull;
     }
-    return options.length == 1 ? options.first.id : null;
+    if (!_soleDecided &&
+        options.hasLoaded &&
+        !options.isLoading &&
+        options.error == null &&
+        options.search.isEmpty) {
+      _soleDecided = true;
+      if (options.items.length == 1 && !options.hasNextPage) {
+        _soleProperty = options.items.first;
+      }
+    }
+    return _soleProperty;
   }
 
   @override
@@ -133,17 +157,78 @@ class _AddAnnouncementScreenState extends ConsumerState<AddAnnouncementScreen> {
 
   void _closePicker() => setState(() => _activePicker = null);
 
-  void _pickProperty(String id, String? current) {
+  Future<void> _pickProperty(PropertyModel? current) async {
+    Haptics.vibrate(HapticsType.selection);
+    final options = propertyOptionsNotifierProvider(managerOnly: true);
+    final picked = await showPagedPickerSheet<PropertyModel>(
+      context: context,
+      title: 'Property',
+      state: options,
+      onSearch: (v) => ref.read(options.notifier).setSearch(v),
+      onLoadMore: () => ref.read(options.notifier).loadNextPage(),
+      onRetry: () => ref.read(options.notifier).refresh(),
+      label: (p) => p.name,
+      id: (p) => p.id,
+      initial: [?current],
+      emptyText: 'No properties found',
+    );
+    if (mounted) ref.read(options.notifier).setSearch('');
+    if (picked == null || picked.isEmpty || !mounted) return;
+    final property = picked.first;
     setState(() {
-      if (id != current) {
-        _blockId = null;
+      if (property.id != current?.id) {
+        _block = null;
         _units.clear();
         _showErrors = false;
       }
-      _pickedPropertyId = id;
-      _activePicker = null;
+      _pickedProperty = property;
     });
+  }
+
+  Future<void> _pickBlock(String propertyId) async {
     Haptics.vibrate(HapticsType.selection);
+    final options = blockOptionsNotifierProvider(propertyId);
+    final picked = await showPagedPickerSheet<PropertyBlockModel>(
+      context: context,
+      title: 'Select block',
+      state: options,
+      onSearch: (v) => ref.read(options.notifier).setSearch(v),
+      onLoadMore: () => ref.read(options.notifier).loadNextPage(),
+      onRetry: () => ref.read(options.notifier).refresh(),
+      label: (b) => b.name,
+      id: (b) => b.id,
+      initial: [?_block],
+      emptyText: 'No blocks in this property',
+    );
+    if (picked == null || picked.isEmpty || !mounted) return;
+    setState(() => _block = picked.first);
+  }
+
+  Future<void> _pickUnits(String propertyId) async {
+    Haptics.vibrate(HapticsType.selection);
+    final options = unitOptionsNotifierProvider(
+      UnitOptionsQuery(propertyIds: [propertyId]),
+    );
+    final picked = await showPagedPickerSheet<UnitModel>(
+      context: context,
+      title: 'Select units',
+      state: options,
+      onSearch: (v) => ref.read(options.notifier).setSearch(v),
+      onLoadMore: () => ref.read(options.notifier).loadNextPage(),
+      onRetry: () => ref.read(options.notifier).refresh(),
+      label: (u) => u.name,
+      sub: (u) => u.propertyBlock?.name ?? '',
+      id: (u) => u.id,
+      multi: true,
+      initial: _units.values.toList(),
+      emptyText: 'No units in this property',
+    );
+    if (picked == null || !mounted) return;
+    setState(() {
+      _units
+        ..clear()
+        ..addEntries([for (final u in picked) MapEntry(u.id, u)]);
+    });
   }
 
   void _pick(String key, String value) {
@@ -153,17 +238,8 @@ class _AddAnnouncementScreenState extends ConsumerState<AddAnnouncementScreen> {
           _type = value;
         case 'priority':
           _priority = value;
-        case 'block':
-          _blockId = value;
       }
       _activePicker = null;
-    });
-    Haptics.vibrate(HapticsType.selection);
-  }
-
-  void _toggleUnit(String id) {
-    setState(() {
-      if (!_units.remove(id)) _units.add(id);
     });
     Haptics.vibrate(HapticsType.selection);
   }
@@ -174,7 +250,7 @@ class _AddAnnouncementScreenState extends ConsumerState<AddAnnouncementScreen> {
       _type.isNotEmpty &&
       switch (_audience) {
         _Audience.property => true,
-        _Audience.block => _blockId != null,
+        _Audience.block => _block != null,
         _Audience.units => _units.isNotEmpty,
       };
 
@@ -196,8 +272,10 @@ class _AddAnnouncementScreenState extends ConsumerState<AddAnnouncementScreen> {
           content: _contentCtrl.text.trim(),
           type: _type,
           priority: _priority,
-          propertyBlockId: _audience == _Audience.block ? _blockId : null,
-          targetUnitIds: _audience == _Audience.units ? _units.toList() : null,
+          propertyBlockId: _audience == _Audience.block ? _block?.id : null,
+          targetUnitIds: _audience == _Audience.units
+              ? _units.keys.toList()
+              : null,
         );
     if (!mounted) return;
     setState(() => _posting = false);
@@ -219,32 +297,27 @@ class _AddAnnouncementScreenState extends ConsumerState<AddAnnouncementScreen> {
   Widget build(BuildContext context) {
     final post = ref.watch(postAnnouncementNotifierProvider);
     final locked = post.draftId != null;
-    final optionsAsync = ref.watch(repairPropertyOptionsProvider);
-    final options = optionsAsync.valueOrNull;
-    final loading = !optionsAsync.hasValue && optionsAsync.isLoading;
-    final noAccess = options != null && options.isEmpty;
+    final options = ref.watch(
+      propertyOptionsNotifierProvider(managerOnly: true),
+    );
+    final loading = !options.hasLoaded;
+    final noAccess =
+        options.hasLoaded &&
+        options.items.isEmpty &&
+        !options.hasNextPage &&
+        options.error == null &&
+        options.search.isEmpty;
+    final property = _propertyFor(options);
     final propertyId = locked && post.propertyId != null
         ? post.propertyId
-        : options == null
-        ? null
-        : _propertyFor(options);
-    final optionsFailed = !optionsAsync.hasValue && optionsAsync.hasError;
-    final needsAssets = _audience != _Audience.property && propertyId != null;
-    final assetsAsync = needsAssets
-        ? ref.watch(repairAssetOptionsProvider(propertyId))
-        : null;
-    final assets = assetsAsync?.valueOrNull;
-    final assetsLoading =
-        assetsAsync != null && !assetsAsync.hasValue && assetsAsync.isLoading;
-    final assetsFailed =
-        assetsAsync != null && !assetsAsync.hasValue && assetsAsync.hasError;
-    final blockList = assets?.blocks ?? const [];
-    final unitList = assets?.units ?? const [];
+        : property?.id;
+    final optionsFailed =
+        options.hasLoaded && options.error != null && options.items.isEmpty;
 
     final unitSummary = _units.isEmpty
         ? ''
         : _units.length == 1
-        ? (unitList.where((u) => u.id == _units.first).firstOrNull?.name ?? '')
+        ? _units.values.first.name
         : '${_units.length} units selected';
 
     return PopScope(
@@ -310,22 +383,19 @@ class _AddAnnouncementScreenState extends ConsumerState<AddAnnouncementScreen> {
                                         ? _LoadError(
                                             message:
                                                 "Couldn't load your properties.",
-                                            onRetry: () => ref.invalidate(
-                                              repairPropertyOptionsProvider,
-                                            ),
+                                            onRetry: () => ref
+                                                .read(
+                                                  propertyOptionsNotifierProvider(
+                                                    managerOnly: true,
+                                                  ).notifier,
+                                                )
+                                                .refresh(),
                                           )
                                         : _SelectField(
-                                            value:
-                                                options
-                                                    ?.where(
-                                                      (p) => p.id == propertyId,
-                                                    )
-                                                    .firstOrNull
-                                                    ?.name ??
-                                                '',
+                                            value: property?.name ?? '',
                                             placeholder: 'Select property',
                                             onTap: () =>
-                                                _openPicker('property'),
+                                                _pickProperty(property),
                                           ),
                                   ),
                                   const SizedBox(height: 18),
@@ -440,38 +510,19 @@ class _AddAnnouncementScreenState extends ConsumerState<AddAnnouncementScreen> {
                                   ),
                                   if (_audience != _Audience.property) ...[
                                     const SizedBox(height: 14),
-                                    if (assetsLoading)
-                                      const _FieldSkeleton()
-                                    else if (assetsFailed)
-                                      _LoadError(
-                                        message:
-                                            "Couldn't load blocks and units.",
-                                        onRetry: () => ref.invalidate(
-                                          repairAssetOptionsProvider(
-                                            propertyId!,
-                                          ),
-                                        ),
-                                      )
-                                    else if (_audience == _Audience.block)
+                                    if (_audience == _Audience.block)
                                       _FormField(
                                         label: 'Block',
-                                        error: _showErrors && _blockId == null
+                                        error: _showErrors && _block == null
                                             ? 'Pick a block'
                                             : null,
                                         child: _SelectField(
-                                          value:
-                                              blockList
-                                                  .where(
-                                                    (b) => b.id == _blockId,
-                                                  )
-                                                  .firstOrNull
-                                                  ?.name ??
-                                              '',
+                                          value: _block?.name ?? '',
                                           placeholder: propertyId == null
                                               ? 'Pick a property first'
                                               : 'Select block',
                                           enabled: propertyId != null,
-                                          onTap: () => _openPicker('block'),
+                                          onTap: () => _pickBlock(propertyId!),
                                         ),
                                       )
                                     else
@@ -486,7 +537,7 @@ class _AddAnnouncementScreenState extends ConsumerState<AddAnnouncementScreen> {
                                               ? 'Pick a property first'
                                               : 'Select units',
                                           enabled: propertyId != null,
-                                          onTap: () => _openPicker('unit'),
+                                          onTap: () => _pickUnits(propertyId!),
                                         ),
                                       ),
                                   ],
@@ -575,17 +626,6 @@ class _AddAnnouncementScreenState extends ConsumerState<AddAnnouncementScreen> {
                 ),
               ),
 
-            if (_activePicker == 'property' && options != null)
-              _PickerSheet(
-                title: 'Property',
-                options: [
-                  for (final p in options)
-                    _PickerOption(value: p.id, label: p.name),
-                ],
-                selected: propertyId ?? '',
-                onPick: (v) => _pickProperty(v, propertyId),
-                onClose: _closePicker,
-              ),
             if (_activePicker == 'type')
               _PickerSheet(
                 title: 'Type',
@@ -606,34 +646,6 @@ class _AddAnnouncementScreenState extends ConsumerState<AddAnnouncementScreen> {
                 ],
                 selected: _priority,
                 onPick: (v) => _pick('priority', v),
-                onClose: _closePicker,
-              ),
-            if (_activePicker == 'block')
-              _PickerSheet(
-                title: 'Select block',
-                options: [
-                  for (final b in blockList)
-                    _PickerOption(value: b.id, label: b.name),
-                ],
-                emptyMessage: 'No blocks in this property',
-                selected: _blockId ?? '',
-                onPick: (v) => _pick('block', v),
-                onClose: _closePicker,
-              ),
-            if (_activePicker == 'unit')
-              _PickerSheet(
-                title: 'Select units',
-                options: [
-                  for (final u in unitList)
-                    _PickerOption(
-                      value: u.id,
-                      label: u.name,
-                      sub: u.propertyBlock?.name,
-                    ),
-                ],
-                emptyMessage: 'No units in this property',
-                selectedValues: _units,
-                onPick: _toggleUnit,
                 onClose: _closePicker,
               ),
           ],
@@ -936,10 +948,9 @@ class _SelectField extends StatelessWidget {
 }
 
 class _PickerOption {
-  const _PickerOption({required this.value, required this.label, this.sub});
+  const _PickerOption({required this.value, required this.label});
   final String value;
   final String label;
-  final String? sub;
 }
 
 class _PickerSheet extends StatelessWidget {
@@ -948,25 +959,16 @@ class _PickerSheet extends StatelessWidget {
     required this.options,
     required this.onPick,
     required this.onClose,
-    this.emptyMessage,
     this.selected = '',
-    this.selectedValues,
   });
 
   final String title;
   final List<_PickerOption> options;
   final ValueChanged<String> onPick;
   final VoidCallback onClose;
-  final String? emptyMessage;
-
-  /// Single-select sheets track one value…
   final String selected;
 
-  /// …while multi-select sheets stay open and toggle each tapped value.
-  final Set<String>? selectedValues;
-
-  bool _isSelected(String value) =>
-      selectedValues?.contains(value) ?? selected == value;
+  bool _isSelected(String value) => selected == value;
 
   @override
   Widget build(BuildContext context) {
@@ -1017,11 +1019,7 @@ class _PickerSheet extends StatelessWidget {
                           ),
                         ),
                         RLIconBtn(
-                          // Multi-select sheets stay open while toggling, so
-                          // this button reads as "done" rather than "cancel".
-                          icon: selectedValues == null
-                              ? Icons.close
-                              : Icons.check_rounded,
+                          icon: Icons.close,
                           bg: RLTokens.fill,
                           iconColor: RLTokens.inkSoft,
                           onTap: onClose,
@@ -1034,18 +1032,6 @@ class _PickerSheet extends StatelessWidget {
                       padding: const EdgeInsets.fromLTRB(14, 4, 14, 30),
                       child: Column(
                         children: [
-                          if (options.isEmpty && emptyMessage != null)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 24),
-                              child: Text(
-                                emptyMessage!,
-                                style: const TextStyle(
-                                  fontFamily: RLTokens.fontSans,
-                                  fontSize: 14,
-                                  color: RLTokens.muted,
-                                ),
-                              ),
-                            ),
                           ...options.asMap().entries.map((e) {
                             final i = e.key;
                             final o = e.value;
@@ -1086,17 +1072,6 @@ class _PickerSheet extends StatelessWidget {
                                               color: RLTokens.ink,
                                             ),
                                           ),
-                                          if (o.sub != null) ...[
-                                            const SizedBox(height: 2),
-                                            Text(
-                                              o.sub!,
-                                              style: const TextStyle(
-                                                fontFamily: RLTokens.fontSans,
-                                                fontSize: 12,
-                                                color: RLTokens.muted,
-                                              ),
-                                            ),
-                                          ],
                                         ],
                                       ),
                                     ),

@@ -4,15 +4,18 @@ import 'package:go_router/go_router.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:shimmer/shimmer.dart';
 
+import 'package:rentloop_manager/src/architecture/current_workspace/current_workspace_notifier.dart';
 import 'package:rentloop_manager/src/lib/financial/bill.dart';
 import 'package:rentloop_manager/src/lib/financial/payment_providers.dart';
 import 'package:rentloop_manager/src/lib/money.dart';
 import 'package:rentloop_manager/src/lib/property_roles.dart';
+import 'package:rentloop_manager/src/modules/main/activity/activity_filters.dart';
 import 'package:rentloop_manager/src/modules/main/money/bill_row.dart';
 import 'package:rentloop_manager/src/repository/models/invoice_model.dart';
 import 'package:rentloop_manager/src/repository/notifiers/money/bills_notifier.dart';
-import 'package:rentloop_manager/src/repository/providers/activity/activity_filter_options_provider.dart';
+import 'package:rentloop_manager/src/repository/notifiers/options/property_options_notifier.dart';
 import 'package:rentloop_manager/src/repository/providers/properties/my_property_roles_provider.dart';
+import 'package:rentloop_manager/src/shared/paged_picker_sheet.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
@@ -27,7 +30,8 @@ class MoneyScreen extends ConsumerStatefulWidget {
 
 class _MoneyScreenState extends ConsumerState<MoneyScreen> {
   BillsView _view = BillsView.owing;
-  String? _propertyId;
+  FilterOption? _property;
+  bool? _multipleProperties;
   late final ScrollController _scrollController;
 
   @override
@@ -43,7 +47,7 @@ class _MoneyScreenState extends ConsumerState<MoneyScreen> {
   }
 
   BillsNotifierProvider _provider(BillsView view) =>
-      billsNotifierProvider(view, _propertyId);
+      billsNotifierProvider(view, _property?.id);
 
   Future<void> _loadBoth() => Future.wait([
     ref.read(_provider(BillsView.owing).notifier).loadFirstPage(),
@@ -60,7 +64,6 @@ class _MoneyScreenState extends ConsumerState<MoneyScreen> {
   }
 
   Future<void> _refresh() async {
-    ref.invalidate(myPropertyRolesProvider);
     await _loadBoth();
   }
 
@@ -70,9 +73,29 @@ class _MoneyScreenState extends ConsumerState<MoneyScreen> {
     setState(() => _view = next);
   }
 
-  Future<void> _selectProperty(String? id) async {
+  Future<void> _pickProperty() async {
     await Haptics.vibrate(HapticsType.selection);
-    setState(() => _propertyId = id);
+    if (!mounted) return;
+    final options = propertyOptionsNotifierProvider();
+    final picked = await showPagedPickerSheet<FilterOption>(
+      context: context,
+      title: 'Property',
+      state: asFilterOptions(options, id: (p) => p.id, name: (p) => p.name),
+      onSearch: (v) => ref.read(options.notifier).setSearch(v),
+      onLoadMore: () => ref.read(options.notifier).loadNextPage(),
+      onRetry: () => ref.read(options.notifier).refresh(),
+      label: (o) => o.name,
+      id: (o) => o.id,
+      initial: [?_property],
+    );
+    if (mounted) ref.read(options.notifier).setSearch('');
+    if (picked == null || picked.isEmpty || !mounted) return;
+    setState(() => _property = picked.first);
+  }
+
+  Future<void> _clearProperty() async {
+    await Haptics.vibrate(HapticsType.selection);
+    setState(() => _property = null);
   }
 
   Future<void> _openBill(InvoiceModel bill) async {
@@ -111,9 +134,14 @@ class _MoneyScreenState extends ConsumerState<MoneyScreen> {
     final owing = ref.watch(_provider(BillsView.owing));
     final state = ref.watch(_provider(_view));
     final roles = ref.watch(myPropertyRolesProvider).valueOrNull;
-    final properties =
-        ref.watch(activityFilterPropertiesProvider).valueOrNull ?? const [];
+    final properties = ref.watch(propertyOptionsNotifierProvider());
     final now = DateTime.now();
+    ref.listen(currentWorkspaceNotifierProvider, (_, __) {
+      setState(() {
+        _property = null;
+        _multipleProperties = null;
+      });
+    });
     final paidView = _view == BillsView.paid;
 
     ref.listen(_provider(_view), (prev, next) {
@@ -142,12 +170,16 @@ class _MoneyScreenState extends ConsumerState<MoneyScreen> {
         if (canManageProperty(roles, b.propertyId))
           for (final p in awaitingConfirmation(b)) (bill: b, payment: p),
     ];
-    final selectedName = _propertyId == null
-        ? _allProperties
-        : properties
-              .where((p) => p.id == _propertyId)
-              .map((p) => p.name)
-              .firstOrNull;
+    if (_multipleProperties == null &&
+        properties.hasLoaded &&
+        !properties.isLoading &&
+        properties.error == null &&
+        properties.search.isEmpty) {
+      _multipleProperties =
+          properties.items.length > 1 || properties.hasNextPage;
+    }
+    final showPropertyFilter =
+        _property != null || (_multipleProperties ?? false);
 
     return Scaffold(
       backgroundColor: RLTokens.surface,
@@ -201,28 +233,55 @@ class _MoneyScreenState extends ConsumerState<MoneyScreen> {
                       ),
                     ),
                   ),
-                  if (properties.length > 1 && selectedName != null)
+                  if (showPropertyFilter)
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(
                           RLTokens.gutter,
                           12,
-                          0,
+                          RLTokens.gutter,
                           0,
                         ),
-                        child: RLFilterChips(
-                          options: [
-                            _allProperties,
-                            for (final p in properties) p.name,
+                        child: Row(
+                          children: [
+                            RLFilterTriggerChip(
+                              label: 'Property: $_allProperties',
+                              value: _property == null
+                                  ? null
+                                  : 'Property: ${_property!.name}',
+                              onTap: _pickProperty,
+                            ),
+                            if (_property != null) ...[
+                              const SizedBox(width: 8),
+                              GestureDetector(
+                                onTap: _clearProperty,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: RLTokens.surface,
+                                    borderRadius: BorderRadius.circular(
+                                      RLTokens.rPill,
+                                    ),
+                                    border: Border.all(
+                                      color: RLTokens.hairline,
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    _allProperties,
+                                    style: TextStyle(
+                                      fontFamily: RLTokens.fontSans,
+                                      fontSize: 12.5,
+                                      fontWeight: RLTokens.semibold,
+                                      color: RLTokens.muted,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ],
-                          selected: selectedName,
-                          onSelect: (name) => _selectProperty(
-                            name == _allProperties
-                                ? null
-                                : properties
-                                      .firstWhere((p) => p.name == name)
-                                      .id,
-                          ),
                         ),
                       ),
                     ),

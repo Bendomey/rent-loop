@@ -8,6 +8,8 @@
 // and close on success; the remaining sheets pop an updated sub-model, or null
 // when cancelled.
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,7 +26,9 @@ import 'package:rentloop_manager/src/modules/main/activity/document_picker.dart'
 import 'package:rentloop_manager/src/repository/api_state.dart';
 import 'package:rentloop_manager/src/repository/models/unit_model.dart';
 import 'package:rentloop_manager/src/repository/notifiers/activity/update_application_notifier.dart';
-import 'package:rentloop_manager/src/repository/providers/activity/application_unit_options_provider.dart';
+import 'package:rentloop_manager/src/repository/notifiers/options/options_state.dart';
+import 'package:rentloop_manager/src/repository/notifiers/options/unit_options_notifier.dart';
+import 'package:rentloop_manager/src/repository/providers/properties/my_property_roles_provider.dart';
 import 'package:rentloop_manager/src/shared/sheet_kit.dart'
     show RLSheet, RLSheetNote;
 import 'package:rentloop_manager/src/shared/tokens.dart';
@@ -1435,6 +1439,9 @@ class _ChangeUnitSheet extends ConsumerStatefulWidget {
 
 class _ChangeUnitSheetState extends ConsumerState<_ChangeUnitSheet> {
   late String? _selectedId = widget.currentUnitId;
+  ApplicationUnit? _selectedUnit;
+  final _search = TextEditingController();
+  Timer? _searchDebounce;
 
   @override
   void initState() {
@@ -1442,6 +1449,24 @@ class _ChangeUnitSheetState extends ConsumerState<_ChangeUnitSheet> {
     Future.microtask(
       () => ref.read(updateApplicationNotifierProvider.notifier).reset(),
     );
+  }
+
+  @override
+  void dispose() {
+    _searchDebounce?.cancel();
+    _search.dispose();
+    super.dispose();
+  }
+
+  UnitOptionsQuery get _query =>
+      UnitOptionsQuery(propertyIds: [widget.propertyId], bookableOnly: true);
+
+  void _onSearch(String value) {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 300), () {
+      if (!mounted) return;
+      ref.read(unitOptionsNotifierProvider(_query).notifier).setSearch(value);
+    });
   }
 
   Future<void> _save(ApplicationUnit unit) async {
@@ -1460,19 +1485,78 @@ class _ChangeUnitSheetState extends ConsumerState<_ChangeUnitSheet> {
     if (ok && mounted) widget.onClose();
   }
 
+  Widget _units(OptionsState<UnitModel> options) {
+    final notifier = ref.read(unitOptionsNotifierProvider(_query).notifier);
+    final units = [for (final u in options.items) ApplicationUnit.fromModel(u)];
+    return Column(
+      children: [
+        RLSearchBar(
+          hint: 'Search units',
+          controller: _search,
+          onChanged: _onSearch,
+        ),
+        const SizedBox(height: 12),
+        if (!options.hasLoaded)
+          const _UnitOptionsSkeleton()
+        else if (options.error != null && units.isEmpty)
+          RLSectionError(
+            title: "Couldn't load units",
+            compact: true,
+            onRetry: notifier.refresh,
+          )
+        else if (units.isEmpty && !options.hasNextPage)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 28),
+            child: Text(
+              'No units available for this property.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: RLTokens.fontSans,
+                fontSize: 13.5,
+                color: RLTokens.muted,
+              ),
+            ),
+          )
+        else ...[
+          for (final unit in units)
+            _UnitOption(
+              unit: unit,
+              selected: _selectedId == unit.id,
+              isCurrent: widget.currentUnitId == unit.id,
+              onTap: () {
+                Haptics.vibrate(HapticsType.selection);
+                setState(() {
+                  _selectedId = unit.id;
+                  _selectedUnit = unit;
+                });
+              },
+            ),
+          if (options.loadMoreFailed)
+            TextButton(
+              onPressed: notifier.loadNextPage,
+              child: const Text("Couldn't load more. Try again"),
+            )
+          else if (options.hasNextPage)
+            TextButton(
+              onPressed: notifier.loadNextPage,
+              child: const Text('Load more'),
+            ),
+        ],
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final options = ref.watch(
-      applicationUnitOptionsProvider(widget.propertyId),
-    );
+    final roles = ref.watch(myPropertyRolesProvider);
+    final isManager = roles.valueOrNull?[widget.propertyId] == 'MANAGER';
+    final options = isManager
+        ? ref.watch(unitOptionsNotifierProvider(_query))
+        : null;
     final state = ref.watch(updateApplicationNotifierProvider);
     final pending = state.status.isLoading();
-    final units = [
-      for (final u in options.valueOrNull ?? const <UnitModel>[])
-        ApplicationUnit.fromModel(u),
-    ];
     final changed = _selectedId != null && _selectedId != widget.currentUnitId;
-    final selected = units.where((u) => u.id == _selectedId).firstOrNull;
+    final selected = _selectedId == _selectedUnit?.id ? _selectedUnit : null;
 
     return _Sheet(
       title: widget.currentUnitId == null ? 'Assign unit' : 'Change unit',
@@ -1485,15 +1569,14 @@ class _ChangeUnitSheetState extends ConsumerState<_ChangeUnitSheet> {
             ? () => _save(selected)
             : null,
       ),
-      child: options.when(
+      child: roles.when(
         loading: () => const _UnitOptionsSkeleton(),
         error: (_, __) => RLSectionError(
           title: "Couldn't load units",
           compact: true,
-          onRetry: () =>
-              ref.invalidate(applicationUnitOptionsProvider(widget.propertyId)),
+          onRetry: () => ref.invalidate(myPropertyRolesProvider),
         ),
-        data: (_) => units.isEmpty
+        data: (_) => options == null
             ? const Padding(
                 padding: EdgeInsets.symmetric(vertical: 28),
                 child: Text(
@@ -1506,21 +1589,7 @@ class _ChangeUnitSheetState extends ConsumerState<_ChangeUnitSheet> {
                   ),
                 ),
               )
-            : Column(
-                children: [
-                  for (final unit in units)
-                    _UnitOption(
-                      unit: unit,
-                      selected: _selectedId == unit.id,
-                      isCurrent: widget.currentUnitId == unit.id,
-                      onTap: () {
-                        Haptics.vibrate(HapticsType.selection);
-                        setState(() => _selectedId = unit.id);
-                      },
-                    ),
-                  _saveError(state),
-                ],
-              ),
+            : Column(children: [_units(options), _saveError(state)]),
       ),
     );
   }

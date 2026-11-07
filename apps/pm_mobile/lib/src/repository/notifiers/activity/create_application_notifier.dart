@@ -7,6 +7,7 @@ import 'package:rentloop_manager/src/lib/api_error_messages.dart';
 import 'package:rentloop_manager/src/repository/api_state.dart';
 import 'package:rentloop_manager/src/repository/models/tenant_application_model.dart';
 import 'package:rentloop_manager/src/repository/providers/tenants/pending_tenants_provider.dart';
+import 'package:rentloop_manager/src/repository/providers/properties/property_stats_provider.dart';
 
 part 'create_application_notifier.g.dart';
 
@@ -44,6 +45,7 @@ class CreateApplicationNotifier extends _$CreateApplicationNotifier {
             input: input,
           );
       ref.invalidate(pendingTenantsProvider);
+      ref.invalidate(propertyStatsProvider(propertyId));
       state = CreateApplicationState(
         status: ApiStatus.success,
         application: created,

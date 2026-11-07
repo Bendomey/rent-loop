@@ -168,7 +168,7 @@ void main() {
     expect(q['page'], ['2']);
     expect(q['page_size'], ['20']);
     expect(q['populate'], [
-      'Property,PayerLease.Tenant,PayerLease.Unit.PropertyBlock,Payments',
+      'Property,PayerLease.Tenant,PayerLease.Unit,Payments',
     ]);
     expect(q.containsKey('query'), isFalse);
     expect(page.rows.single.code, 'INV-2024-0001');

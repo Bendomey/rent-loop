@@ -40,7 +40,6 @@ class InvoiceDetailScreen extends ConsumerWidget {
 
   Future<void> _refresh(WidgetRef ref) async {
     final pid = propertyId;
-    ref.invalidate(myPropertyRolesProvider);
     if (pid == null) return;
     ref.invalidate(billDetailProvider(pid, id));
     try {

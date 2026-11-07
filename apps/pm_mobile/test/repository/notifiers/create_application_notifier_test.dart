@@ -10,6 +10,8 @@ import 'package:rentloop_manager/src/repository/models/client_user_model.dart';
 import 'package:rentloop_manager/src/repository/models/pagination_meta_model.dart';
 import 'package:rentloop_manager/src/repository/models/tenant_application_model.dart';
 import 'package:rentloop_manager/src/repository/notifiers/activity/create_application_notifier.dart';
+import 'package:rentloop_manager/src/repository/models/property_stats_model.dart';
+import 'package:rentloop_manager/src/repository/providers/properties/property_stats_provider.dart';
 import 'package:rentloop_manager/src/repository/providers/tenants/pending_tenants_provider.dart';
 
 class _NoStorage extends Storage {
@@ -115,6 +117,30 @@ void main() {
     expect(state.application?.id, 'new1');
     expect(api.createdFor, 'p1');
     expect(api.pendingFetches, 1);
+  });
+
+  test('success invalidates the property stats', () async {
+    var builds = 0;
+    final scoped = ProviderContainer(
+      overrides: [
+        tenantApplicationApiProvider.overrideWithValue(api),
+        currentWorkspaceNotifierProvider.overrideWith(_SignedIn.new),
+        propertyStatsProvider('p1').overrideWith((ref) async {
+          builds++;
+          return const PropertyStats();
+        }),
+      ],
+    );
+    addTearDown(scoped.dispose);
+    scoped.listen(propertyStatsProvider('p1'), (_, __) {});
+    await scoped.read(propertyStatsProvider('p1').future);
+
+    await scoped
+        .read(createApplicationNotifierProvider.notifier)
+        .submit(_input(), propertyId: 'p1');
+    await scoped.read(propertyStatsProvider('p1').future);
+
+    expect(builds, 2);
   });
 
   test('an API error is translated and kept on the state', () async {

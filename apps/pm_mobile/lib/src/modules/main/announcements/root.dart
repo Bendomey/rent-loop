@@ -78,7 +78,6 @@ class _AnnouncementsScreenState extends ConsumerState<AnnouncementsScreen> {
   }
 
   Future<void> _refresh() async {
-    ref.invalidate(myPropertyRolesProvider);
     await ref.read(_provider.notifier).loadFirstPage();
   }
 

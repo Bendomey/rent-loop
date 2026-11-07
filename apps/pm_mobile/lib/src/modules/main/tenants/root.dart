@@ -11,7 +11,6 @@ import 'package:rentloop_manager/src/lib/tenant_label.dart';
 import 'package:rentloop_manager/src/repository/models/tenant_model.dart';
 import 'package:rentloop_manager/src/modules/main/tenants/pending_tenants_section.dart';
 import 'package:rentloop_manager/src/repository/notifiers/tenants/tenants_notifier.dart';
-import 'package:rentloop_manager/src/repository/providers/properties/my_property_roles_provider.dart';
 import 'package:rentloop_manager/src/repository/providers/tenants/pending_tenants_provider.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
@@ -109,7 +108,6 @@ class _TenantsScreenState extends ConsumerState<TenantsScreen> {
 
   Future<void> _refresh() async {
     ref.invalidate(pendingTenantsProvider(widget.propertyId));
-    ref.invalidate(myPropertyRolesProvider);
     await Future.wait([
       ref
           .read(tenantsNotifierProvider(widget.propertyId).notifier)

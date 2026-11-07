@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:rentloop_manager/src/architecture/current_workspace/current_workspace_notifier.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 import 'package:rentloop_manager/src/modules/main/activity/applications_list.dart';
@@ -105,7 +106,9 @@ class _Header extends ConsumerWidget {
     // Null while the first Cube round-trip is in flight, or if it failed —
     // RLSegmentItem then hides the badge rather than flashing a placeholder
     // zero that reads as "nothing to do here".
-    final counts = ref.watch(activityCountsProvider).valueOrNull;
+    final clientId = ref.watch(currentWorkspaceNotifierProvider)?.clientId;
+    final value = ref.watch(activityCountsProvider).valueOrNull;
+    final counts = value?.clientId == clientId ? value : null;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [

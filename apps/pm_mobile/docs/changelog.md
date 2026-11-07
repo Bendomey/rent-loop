@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-06 — Pickers page 20 with server search (plan: pm-mobile-api-efficiency, task 4)
+- Every property, block and unit picker or filter now loads 20 at a time, searches on the server and loads more on scroll: maintenance board and applications filters, Rent property filter, Add tenant and Change unit, Add repair, New announcement.
+- Rent tab: the property chip row is one "Property: {name}" chip that opens the picker, with "All properties" to reset.
+- Add tenant offers bookable units only (Available or PartiallyOccupied), in properties the user manages.
+- Add repair and New announcement preselect a lone property only when the first page has exactly one and no next page.
+- Removed the 200-row providers and `UnitApi.getUnitsAcrossProperties`. Modules affected: `modules/main/activity/`, `modules/main/announcements/`, `modules/main/money/`, `shared/paged_picker_sheet.dart`.
+
 ## 2026-11-06 — Post-now announcement form (plan: pm-mobile-v1-announcements, task 3)
 - "New announcement" (`announcements/add.dart`) now posts a real announcement to tenants: property, title (60), message (2,000), type, priority, and "Who should get it?" (Whole property / One block / Some units). The sample lists, schedule, expiry and "Save as draft" are gone.
 - Posting creates then publishes. If publishing fails after the draft is saved, the form locks, shows "Saved, but not sent yet." and the button becomes "Send now", which retries publish only.

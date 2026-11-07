@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:rentloop_manager/src/api/r2_upload_service.dart';
 import 'package:rentloop_manager/src/api/tenant_application_api.dart';
+import 'package:rentloop_manager/src/api/unit_api.dart';
 import 'package:rentloop_manager/src/architecture/current_workspace/current_workspace_notifier.dart';
 import 'package:rentloop_manager/src/lib/storage.dart';
 import 'package:rentloop_manager/src/lib/token_manager.dart';
@@ -13,8 +14,9 @@ import 'package:rentloop_manager/src/modules/main/activity/add_application.dart'
 import 'package:rentloop_manager/src/modules/main/activity/application_form_widgets.dart';
 import 'package:rentloop_manager/src/repository/models/client_user_model.dart';
 import 'package:rentloop_manager/src/repository/models/tenant_application_model.dart';
+import 'package:rentloop_manager/src/repository/models/pagination_meta_model.dart';
 import 'package:rentloop_manager/src/repository/models/unit_model.dart';
-import 'package:rentloop_manager/src/repository/providers/activity/application_unit_options_provider.dart';
+import 'package:rentloop_manager/src/repository/providers/properties/my_property_roles_provider.dart';
 
 class _NoStorage extends Storage {
   @override
@@ -49,6 +51,35 @@ class _Api extends TenantApplicationApi {
   }) async {
     created.add(input);
     return TenantApplicationModel(id: 'new1', code: 'TA-1');
+  }
+}
+
+class _UnitsApi extends UnitApi {
+  _UnitsApi(this.units) : super(tokenManager: TokenManager(_NoStorage()));
+
+  final List<UnitModel> units;
+  final propertyIds = <List<String>?>[];
+
+  @override
+  Future<UnitsPage> getUnitsPageAcrossProperties({
+    required String clientId,
+    List<String>? propertyIds,
+    String? blockId,
+    int page = 1,
+    int pageSize = 20,
+    String? search,
+  }) async {
+    this.propertyIds.add(propertyIds);
+    return UnitsPage(
+      rows: units,
+      meta: PaginationMetaModel(
+        total: units.length,
+        page: 1,
+        pageSize: pageSize,
+        hasNextPage: false,
+        hasPreviousPage: false,
+      ),
+    );
   }
 }
 
@@ -110,6 +141,8 @@ Future<_Api> _pump(
   List<UnitModel>? units,
   TenantLookupModel? lookup,
   bool failUploads = false,
+  Map<String, String> roles = const {'p1': 'MANAGER'},
+  _UnitsApi? unitApi,
 }) async {
   tester.view.physicalSize = const Size(800, 2400);
   tester.view.devicePixelRatio = 2;
@@ -133,9 +166,10 @@ Future<_Api> _pump(
       overrides: [
         tenantApplicationApiProvider.overrideWithValue(api),
         currentWorkspaceNotifierProvider.overrideWith(_SignedIn.new),
-        applicationUnitOptionsProvider(
-          null,
-        ).overrideWith((ref) async => units ?? _units),
+        unitApiProvider.overrideWithValue(
+          unitApi ?? _UnitsApi(units ?? _units),
+        ),
+        myPropertyRolesProvider.overrideWith((ref) async => roles),
         applicationImagePickerProvider.overrideWithValue(_FakePicker()),
         if (failUploads)
           r2UploadServiceProvider.overrideWithValue(_FailingUpload()),
@@ -198,10 +232,42 @@ void main() {
     expect(find.text('B2 · Oak Row'), findsOneWidget);
   });
 
+  testWidgets('add tenant offers only bookable units', (tester) async {
+    UnitModel unit(String id, String status) => UnitModel(
+      id: id,
+      name: id,
+      type: 'Unit.Type.Apartment',
+      status: status,
+      rentFee: 1,
+      rentFeeCurrency: 'GHS',
+      propertyId: 'p1',
+    );
+    final api = _UnitsApi([
+      unit('Free', 'Unit.Status.Available'),
+      unit('Shared', 'Unit.Status.PartiallyOccupied'),
+      unit('Taken', 'Unit.Status.Occupied'),
+      unit('Repairs', 'Unit.Status.UnderMaintenance'),
+    ]);
+    await _pump(
+      tester,
+      unitApi: api,
+      roles: const {'p1': 'MANAGER', 'p2': 'STAFF'},
+    );
+
+    await tester.tap(find.text('Select unit'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Free'), findsOneWidget);
+    expect(find.text('Shared'), findsOneWidget);
+    expect(find.text('Taken'), findsNothing);
+    expect(find.text('Repairs'), findsNothing);
+    expect(api.propertyIds.first, ['p1']);
+  });
+
   testWidgets('explains when there is no unit the caller manages', (
     tester,
   ) async {
-    await _pump(tester, units: const []);
+    await _pump(tester, roles: const {'p1': 'STAFF'});
 
     expect(
       find.text('You can only add tenants to properties you manage.'),

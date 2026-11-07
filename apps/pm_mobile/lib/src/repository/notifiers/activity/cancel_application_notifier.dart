@@ -7,6 +7,7 @@ import 'package:rentloop_manager/src/lib/api_error_messages.dart';
 import 'package:rentloop_manager/src/repository/api_state.dart';
 import 'package:rentloop_manager/src/repository/providers/activity/application_detail_provider.dart';
 import 'package:rentloop_manager/src/repository/providers/tenants/pending_tenants_provider.dart';
+import 'package:rentloop_manager/src/repository/providers/properties/property_stats_provider.dart';
 
 part 'cancel_application_notifier.g.dart';
 
@@ -45,6 +46,7 @@ class CancelApplicationNotifier extends _$CancelApplicationNotifier {
           );
       ref.invalidate(applicationDetailProvider(propertyId, id));
       ref.invalidate(pendingTenantsProvider);
+      ref.invalidate(propertyStatsProvider(propertyId));
       state = CancelApplicationState(status: ApiStatus.success);
     } on ApiException catch (e) {
       state = CancelApplicationState(

@@ -168,7 +168,7 @@ void main() {
     expect(lastRow.bottom, lessThan(fab.top));
   });
 
-  testWidgets('pull-to-refresh reloads my property roles', (tester) async {
+  testWidgets('pull-to-refresh leaves my property roles alone', (tester) async {
     var builds = 0;
     await _pump(
       tester,
@@ -189,7 +189,7 @@ void main() {
         .onRefresh();
     await container.read(myPropertyRolesProvider.future);
 
-    expect(builds, 2);
+    expect(builds, 1);
   });
 
   testWidgets('shows pending tenants, active header and Add tenant', (

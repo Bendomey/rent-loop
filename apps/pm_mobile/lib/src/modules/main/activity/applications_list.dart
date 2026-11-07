@@ -15,7 +15,10 @@ import 'package:rentloop_manager/src/lib/application_utils.dart';
 import 'package:rentloop_manager/src/modules/main/activity/activity_filters.dart';
 import 'package:rentloop_manager/src/modules/main/tenants/pending_tenants_section.dart';
 import 'package:rentloop_manager/src/repository/notifiers/activity/tenant_applications_notifier.dart';
-import 'package:rentloop_manager/src/repository/providers/activity/activity_filter_options_provider.dart';
+import 'package:rentloop_manager/src/repository/notifiers/options/options_state.dart';
+import 'package:rentloop_manager/src/repository/notifiers/options/property_options_notifier.dart';
+import 'package:rentloop_manager/src/repository/notifiers/options/unit_options_notifier.dart';
+import 'package:rentloop_manager/src/shared/paged_picker_sheet.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
@@ -31,8 +34,8 @@ class _ApplicationsListState extends ConsumerState<ApplicationsList> {
   String? _statusFilter;
   String? _genderFilter;
   String? _maritalFilter;
-  List<String> _propertyFilterIds = const [];
-  List<String> _unitFilterIds = const [];
+  List<FilterOption> _propertyFilters = const [];
+  List<FilterOption> _unitFilters = const [];
 
   late final ScrollController _scrollController;
   late final TextEditingController _searchController;
@@ -89,8 +92,8 @@ class _ApplicationsListState extends ConsumerState<ApplicationsList> {
       _statusFilter != null ||
       _genderFilter != null ||
       _maritalFilter != null ||
-      _propertyFilterIds.isNotEmpty ||
-      _unitFilterIds.isNotEmpty ||
+      _propertyFilters.isNotEmpty ||
+      _unitFilters.isNotEmpty ||
       (_query.search?.isNotEmpty ?? false);
 
   Future<void> _pickSingle({
@@ -112,36 +115,32 @@ class _ApplicationsListState extends ConsumerState<ApplicationsList> {
 
   Future<void> _pickMulti({
     required String title,
-    required List<({String id, String name})> options,
-    required List<String> selectedIds,
-    required void Function(List<String> ids) onChanged,
+    required ProviderListenable<OptionsState<FilterOption>> state,
+    required void Function(String) onSearch,
+    required VoidCallback onLoadMore,
+    required VoidCallback onRetry,
+    required List<FilterOption> selected,
+    required void Function(List<FilterOption> picked) onChanged,
   }) async {
-    final labels = options.map((o) => o.name).toList();
-    final idsByLabel = {for (final o in options) o.name: o.id};
-    final selectedLabels = options
-        .where((o) => selectedIds.contains(o.id))
-        .map((o) => o.name)
-        .toList();
-    final result = await showModalBottomSheet<RLFilterPickResult>(
+    final result = await showPagedPickerSheet<FilterOption>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => RLFilterSheet(
-        title: title,
-        options: labels,
-        selectedMulti: selectedLabels,
-        idsByLabel: idsByLabel,
-        multiSelect: true,
-      ),
+      title: title,
+      state: state,
+      onSearch: onSearch,
+      onLoadMore: onLoadMore,
+      onRetry: onRetry,
+      label: (o) => o.name,
+      id: (o) => o.id,
+      multi: true,
+      initial: selected,
     );
     if (result == null) return;
-    onChanged(result.isClear ? const [] : (result.ids ?? const []));
+    onChanged(result);
   }
 
-  Widget _buildChipsRow(
-    List<({String id, String name})> propertyOptions,
-    List<({String id, String name})> unitOptions,
-  ) {
+  Widget _buildChipsRow() {
+    final propertyOptions = propertyOptionsNotifierProvider();
+    final unitOptions = unitOptionsNotifierProvider(const UnitOptionsQuery());
     return Container(
       decoration: const BoxDecoration(
         color: RLTokens.surface,
@@ -157,38 +156,60 @@ class _ApplicationsListState extends ConsumerState<ApplicationsList> {
           children: [
             RLFilterTriggerChip(
               label: 'Property',
-              value: rlMultiSelectChipLabel(
-                selectedIds: _propertyFilterIds,
-                options: propertyOptions,
+              value: filterChipLabel(
+                selected: _propertyFilters,
                 singularNoun: 'Property',
                 pluralNoun: 'Properties',
               ),
               onTap: () => _pickMulti(
                 title: 'Property',
-                options: propertyOptions,
-                selectedIds: _propertyFilterIds,
-                onChanged: (ids) {
-                  _propertyFilterIds = ids;
-                  _applyQuery(_query.copyWith(propertyIds: ids));
+                state: asFilterOptions(
+                  propertyOptions,
+                  id: (p) => p.id,
+                  name: (p) => p.name,
+                ),
+                onSearch: (v) =>
+                    ref.read(propertyOptions.notifier).setSearch(v),
+                onLoadMore: () =>
+                    ref.read(propertyOptions.notifier).loadNextPage(),
+                onRetry: () => ref.read(propertyOptions.notifier).refresh(),
+                selected: _propertyFilters,
+                onChanged: (picked) {
+                  _propertyFilters = picked;
+                  _applyQuery(
+                    _query.copyWith(
+                      propertyIds: [for (final o in picked) o.id],
+                    ),
+                  );
                 },
               ),
             ),
             const SizedBox(width: 8),
             RLFilterTriggerChip(
               label: 'Unit',
-              value: rlMultiSelectChipLabel(
-                selectedIds: _unitFilterIds,
-                options: unitOptions,
+              value: filterChipLabel(
+                selected: _unitFilters,
                 singularNoun: 'Unit',
                 pluralNoun: 'Units',
               ),
               onTap: () => _pickMulti(
                 title: 'Unit',
-                options: unitOptions,
-                selectedIds: _unitFilterIds,
-                onChanged: (ids) {
-                  _unitFilterIds = ids;
-                  _applyQuery(_query.copyWith(desiredUnitIds: ids));
+                state: asFilterOptions(
+                  unitOptions,
+                  id: (u) => u.id,
+                  name: (u) => u.name,
+                ),
+                onSearch: (v) => ref.read(unitOptions.notifier).setSearch(v),
+                onLoadMore: () => ref.read(unitOptions.notifier).loadNextPage(),
+                onRetry: () => ref.read(unitOptions.notifier).refresh(),
+                selected: _unitFilters,
+                onChanged: (picked) {
+                  _unitFilters = picked;
+                  _applyQuery(
+                    _query.copyWith(
+                      desiredUnitIds: [for (final o in picked) o.id],
+                    ),
+                  );
                 },
               ),
             ),
@@ -255,15 +276,6 @@ class _ApplicationsListState extends ConsumerState<ApplicationsList> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(tenantApplicationsNotifierProvider);
-    final propertyOptions =
-        (ref.watch(activityFilterPropertiesProvider).valueOrNull ?? [])
-            .map((p) => (id: p.id, name: p.name))
-            .toList();
-    final unitOptions =
-        (ref.watch(activityFilterUnitsProvider).valueOrNull ?? [])
-            .map((u) => (id: u.id, name: u.name))
-            .toList();
-
     final Widget body;
     if (state.isLoadingFirstPage) {
       body = const SingleChildScrollView(
@@ -314,7 +326,7 @@ class _ApplicationsListState extends ConsumerState<ApplicationsList> {
           controller: _searchController,
           onChanged: _onSearchChanged,
         ),
-        _buildChipsRow(propertyOptions, unitOptions),
+        _buildChipsRow(),
         Expanded(
           child: RefreshIndicator(
             onRefresh: () =>

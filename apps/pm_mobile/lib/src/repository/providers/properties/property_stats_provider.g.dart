@@ -6,7 +6,7 @@ part of 'property_stats_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$propertyStatsHash() => r'4130c4c7eb0665d567b259879d109c75dc5118a4';
+String _$propertyStatsHash() => r'962e8ac818dc1d8ae89689a9a098a0f1efe9960b';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -72,7 +72,7 @@ class PropertyStatsFamily extends Family<AsyncValue<PropertyStats>> {
 }
 
 /// See also [propertyStats].
-class PropertyStatsProvider extends AutoDisposeFutureProvider<PropertyStats> {
+class PropertyStatsProvider extends FutureProvider<PropertyStats> {
   /// See also [propertyStats].
   PropertyStatsProvider(
     String propertyId,
@@ -124,7 +124,7 @@ class PropertyStatsProvider extends AutoDisposeFutureProvider<PropertyStats> {
   }
 
   @override
-  AutoDisposeFutureProviderElement<PropertyStats> createElement() {
+  FutureProviderElement<PropertyStats> createElement() {
     return _PropertyStatsProviderElement(this);
   }
 
@@ -142,13 +142,12 @@ class PropertyStatsProvider extends AutoDisposeFutureProvider<PropertyStats> {
   }
 }
 
-mixin PropertyStatsRef on AutoDisposeFutureProviderRef<PropertyStats> {
+mixin PropertyStatsRef on FutureProviderRef<PropertyStats> {
   /// The parameter `propertyId` of this provider.
   String get propertyId;
 }
 
-class _PropertyStatsProviderElement
-    extends AutoDisposeFutureProviderElement<PropertyStats>
+class _PropertyStatsProviderElement extends FutureProviderElement<PropertyStats>
     with PropertyStatsRef {
   _PropertyStatsProviderElement(super.provider);
 

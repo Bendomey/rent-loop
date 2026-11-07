@@ -6,6 +6,8 @@ import 'package:rentloop_manager/src/lib/api_error_messages.dart';
 import 'package:rentloop_manager/src/repository/api_state.dart';
 import 'package:rentloop_manager/src/repository/models/tenant_application_model.dart';
 import 'package:rentloop_manager/src/repository/notifiers/activity/financial_action.dart';
+import 'package:rentloop_manager/src/repository/providers/home/home_stats_provider.dart';
+import 'package:rentloop_manager/src/repository/providers/properties/property_stats_provider.dart';
 
 part 'approve_application_notifier.g.dart';
 
@@ -41,6 +43,8 @@ class ApproveApplicationNotifier extends _$ApproveApplicationNotifier {
           );
       invalidateFinancials(ref, propertyId: propertyId, applicationId: id);
       state = ApproveApplicationState(status: ApiStatus.success, lease: lease);
+      ref.invalidate(propertyStatsProvider);
+      ref.invalidate(homeStatsProvider);
     } on ApiException catch (e) {
       state = ApproveApplicationState(
         status: ApiStatus.failed,

@@ -35,7 +35,6 @@ class ApplicationFinancialPage extends ConsumerWidget {
   final String propertyId;
 
   Future<void> _refresh(WidgetRef ref, String? accountId) async {
-    ref.invalidate(myPropertyRolesProvider);
     ref.invalidate(applicationDetailProvider(propertyId, data.id));
     if (accountId != null) {
       ref.invalidate(financialAccountProvider(propertyId, accountId));

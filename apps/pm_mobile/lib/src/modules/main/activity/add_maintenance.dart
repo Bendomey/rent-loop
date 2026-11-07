@@ -7,9 +7,17 @@ import 'package:shimmer/shimmer.dart';
 import 'package:rentloop_manager/src/lib/repair_labels.dart';
 import 'package:rentloop_manager/src/modules/main/activity/application_form_widgets.dart';
 import 'package:rentloop_manager/src/repository/api_state.dart';
+import 'package:rentloop_manager/src/repository/models/property_block_model.dart';
 import 'package:rentloop_manager/src/repository/models/property_model.dart';
+import 'package:rentloop_manager/src/repository/models/unit_model.dart';
 import 'package:rentloop_manager/src/repository/notifiers/activity/create_maintenance_request_notifier.dart';
-import 'package:rentloop_manager/src/repository/providers/activity/repair_form_options_provider.dart';
+import 'package:rentloop_manager/src/repository/notifiers/options/block_options_notifier.dart';
+import 'package:rentloop_manager/src/repository/notifiers/options/options_state.dart';
+import 'package:rentloop_manager/src/repository/notifiers/options/property_options_notifier.dart';
+import 'package:rentloop_manager/src/repository/notifiers/options/unit_options_notifier.dart';
+import 'package:rentloop_manager/src/repository/providers/properties/my_property_roles_provider.dart';
+import 'package:rentloop_manager/src/repository/providers/properties/property_detail_provider.dart';
+import 'package:rentloop_manager/src/shared/paged_picker_sheet.dart';
 import 'package:rentloop_manager/src/shared/toast.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
@@ -47,12 +55,14 @@ class AddMaintenanceScreen extends ConsumerStatefulWidget {
 }
 
 class _AddMaintenanceScreenState extends ConsumerState<AddMaintenanceScreen> {
-  final _blocks = <String>{};
-  final _units = <String>{};
+  final _blocks = <String, PropertyBlockModel>{};
+  final _units = <String, UnitModel>{};
   final _titleCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
   final _photos = [_PhotoSlot()];
-  String? _pickedPropertyId;
+  PropertyModel? _pickedProperty;
+  PropertyModel? _soleProperty;
+  bool _soleDecided = false;
   String _priority = '';
   String _category = '';
   String _chosenVisibility = _kTenantValue;
@@ -77,14 +87,28 @@ class _AddMaintenanceScreenState extends ConsumerState<AddMaintenanceScreen> {
 
   bool get _photoBlocking => _photos.any((p) => p.blocking);
 
-  String? _propertyFor(List<PropertyModel> options) {
-    final picked = _pickedPropertyId;
-    if (picked != null && options.any((p) => p.id == picked)) return picked;
+  PropertyModel? _propertyFor(OptionsState<PropertyModel> options) {
+    final picked = _pickedProperty;
+    if (picked != null) return picked;
     final scoped = widget.propertyId;
     if (scoped != null) {
-      return options.any((p) => p.id == scoped) ? scoped : null;
+      final listed = options.items.where((p) => p.id == scoped).firstOrNull;
+      if (listed != null) return listed;
+      final roles = ref.watch(myPropertyRolesProvider).valueOrNull;
+      if (roles?[scoped] != 'MANAGER') return null;
+      return ref.watch(propertyDetailProvider(scoped)).valueOrNull;
     }
-    return options.length == 1 ? options.first.id : null;
+    if (!_soleDecided &&
+        options.hasLoaded &&
+        !options.isLoading &&
+        options.error == null &&
+        options.search.isEmpty) {
+      _soleDecided = true;
+      if (options.items.length == 1 && !options.hasNextPage) {
+        _soleProperty = options.items.first;
+      }
+    }
+    return _soleProperty;
   }
 
   @override
@@ -101,28 +125,84 @@ class _AddMaintenanceScreenState extends ConsumerState<AddMaintenanceScreen> {
 
   void _closePicker() => setState(() => _activePicker = null);
 
-  void _pickProperty(String id, String? current) {
+  Future<void> _pickProperty(PropertyModel? current) async {
+    Haptics.vibrate(HapticsType.selection);
+    final options = propertyOptionsNotifierProvider(managerOnly: true);
+    final picked = await showPagedPickerSheet<PropertyModel>(
+      context: context,
+      title: 'Property',
+      state: options,
+      onSearch: (v) => ref.read(options.notifier).setSearch(v),
+      onLoadMore: () => ref.read(options.notifier).loadNextPage(),
+      onRetry: () => ref.read(options.notifier).refresh(),
+      label: (p) => p.name,
+      id: (p) => p.id,
+      initial: [?current],
+      emptyText: 'No properties found',
+    );
+    if (mounted) ref.read(options.notifier).setSearch('');
+    if (picked == null || picked.isEmpty || !mounted) return;
+    final property = picked.first;
     setState(() {
-      if (id != current) {
+      if (property.id != current?.id) {
         _blocks.clear();
         _units.clear();
         _chosenVisibility = _kTenantValue;
         _showErrors = false;
       }
-      _pickedPropertyId = id;
-      _activePicker = null;
+      _pickedProperty = property;
     });
-    Haptics.vibrate(HapticsType.selection);
   }
 
-  /// Blocks and units are independent selections, so the sheet stays open and
-  /// each tap toggles one asset.
-  void _toggleAsset(String key, String value) {
-    setState(() {
-      final selection = key == 'block' ? _blocks : _units;
-      if (!selection.remove(value)) selection.add(value);
-    });
+  Future<void> _pickBlocks(String propertyId) async {
     Haptics.vibrate(HapticsType.selection);
+    final options = blockOptionsNotifierProvider(propertyId);
+    final picked = await showPagedPickerSheet<PropertyBlockModel>(
+      context: context,
+      title: 'Select blocks',
+      state: options,
+      onSearch: (v) => ref.read(options.notifier).setSearch(v),
+      onLoadMore: () => ref.read(options.notifier).loadNextPage(),
+      onRetry: () => ref.read(options.notifier).refresh(),
+      label: (b) => b.name,
+      id: (b) => b.id,
+      multi: true,
+      initial: _blocks.values.toList(),
+      emptyText: 'No blocks in this property',
+    );
+    if (picked == null || !mounted) return;
+    setState(() {
+      _blocks
+        ..clear()
+        ..addEntries([for (final b in picked) MapEntry(b.id, b)]);
+    });
+  }
+
+  Future<void> _pickUnits(String propertyId) async {
+    Haptics.vibrate(HapticsType.selection);
+    final options = unitOptionsNotifierProvider(
+      UnitOptionsQuery(propertyIds: [propertyId]),
+    );
+    final picked = await showPagedPickerSheet<UnitModel>(
+      context: context,
+      title: 'Select units',
+      state: options,
+      onSearch: (v) => ref.read(options.notifier).setSearch(v),
+      onLoadMore: () => ref.read(options.notifier).loadNextPage(),
+      onRetry: () => ref.read(options.notifier).refresh(),
+      label: (u) => u.name,
+      sub: (u) => u.propertyBlock?.name ?? '',
+      id: (u) => u.id,
+      multi: true,
+      initial: _units.values.toList(),
+      emptyText: 'No units in this property',
+    );
+    if (picked == null || !mounted) return;
+    setState(() {
+      _units
+        ..clear()
+        ..addEntries([for (final u in picked) MapEntry(u.id, u)]);
+    });
   }
 
   void _pick(String key, String value) {
@@ -162,8 +242,8 @@ class _AddMaintenanceScreenState extends ConsumerState<AddMaintenanceScreen> {
     );
     await notifier.submit(
       propertyId: propertyId,
-      unitIds: _units.toList(),
-      blockIds: _blocks.toList(),
+      unitIds: _units.keys.toList(),
+      blockIds: _blocks.keys.toList(),
       title: _titleCtrl.text.trim(),
       description: _descCtrl.text.trim(),
       priority: _priority,
@@ -198,42 +278,35 @@ class _AddMaintenanceScreenState extends ConsumerState<AddMaintenanceScreen> {
     }
   }
 
-  String _assetSummary(
-    Set<String> selection,
+  String _assetSummary<T>(
+    Map<String, T> selection,
     String plural,
-    String Function(String) nameOf,
+    String Function(T) nameOf,
   ) {
     if (selection.isEmpty) return '';
-    if (selection.length == 1) return nameOf(selection.first);
+    if (selection.length == 1) return nameOf(selection.values.first);
     return '${selection.length} $plural selected';
   }
 
   @override
   Widget build(BuildContext context) {
-    final optionsAsync = ref.watch(repairPropertyOptionsProvider);
-    final options = optionsAsync.valueOrNull;
-    final loading = !optionsAsync.hasValue && optionsAsync.isLoading;
-    final noAccess = options != null && options.isEmpty;
-    final propertyId = options == null ? null : _propertyFor(options);
-    final assetsAsync = propertyId == null
-        ? null
-        : ref.watch(repairAssetOptionsProvider(propertyId));
-    final assets = assetsAsync?.valueOrNull;
-    final assetsLoading =
-        assetsAsync != null && !assetsAsync.hasValue && assetsAsync.isLoading;
-    final assetsFailed =
-        assetsAsync != null && !assetsAsync.hasValue && assetsAsync.hasError;
-    final blockList = assets?.blocks ?? const [];
-    final unitList = assets?.units ?? const [];
+    final options = ref.watch(
+      propertyOptionsNotifierProvider(managerOnly: true),
+    );
+    final loading = !options.hasLoaded;
+    final noAccess =
+        options.hasLoaded &&
+        options.items.isEmpty &&
+        !options.hasNextPage &&
+        options.error == null &&
+        options.search.isEmpty;
+    final property = _propertyFor(options);
+    final propertyId = property?.id;
     final vacantSingleUnit =
         _blocks.isEmpty &&
         _units.length == 1 &&
-        unitList.any(
-          (u) =>
-              u.id == _units.first &&
-              u.status != 'Unit.Status.Occupied' &&
-              u.status != 'Unit.Status.PartiallyOccupied',
-        );
+        _units.values.first.status != 'Unit.Status.Occupied' &&
+        _units.values.first.status != 'Unit.Status.PartiallyOccupied';
 
     return Scaffold(
       backgroundColor: RLTokens.surface,
@@ -296,77 +369,49 @@ class _AddMaintenanceScreenState extends ConsumerState<AddMaintenanceScreen> {
                               child: loading
                                   ? const _FieldSkeleton()
                                   : _SelectField(
-                                      value:
-                                          options
-                                              ?.where((p) => p.id == propertyId)
-                                              .firstOrNull
-                                              ?.name ??
-                                          '',
-                                      placeholder: optionsAsync.hasError
+                                      value: property?.name ?? '',
+                                      placeholder: options.error != null
                                           ? "Couldn't load properties"
                                           : 'Select property',
-                                      onTap: () => _openPicker('property'),
+                                      onTap: () => _pickProperty(property),
                                     ),
                             ),
                             const SizedBox(height: 18),
                             _FormField(
                               label: 'Blocks',
                               required: false,
-                              child: assetsLoading
-                                  ? const _FieldSkeleton()
-                                  : assetsFailed
-                                  ? _AssetLoadError(
-                                      onRetry: () => ref.invalidate(
-                                        repairAssetOptionsProvider(propertyId!),
-                                      ),
-                                    )
-                                  : _SelectField(
-                                      value: _assetSummary(
-                                        _blocks,
-                                        'blocks',
-                                        (id) =>
-                                            blockList
-                                                .where((b) => b.id == id)
-                                                .firstOrNull
-                                                ?.name ??
-                                            '',
-                                      ),
-                                      placeholder: propertyId == null
-                                          ? 'Pick a property first'
-                                          : 'Select blocks',
-                                      enabled: propertyId != null,
-                                      hasError: _showErrors && _assetCount == 0,
-                                      onTap: () => _openPicker('block'),
-                                    ),
-                            ),
-                            if (!assetsFailed) ...[
-                              const SizedBox(height: 18),
-                              _FormField(
-                                label: 'Units',
-                                required: false,
-                                child: assetsLoading
-                                    ? const _FieldSkeleton()
-                                    : _SelectField(
-                                        value: _assetSummary(
-                                          _units,
-                                          'units',
-                                          (id) =>
-                                              unitList
-                                                  .where((u) => u.id == id)
-                                                  .firstOrNull
-                                                  ?.name ??
-                                              '',
-                                        ),
-                                        placeholder: propertyId == null
-                                            ? 'Pick a property first'
-                                            : 'Select units',
-                                        enabled: propertyId != null,
-                                        hasError:
-                                            _showErrors && _assetCount == 0,
-                                        onTap: () => _openPicker('unit'),
-                                      ),
+                              child: _SelectField(
+                                value: _assetSummary(
+                                  _blocks,
+                                  'blocks',
+                                  (b) => b.name,
+                                ),
+                                placeholder: propertyId == null
+                                    ? 'Pick a property first'
+                                    : 'Select blocks',
+                                enabled: propertyId != null,
+                                hasError: _showErrors && _assetCount == 0,
+                                onTap: () => _pickBlocks(propertyId!),
                               ),
-                            ],
+                            ),
+                            const SizedBox(height: 18),
+                            _FormField(
+                              label: 'Units',
+                              required: false,
+                              child: _SelectField(
+                                value: _assetSummary(
+                                  _units,
+                                  'units',
+                                  (u) => u.name,
+                                ),
+                                placeholder: propertyId == null
+                                    ? 'Pick a property first'
+                                    : 'Select units',
+                                enabled: propertyId != null,
+                                hasError: _showErrors && _assetCount == 0,
+                                onTap: () => _pickUnits(propertyId!),
+                              ),
+                            ),
                             if (_showErrors && _assetCount == 0) ...[
                               const SizedBox(height: 8),
                               const _FieldError(_kAssetError),
@@ -631,45 +676,6 @@ class _AddMaintenanceScreenState extends ConsumerState<AddMaintenanceScreen> {
               ),
             ),
 
-          if (_activePicker == 'property' && options != null)
-            _PickerSheet(
-              title: 'Property',
-              options: [
-                for (final p in options)
-                  _PickerOption(value: p.id, label: p.name),
-              ],
-              selected: propertyId ?? '',
-              onPick: (v) => _pickProperty(v, propertyId),
-              onClose: _closePicker,
-            ),
-          if (_activePicker == 'block')
-            _PickerSheet(
-              title: 'Select blocks',
-              options: [
-                for (final b in blockList)
-                  _PickerOption(value: b.id, label: b.name),
-              ],
-              emptyMessage: 'No blocks in this property',
-              selectedValues: _blocks,
-              onPick: (v) => _toggleAsset('block', v),
-              onClose: _closePicker,
-            ),
-          if (_activePicker == 'unit')
-            _PickerSheet(
-              title: 'Select units',
-              options: [
-                for (final u in unitList)
-                  _PickerOption(
-                    value: u.id,
-                    label: u.name,
-                    sub: u.propertyBlock?.name,
-                  ),
-              ],
-              emptyMessage: 'No units in this property',
-              selectedValues: _units,
-              onPick: (v) => _toggleAsset('unit', v),
-              onClose: _closePicker,
-            ),
           if (_activePicker == 'priority')
             _PickerSheet(
               title: 'Priority',
@@ -711,35 +717,6 @@ class _AddMaintenanceScreenState extends ConsumerState<AddMaintenanceScreen> {
             ),
         ],
       ),
-    );
-  }
-}
-
-class _AssetLoadError extends StatelessWidget {
-  const _AssetLoadError({required this.onRetry});
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        const Expanded(
-          child: Text(
-            "Couldn't load blocks and units.",
-            style: TextStyle(
-              fontFamily: RLTokens.fontSans,
-              fontSize: 13.5,
-              color: RLTokens.danger,
-            ),
-          ),
-        ),
-        RLBtn(
-          label: 'Try again',
-          kind: RLBtnKind.light,
-          large: false,
-          onPressed: onRetry,
-        ),
-      ],
     );
   }
 }
@@ -1004,25 +981,16 @@ class _PickerSheet extends StatelessWidget {
     required this.options,
     required this.onPick,
     required this.onClose,
-    this.emptyMessage,
     this.selected = '',
-    this.selectedValues,
   });
 
   final String title;
   final List<_PickerOption> options;
   final ValueChanged<String> onPick;
   final VoidCallback onClose;
-  final String? emptyMessage;
-
-  /// Single-select sheets track one value…
   final String selected;
 
-  /// …while multi-select sheets stay open and toggle each tapped value.
-  final Set<String>? selectedValues;
-
-  bool _isSelected(String value) =>
-      selectedValues?.contains(value) ?? selected == value;
+  bool _isSelected(String value) => selected == value;
 
   @override
   Widget build(BuildContext context) {
@@ -1075,11 +1043,7 @@ class _PickerSheet extends StatelessWidget {
                           ),
                         ),
                         RLIconBtn(
-                          // Multi-select sheets stay open while toggling, so
-                          // this button reads as "done" rather than "cancel".
-                          icon: selectedValues == null
-                              ? Icons.close
-                              : Icons.check_rounded,
+                          icon: Icons.close,
                           bg: RLTokens.fill,
                           iconColor: RLTokens.inkSoft,
                           onTap: onClose,
@@ -1093,18 +1057,6 @@ class _PickerSheet extends StatelessWidget {
                       padding: const EdgeInsets.fromLTRB(14, 4, 14, 30),
                       child: Column(
                         children: [
-                          if (options.isEmpty && emptyMessage != null)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 24),
-                              child: Text(
-                                emptyMessage!,
-                                style: const TextStyle(
-                                  fontFamily: RLTokens.fontSans,
-                                  fontSize: 14,
-                                  color: RLTokens.muted,
-                                ),
-                              ),
-                            ),
                           ...options.asMap().entries.map((e) {
                             final i = e.key;
                             final o = e.value;

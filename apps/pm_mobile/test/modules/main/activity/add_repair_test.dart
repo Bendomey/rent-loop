@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:rentloop_manager/src/api/r2_upload_service.dart';
 import 'package:rentloop_manager/src/modules/main/activity/add_maintenance.dart';
@@ -18,11 +17,16 @@ import 'package:rentloop_manager/src/repository/models/property_block_model.dart
 import 'package:rentloop_manager/src/repository/models/property_model.dart';
 import 'package:rentloop_manager/src/repository/models/unit_model.dart';
 import 'package:rentloop_manager/src/repository/notifiers/activity/create_maintenance_request_notifier.dart';
-import 'package:rentloop_manager/src/repository/providers/activity/repair_form_options_provider.dart';
+import 'package:rentloop_manager/src/repository/notifiers/options/unit_options_notifier.dart';
+import 'package:rentloop_manager/src/repository/notifiers/options/block_options_notifier.dart';
+import 'package:rentloop_manager/src/repository/notifiers/options/property_options_notifier.dart';
 import 'package:rentloop_manager/src/repository/providers/properties/my_property_roles_provider.dart';
+import 'package:rentloop_manager/src/repository/providers/properties/property_detail_provider.dart';
 import 'package:rentloop_manager/src/shared/toast.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
+
+import '../../../support/options_fakes.dart';
 
 class _FakeCreate extends CreateMaintenanceRequestNotifier {
   _FakeCreate({this.fail = false});
@@ -105,11 +109,6 @@ class _StalledUpload extends R2UploadService {
   }) => Completer<String>().future;
 }
 
-typedef AssetOptions = ({
-  List<PropertyBlockModel> blocks,
-  List<UnitModel> units,
-});
-
 PropertyModel _prop(String id, String name) =>
     PropertyModel(id: id, name: name, type: 'Apartment', status: 'ACTIVE');
 
@@ -138,8 +137,13 @@ Future<_FakeCreate> _pump(
   bool fail = false,
   bool stallUploads = false,
   R2UploadService? upload,
-  Future<AssetOptions> Function()? assets,
-  bool settle = true,
+  List<PropertyBlockModel>? blocks,
+  List<UnitModel>? units,
+  List<String>? unitSearches,
+  Map<String, String>? roles,
+  bool hasMoreProperties = false,
+  bool staleOnClear = false,
+  PropertyModel? detail,
 }) async {
   tester.view.physicalSize = const Size(800, 3200);
   tester.view.devicePixelRatio = 2;
@@ -161,20 +165,36 @@ Future<_FakeCreate> _pump(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
-        repairPropertyOptionsProvider.overrideWith((ref) async => props),
-        for (final id in ['p1', 'p2'])
-          repairAssetOptionsProvider(id).overrideWith(
-            (ref) =>
-                assets?.call() ??
-                Future.value((
-                  blocks: [_block('b1', 'Block A')],
-                  units: [
+        propertyOptionsNotifierProvider(managerOnly: true).overrideWith(
+          () => FakePropertyOptions(
+            props,
+            hasNextPage: hasMoreProperties,
+            staleOnClear: staleOnClear,
+          ),
+        ),
+        if (detail != null)
+          propertyDetailProvider(detail.id).overrideWith((ref) async => detail),
+        myPropertyRolesProvider.overrideWith(
+          (ref) async => roles ?? {for (final p in props) p.id: 'MANAGER'},
+        ),
+        for (final id in ['p1', 'p2']) ...[
+          blockOptionsNotifierProvider(id).overrideWith(
+            () => FakeBlockOptions(blocks ?? [_block('b1', 'Block A')]),
+          ),
+          unitOptionsNotifierProvider(
+            UnitOptionsQuery(propertyIds: [id]),
+          ).overrideWith(
+            () => FakeUnitOptions(
+              units ??
+                  [
                     _unit('u1', 'Unit 1', block: 'Block A'),
                     _unit('u2', 'Unit 2'),
                     _unit('u3', 'Unit 3', status: 'Unit.Status.Available'),
                   ],
-                )),
+              searches: unitSearches,
+            ),
           ),
+        ],
         createMaintenanceRequestNotifierProvider.overrideWith(() => fake),
         applicationImagePickerProvider.overrideWithValue(_FakePicker()),
         r2UploadServiceProvider.overrideWithValue(
@@ -184,19 +204,11 @@ Future<_FakeCreate> _pump(
       child: MaterialApp.router(routerConfig: router),
     ),
   );
-  if (settle) {
-    await tester.pumpAndSettle();
-  } else {
-    await tester.pump();
-    await tester.pump();
-  }
+  await tester.pumpAndSettle();
   return fake;
 }
 
-final _doneButton = find.descendant(
-  of: find.byType(RLIconBtn),
-  matching: find.byIcon(Icons.check_rounded),
-);
+final _doneButton = find.textContaining('Done (');
 
 Future<void> _tapText(WidgetTester tester, String text) async {
   await tester.ensureVisible(find.text(text).first);
@@ -316,6 +328,100 @@ void main() {
     expect(call['attachments'], ['https://r2/x.jpg']);
   });
 
+  testWidgets('Add repair unit picks survive a search and are all submitted', (
+    tester,
+  ) async {
+    final searches = <String>[];
+    final fake = await _pump(tester, unitSearches: searches);
+    await _tapText(tester, 'Select units');
+    await tester.tap(find.text('Unit 1'));
+    await tester.pump();
+
+    await tester.enterText(
+      find.descendant(
+        of: find.byType(RLSearchBar),
+        matching: find.byType(TextField),
+      ),
+      '3',
+    );
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pumpAndSettle();
+    expect(searches, ['3']);
+    expect(find.text('Unit 1'), findsNothing);
+
+    await tester.tap(find.text('Unit 3'));
+    await tester.pump();
+    await tester.tap(find.text('Done (2)'));
+    await tester.pumpAndSettle();
+    expect(find.text('2 units selected'), findsOneWidget);
+
+    await _fillRest(tester);
+    await _tapText(tester, 'Create repair');
+    await tester.pump(const Duration(seconds: 5));
+    expect(fake.calls.single['unitIds'], unorderedEquals(['u1', 'u3']));
+  });
+
+  testWidgets('a cancelled one-hit search does not preselect that property', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      properties: [_prop('p1', 'Palm Court'), _prop('p2', 'Oak Row')],
+      staleOnClear: true,
+    );
+    await _tapText(tester, 'Select property');
+    await tester.enterText(
+      find.descendant(
+        of: find.byType(RLSearchBar),
+        matching: find.byType(TextField),
+      ),
+      'Oak',
+    );
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pumpAndSettle();
+    expect(find.text('Palm Court'), findsNothing);
+    await tester.tap(find.byIcon(Icons.close).last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Select property'), findsOneWidget);
+    expect(find.text('Oak Row'), findsNothing);
+  });
+
+  testWidgets('a lone property is not preselected while more pages exist', (
+    tester,
+  ) async {
+    await _pump(tester, hasMoreProperties: true);
+    expect(find.text('Select property'), findsOneWidget);
+    expect(find.text('Palm Court'), findsNothing);
+  });
+
+  testWidgets('a scoped property missing from page one is found by role', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      propertyId: 'p2',
+      properties: [_prop('p1', 'Palm Court')],
+      roles: {'p1': 'MANAGER', 'p2': 'MANAGER'},
+      detail: _prop('p2', 'Oak Row'),
+    );
+    expect(find.text('Oak Row'), findsOneWidget);
+  });
+
+  testWidgets('a scoped property the user only staffs is not preselected', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      propertyId: 'p2',
+      properties: [_prop('p1', 'Palm Court')],
+      roles: {'p1': 'MANAGER', 'p2': 'STAFF'},
+      detail: _prop('p2', 'Oak Row'),
+    );
+    expect(find.text('Oak Row'), findsNothing);
+    expect(find.text('Select property'), findsOneWidget);
+  });
+
   testWidgets('a block forces "Only staff can see this"', (tester) async {
     final fake = await _pump(tester);
     await _tapText(tester, 'Select blocks');
@@ -399,49 +505,10 @@ void main() {
     expect(find.text('Palm Court'), findsNothing);
   });
 
-  testWidgets('block and unit fields shimmer while options load', (
-    tester,
-  ) async {
-    await _pump(
-      tester,
-      assets: () => Completer<AssetOptions>().future,
-      settle: false,
-    );
-    expect(find.byType(Shimmer), findsNWidgets(2));
-    expect(find.text('Select units'), findsNothing);
-  });
-
-  testWidgets('failed options offer Try again, not the empty copy', (
-    tester,
-  ) async {
-    var attempts = 0;
-    await _pump(
-      tester,
-      assets: () {
-        attempts++;
-        if (attempts == 1) return Future.error(Exception('boom'));
-        return Future.value((
-          blocks: <PropertyBlockModel>[],
-          units: [_unit('u1', 'Unit 1')],
-        ));
-      },
-    );
-    expect(find.text("Couldn't load blocks and units."), findsOneWidget);
-    expect(find.text('No units in this property'), findsNothing);
-
-    await _tapText(tester, 'Try again');
-    expect(find.text("Couldn't load blocks and units."), findsNothing);
-    expect(find.text('Select units'), findsOneWidget);
-  });
-
   testWidgets('empty units show the empty copy while blocks still work', (
     tester,
   ) async {
-    await _pump(
-      tester,
-      assets: () async =>
-          (blocks: [_block('b1', 'Block A')], units: <UnitModel>[]),
-    );
+    await _pump(tester, units: <UnitModel>[]);
     await _tapText(tester, 'Select units');
     expect(find.text('No units in this property'), findsOneWidget);
     await tester.tap(_doneButton);
@@ -451,11 +518,7 @@ void main() {
   });
 
   testWidgets('empty blocks show the empty copy', (tester) async {
-    await _pump(
-      tester,
-      assets: () async =>
-          (blocks: <PropertyBlockModel>[], units: [_unit('u1', 'Unit 1')]),
-    );
+    await _pump(tester, blocks: <PropertyBlockModel>[]);
     await _tapText(tester, 'Select blocks');
     expect(find.text('No blocks in this property'), findsOneWidget);
   });

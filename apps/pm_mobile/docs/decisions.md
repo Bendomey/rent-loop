@@ -149,3 +149,12 @@ The boundary is a semi-join (`accessiblePropertyIDsSubQuery` in `repository/comm
 **Decision:** Remove the GoRouter routes and every Home/More/My-account entry point. Keep the screen files on disk.
 **Tradeoffs:** Dead code stays in the tree; restoring a screen is re-adding a route and a row.
 **Alternatives considered:** Feature flags (rejected, extra surface for a hide that is meant to be temporary); deleting the files (rejected, v2 will bring them back).
+
+---
+
+## Pickers page 20 with server search; analytics + roles cached app-wide (2026-11-06)
+**Date:** 2026-11-06
+**Why:** Pickers and filters asked for 200 properties, blocks or units at once, and every screen visit refetched analytics and the user's property roles. On a large portfolio that is slow and wasteful on mobile data.
+**Decision:** Pickers load 20 per page, search on the server (debounced) and load more on scroll, through shared option notifiers and one picker sheet. Selected items are kept with id and name, so ticks and filter chips survive search and paging. Analytics (Home, Activity counts, property stats) are cached until pull-to-refresh or reopening the app, stamped with the workspace `clientId`; roles are fetched once after login or workspace switch and never refreshed by screens. Add tenant filters to bookable units on the phone because the backend filters a single status only; the notifier keeps paging (up to 5 pages) until 8 rows show.
+**Tradeoffs:** A property list filtered on the phone (managers only) can need several requests before it fills. Changing roles on the server shows up only after the next login or workspace switch. Change unit keeps an inline list rather than the sheet, so it has its own search and "Load more".
+**Alternatives considered:** Raising the page size (rejected, same cost); client-side search over a cached full list (rejected, defeats paging); a backend multi-status filter (rejected, no backend changes in this pass).

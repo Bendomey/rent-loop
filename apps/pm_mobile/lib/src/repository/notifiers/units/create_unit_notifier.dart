@@ -5,6 +5,8 @@ import 'package:rentloop_manager/src/api/unit_api.dart';
 import 'package:rentloop_manager/src/architecture/current_workspace/current_workspace_notifier.dart';
 import 'package:rentloop_manager/src/lib/api_error_messages.dart';
 import 'package:rentloop_manager/src/repository/api_state.dart';
+import 'package:rentloop_manager/src/repository/providers/home/home_stats_provider.dart';
+import 'package:rentloop_manager/src/repository/providers/properties/property_stats_provider.dart';
 
 part 'create_unit_notifier.g.dart';
 
@@ -58,6 +60,8 @@ class CreateUnitNotifier extends _$CreateUnitNotifier {
             maxOccupantsAllowed: maxOccupantsAllowed,
           );
       state = CreateUnitState(status: ApiStatus.success);
+      ref.invalidate(propertyStatsProvider);
+      ref.invalidate(homeStatsProvider);
     } on ApiException catch (e) {
       state = CreateUnitState(
         status: ApiStatus.failed,

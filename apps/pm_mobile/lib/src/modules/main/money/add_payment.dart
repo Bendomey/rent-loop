@@ -88,7 +88,6 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
   }
 
   Future<void> _refresh() async {
-    ref.invalidate(myPropertyRolesProvider);
     await _load();
   }
 

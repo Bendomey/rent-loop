@@ -54,7 +54,6 @@ class _ApplicationDetailScreenState
     try {
       final provider = applicationDetailProvider(propertyId, widget.id);
       ref.invalidate(provider);
-      ref.invalidate(myPropertyRolesProvider);
       await ref.read(provider.future);
     } catch (_) {
       // The error state renders from the provider itself.

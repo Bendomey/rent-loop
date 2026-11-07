@@ -3,7 +3,9 @@
 // drift apart. Extracted verbatim from maintenance_board.dart.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:rentloop_manager/src/repository/notifiers/options/options_state.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
@@ -293,16 +295,35 @@ class RLFilterSheetState extends State<RLFilterSheet> {
   }
 }
 
-String? rlMultiSelectChipLabel({
-  required List<String> selectedIds,
-  required List<({String id, String name})> options,
+typedef FilterOption = ({String id, String name});
+
+ProviderListenable<OptionsState<FilterOption>> asFilterOptions<T>(
+  ProviderListenable<OptionsState<T>> source, {
+  required String Function(T) id,
+  required String Function(T) name,
+}) {
+  return source.select(
+    (s) => OptionsState<FilterOption>(
+      items: [for (final i in s.items) (id: id(i), name: name(i))],
+      hasLoaded: s.hasLoaded,
+      isLoading: s.isLoading,
+      hasNextPage: s.hasNextPage,
+      loadMoreFailed: s.loadMoreFailed,
+      error: s.error,
+      search: s.search,
+    ),
+  );
+}
+
+String? filterChipLabel({
+  required List<FilterOption> selected,
   required String singularNoun,
   required String pluralNoun,
 }) {
-  if (selectedIds.isEmpty) return null;
-  if (selectedIds.length == 1) {
-    final match = options.where((o) => o.id == selectedIds.first);
-    return match.isEmpty ? '1 $singularNoun' : match.first.name;
+  if (selected.isEmpty) return null;
+  if (selected.length == 1) {
+    final name = selected.first.name;
+    return name.isEmpty ? '1 $singularNoun' : name;
   }
-  return '${selectedIds.length} $pluralNoun';
+  return '${selected.length} $pluralNoun';
 }

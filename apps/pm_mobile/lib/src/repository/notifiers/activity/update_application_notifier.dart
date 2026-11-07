@@ -8,6 +8,7 @@ import 'package:rentloop_manager/src/repository/api_state.dart';
 import 'package:rentloop_manager/src/repository/providers/activity/application_detail_provider.dart';
 import 'package:rentloop_manager/src/repository/providers/activity/financial_account_provider.dart';
 import 'package:rentloop_manager/src/repository/providers/tenants/pending_tenants_provider.dart';
+import 'package:rentloop_manager/src/repository/providers/properties/property_stats_provider.dart';
 
 part 'update_application_notifier.g.dart';
 
@@ -47,6 +48,7 @@ class UpdateApplicationNotifier extends _$UpdateApplicationNotifier {
           );
       ref.invalidate(applicationDetailProvider(propertyId, id));
       ref.invalidate(pendingTenantsProvider);
+      ref.invalidate(propertyStatsProvider(propertyId));
       _refreshAccount(propertyId, accountId);
       state = UpdateApplicationState(status: ApiStatus.success);
     } on ApiException catch (e) {
