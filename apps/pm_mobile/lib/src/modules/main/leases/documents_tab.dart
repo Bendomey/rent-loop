@@ -94,6 +94,7 @@ Future<void> _showUseWebAlert(
             title,
             style: TextStyle(
               fontFamily: RLTokens.fontSerif,
+              fontWeight: RLTokens.headingWeight,
               fontSize: 20,
               letterSpacing: -0.3,
               color: RLTokens.ink,
@@ -341,7 +342,11 @@ class _DocumentCard extends ConsumerWidget {
         ),
         title: Text(
           'Remove this document?',
-          style: TextStyle(fontFamily: RLTokens.fontSerif, fontSize: 20),
+          style: TextStyle(
+            fontFamily: RLTokens.fontSerif,
+            fontWeight: RLTokens.headingWeight,
+            fontSize: 20,
+          ),
         ),
         content: Text(
           'The linked document, any uploaded file, and all recorded '
@@ -395,6 +400,7 @@ class _DocumentCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.listen(deleteLeaseAgreementDocumentNotifierProvider, (_, _) {});
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -843,7 +849,11 @@ class _TenantSignerRow extends ConsumerWidget {
         ),
         title: Text(
           'Request signature?',
-          style: TextStyle(fontFamily: RLTokens.fontSerif, fontSize: 20),
+          style: TextStyle(
+            fontFamily: RLTokens.fontSerif,
+            fontWeight: RLTokens.headingWeight,
+            fontSize: 20,
+          ),
         ),
         content: Text(
           'A signing link will be sent to $contact.',
@@ -932,6 +942,8 @@ class _TenantSignerRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.listen(generateSigningTokenNotifierProvider, (_, _) {});
+    ref.listen(resendSigningTokenNotifierProvider, (_, _) {});
     final tenantSignature = doc.signatureFor('TENANT');
     if (tenantSignature != null) {
       return _SignerRow(label: 'Tenant', signature: tenantSignature);

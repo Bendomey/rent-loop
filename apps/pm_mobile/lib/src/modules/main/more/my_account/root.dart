@@ -3,10 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:rentloop_manager/src/architecture/app_startup/app_startup_notifier.dart';
 import 'package:rentloop_manager/src/architecture/current_user/current_user_notifier.dart';
-import 'package:rentloop_manager/src/repository/providers/sessions_provider.dart';
 import 'package:rentloop_manager/src/modules/main/more/my_account/profile_page.dart';
-import 'package:rentloop_manager/src/modules/main/more/my_account/security_page.dart';
-import 'package:rentloop_manager/src/modules/main/more/my_account/sessions_page.dart';
 import 'package:rentloop_manager/src/modules/main/more/my_account/sheets.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
@@ -14,11 +11,8 @@ import 'package:rentloop_manager/src/shared/widgets.dart';
 /// My Account — the mobile counterpart of the web portal's
 /// Settings › My Account redesign.
 ///
-/// The hub lists three categories; each pushes its own page rather than
-/// one long scroll:
-///   Profile  — photo, name, email
-///   Security — password, two-factor, delete account
-///   Sessions — every signed-in device, revoke one or all
+/// v1 lists only Profile (name, phone, email). Security and Sessions pages
+/// stay on disk but have no entry point.
 ///
 /// UI only — see placeholder_data.dart for what still needs an API.
 class MyAccountScreen extends ConsumerWidget {
@@ -33,9 +27,6 @@ class MyAccountScreen extends ConsumerWidget {
         ? user!.clientUsers.first.role
         : null;
     final initials = _initials(name);
-    // Watched rather than read: the hub rebuilds when a device is revoked on
-    // the Sessions page, so the count never lags behind the list.
-    final sessionCount = ref.watch(sessionsProvider).valueOrNull?.length;
 
     return Scaffold(
       backgroundColor: RLTokens.paper,
@@ -76,6 +67,7 @@ class MyAccountScreen extends ConsumerWidget {
                             initials,
                             style: const TextStyle(
                               fontFamily: RLTokens.fontSerif,
+                              fontWeight: RLTokens.headingWeight,
                               fontSize: 21,
                               color: Colors.white,
                               height: 1,
@@ -92,6 +84,7 @@ class MyAccountScreen extends ConsumerWidget {
                               name,
                               style: const TextStyle(
                                 fontFamily: RLTokens.fontSerif,
+                                fontWeight: RLTokens.headingWeight,
                                 fontSize: 20,
                                 color: RLTokens.ink,
                                 letterSpacing: -0.2,
@@ -134,50 +127,13 @@ class MyAccountScreen extends ConsumerWidget {
                           tone: RLTone.danger,
                         ),
                         title: 'Profile',
-                        subtitle: 'Photo, name and email',
+                        subtitle: 'Name, phone and email',
                         onTap: () => _push(
                           context,
                           'Profile',
-                          AccountProfilePage(
-                            name: name,
-                            email: email,
-                            initials: initials,
-                          ),
+                          AccountProfilePage(initials: initials),
                         ),
-                      ),
-                      RLRow(
-                        leading: const RLIconTile(
-                          icon: Icons.shield_outlined,
-                          tone: RLTone.info,
-                        ),
-                        title: 'Security',
-                        subtitle: 'Password · 2FA coming soon',
-                        onTap: () => _push(
-                          context,
-                          'Security',
-                          const AccountSecurityPage(),
-                        ),
-                      ),
-                      RLRow(
-                        leading: const RLIconTile(
-                          icon: Icons.lock_outline_rounded,
-                          tone: RLTone.warning,
-                        ),
-                        title: 'Sessions',
-                        // Live count, so the hub can't disagree with the page
-                        // it opens. Null while loading rather than a guess.
-                        subtitle: sessionCount == null
-                            ? 'Signed-in devices'
-                            : '$sessionCount signed-in ${sessionCount == 1 ? 'device' : 'devices'}',
                         last: true,
-                        // Owns its own ListView for pull-to-refresh, so the
-                        // shell must not wrap it in a second scroll view.
-                        onTap: () => _push(
-                          context,
-                          'Sessions',
-                          const AccountSessionsPage(),
-                          scrollable: false,
-                        ),
                       ),
                     ],
                   ),

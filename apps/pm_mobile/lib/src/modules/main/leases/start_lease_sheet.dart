@@ -25,6 +25,7 @@ Future<bool?> showStartLeaseSheet({
     backgroundColor: Colors.transparent,
     barrierColor: const Color.fromRGBO(17, 17, 16, 0.35),
     isScrollControlled: true,
+    useSafeArea: true,
     builder: (_) => _StartLeaseSheet(propertyId: propertyId, lease: lease),
   );
 }
@@ -158,6 +159,7 @@ class _StartLeaseSheetState extends ConsumerState<_StartLeaseSheet> {
                 'Start Lease',
                 style: TextStyle(
                   fontFamily: RLTokens.fontSerif,
+                  fontWeight: RLTokens.headingWeight,
                   fontSize: 20,
                   color: RLTokens.ink,
                 ),

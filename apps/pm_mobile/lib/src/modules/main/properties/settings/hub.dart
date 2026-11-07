@@ -174,6 +174,7 @@ class _PropertyIdentityCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontFamily: RLTokens.fontSerif,
+                    fontWeight: RLTokens.headingWeight,
                     fontSize: 18,
                     color: RLTokens.ink,
                     height: 1.1,
@@ -301,6 +302,7 @@ class _DeletePropertyCard extends StatelessWidget {
                 'Delete property',
                 style: TextStyle(
                   fontFamily: RLTokens.fontSerif,
+                  fontWeight: RLTokens.headingWeight,
                   fontSize: 18,
                   color: RLTokens.ink,
                   letterSpacing: -0.2,

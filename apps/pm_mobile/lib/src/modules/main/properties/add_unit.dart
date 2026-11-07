@@ -88,6 +88,7 @@ class _AddUnitScreenState extends ConsumerState<AddUnitScreen> {
       backgroundColor: Colors.transparent,
       barrierColor: const Color.fromRGBO(17, 17, 16, 0.35),
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) => _BlockPickerSheet(
         propertyId: widget.propertyId,
         selectedId: _block?.id,
@@ -157,6 +158,18 @@ class _AddUnitScreenState extends ConsumerState<AddUnitScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    ref.listenManual(propertyBlocksProvider(widget.propertyId), (_, next) {
+      final rows = next.valueOrNull?.rows;
+      if (_block == null && rows != null && rows.length == 1) {
+        _block = rows.single;
+        if (mounted) setState(() {});
+      }
+    }, fireImmediately: true);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final propertyAsync = ref.watch(propertyDetailProvider(widget.propertyId));
     final createState = ref.watch(createUnitNotifierProvider);
@@ -197,6 +210,7 @@ class _AddUnitScreenState extends ConsumerState<AddUnitScreen> {
                     'Add New Property Unit',
                     style: TextStyle(
                       fontFamily: RLTokens.fontSerif,
+                      fontWeight: RLTokens.headingWeight,
                       fontSize: 24,
                       color: RLTokens.ink,
                       letterSpacing: -0.4,
@@ -291,6 +305,7 @@ class _AddUnitScreenState extends ConsumerState<AddUnitScreen> {
                     'Basic Information',
                     style: TextStyle(
                       fontFamily: RLTokens.fontSerif,
+                      fontWeight: RLTokens.headingWeight,
                       fontSize: 21,
                       color: RLTokens.ink,
                       letterSpacing: -0.3,
@@ -377,6 +392,7 @@ class _AddUnitScreenState extends ConsumerState<AddUnitScreen> {
                     'Rental Information',
                     style: TextStyle(
                       fontFamily: RLTokens.fontSerif,
+                      fontWeight: RLTokens.headingWeight,
                       fontSize: 21,
                       color: RLTokens.ink,
                       letterSpacing: -0.3,
@@ -620,6 +636,7 @@ class _BlockPickerSheet extends ConsumerWidget {
                     'Select block',
                     style: TextStyle(
                       fontFamily: RLTokens.fontSerif,
+                      fontWeight: RLTokens.headingWeight,
                       fontSize: 21,
                       letterSpacing: -0.3,
                       color: RLTokens.ink,

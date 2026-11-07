@@ -1,5 +1,96 @@
 # Changelog
 
+## 2026-11-07 — Print a bill
+- The bill detail screen has a Print button in its header. It makes an A4 PDF that matches the web portal's printed bill (stamp, billed to, what it is for, dates, items, totals, Still owed, how they may pay, the after-the-due-date terms) and opens the system print sheet, which on iOS can also save or share it. Anyone who can see the bill can print it.
+- New: `lib/financial/bill_sheet.dart` (the web's bill state and copy, ported), `lib/financial/bill_pdf.dart`, `billPrinterProvider`. `InvoiceModel` now reads sub-total, taxes, payer type, allowed payment rails, voided reason, the lease code and the tenant's other names.
+- Added `pdf` 3.11.3 and `printing` 5.14.3 (the newest that resolve on this Flutter). This pulled the transitive `image` package down from 4.8.0 to 4.5.4.
+- Modules affected: `modules/main/money/`, `lib/financial/`, `repository/models/invoice_model.dart`, `repository/providers/money/`.
+
+## 2026-11-07 — Home v2: closer to the web Insights overview
+- Home now has a property switcher ("All properties" or one property); every number follows it.
+- New sections: "Needs your attention" (late rent with how many properties, leases ending soon, open repairs with urgent count; each opens a filtered list; rows at 0 hide, "Nothing needs your attention." when all clear), a 2×2 of occupied %, empty units, active leases and pending tenants, a 6-month rent bar chart (tap a bar to see its amount), and "Your properties this month" (highest first, All only).
+- The money card gains a "▲/▼ N% vs {last month}" badge, hidden when last month was 0.
+- Each section loads and fails on its own ("Couldn't load this." + Try again); pull-to-refresh reloads everything.
+- Leases list: new "Ending soon" filter (Active, not renewed, inside the expiring window — the backend `expiring`/`exclude_renewed` params). `/more/leases?filter=` preselects a chip.
+- Rent tab: Home's late-rent row opens it on Owing for the chosen property (`rentFocusNotifierProvider`).
+- Replaced `homeStatsProvider`/`HomeStats` with per-cube Home slices; Home no longer reads `activityCountsProvider`. Expenses and net income are left out (hidden in mobile v1).
+- Modules affected: `modules/main/home/`, `modules/main/leases/`, `modules/main/money/`, `repository/providers/home/`, `repository/providers/money/`, `repository/notifiers/leases/`, `api/lease_api.dart`, `lib/home_stats_logic.dart`, `navigation/routes.dart`, and the notifiers that invalidate Home.
+
+## 2026-11-06 — Pickers page 20 with server search (plan: pm-mobile-api-efficiency, task 4)
+- Every property, block and unit picker or filter now loads 20 at a time, searches on the server and loads more on scroll: maintenance board and applications filters, Rent property filter, Add tenant and Change unit, Add repair, New announcement.
+- Rent tab: the property chip row is one "Property: {name}" chip that opens the picker, with "All properties" to reset.
+- Add tenant offers bookable units only (Available or PartiallyOccupied), in properties the user manages.
+- Add repair and New announcement preselect a lone property only when the first page has exactly one and no next page.
+- Removed the 200-row providers and `UnitApi.getUnitsAcrossProperties`. Modules affected: `modules/main/activity/`, `modules/main/announcements/`, `modules/main/money/`, `shared/paged_picker_sheet.dart`.
+
+## 2026-11-06 — Post-now announcement form (plan: pm-mobile-v1-announcements, task 3)
+- "New announcement" (`announcements/add.dart`) now posts a real announcement to tenants: property, title (60), message (2,000), type, priority, and "Who should get it?" (Whole property / One block / Some units). The sample lists, schedule, expiry and "Save as draft" are gone.
+- Posting creates then publishes. If publishing fails after the draft is saved, the form locks, shows "Saved, but not sent yet." and the button becomes "Send now", which retries publish only.
+- Says "You need manager access to a property to post an announcement." when the user manages none. `/more/announcements/add?property_id=` pre-selects a property.
+- Home's Announcement shortcut shows only for users who manage a property, like Record payment.
+- Modules affected: `modules/main/announcements/`, `modules/main/home/`, `navigation/routes.dart`.
+
+## 2026-11-06 — Add repair connected to real data (plan: pm-mobile-v1-add-repair)
+- "New repair" (`activity/add_maintenance.dart`) now lists the manager's real properties, blocks and units, uploads real photos (up to 5, via `ApplicationUploadTile`) and creates the repair. On success it opens the new repair's detail and shows "Repair added". The sample blocks, units and photo counter are gone.
+- The form shows a shimmer while properties load, says "You need manager access to a property to add a repair." when there are none, and keeps its fields on a server error.
+- The Repairs "Add repair" button and the Activity add action (Repairs tab) show only for users who manage a property. `/activity/maintenances/add?property_id=` pre-selects a property.
+- Modules affected: `modules/main/activity/`, `modules/main/repairs/`, `navigation/routes.dart`.
+
+## 2026-11-06 — Home with real numbers (plan: pm-mobile-v1-home)
+- Home shows "Collected this month", "Still to collect" (with "{amount} of it is late" when there are arrears), and Empty units / Open repairs / Pending tenants cards, all read from live data. Cards open Properties, Repairs and Tenants.
+- Removed the sample revenue card, stat grid, "Needs your attention" and collection trend. Loading shows shimmer; a failed read shows "Couldn't load your numbers." with Try again; pull-to-refresh reloads.
+- New: `homeStatsProvider`, `HomeStats` (`lib/home_stats_logic.dart`).
+
+## 2026-11-06 — Tenant detail with real data (plan: pm-mobile-v1-tenant-detail)
+- `TenantDetailScreen` (`tenants/detail.dart`) now shows the real tenant: name, unit, Call and WhatsApp, what they owe, lease dates and rent, and contact details. All sample data and the placeholder Record card are gone.
+- "What they owe" is the lease's account balance, with credit shown as "You owe {name}". A failed lease read only affects that card.
+- Routes: `/more/tenants/:id?property_id=...`; the tenants list, lease hero card and "What's next" sheet pass the property id.
+- New: `tenantDetailProvider`, `RLContactButtons`, `tenantUnitLabel` (`lib/src/lib/tenant_label.dart`, shared with the tenants list row), `LeaseModel.financialAccount`, `TenantLeaseRef.id`.
+
+## 2026-11-06 — Rent tab: real bills, record and confirm payments (plan: pm-mobile-v1-rent)
+- The Rent tab (`money/root.dart`) shows real bills: an Owing total, "Needs your OK" for payments waiting on a manager, Owing and Paid lists with a property filter, and infinite scroll with pull-to-refresh.
+- Bill detail is read-only with line items and payments; managers can record a payment or confirm or decline a pending one. New `InvoiceApi`, `InvoiceModel`, `lib/financial/bill.dart`, `BillsNotifier`, `billDetailProvider`, `RecordBillPaymentNotifier`, `VerifyPaymentNotifier`, `bill_row`, `record_bill_payment_sheet`, `verify_payment_sheet`.
+- Home "Record payment" now opens a "Which bill did they pay?" picker (`add_payment.dart`) over the Owing list, with debounced code search; only managed properties are listed.
+- `paymentAccountsProvider` only offers ACTIVE accounts on the OFFLINE rail, which also fixes the 2b "{Name} paid me" sheet. New error mappings in `translateApiErrorMessage`.
+- Backend: `PATCH .../payments/{id}/verify` requires `is_successful` explicitly (`handlers/payment.go`, Swagger regenerated).
+- Removed dead code: `InvoiceRef`/`applicationPaymentInvoice`, the lease detail "Rent bill" row, and `ApplicationFinancial.invoiceGenerated`/`invoicePaid`.
+- Modules affected: `api/`, `lib/`, `repository/`, `modules/main/money/`, `modules/main/leases/detail.dart`, `modules/main/activity/application_data.dart`, `navigation/routes.dart`, `services/main/internal/handlers/payment.go`.
+
+## 2026-11-06 — Lease document on a pending tenant (plan 2c)
+- A landlord can add, open, replace and remove a lease document (PDF or Word, up to 5MB) on a pending tenant; it is optional.
+- Online documents written on the web open on the web and cannot be changed from mobile; signed documents can only be opened.
+- Removed the sample signing UI and the "From Library" and picker-coming-soon placeholders.
+- New dependency `file_picker` (and `http_parser` as a direct dependency).
+- Modules affected: `modules/main/activity/` (`document_picker.dart`, `application_detail_pages.dart`, `application_edit_sheets.dart`), `api/r2_upload_service.dart`, `ApplicationDocumentModel`.
+
+## 2026-11-06 — Plan 2b final-review fixes
+- Prepaid rent: a card asks "Already been paid?" before the first automatic bill goes out; the record-payment sheet lists charges already on a bill apart; setup warns when the move-in date has passed.
+- "Still owes you" reads "You owe {Name}" for a credit and "{Name} is all paid up" at zero; typing more than is owed says only the total will be recorded; fees with no name or amount block "Save this and start billing".
+- Start billing recovers from `ChargesAlreadyPrepared`; every financial write refreshes on failure; write sheets can't be dismissed while saving; refunds are listed apart from the rent count; manual plans get their own subtitle.
+- Modules affected: `lib/financial/`, `lib/money.dart`, `shared/sheet_kit.dart`, `modules/main/activity/financial/`, `activity/approve_sheet.dart`, financial notifiers.
+
+## 2026-11-06 — Tenant billing, fees, payments, refunds and Approve (plan 2b)
+- The tenant financial page now follows the web model: set up billing (rent, deposit, schedule, fees), then a live view with what the tenant owes, charges and billing plan.
+- Add or remove a fee, record a payment (including prepaid rent), refund, and Approve & move in, all shown only to a MANAGER on an in-progress tenant.
+- New error codes translate to plain English (`ChargesAlreadyPrepared`, `ChargeAlreadyBilled`, `ReversalExceedsSettledAmount` and others).
+- Backend: refunds are capped at settled minus prior reversals inside a locked transaction; charge instances expose `reverses_charge_instance_id`.
+- Fixed `lease_api` populate, and test fixtures no longer use null-aware map entries, so `build_runner` completes.
+- Modules affected: `api/`, `lib/financial/`, `repository/`, `modules/main/activity/`, `services/main` financials.
+
+## 2026-11-06 — Add tenant wired to the real API (plan 2a)
+- Add tenant now creates a real tenant application: phone lookup prefills returning tenants, uploads go to R2, and the invite sheet shares a setup link.
+- Tenant setup detail loads live data, with edit sheets, unit and move-in changes, and Cancel tenant setup, all gated on the caller's property role (MANAGER).
+- Pending tenants list above active tenants on the Tenants tab.
+- Wording sweep: "application" no longer appears in user-visible copy on these screens (list, empty and error states, unit page, post-approve sheet).
+- Error codes `UnitNotAvailable`, `ChargesAlreadyBilled`, `PhoneOrEmailRequired`, `TenantApplicationAlreadyCompleted`, `TenantApplicationAlreadyCancelled` now translate to plain English.
+- Modules affected: `api/`, `lib/`, `repository/`, `modules/main/activity/`, `modules/main/tenants/`
+
+## 2026-11-06 — Home and More reduced to v1
+- Home: removed the notifications bell and `ChecklistBanner`; quick actions are now Add tenant, Record payment, Repairs, Announcement.
+- More: Manage is Repairs / Announcements / Leases; removed Tenants, Documents, Reports, the Organisation settings section and Share Rentloop.
+- My account: removed Security and Sessions rows.
+- Modules affected: `modules/main/home`, `modules/main/more`, `modules/main/more/my_account`.
+
 ## 2026-08-01 — General Settings redesigned; reads are live, edits are not
 - `more/settings.dart` (1,571 lines, every value hardcoded, not one API call) deleted and replaced by `more/general/` — hub plus one page per category, matching the My Account redesign and the web portal's new five-tab Settings › General.
 - Categories: Profile · Company · Location · Branding · Preferences, with **Identity taking Company's slot for individual accounts** — the same type-dependent swap the web page makes, so neither account type sees a section that can't apply to it.

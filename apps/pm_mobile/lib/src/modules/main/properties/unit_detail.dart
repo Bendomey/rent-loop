@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
@@ -12,13 +11,6 @@ import 'package:rentloop_manager/src/repository/models/unit_model.dart';
 import 'package:rentloop_manager/src/repository/providers/properties/unit_detail_provider.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
-
-const _kUnitTabs = [
-  'Details',
-  'Leases',
-  'Maintenance Requests',
-  'Tenant Reviews',
-];
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
@@ -37,46 +29,39 @@ class UnitDetailScreen extends ConsumerWidget {
     final showSkeleton = !unitAsync.hasValue && unitAsync.isLoading;
     final showError = unitAsync.hasError && !unitAsync.hasValue;
 
+    Future<void> back() async {
+      await Haptics.vibrate(HapticsType.selection);
+      if (context.mounted) Navigator.of(context).pop();
+    }
+
+    if (!showSkeleton && !showError) {
+      return Scaffold(
+        backgroundColor: RLTokens.surface,
+        body: RefreshIndicator(
+          color: RLTokens.crimson,
+          edgeOffset: MediaQuery.of(context).padding.top,
+          onRefresh: () =>
+              ref.refresh(unitDetailProvider(propertyId, unitId).future),
+          child: _UnitDetailContent(unit: unitAsync.value!, onBack: back),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: RLTokens.surface,
       body: Column(
         children: [
-          RLBackHeader(
-            title: unitAsync.valueOrNull?.name ?? '',
-            onBack: () async {
-              await Haptics.vibrate(HapticsType.selection);
-              if (context.mounted) Navigator.of(context).pop();
-            },
-            trailing: RLIconBtn(
-              icon: Icons.settings_outlined,
-              onTap: () async {
-                await Haptics.vibrate(HapticsType.selection);
-                if (context.mounted) {
-                  context.push(
-                    '/properties/$propertyId/units/$unitId/settings',
-                  );
-                }
-              },
-            ),
-          ),
+          RLBackHeader(title: unitAsync.valueOrNull?.name ?? '', onBack: back),
           Expanded(
             child: showSkeleton
                 ? const _DetailSkeleton()
-                : showError
-                ? Padding(
+                : Padding(
                     padding: const EdgeInsets.all(RLTokens.gutter),
                     child: RLSectionError(
                       onRetry: () => ref.invalidate(
                         unitDetailProvider(propertyId, unitId),
                       ),
                     ),
-                  )
-                : RefreshIndicator(
-                    color: RLTokens.crimson,
-                    onRefresh: () => ref.refresh(
-                      unitDetailProvider(propertyId, unitId).future,
-                    ),
-                    child: _UnitDetailContent(unit: unitAsync.value!),
                   ),
           ),
         ],
@@ -120,33 +105,24 @@ class _DetailSkeleton extends StatelessWidget {
 
 // ── Body ──────────────────────────────────────────────────────────────────────
 
-class _UnitDetailContent extends StatefulWidget {
-  const _UnitDetailContent({required this.unit});
+class _UnitDetailContent extends StatelessWidget {
+  const _UnitDetailContent({required this.unit, required this.onBack});
   final UnitModel unit;
-
-  @override
-  State<_UnitDetailContent> createState() => _UnitDetailContentState();
-}
-
-class _UnitDetailContentState extends State<_UnitDetailContent> {
-  String _tab = _kUnitTabs.first;
-
-  Future<void> _onSelectTab(String tab) async {
-    await Haptics.vibrate(HapticsType.selection);
-    setState(() => _tab = tab);
-  }
+  final VoidCallback onBack;
 
   @override
   Widget build(BuildContext context) {
-    final unit = widget.unit;
     final statusLabel = propertyStatusLabel(unit.status);
     final typeLabel = unitTypeLabel(unit.type);
 
     return CustomScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
-        SliverToBoxAdapter(
-          child: _UnitHero(
+        RLHeroSliverAppBar(
+          title: unit.name,
+          color: _UnitHeroPlaceholder._bg(unit.type),
+          onBack: onBack,
+          background: _UnitHero(
             images: unit.images ?? const [],
             type: unit.type,
             name: unit.name,
@@ -167,12 +143,6 @@ class _UnitDetailContentState extends State<_UnitDetailContent> {
               const SizedBox(height: 14),
               _RentFeeCard(unit: unit),
               const SizedBox(height: RLTokens.space6),
-              RLFilterChips(
-                options: _kUnitTabs,
-                selected: _tab,
-                onSelect: _onSelectTab,
-              ),
-              const SizedBox(height: 16),
               ..._buildTabContent(unit),
               const SizedBox(height: 32),
             ]),
@@ -183,10 +153,6 @@ class _UnitDetailContentState extends State<_UnitDetailContent> {
   }
 
   List<Widget> _buildTabContent(UnitModel unit) {
-    if (_tab != 'Details') {
-      return [_ComingSoonTab(title: _tab)];
-    }
-
     return [
       RLLabel('Description'),
       _DescriptionCard(unit: unit),
@@ -270,9 +236,7 @@ class _UnitHeroState extends State<_UnitHero> {
     final images = widget.images;
     final typeLabel = unitTypeLabel(widget.type);
 
-    return SizedBox(
-      height: 170,
-      width: double.infinity,
+    return SizedBox.expand(
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -333,6 +297,7 @@ class _UnitHeroState extends State<_UnitHero> {
                   widget.name,
                   style: TextStyle(
                     fontFamily: RLTokens.fontSerif,
+                    fontWeight: FontWeight.w800,
                     fontSize: 22,
                     color: Colors.white.withAlpha(230),
                     letterSpacing: -0.3,
@@ -530,53 +495,6 @@ class _DescriptionCard extends StatelessWidget {
           height: 1.5,
           color: hasDescription ? RLTokens.ink : RLTokens.muted,
         ),
-      ),
-    );
-  }
-}
-
-// ── Inline "coming soon" tab content ───────────────────────────────────────────
-// Lighter-weight than shared/coming_soon.dart's RLComingSoon (which is a full
-// Scaffold with its own back header, meant to be pushed as its own route —
-// wrong when embedded inline inside this screen's tab content area).
-
-class _ComingSoonTab extends StatelessWidget {
-  const _ComingSoonTab({required this.title});
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 48),
-      alignment: Alignment.center,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(
-            Icons.construction_rounded,
-            size: 34,
-            color: RLTokens.hairline,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            style: TextStyle(
-              fontFamily: RLTokens.fontSerif,
-              fontSize: 17,
-              color: RLTokens.muted,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'This feature is under construction.',
-            style: TextStyle(
-              fontFamily: RLTokens.fontSans,
-              fontSize: 12.5,
-              color: RLTokens.mutedSoft,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
       ),
     );
   }

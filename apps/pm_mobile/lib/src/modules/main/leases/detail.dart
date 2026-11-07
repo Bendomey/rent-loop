@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
@@ -9,78 +8,16 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:rentloop_manager/src/lib/lease_status.dart';
 import 'package:rentloop_manager/src/lib/money.dart';
 import 'package:rentloop_manager/src/lib/unit_status.dart';
-import 'package:rentloop_manager/src/modules/main/leases/checklist_detail.dart';
-import 'package:rentloop_manager/src/modules/main/leases/create_checklist_dialog.dart';
-import 'package:rentloop_manager/src/modules/main/leases/documents_tab.dart';
 import 'package:rentloop_manager/src/modules/main/leases/hero_card.dart';
 import 'package:rentloop_manager/src/modules/main/leases/start_lease_sheet.dart';
 import 'package:rentloop_manager/src/modules/main/leases/terms_grid.dart';
-import 'package:rentloop_manager/src/repository/models/lease_checklist_model.dart';
 import 'package:rentloop_manager/src/repository/models/lease_model.dart';
 import 'package:rentloop_manager/src/repository/models/tenant_model.dart';
-import 'package:rentloop_manager/src/repository/providers/leases/lease_checklists_provider.dart';
 import 'package:rentloop_manager/src/repository/providers/leases/lease_detail_provider.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
-const _kLeaseTabs = ['Lease', 'Tenant', 'Docs', 'Expenses'];
-
-void _pushChecklistDetail(
-  BuildContext context, {
-  required String propertyId,
-  required String leaseId,
-  required String checklistId,
-}) {
-  Navigator.of(context).push(
-    MaterialPageRoute(
-      builder: (_) => ChecklistDetailScreen(
-        propertyId: propertyId,
-        leaseId: leaseId,
-        checklistId: checklistId,
-      ),
-    ),
-  );
-}
-
-/// Shared by the alert rows' "Create Report" actions and the Inspection
-/// Reports card's "+ {type}" ghost buttons: confirms via
-/// `showCreateChecklistDialog`, then re-fetches the checklist list (the
-/// create response isn't guaranteed to include populated `items`) and opens
-/// the freshly-created checklist.
-Future<void> _createChecklistAndOpen(
-  BuildContext context,
-  WidgetRef ref, {
-  required String propertyId,
-  required String leaseId,
-  required String type,
-}) async {
-  final created = await showCreateChecklistDialog(
-    context: context,
-    ref: ref,
-    propertyId: propertyId,
-    leaseId: leaseId,
-    type: type,
-  );
-  if (created != true || !context.mounted) return;
-
-  final checklists = await ref.refresh(
-    leaseChecklistsProvider(propertyId, leaseId).future,
-  );
-  LeaseChecklistModel? match;
-  for (final c in checklists) {
-    if (c.type == type) {
-      match = c;
-      break;
-    }
-  }
-  if (match == null || !context.mounted) return;
-  _pushChecklistDetail(
-    context,
-    propertyId: propertyId,
-    leaseId: leaseId,
-    checklistId: match.id,
-  );
-}
+const _kLeaseTabs = ['Lease', 'Tenant'];
 
 String _formatDate(String? iso) {
   if (iso == null) return '—';
@@ -162,16 +99,9 @@ class LeaseDetailScreen extends ConsumerWidget {
                   )
                 : RefreshIndicator(
                     color: RLTokens.crimson,
-                    onRefresh: () async {
-                      await Future.wait([
-                        ref.refresh(
-                          leaseDetailProvider(propertyId!, id).future,
-                        ),
-                        ref.refresh(
-                          leaseChecklistsProvider(propertyId!, id).future,
-                        ),
-                      ]);
-                    },
+                    onRefresh: () => ref.refresh(
+                      leaseDetailProvider(propertyId!, id).future,
+                    ),
                     child: _LeaseDetailContent(
                       propertyId: propertyId!,
                       lease: leaseAsync.value!,
@@ -240,16 +170,15 @@ class _LeaseDetailContentState extends ConsumerState<_LeaseDetailContent> {
   @override
   Widget build(BuildContext context) {
     final lease = widget.lease;
-    final showStickyBar = lease.status == 'Lease.Status.Active';
 
-    final scroll = CustomScrollView(
+    return CustomScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
         SliverToBoxAdapter(
           child: _LeaseAlerts(propertyId: widget.propertyId, lease: lease),
         ),
         SliverPadding(
-          padding: EdgeInsets.fromLTRB(20, 16, 20, showStickyBar ? 90 : 0),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
               LeaseHeroCard(propertyId: widget.propertyId, lease: lease),
@@ -269,74 +198,19 @@ class _LeaseDetailContentState extends ConsumerState<_LeaseDetailContent> {
         ),
       ],
     );
-
-    if (!showStickyBar) return scroll;
-
-    return Stack(
-      children: [
-        scroll,
-        const Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          child: _LeaseStickyActionBar(),
-        ),
-      ],
-    );
   }
 
   List<Widget> _buildTabContent(LeaseModel lease) {
     switch (_tab) {
       case 'Tenant':
         return _buildTenantProfile(lease.tenant);
-      case 'Docs':
-        return buildDocumentsTab(widget.propertyId, lease);
-      case 'Expenses':
-        return [const _ComingSoonTab(title: 'Expenses')];
       default:
-        return _buildLeaseDetails(widget.propertyId, lease);
+        return _buildLeaseDetails(lease);
     }
   }
 }
 
-class _LeaseStickyActionBar extends StatelessWidget {
-  const _LeaseStickyActionBar();
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
-        decoration: const BoxDecoration(
-          color: RLTokens.surface,
-          border: Border(top: BorderSide(color: RLTokens.hairline)),
-          boxShadow: RLTokens.elevBar,
-        ),
-        child: Row(
-          children: [
-            // No `onPressed` — RLBtn dims itself when disabled. Neither
-            // action has a backend endpoint yet (see the plan/changelog),
-            // so both stay permanently non-interactive.
-            const Expanded(
-              child: RLBtn(label: 'Renew', kind: RLBtnKind.light, full: true),
-            ),
-            const SizedBox(width: 10),
-            const Expanded(
-              child: RLBtn(
-                label: 'Terminate Lease',
-                kind: RLBtnKind.danger,
-                full: true,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-List<Widget> _buildLeaseDetails(String propertyId, LeaseModel lease) {
+List<Widget> _buildLeaseDetails(LeaseModel lease) {
   final application = lease.tenantApplication;
 
   return [
@@ -466,32 +340,8 @@ List<Widget> _buildLeaseDetails(String propertyId, LeaseModel lease) {
                 ],
               ],
             ),
-            if (application.applicationPaymentInvoice != null) ...[
-              const SizedBox(height: 10),
-              _LinkFieldRow(
-                k: 'Invoice',
-                label: application.applicationPaymentInvoice!.code,
-                last: true,
-                onTap: (context) => context.push(
-                  '/money/invoices/${application.applicationPaymentInvoice!.id}',
-                ),
-              ),
-            ],
           ],
         ],
-      ),
-    ),
-    const SizedBox(height: 16),
-    Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: RLTokens.surface,
-        borderRadius: BorderRadius.circular(RLTokens.rLg),
-        border: Border.all(color: RLTokens.hairline),
-      ),
-      child: _InspectionReportsSection(
-        propertyId: propertyId,
-        leaseId: lease.id,
       ),
     ),
   ];
@@ -678,74 +528,26 @@ class _LeaseAlerts extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final checklistsAsync = ref.watch(
-      leaseChecklistsProvider(propertyId, lease.id),
-    );
-    // Mirrors the web's own early-return: no skeleton for alerts, they just
-    // appear once the (fast, small) checklist list resolves.
-    if (!checklistsAsync.hasValue) return const SizedBox.shrink();
-    final checklists = checklistsAsync.value!;
-
-    LeaseChecklistModel? checkIn;
-    LeaseChecklistModel? checkOut;
-    for (final c in checklists) {
-      if (c.type == 'CHECK_IN') checkIn = c;
-      if (c.type == 'CHECK_OUT') checkOut = c;
-    }
-    final checkInHandled =
-        checkIn != null && isChecklistHandled(checkIn.status);
-    final canOfferCheckIn = checkIn == null || checkIn.status == 'DRAFT';
-    final checkOutHandled =
-        checkOut != null && isChecklistHandled(checkOut.status);
-    final canOfferCheckOut = checkOut == null || checkOut.status == 'DRAFT';
-
     final isPending = lease.status == 'Lease.Status.Pending';
-    final showStarting = shouldShowCheckInAlert(lease, checklists) || isPending;
     final showEnding = shouldShowLeaseEndingAlert(lease);
 
-    if (!showStarting && !showEnding) return const SizedBox.shrink();
+    if (!isPending && !showEnding) return const SizedBox.shrink();
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
       child: Column(
         children: [
-          if (showStarting)
+          if (isPending)
             _AlertCard(
               title: 'Lease Starting Soon',
               description:
-                  "Documenting the property's condition at move-in protects "
-                  'you against future disputes, and activating the lease '
-                  'unlocks billing and tenant access.',
+                  'Start the lease to begin rent billing and give your '
+                  'tenant access.',
               rows: [
                 _AlertActionRow(
-                  label: 'Move-In Report',
-                  handled: checkInHandled,
-                  actionLabel: canOfferCheckIn
-                      ? (checkIn != null ? 'Complete Report' : 'Create Report')
-                      : null,
-                  onAction: () {
-                    if (checkIn != null) {
-                      _pushChecklistDetail(
-                        context,
-                        propertyId: propertyId,
-                        leaseId: lease.id,
-                        checklistId: checkIn.id,
-                      );
-                    } else {
-                      _createChecklistAndOpen(
-                        context,
-                        ref,
-                        propertyId: propertyId,
-                        leaseId: lease.id,
-                        type: 'CHECK_IN',
-                      );
-                    }
-                  },
-                ),
-                _AlertActionRow(
                   label: 'Start Lease',
-                  handled: !isPending,
-                  actionLabel: isPending ? 'Start Lease' : null,
+                  handled: false,
+                  actionLabel: 'Start Lease',
                   onAction: () async {
                     final result = await showStartLeaseSheet(
                       context: context,
@@ -759,46 +561,13 @@ class _LeaseAlerts extends ConsumerWidget {
                 ),
               ],
             ),
-          if (showStarting && showEnding) const SizedBox(height: 8),
+          if (isPending && showEnding) const SizedBox(height: 8),
           if (showEnding)
             _AlertCard(
               title: 'Lease Ending Soon',
               description:
-                  'This lease is approaching its end date. Wrap up the '
-                  'Move-Out Report and decide whether to renew.',
-              rows: [
-                _AlertActionRow(
-                  label: 'Move-Out Report',
-                  handled: checkOutHandled,
-                  actionLabel: canOfferCheckOut
-                      ? (checkOut != null ? 'Complete Report' : 'Create Report')
-                      : null,
-                  onAction: () {
-                    if (checkOut != null) {
-                      _pushChecklistDetail(
-                        context,
-                        propertyId: propertyId,
-                        leaseId: lease.id,
-                        checklistId: checkOut.id,
-                      );
-                    } else {
-                      _createChecklistAndOpen(
-                        context,
-                        ref,
-                        propertyId: propertyId,
-                        leaseId: lease.id,
-                        type: 'CHECK_OUT',
-                      );
-                    }
-                  },
-                ),
-                const _AlertActionRow(
-                  label: 'Renew Lease',
-                  handled: false,
-                  actionLabel: 'Renew Lease',
-                  disabled: true,
-                ),
-              ],
+                  'This lease ends on ${_formatDate(lease.moveOutDate)}.',
+              rows: const [],
             ),
         ],
       ),
@@ -861,8 +630,7 @@ class _AlertCard extends StatelessWidget {
               color: RLTokens.inkSoft,
             ),
           ),
-          const SizedBox(height: 10),
-          ...rows,
+          if (rows.isNotEmpty) ...[const SizedBox(height: 10), ...rows],
         ],
       ),
     );
@@ -875,13 +643,11 @@ class _AlertActionRow extends StatelessWidget {
     required this.handled,
     this.actionLabel,
     this.onAction,
-    this.disabled = false,
   });
   final String label;
   final bool handled;
   final String? actionLabel;
   final VoidCallback? onAction;
-  final bool disabled;
 
   @override
   Widget build(BuildContext context) {
@@ -917,262 +683,31 @@ class _AlertActionRow extends StatelessWidget {
           ),
           if (actionLabel != null)
             GestureDetector(
-              onTap: disabled
-                  ? null
-                  : () async {
-                      await Haptics.vibrate(HapticsType.selection);
-                      onAction?.call();
-                    },
-              child: Opacity(
-                opacity: disabled ? 0.45 : 1,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: RLTokens.warning),
-                    borderRadius: BorderRadius.circular(RLTokens.rMd),
-                  ),
-                  child: Text(
-                    actionLabel!,
-                    style: TextStyle(
-                      fontFamily: RLTokens.fontSans,
-                      fontSize: 11.5,
-                      fontWeight: RLTokens.semibold,
-                      color: RLTokens.warning,
-                    ),
+              onTap: () async {
+                await Haptics.vibrate(HapticsType.selection);
+                onAction?.call();
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  border: Border.all(color: RLTokens.warning),
+                  borderRadius: BorderRadius.circular(RLTokens.rMd),
+                ),
+                child: Text(
+                  actionLabel!,
+                  style: TextStyle(
+                    fontFamily: RLTokens.fontSans,
+                    fontSize: 11.5,
+                    fontWeight: RLTokens.semibold,
+                    color: RLTokens.warning,
                   ),
                 ),
               ),
             ),
         ],
-      ),
-    );
-  }
-}
-
-// ── Inspection reports ────────────────────────────────────────────────────────
-
-class _InspectionReportsSection extends ConsumerWidget {
-  const _InspectionReportsSection({
-    required this.propertyId,
-    required this.leaseId,
-  });
-  final String propertyId;
-  final String leaseId;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final checklistsAsync = ref.watch(
-      leaseChecklistsProvider(propertyId, leaseId),
-    );
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _SectionHeading('Inspection Reports'),
-        if (!checklistsAsync.hasValue && checklistsAsync.isLoading)
-          Shimmer.fromColors(
-            baseColor: RLTokens.fill,
-            highlightColor: RLTokens.paper,
-            child: Column(
-              children: List.generate(
-                2,
-                (_) => Container(
-                  height: 48,
-                  margin: const EdgeInsets.only(bottom: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(RLTokens.rMd),
-                  ),
-                ),
-              ),
-            ),
-          )
-        else if (checklistsAsync.hasError && !checklistsAsync.hasValue)
-          RLSectionError(
-            compact: true,
-            onRetry: () =>
-                ref.invalidate(leaseChecklistsProvider(propertyId, leaseId)),
-          )
-        else
-          _ChecklistList(
-            propertyId: propertyId,
-            leaseId: leaseId,
-            checklists: checklistsAsync.value ?? const [],
-          ),
-      ],
-    );
-  }
-}
-
-class _ChecklistList extends ConsumerWidget {
-  const _ChecklistList({
-    required this.propertyId,
-    required this.leaseId,
-    required this.checklists,
-  });
-  final String propertyId;
-  final String leaseId;
-  final List<LeaseChecklistModel> checklists;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    const order = ['CHECK_IN', 'ROUTINE', 'CHECK_OUT'];
-    final sorted = [...checklists]
-      ..sort((a, b) => order.indexOf(a.type).compareTo(order.indexOf(b.type)));
-    final existingTypes = checklists.map((c) => c.type).toSet();
-    final missing = order.where((t) => !existingTypes.contains(t)).toList();
-
-    return Column(
-      children: [
-        if (checklists.isEmpty) ...[
-          const SizedBox(height: 4),
-          const Icon(
-            Icons.assignment_outlined,
-            size: 28,
-            color: RLTokens.mutedSoft,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'No inspection reports yet.',
-            style: TextStyle(
-              fontFamily: RLTokens.fontSans,
-              fontSize: 12.5,
-              color: RLTokens.muted,
-            ),
-          ),
-          const SizedBox(height: 12),
-        ],
-        ...sorted.map(
-          (c) => _ChecklistRow(
-            propertyId: propertyId,
-            leaseId: leaseId,
-            checklist: c,
-          ),
-        ),
-        if (missing.isNotEmpty) ...[
-          if (checklists.isNotEmpty) const SizedBox(height: 4),
-          Wrap(
-            spacing: 8,
-            runSpacing: 6,
-            children: missing.map((type) {
-              return GestureDetector(
-                onTap: () => _createChecklistAndOpen(
-                  context,
-                  ref,
-                  propertyId: propertyId,
-                  leaseId: leaseId,
-                  type: type,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.add_rounded,
-                      size: 14,
-                      color: RLTokens.muted,
-                    ),
-                    Text(
-                      leaseChecklistTypeLabel(type),
-                      style: TextStyle(
-                        fontFamily: RLTokens.fontSans,
-                        fontSize: 12,
-                        color: RLTokens.muted,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-        if (checklists.isEmpty) const SizedBox(height: 4),
-      ],
-    );
-  }
-}
-
-class _ChecklistRow extends StatelessWidget {
-  const _ChecklistRow({
-    required this.propertyId,
-    required this.leaseId,
-    required this.checklist,
-  });
-  final String propertyId;
-  final String leaseId;
-  final LeaseChecklistModel checklist;
-
-  @override
-  Widget build(BuildContext context) {
-    final items = checklist.items ?? const [];
-    final pendingCount = items.where((i) => i.status == 'PENDING').length;
-    final summary = checklist.status == 'DISPUTED'
-        ? 'Tenant disputed — needs your attention'
-        : items.isEmpty
-        ? 'No items'
-        : pendingCount > 0
-        ? '$pendingCount of ${items.length} items need attention'
-        : '${items.length} items';
-
-    return GestureDetector(
-      onTap: () async {
-        await Haptics.vibrate(HapticsType.selection);
-        if (context.mounted) {
-          _pushChecklistDetail(
-            context,
-            propertyId: propertyId,
-            leaseId: leaseId,
-            checklistId: checklist.id,
-          );
-        }
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          border: Border.all(color: RLTokens.hairline),
-          borderRadius: BorderRadius.circular(RLTokens.rMd),
-        ),
-        child: Row(
-          children: [
-            const Icon(
-              Icons.assignment_outlined,
-              size: 18,
-              color: RLTokens.muted,
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    leaseChecklistTypeLabel(checklist.type),
-                    style: TextStyle(
-                      fontFamily: RLTokens.fontSans,
-                      fontSize: 13,
-                      fontWeight: RLTokens.semibold,
-                      color: RLTokens.ink,
-                    ),
-                  ),
-                  Text(
-                    summary,
-                    style: TextStyle(
-                      fontFamily: RLTokens.fontSans,
-                      fontSize: 11.5,
-                      color: RLTokens.muted,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            RLPill(
-              leaseChecklistStatusLabel(checklist.status),
-              tone: leaseChecklistStatusTone(checklist.status),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -1261,13 +796,11 @@ class _LinkFieldRow extends StatelessWidget {
     required this.k,
     required this.label,
     this.last = false,
-    this.onTap,
     this.onExternalTap,
   });
   final String k;
   final String label;
   final bool last;
-  final void Function(BuildContext context)? onTap;
   final VoidCallback? onExternalTap;
 
   @override
@@ -1294,7 +827,6 @@ class _LinkFieldRow extends StatelessWidget {
             onTap: () async {
               await Haptics.vibrate(HapticsType.selection);
               if (!context.mounted) return;
-              if (onTap != null) onTap!(context);
               onExternalTap?.call();
             },
             child: Row(
@@ -1317,50 +849,6 @@ class _LinkFieldRow extends StatelessWidget {
                 ),
               ],
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Inline "coming soon" tab content (mirrors unit_detail.dart's) ─────────────
-
-class _ComingSoonTab extends StatelessWidget {
-  const _ComingSoonTab({required this.title});
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 48),
-      alignment: Alignment.center,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(
-            Icons.construction_rounded,
-            size: 34,
-            color: RLTokens.hairline,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            style: TextStyle(
-              fontFamily: RLTokens.fontSerif,
-              fontSize: 17,
-              color: RLTokens.muted,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'This feature is under construction.',
-            style: TextStyle(
-              fontFamily: RLTokens.fontSans,
-              fontSize: 12.5,
-              color: RLTokens.mutedSoft,
-            ),
-            textAlign: TextAlign.center,
           ),
         ],
       ),

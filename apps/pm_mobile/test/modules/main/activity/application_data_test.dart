@@ -3,30 +3,112 @@ import 'package:rentloop_manager/src/lib/application_checklist.dart';
 import 'package:rentloop_manager/src/repository/models/tenant_application_model.dart';
 import 'package:rentloop_manager/src/modules/main/activity/application_data.dart';
 
-/// The checklist mirrors the web's `use-calculate-checklist`: five sections,
-/// progress is the fraction of sections that are *fully* complete, and an
-/// empty section (no document attached) passes the approval gate vacuously
-/// while still counting as incomplete for display.
+ApplicationDetailData _inProgress() => ApplicationDetailData(
+  id: 'a1',
+  code: '2607QUOWF0',
+  status: 'In Progress',
+  submittedOn: 'Fri, 10 Jul 2026 · 11:34',
+  submittedBy: 'Benjamin Domey',
+  applicant: ApplicationApplicant(
+    firstName: 'Ebenezer',
+    lastName: 'Adu',
+    gender: 'MALE',
+    maritalStatus: 'SINGLE',
+    email: 'e@example.com',
+    phone: '+233277099220',
+    dateOfBirth: DateTime(1998, 3, 4),
+  ),
+  identity: const ApplicationIdentity(
+    nationality: 'Ghanaian',
+    idType: 'NATIONAL_ID',
+    idNumber: 'GHA-14564-464',
+  ),
+  background: const ApplicationBackground(
+    employerType: 'WORKER',
+    occupation: 'Accountant',
+  ),
+  moveIn: const ApplicationMoveIn(
+    stayDurationFrequency: 'MONTHLY',
+    stayDuration: 12,
+  ),
+  financial: const ApplicationFinancial(
+    rentFee: 50000,
+    paymentFrequency: 'MONTHLY',
+  ),
+  doc: const ApplicationDoc(
+    name: 'Lease Agreement',
+    mode: 'ONLINE',
+    signers: [
+      ApplicationSigner(
+        role: 'PROPERTY_MANAGER',
+        label: 'Property Manager',
+        signed: false,
+        isSelf: true,
+      ),
+      ApplicationSigner(
+        role: 'TENANT',
+        label: 'Tenant',
+        signed: false,
+        isSelf: false,
+      ),
+      ApplicationSigner(
+        role: 'PM_WITNESS',
+        label: 'Property Manager Witness',
+        signed: false,
+        isSelf: false,
+      ),
+      ApplicationSigner(
+        role: 'TENANT_WITNESS',
+        label: 'Tenant Witness',
+        signed: false,
+        isSelf: false,
+      ),
+    ],
+  ),
+  desiredUnit: kApplicationSeedUnits[0],
+);
+
+ApplicationDetailData _bare() => ApplicationDetailData(
+  id: 'a4',
+  code: '2607SLRKD4',
+  status: 'In Progress',
+  submittedOn: '—',
+  submittedBy: '—',
+  applicant: ApplicationApplicant(
+    firstName: 'Selorm',
+    lastName: 'Kudjo',
+    email: 's@example.com',
+  ),
+  identity: const ApplicationIdentity(),
+  background: const ApplicationBackground(),
+  moveIn: const ApplicationMoveIn(),
+  financial: const ApplicationFinancial(),
+  doc: const ApplicationDoc(),
+);
+
+/// The checklist mirrors the web's `use-calculate-checklist`: five steps,
+/// progress is the share of steps that are done or locked, and a step with no
+/// items (no document attached) passes the approval gate vacuously while not
+/// counting as done.
 void main() {
   group('checklist derivation', () {
-    final a1 = ApplicationDetailData.forId('a1');
+    final a1 = _inProgress();
 
-    test('tenant details counts the 17 fields the web tracks', () {
-      final tenant = a1.tenantSection;
-      expect(tenant.items.length, 17);
-      expect(tenant.doneCount, 11);
-      expect(tenant.complete, isFalse);
+    test('tenant details reports the four groups the web tracks', () {
+      final tenant = a1.stepFor(ChecklistSection.tenant);
+      expect(tenant.totalItems, 4);
+      expect(tenant.allItemsDone, isFalse);
     });
 
     test('docs section is document + one row per signer', () {
-      final docs = a1.docsSection;
-      expect(docs.items.length, 5);
+      final docs = a1.stepFor(ChecklistSection.docs);
+      expect(docs.totalItems, 5);
       // Only "Document uploaded" is done — nobody has signed yet.
-      expect(docs.doneCount, 1);
+      expect(docs.doneItems, 1);
     });
 
     test('unit section is complete when a unit is selected', () {
-      expect(a1.unitSection.complete, isTrue);
+      expect(a1.stepFor(ChecklistSection.unit).isSatisfied, isTrue);
     });
 
     test('progress is the fraction of fully complete sections', () {
@@ -41,66 +123,21 @@ void main() {
           desiredMoveInDate: () => DateTime(2026, 8, 1),
         ),
       );
-      expect(filled.moveInSection.complete, isTrue);
+      expect(filled.stepFor(ChecklistSection.moveIn).isSatisfied, isTrue);
       expect(filled.progress, 40);
     });
 
     test('an unattached document yields an empty, vacuous docs section', () {
-      final a4 = ApplicationDetailData.forId('a4');
+      final a4 = _bare();
       expect(a4.doc.attached, isFalse);
-      expect(a4.docsSection.items, isEmpty);
-      // Empty sections never count as complete for the progress readout.
-      expect(a4.docsSection.complete, isFalse);
-    });
-
-    test('unknown ids fall back to the first application', () {
-      expect(ApplicationDetailData.forId('nope').id, 'a1');
-    });
-  });
-
-  group('financial totals', () {
-    test('full-stay payment covers every period of the stay', () {
-      const f = ApplicationFinancial(
-        rentFee: 50000,
-        paymentFrequency: 'MONTHLY',
-      );
-      expect(f.periodsFor(12), 12);
-      expect(f.initialTotalFor(12), 600000);
-    });
-
-    test('custom mode uses the chosen number of periods', () {
-      const f = ApplicationFinancial(
-        rentFee: 50000,
-        paymentMode: 'CUSTOM',
-        customPeriods: 2,
-      );
-      expect(f.initialTotalFor(12), 100000);
-    });
-
-    test('an enabled security deposit is added on top', () {
-      const f = ApplicationFinancial(
-        rentFee: 50000,
-        paymentMode: 'CUSTOM',
-        customPeriods: 1,
-        securityDepositEnabled: true,
-        securityDepositFee: 25000,
-      );
-      expect(f.initialTotalFor(12), 75000);
-    });
-
-    test('a disabled deposit is ignored even when an amount lingers', () {
-      const f = ApplicationFinancial(
-        rentFee: 50000,
-        paymentMode: 'CUSTOM',
-        customPeriods: 1,
-        securityDepositFee: 25000,
-      );
-      expect(f.initialTotalFor(12), 50000);
+      final docs = a4.stepFor(ChecklistSection.docs);
+      expect(docs.totalItems, 0);
+      expect(docs.isSatisfied, isFalse);
     });
   });
 
   group('unit selection', () {
-    final a1 = ApplicationDetailData.forId('a1');
+    final a1 = _inProgress();
 
     test('picking a unit cascades its terms into rent and stay frequency', () {
       final target = kApplicationSeedUnits.firstWhere((u) => u.id == 'u4');
@@ -115,21 +152,13 @@ void main() {
     });
 
     test('the unit section completes once a unit is assigned', () {
-      final none = ApplicationDetailData.forId('a4');
+      final none = _bare();
       expect(none.desiredUnit, isNull);
-      expect(none.unitSection.complete, isFalse);
+      expect(none.stepFor(ChecklistSection.unit).isSatisfied, isFalse);
 
       final assigned = none.withUnit(kApplicationSeedUnits.first);
-      expect(assigned.unitSection.complete, isTrue);
+      expect(assigned.stepFor(ChecklistSection.unit).isSatisfied, isTrue);
       expect(assigned.progress, greaterThan(none.progress));
-    });
-
-    test('changes lock once the initial payment is paid', () {
-      final paid = a1.copyWith(
-        financial: a1.financial.copyWith(invoicePaid: true),
-      );
-      expect(paid.isUnitChangeLocked, isTrue);
-      expect(paid.unitChangeLockReason, contains('initial payment'));
     });
 
     test('changes lock once anyone has signed the lease document', () {
@@ -202,7 +231,7 @@ void main() {
       expect(data.desiredUnit?.name, 'Unit 1C');
       // The important one: the trip through ApplicationDetailData loses
       // nothing the checklist reads.
-      expect(data.progress, applicationProgress(model));
+      expect(data.progress, computeApplicationChecklist(model).progress * 100);
     });
 
     test('a completed application reads as approved', () {
@@ -221,7 +250,52 @@ void main() {
       final model = TenantApplicationModel.fromJson({'id': 'a', 'code': 'c'});
       final data = ApplicationDetailData.fromApplicationModel(model);
       expect(data.doc.signers, isEmpty);
-      expect(data.docsSection.items, isEmpty);
+      expect(data.stepFor(ChecklistSection.docs).totalItems, 0);
     });
+
+    for (final entry in {
+      'financial account without an invoice': {
+        'financial_account': {'id': 'fa'},
+      },
+      'invoice without a financial account': {
+        'application_payment_invoice': {
+          'id': 'i',
+          'code': 'c',
+          'status': 'ISSUED',
+        },
+      },
+    }.entries) {
+      test('detail checklist matches the list for a ${entry.key}', () {
+        final model = TenantApplicationModel.fromJson({
+          'id': 'a',
+          'code': 'c',
+          'status': 'TenantApplication.Status.InProgress',
+          'rent_fee': 1000,
+          ...entry.value,
+        });
+        final expected = computeApplicationChecklist(model);
+        final data = ApplicationDetailData.fromApplicationModel(model);
+        expect(data.progress, expected.progress * 100);
+        expect(data.canApprove, expected.canApprove);
+        expect(
+          data.stepFor(ChecklistSection.financial).state,
+          expected.step(ChecklistSection.financial).state,
+        );
+      });
+    }
+  });
+
+  test('submittedByLabel never shows a raw source enum', () {
+    expect(submittedByLabel('SELF'), isNull);
+    expect(submittedByLabel('ADMIN'), isNull);
+    expect(submittedByLabel(null), isNull);
+    expect(submittedByLabel('CSV_BULK'), 'from a file upload');
+  });
+
+  test('idTypeDisplay shows Ghana Card for the national ID value', () {
+    expect(idTypeDisplay('NATIONAL_ID'), 'Ghana Card');
+    expect(idTypeDisplay('GHANA_CARD'), 'Ghana Card');
+    expect(idTypeDisplay('PASSPORT'), 'Passport');
+    expect(idTypeDisplay(null), isNull);
   });
 }

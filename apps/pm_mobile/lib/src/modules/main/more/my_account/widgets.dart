@@ -16,23 +16,23 @@ void showAccountComingSoon(WidgetRef ref, String feature) {
   );
 }
 
-/// Label above, value + trailing action button below. Used by the Profile
-/// and Security pages.
+/// Label above, value + optional trailing action button below. Used by the
+/// Profile and Security pages.
 class AccountField extends StatelessWidget {
   const AccountField({
     super.key,
     required this.label,
     required this.value,
-    required this.action,
-    required this.onAction,
+    this.action,
+    this.onAction,
     this.badge,
     this.mono = false,
   });
 
   final String label;
   final String value;
-  final String action;
-  final VoidCallback onAction;
+  final String? action;
+  final VoidCallback? onAction;
   final Widget? badge;
   final bool mono;
 
@@ -74,33 +74,35 @@ class AccountField extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 10),
-            GestureDetector(
-              onTap: () async {
-                await Haptics.vibrate(HapticsType.selection);
-                onAction();
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 13,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: RLTokens.surface,
-                  borderRadius: BorderRadius.circular(RLTokens.rSm),
-                  border: Border.all(color: RLTokens.hairline),
-                ),
-                child: Text(
-                  action,
-                  style: const TextStyle(
-                    fontFamily: RLTokens.fontSans,
-                    fontSize: 13,
-                    fontWeight: RLTokens.semibold,
-                    color: RLTokens.ink,
+            if (action != null) ...[
+              const SizedBox(width: 10),
+              GestureDetector(
+                onTap: () async {
+                  await Haptics.vibrate(HapticsType.selection);
+                  onAction?.call();
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 13,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: RLTokens.surface,
+                    borderRadius: BorderRadius.circular(RLTokens.rSm),
+                    border: Border.all(color: RLTokens.hairline),
+                  ),
+                  child: Text(
+                    action!,
+                    style: const TextStyle(
+                      fontFamily: RLTokens.fontSans,
+                      fontSize: 13,
+                      fontWeight: RLTokens.semibold,
+                      color: RLTokens.ink,
+                    ),
                   ),
                 ),
               ),
-            ),
+            ],
           ],
         ),
       ],

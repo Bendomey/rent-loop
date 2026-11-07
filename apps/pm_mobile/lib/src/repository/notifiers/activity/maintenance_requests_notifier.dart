@@ -162,6 +162,8 @@ class MaintenanceRequestsNotifier extends _$MaintenanceRequestsNotifier {
     }
   }
 
+  Future<void> reload() => loadFirstPage(_currentQuery);
+
   Future<void> loadNextPage() async {
     if (!state.hasNextPage || state.isLoadingMore) return;
 

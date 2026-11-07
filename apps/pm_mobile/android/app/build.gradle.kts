@@ -25,18 +25,27 @@ android {
         applicationId = "com.rentloop.pm"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = 23
+        minSdk = 24
         targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
 
+    // Release signing comes from CI/local env. Without it, debug builds and
+    // `flutter run` still work; a release falls back to the debug key, which
+    // Play rejects on upload, so an unsigned store build cannot slip through.
+    val releaseStoreFile = System.getenv("STORE_FILE")
+    val hasReleaseSigning = listOf("STORE_FILE", "STORE_PASSWORD", "KEY_ALIAS", "KEY_PASSWORD")
+        .all { !System.getenv(it).isNullOrBlank() }
+
     signingConfigs {
-        create("release") {
-            storeFile = file(System.getenv("STORE_FILE"))
-            storePassword = System.getenv("STORE_PASSWORD")
-            keyAlias = System.getenv("KEY_ALIAS")
-            keyPassword = System.getenv("KEY_PASSWORD")
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = file(releaseStoreFile!!)
+                storePassword = System.getenv("STORE_PASSWORD")
+                keyAlias = System.getenv("KEY_ALIAS")
+                keyPassword = System.getenv("KEY_PASSWORD")
+            }
         }
     }
 
@@ -44,11 +53,11 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
-            proguardFiles(                                                                                                                                     
+            proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"                                                                                                                           
+                "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("release")
+            signingConfig = signingConfigs.getByName(if (hasReleaseSigning) "release" else "debug")
         }
     }
 }

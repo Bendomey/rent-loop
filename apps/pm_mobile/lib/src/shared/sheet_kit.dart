@@ -18,6 +18,7 @@ void showRLSheet(
   showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
+    useSafeArea: true,
     backgroundColor: Colors.transparent,
     builder: (ctx) => builder(() => Navigator.of(ctx).pop()),
   );
@@ -33,6 +34,7 @@ class RLSheet extends StatelessWidget {
     required this.onClose,
     required this.child,
     required this.footer,
+    this.dismissible = true,
   });
 
   final String title;
@@ -41,18 +43,33 @@ class RLSheet extends StatelessWidget {
   final Widget child;
   final Widget footer;
 
+  /// False while a write is in flight. The bottom sheet's own drag-to-close
+  /// pops the route directly, past PopScope, so drags are swallowed here too.
+  final bool dismissible;
+
   @override
   Widget build(BuildContext context) {
-    final bottom = MediaQuery.of(context).padding.bottom;
+    final sheet = _sheet(context);
+    if (dismissible) return sheet;
+    return PopScope(
+      canPop: false,
+      child: GestureDetector(
+        onVerticalDragStart: (_) {},
+        onVerticalDragUpdate: (_) {},
+        onVerticalDragEnd: (_) {},
+        child: sheet,
+      ),
+    );
+  }
+
+  Widget _sheet(BuildContext context) {
+    final mq = MediaQuery.of(context);
+    final bottom = mq.padding.bottom;
     return AnimatedPadding(
       duration: const Duration(milliseconds: 150),
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
+      padding: EdgeInsets.only(bottom: mq.viewInsets.bottom),
       child: Container(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.9,
-        ),
+        constraints: BoxConstraints(maxHeight: mq.size.height * 0.9),
         decoration: const BoxDecoration(
           color: RLTokens.surface,
           borderRadius: BorderRadius.vertical(
@@ -89,6 +106,7 @@ class RLSheet extends StatelessWidget {
                           title,
                           style: const TextStyle(
                             fontFamily: RLTokens.fontSerif,
+                            fontWeight: RLTokens.headingWeight,
                             fontSize: 21,
                             color: RLTokens.ink,
                             letterSpacing: -0.3,
@@ -111,10 +129,12 @@ class RLSheet extends StatelessWidget {
                   ),
                   const SizedBox(width: 10),
                   GestureDetector(
-                    onTap: () async {
-                      await Haptics.vibrate(HapticsType.selection);
-                      onClose();
-                    },
+                    onTap: dismissible
+                        ? () async {
+                            await Haptics.vibrate(HapticsType.selection);
+                            onClose();
+                          }
+                        : null,
                     child: Container(
                       width: 36,
                       height: 36,
@@ -155,6 +175,7 @@ Widget rlSheetFooter({
   required VoidCallback onCancel,
   required VoidCallback onConfirm,
   bool enabled = true,
+  bool cancelEnabled = true,
   RLBtnKind confirmKind = RLBtnKind.primary,
 }) {
   return Row(
@@ -164,7 +185,7 @@ Widget rlSheetFooter({
           label: 'Cancel',
           kind: RLBtnKind.light,
           full: true,
-          onPressed: onCancel,
+          onPressed: cancelEnabled ? onCancel : null,
         ),
       ),
       const SizedBox(width: 10),
@@ -225,6 +246,8 @@ class RLSheetTextArea extends StatelessWidget {
     this.hint,
     this.helper,
     this.lines = 3,
+    this.maxLength,
+    this.onChanged,
   });
 
   final String label;
@@ -232,6 +255,8 @@ class RLSheetTextArea extends StatelessWidget {
   final String? hint;
   final String? helper;
   final int lines;
+  final int? maxLength;
+  final ValueChanged<String>? onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -241,6 +266,8 @@ class RLSheetTextArea extends StatelessWidget {
       child: TextField(
         controller: controller,
         maxLines: lines,
+        maxLength: maxLength,
+        onChanged: onChanged,
         style: const TextStyle(
           fontFamily: RLTokens.fontSans,
           fontSize: 14.5,

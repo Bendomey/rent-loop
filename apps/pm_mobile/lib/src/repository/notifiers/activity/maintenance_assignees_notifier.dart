@@ -7,50 +7,47 @@ import 'package:rentloop_manager/src/repository/models/maintenance_request_model
 part 'maintenance_assignees_notifier.g.dart';
 
 /// Backs both the Assigned Worker and Assigned Manager filter chips with
-/// one shared, deduped list of people — built from whichever properties are
-/// currently represented on the maintenance board, not a fixed org-wide
-/// roster. Fetches per-property client-user-properties once each (cached
-/// for the lifetime of this provider instance) as new properties appear
-/// among loaded maintenance requests; never re-fetches an already-seen
-/// property.
+/// one shared, deduped list of people. Fetches each property's people once,
+/// all in parallel, when the filter sheet asks for them; never re-fetches an
+/// already-seen property.
 @riverpod
 class MaintenanceAssigneesNotifier extends _$MaintenanceAssigneesNotifier {
-  final Set<String> _fetchedPropertyIds = {};
+  final Map<String, Future<void>> _fetches = {};
   final Map<String, MaintenanceAssigneeModel> _byId = {};
 
+  bool _disposed = false;
+
   @override
-  List<MaintenanceAssigneeModel> build() => const [];
+  List<MaintenanceAssigneeModel> build() {
+    ref.onDispose(() => _disposed = true);
+    return const [];
+  }
 
   Future<void> ensurePropertiesLoaded(Iterable<String> propertyIds) async {
     final clientId = ref.read(currentWorkspaceNotifierProvider)?.clientId;
     if (clientId == null) return;
 
-    final newIds = propertyIds
-        .toSet()
-        .difference(_fetchedPropertyIds)
-        .toList();
-    if (newIds.isEmpty) return;
+    final ids = propertyIds.toSet();
+    if (ids.isEmpty) return;
 
-    for (final propertyId in newIds) {
-      _fetchedPropertyIds.add(propertyId);
-      try {
-        final people = await ref
-            .read(clientUserPropertyApiProvider)
-            .getClientUserProperties(clientId: clientId, propertyId: propertyId);
-        for (final person in people) {
-          _byId[person.id] = person;
-        }
-      } catch (_) {
-        // A single property's people failing to load shouldn't block the
-        // rest of the board's filter options — that property's people
-        // simply won't appear in the list; retried on next distinct-id
-        // recompute only if the id is removed from _fetchedPropertyIds,
-        // which doesn't happen here (matches "don't re-fetch a seen
-        // property" — a transient failure is treated the same as "no
-        // people found for this property" rather than retried forever).
-      }
-    }
-
+    final futures = [
+      for (final id in ids)
+        _fetches.putIfAbsent(id, () => _fetchProperty(clientId, id)),
+    ];
+    await Future.wait(futures);
+    if (_disposed) return;
     state = _byId.values.toList();
+  }
+
+  // A failed property is treated as having no people rather than retried.
+  Future<void> _fetchProperty(String clientId, String propertyId) async {
+    try {
+      final people = await ref
+          .read(clientUserPropertyApiProvider)
+          .getClientUserProperties(clientId: clientId, propertyId: propertyId);
+      for (final person in people) {
+        _byId[person.id] = person;
+      }
+    } catch (_) {}
   }
 }

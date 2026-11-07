@@ -5,6 +5,7 @@ import 'package:rentloop_manager/src/api/root.dart';
 import 'package:rentloop_manager/src/architecture/current_workspace/current_workspace_notifier.dart';
 import 'package:rentloop_manager/src/lib/api_error_messages.dart';
 import 'package:rentloop_manager/src/repository/api_state.dart';
+import 'package:rentloop_manager/src/repository/providers/properties/property_detail_provider.dart';
 
 part 'create_block_notifier.g.dart';
 
@@ -46,6 +47,7 @@ class CreateBlockNotifier extends _$CreateBlockNotifier {
             status: status,
           );
       state = CreateBlockState(status: ApiStatus.success);
+      ref.invalidate(propertyDetailProvider);
     } on ApiException catch (e) {
       state = CreateBlockState(
         status: ApiStatus.failed,

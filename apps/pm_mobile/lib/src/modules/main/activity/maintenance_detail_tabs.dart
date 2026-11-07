@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -12,34 +11,20 @@ import 'package:rentloop_manager/src/repository/models/maintenance_financial_mod
 import 'package:rentloop_manager/src/repository/models/maintenance_request_model.dart';
 import 'package:rentloop_manager/src/repository/providers/activity/maintenance_detail_provider.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
-import 'package:rentloop_manager/src/shared/toast.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
-// The three bodies behind the maintenance detail screen's segmented control:
-// History (activity log timeline), Comments (thread) and Expenses (ledger).
+// The three bodies behind the repair detail screen's segmented control:
+// History (activity log timeline), Comments (thread) and Financials (ledger).
 //
 // Each tab owns its own provider, loading state, empty state and error state,
 // so a failure in one never blanks the screen around it. They are separated
 // from maintenance_detail.dart purely to keep both files readable.
-//
-// Write actions (post comment, add expense) are out of scope for this pass —
-// the controls render per the design and explain themselves via a toast rather
-// than silently doing nothing.
 
 String _timestamp(String? iso) {
   if (iso == null) return '';
   final date = DateTime.tryParse(iso);
   if (date == null) return '';
   return DateFormat('MMM d, y · h:mm a').format(date.toLocal());
-}
-
-void _notYet(WidgetRef ref, String what) {
-  showRLToast(
-    ref,
-    tone: RLToastTone.info,
-    title: 'Coming soon',
-    body: '$what is not available in the app yet.',
-  );
 }
 
 // ── History ───────────────────────────────────────────────────────────────────
@@ -52,7 +37,7 @@ void _notYet(WidgetRef ref, String what) {
       'CREATED' => (
         icon: Icons.add_rounded,
         tone: RLTone.success,
-        title: 'Request created',
+        title: 'Repair created',
       ),
       'STATUS_CHANGED' => (
         icon: Icons.swap_horiz_rounded,
@@ -427,8 +412,6 @@ class MaintenanceCommentsTab extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _CommentComposer(),
-        const SizedBox(height: 12),
         if (comments.isEmpty)
           const _TabEmpty(message: 'No comments yet.')
         else
@@ -437,49 +420,6 @@ class MaintenanceCommentsTab extends ConsumerWidget {
             const SizedBox(height: 10),
           ],
       ],
-    );
-  }
-}
-
-/// Renders the design's composer so the tab reads correctly, but posting is
-/// not wired this pass — the field is read-only and Post explains itself
-/// rather than accepting text that would go nowhere.
-class _CommentComposer extends ConsumerWidget {
-  const _CommentComposer();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return RLCard(
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          const SizedBox(
-            width: double.infinity,
-            child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 6),
-              child: Text(
-                'Write a comment...',
-                style: TextStyle(
-                  fontFamily: RLTokens.fontSans,
-                  fontSize: 14,
-                  color: RLTokens.mutedSoft,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 4),
-          RLBtn(
-            label: 'Post',
-            icon: Icons.send_rounded,
-            large: false,
-            onPressed: () async {
-              await Haptics.vibrate(HapticsType.selection);
-              if (context.mounted) _notYet(ref, 'Posting comments');
-            },
-          ),
-        ],
-      ),
     );
   }
 }
@@ -576,17 +516,6 @@ class MaintenanceFinancialsTab extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        RLBtn(
-          label: 'Log financial',
-          kind: RLBtnKind.light,
-          icon: Icons.add_rounded,
-          full: true,
-          onPressed: () async {
-            await Haptics.vibrate(HapticsType.selection);
-            if (context.mounted) _notYet(ref, 'Logging financials');
-          },
-        ),
-        const SizedBox(height: 12),
         if (financials.isEmpty)
           const _TabEmpty(message: 'No financials recorded.')
         else
@@ -645,6 +574,7 @@ class _FinancialList extends StatelessWidget {
                   _money(total, currency),
                   style: const TextStyle(
                     fontFamily: RLTokens.fontSerif,
+                    fontWeight: RLTokens.headingWeight,
                     fontSize: 18,
                     color: RLTokens.ink,
                     letterSpacing: -0.3,

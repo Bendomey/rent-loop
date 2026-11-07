@@ -506,6 +506,7 @@ class _Step1 extends StatelessWidget {
           'What type of property is this?',
           style: TextStyle(
             fontFamily: RLTokens.fontSerif,
+            fontWeight: RLTokens.headingWeight,
             fontSize: 25,
             color: RLTokens.ink,
             letterSpacing: -0.4,
@@ -570,25 +571,9 @@ class _Step1 extends StatelessWidget {
         _RentalRow(
           icon: Icons.description_outlined,
           title: 'Long-term (Leases)',
-          desc: 'Monthly rent, applications, lease agreements.',
+          desc: 'Monthly rent, tenants, lease agreements.',
           selected: rental == 'Long-term (Leases)',
           onTap: () => onRental('Long-term (Leases)'),
-        ),
-        const SizedBox(height: 10),
-        _RentalRow(
-          icon: Icons.calendar_month_outlined,
-          title: 'Short-term (Bookings)',
-          desc: 'Nightly stays, booking link, availability calendar.',
-          selected: rental == 'Short-term (Bookings)',
-          onTap: () => onRental('Short-term (Bookings)'),
-        ),
-        const SizedBox(height: 10),
-        _RentalRow(
-          icon: Icons.grid_view_rounded,
-          title: 'Both',
-          desc: 'Some units long-term, others for short stays.',
-          selected: rental == 'Both',
-          onTap: () => onRental('Both'),
         ),
       ],
     );
@@ -855,6 +840,7 @@ class _Step2 extends StatelessWidget {
           'Basic information',
           style: TextStyle(
             fontFamily: RLTokens.fontSerif,
+            fontWeight: RLTokens.headingWeight,
             fontSize: 25,
             color: RLTokens.ink,
             letterSpacing: -0.4,
@@ -1245,6 +1231,7 @@ class _Step3 extends StatelessWidget {
           'Where is it located?',
           style: TextStyle(
             fontFamily: RLTokens.fontSerif,
+            fontWeight: RLTokens.headingWeight,
             fontSize: 25,
             color: RLTokens.ink,
             letterSpacing: -0.4,
@@ -1305,6 +1292,7 @@ class _Step4 extends StatelessWidget {
           'Review & submit',
           style: TextStyle(
             fontFamily: RLTokens.fontSerif,
+            fontWeight: RLTokens.headingWeight,
             fontSize: 25,
             color: RLTokens.ink,
             letterSpacing: -0.4,

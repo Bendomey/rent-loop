@@ -9,23 +9,8 @@ import 'package:rentloop_manager/src/shared/widgets.dart';
 // UI only — none of these are wired to the API. Confirmations call back so
 // the calling page can update its local state.
 
-void showChangeNameSheet(BuildContext context, {required String name}) {
-  _openSheet(context, (close) => _ChangeNameSheet(name: name, onClose: close));
-}
-
 void showChangePasswordSheet(BuildContext context) {
   _openSheet(context, (close) => _ChangePasswordSheet(onClose: close));
-}
-
-void showUploadPhotoSheet(BuildContext context) {
-  _openSheet(context, (close) => _UploadPhotoSheet(onClose: close));
-}
-
-void showRemovePhotoSheet(BuildContext context, {required String initials}) {
-  _openSheet(
-    context,
-    (close) => _RemovePhotoSheet(initials: initials, onClose: close),
-  );
 }
 
 void showSignOutDeviceSheet(
@@ -80,6 +65,7 @@ void _openSheet(
   showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
+    useSafeArea: true,
     backgroundColor: Colors.transparent,
     builder: (ctx) => builder(() => Navigator.of(ctx).pop()),
   );
@@ -150,6 +136,7 @@ class _AccountSheet extends StatelessWidget {
                           title,
                           style: const TextStyle(
                             fontFamily: RLTokens.fontSerif,
+                            fontWeight: RLTokens.headingWeight,
                             fontSize: 21,
                             color: RLTokens.ink,
                             letterSpacing: -0.3,
@@ -345,53 +332,6 @@ Widget _twoButtonFooter({
   );
 }
 
-// ── Change name ───────────────────────────────────────────────────────────────
-
-class _ChangeNameSheet extends StatefulWidget {
-  const _ChangeNameSheet({required this.name, required this.onClose});
-  final String name;
-  final VoidCallback onClose;
-
-  @override
-  State<_ChangeNameSheet> createState() => _ChangeNameSheetState();
-}
-
-class _ChangeNameSheetState extends State<_ChangeNameSheet> {
-  late final TextEditingController _controller = TextEditingController(
-    text: widget.name,
-  );
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final value = _controller.text.trim();
-    final canSave = value.length > 1 && value != widget.name;
-    return _AccountSheet(
-      title: 'Change your name',
-      desc:
-          'This is the name shown to your team, tenants and on documents you sign.',
-      onClose: widget.onClose,
-      footer: _twoButtonFooter(
-        confirmLabel: 'Save name',
-        enabled: canSave,
-        onCancel: widget.onClose,
-        onConfirm: widget.onClose,
-      ),
-      child: _SheetField(
-        label: 'Full name',
-        controller: _controller,
-        hint: 'Your full name',
-        onChanged: (_) => setState(() {}),
-      ),
-    );
-  }
-}
-
 // ── Change password ───────────────────────────────────────────────────────────
 
 int _passwordScore(String v) {
@@ -548,117 +488,6 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
           ),
         ],
       ),
-    );
-  }
-}
-
-// ── Upload photo ──────────────────────────────────────────────────────────────
-
-class _UploadPhotoSheet extends StatelessWidget {
-  const _UploadPhotoSheet({required this.onClose});
-  final VoidCallback onClose;
-
-  @override
-  Widget build(BuildContext context) {
-    return _AccountSheet(
-      title: 'Upload a profile photo',
-      desc:
-          'A square image works best — it’s cropped to a circle everywhere it appears.',
-      onClose: onClose,
-      footer: _twoButtonFooter(
-        confirmLabel: 'Save photo',
-        onCancel: onClose,
-        onConfirm: onClose,
-      ),
-      child: Column(
-        children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 26),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(RLTokens.rLg),
-              border: Border.all(
-                color: RLTokens.hairline,
-                style: BorderStyle.solid,
-              ),
-              color: RLTokens.paper,
-            ),
-            child: Column(
-              children: [
-                const Icon(
-                  Icons.photo_camera_outlined,
-                  size: 26,
-                  color: RLTokens.mutedSoft,
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  'Choose an image',
-                  style: TextStyle(
-                    fontFamily: RLTokens.fontSans,
-                    fontSize: 14.5,
-                    fontWeight: RLTokens.semibold,
-                    color: RLTokens.ink,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'JPG or PNG · min 200×200px · up to 2MB',
-                  style: TextStyle(
-                    fontFamily: RLTokens.fontSans,
-                    fontSize: 12.5,
-                    color: RLTokens.muted,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    RLBtn(
-                      label: 'Photo library',
-                      kind: RLBtnKind.light,
-                      large: false,
-                      icon: Icons.photo_library_outlined,
-                      onPressed: () {},
-                    ),
-                    const SizedBox(width: 10),
-                    RLBtn(
-                      label: 'Camera',
-                      kind: RLBtnKind.light,
-                      large: false,
-                      icon: Icons.photo_camera_outlined,
-                      onPressed: () {},
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Remove photo ──────────────────────────────────────────────────────────────
-
-class _RemovePhotoSheet extends StatelessWidget {
-  const _RemovePhotoSheet({required this.initials, required this.onClose});
-  final String initials;
-  final VoidCallback onClose;
-
-  @override
-  Widget build(BuildContext context) {
-    return _AccountSheet(
-      title: 'Remove your photo?',
-      desc:
-          'We’ll show your initials $initials instead. You can upload a new photo at any time.',
-      onClose: onClose,
-      footer: _twoButtonFooter(
-        confirmLabel: 'Remove photo',
-        onCancel: onClose,
-        onConfirm: onClose,
-      ),
-      child: const SizedBox.shrink(),
     );
   }
 }

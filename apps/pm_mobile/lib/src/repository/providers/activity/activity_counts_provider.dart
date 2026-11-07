@@ -7,6 +7,8 @@ import 'package:rentloop_manager/src/lib/activity_counts_logic.dart';
 import 'package:rentloop_manager/src/lib/api_error_messages.dart';
 import 'package:rentloop_manager/src/repository/models/activity_counts_model.dart';
 
+import 'package:rentloop_manager/src/repository/providers/analytics_token_provider.dart';
+
 part 'activity_counts_provider.g.dart';
 
 /// The Maintenance / Applications / Bookings badge numbers on the Activity
@@ -25,46 +27,47 @@ part 'activity_counts_provider.g.dart';
 ///
 /// Three calls rather than one: Cube only merges measures from different cubes
 /// when they are joined, and these three have no join path.
-@riverpod
+@Riverpod(keepAlive: true)
 Future<ActivityCounts> activityCounts(ActivityCountsRef ref) async {
   final clientId = ref.watch(currentWorkspaceNotifierProvider)?.clientId;
   if (clientId == null) return const ActivityCounts();
 
   try {
-    final token = await ref
-        .read(analyticsApiProvider)
-        .getToken(clientId: clientId);
     final cube = ref.read(cubeApiProvider);
 
-    final results = await Future.wait([
-      cube.load(
-        token: token,
-        query: {
-          'measures': [
-            'MaintenanceRequests.newCount',
-            'MaintenanceRequests.inProgressCount',
-            'MaintenanceRequests.inReviewCount',
-          ],
-        },
-      ),
-      cube.load(
-        token: token,
-        query: {
-          'measures': ['TenantApplications.inProgressCount'],
-        },
-      ),
-      cube.load(
-        token: token,
-        query: {
-          'measures': ['Bookings.confirmedCount', 'Bookings.checkedInCount'],
-        },
-      ),
-    ]);
+    final results = await withCubeToken(
+      ref,
+      (token) => Future.wait([
+        cube.load(
+          token: token,
+          query: {
+            'measures': [
+              'MaintenanceRequests.newCount',
+              'MaintenanceRequests.inProgressCount',
+              'MaintenanceRequests.inReviewCount',
+            ],
+          },
+        ),
+        cube.load(
+          token: token,
+          query: {
+            'measures': ['TenantApplications.inProgressCount'],
+          },
+        ),
+        cube.load(
+          token: token,
+          query: {
+            'measures': ['Bookings.confirmedCount', 'Bookings.checkedInCount'],
+          },
+        ),
+      ]),
+    );
 
     return computeActivityCounts(
       maintenanceRows: results[0],
       applicationRows: results[1],
       bookingRows: results[2],
+      clientId: clientId,
     );
   } on ApiException catch (e) {
     // Analytics token fetch failed (expired session, no analytics access for

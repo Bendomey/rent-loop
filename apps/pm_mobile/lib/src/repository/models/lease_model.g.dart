@@ -6,6 +6,22 @@ part of 'lease_model.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
+LeaseFinancialRef _$LeaseFinancialRefFromJson(Map<String, dynamic> json) =>
+    LeaseFinancialRef(
+      id: json['id'] as String,
+      currency: json['currency'] as String,
+      outstandingAmount: (json['outstanding_amount'] as num?)?.toInt() ?? 0,
+      availableCredit: (json['available_credit'] as num?)?.toInt() ?? 0,
+    );
+
+Map<String, dynamic> _$LeaseFinancialRefToJson(LeaseFinancialRef instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'currency': instance.currency,
+      'outstanding_amount': instance.outstandingAmount,
+      'available_credit': instance.availableCredit,
+    };
+
 LeaseModel _$LeaseModelFromJson(Map<String, dynamic> json) => LeaseModel(
       id: json['id'] as String,
       code: json['code'] as String,
@@ -41,6 +57,10 @@ LeaseModel _$LeaseModelFromJson(Map<String, dynamic> json) => LeaseModel(
       cancelledAt: json['cancelled_at'] as String?,
       completedAt: json['completed_at'] as String?,
       terminatedAt: json['terminated_at'] as String?,
+      financialAccount: json['financial_account'] == null
+          ? null
+          : LeaseFinancialRef.fromJson(
+              json['financial_account'] as Map<String, dynamic>),
       createdAt: json['created_at'] as String?,
       updatedAt: json['updated_at'] as String?,
     );
@@ -73,6 +93,7 @@ Map<String, dynamic> _$LeaseModelToJson(LeaseModel instance) =>
       'cancelled_at': instance.cancelledAt,
       'completed_at': instance.completedAt,
       'terminated_at': instance.terminatedAt,
+      'financial_account': instance.financialAccount,
       'created_at': instance.createdAt,
       'updated_at': instance.updatedAt,
     };

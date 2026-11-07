@@ -7,6 +7,11 @@ num pesewasToCedis(int pesewas) => pesewas / 100;
 /// inputs) to the integer pesewas value the backend stores/expects.
 int cedisToPesewas(num cedis) => (cedis * 100).round();
 
+/// What to put back into a cedis text field: `6000`, or `55.50` when there
+/// are pesewas. Never `6000.0`.
+String cedisInputText(int minor) =>
+    minor % 100 == 0 ? '${minor ~/ 100}' : (minor / 100).toStringAsFixed(2);
+
 /// The ISO 4217 code the backend stores for every amount today. Send this on
 /// write paths — [currencySymbol] is for display only.
 const String defaultCurrencyCode = 'GHS';

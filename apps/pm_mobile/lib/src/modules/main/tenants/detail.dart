@@ -1,284 +1,261 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:intl/intl.dart';
+import 'package:shimmer/shimmer.dart';
+
 import 'package:rentloop_manager/src/lib/money.dart';
+import 'package:rentloop_manager/src/lib/tenant_label.dart';
+import 'package:rentloop_manager/src/lib/unit_status.dart';
+import 'package:rentloop_manager/src/repository/models/tenant_model.dart';
+import 'package:rentloop_manager/src/repository/providers/leases/lease_detail_provider.dart';
+import 'package:rentloop_manager/src/repository/providers/tenants/tenant_detail_provider.dart';
+import 'package:rentloop_manager/src/shared/contact_buttons.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
-// ── Seed data (mirrors root.dart) ─────────────────────────────────────────────
-
-class _TenantData {
-  const _TenantData({
-    required this.id,
-    required this.name,
-    required this.unit,
-    required this.phone,
-    required this.status,
-    required this.balance,
-    required this.since,
-    required this.rent,
-  });
-  final String id;
-  final String name;
-  final String unit;
-  final String phone;
-  final String status;
-  final int balance;
-  final String since;
-  final int rent;
+String _formatDate(String? iso) {
+  final date = iso == null ? null : DateTime.tryParse(iso);
+  if (date == null) return '—';
+  return DateFormat('d MMM yyyy').format(date.toLocal());
 }
 
-const _kTenants = [
-  _TenantData(
-    id: 't1',
-    name: 'Kwame Mensah',
-    unit: 'Unit 4B · Cantonments Court',
-    phone: '+233 24 558 1190',
-    status: 'Active',
-    balance: 0,
-    since: 'Mar 2024',
-    rent: 4200,
-  ),
-  _TenantData(
-    id: 't2',
-    name: 'Ama Boateng',
-    unit: 'Unit 5A · Cantonments Court',
-    phone: '+233 20 771 4402',
-    status: 'Active',
-    balance: 4200,
-    since: 'Jan 2025',
-    rent: 4200,
-  ),
-  _TenantData(
-    id: 't3',
-    name: 'Yaw Asante',
-    unit: 'Unit 3B · Cantonments Court',
-    phone: '+233 55 309 8821',
-    status: 'Active',
-    balance: 0,
-    since: 'Aug 2023',
-    rent: 5500,
-  ),
-  _TenantData(
-    id: 't4',
-    name: 'Efua Sarpong',
-    unit: 'Unit 7 · Spintex Heights',
-    phone: '+233 27 644 1180',
-    status: 'Active',
-    balance: 1500,
-    since: 'Nov 2024',
-    rent: 3500,
-  ),
-  _TenantData(
-    id: 't5',
-    name: 'Kojo Antwi',
-    unit: 'Shop 2 · Osu Retail Block',
-    phone: '+233 24 902 3318',
-    status: 'Expired',
-    balance: 0,
-    since: 'Feb 2022',
-    rent: 6000,
-  ),
-];
+String _displayName(TenantModel t) => [
+  t.firstName,
+  t.otherNames,
+  t.lastName,
+].whereType<String>().where((v) => v.isNotEmpty).join(' ');
 
-// ── Record row model ──────────────────────────────────────────────────────────
-
-class _RecordRow {
-  const _RecordRow({
-    required this.label,
-    required this.sub,
-    required this.iconBg,
-    required this.iconFg,
-    required this.icon,
-  });
-  final String label;
-  final String sub;
-  final Color iconBg;
-  final Color iconFg;
-  final IconData icon;
-}
-
-// ── Screen ────────────────────────────────────────────────────────────────────
-
-class TenantDetailScreen extends StatelessWidget {
-  const TenantDetailScreen({super.key, required this.id});
+class TenantDetailScreen extends ConsumerWidget {
+  const TenantDetailScreen({super.key, required this.id, this.propertyId});
   final String id;
-
-  static const _recordRows = [
-    _RecordRow(
-      label: 'Leases',
-      sub: '1 active · 1 past',
-      iconBg: RLTokens.infoBg,
-      iconFg: RLTokens.info,
-      icon: Icons.description_outlined,
-    ),
-    _RecordRow(
-      label: 'Payments',
-      sub: 'On-time rate 96%',
-      iconBg: RLTokens.successBg,
-      iconFg: RLTokens.success,
-      icon: Icons.credit_card_outlined,
-    ),
-    _RecordRow(
-      label: 'Maintenance',
-      sub: '2 requests',
-      iconBg: RLTokens.warningBg,
-      iconFg: RLTokens.warning,
-      icon: Icons.build_outlined,
-    ),
-    _RecordRow(
-      label: 'Activity log',
-      sub: 'Full audit trail',
-      iconBg: RLTokens.neutralBg,
-      iconFg: RLTokens.neutral,
-      icon: Icons.history_rounded,
-    ),
-  ];
+  final String? propertyId;
 
   @override
-  Widget build(BuildContext context) {
-    final t = _kTenants.firstWhere(
-      (x) => x.id == id,
-      orElse: () => _kTenants.first,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final pid = propertyId;
+    final header = RLBackHeader(
+      title: 'Tenant',
+      onBack: () async {
+        await Haptics.vibrate(HapticsType.selection);
+        if (context.mounted) Navigator.of(context).pop();
+      },
     );
+
+    if (pid == null || pid.isEmpty) {
+      return Scaffold(
+        backgroundColor: RLTokens.surface,
+        body: Column(
+          children: [
+            header,
+            const Expanded(
+              child: Padding(
+                padding: EdgeInsets.all(RLTokens.gutter),
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: Text(
+                    "We couldn't open this tenant.",
+                    style: TextStyle(
+                      fontFamily: RLTokens.fontSans,
+                      fontSize: 14,
+                      color: RLTokens.muted,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final tenantAsync = ref.watch(tenantDetailProvider(pid, id));
+    final tenant = tenantAsync.valueOrNull;
+
+    final Widget body;
+    if (tenant == null && tenantAsync.isLoading) {
+      body = const _Skeleton();
+    } else if (tenant == null) {
+      body = Padding(
+        padding: const EdgeInsets.all(RLTokens.gutter),
+        child: RLSectionError(
+          onRetry: () => ref.invalidate(tenantDetailProvider(pid, id)),
+        ),
+      );
+    } else {
+      body = RefreshIndicator(
+        color: RLTokens.crimson,
+        onRefresh: () async {
+          final leaseId = tenant.recentLease?.id;
+          if (leaseId != null) {
+            ref.invalidate(leaseDetailProvider(pid, leaseId));
+          }
+          ref.invalidate(tenantDetailProvider(pid, id));
+          try {
+            await ref.read(tenantDetailProvider(pid, id).future);
+          } catch (_) {}
+        },
+        child: _Content(propertyId: pid, tenant: tenant),
+      );
+    }
 
     return Scaffold(
       backgroundColor: RLTokens.surface,
       body: Column(
         children: [
-          RLBackHeader(
-            title: 'Tenant',
-            onBack: () async {
-              await Haptics.vibrate(HapticsType.selection);
-              if (context.mounted) Navigator.of(context).pop();
-            },
-            trailing: GestureDetector(
-              onTap: () async => Haptics.vibrate(HapticsType.selection),
-              child: const Padding(
-                padding: EdgeInsets.all(10),
-                child: Icon(Icons.more_horiz, size: 22, color: RLTokens.ink),
-              ),
-            ),
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(
-                RLTokens.gutter,
-                0,
-                RLTokens.gutter,
-                32,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Hero
-                  _Hero(t: t),
-
-                  // Stat grid
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _StatCard(
-                          label: 'Monthly rent',
-                          value:
-                              '${currencySymbol(defaultCurrencyCode)} ${_fmt(t.rent)}',
-                          valueColor: RLTokens.ink,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _StatCard(
-                          label: 'Balance',
-                          value: t.balance > 0
-                              ? '${currencySymbol(defaultCurrencyCode)} ${_fmt(t.balance)}'
-                              : '${currencySymbol(defaultCurrencyCode)} 0',
-                          valueColor: t.balance > 0
-                              ? RLTokens.crimson
-                              : RLTokens.success,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  // Details
-                  RLLabel('Details'),
-                  _DetailsCard(t: t),
-
-                  // Record
-                  RLLabel('Record'),
-                  _RecordCard(rows: _recordRows),
-                ],
-              ),
-            ),
-          ),
+          header,
+          Expanded(child: body),
         ],
       ),
     );
   }
 }
 
-// ── Hero ──────────────────────────────────────────────────────────────────────
-
-class _Hero extends StatelessWidget {
-  const _Hero({required this.t});
-  final _TenantData t;
+class _Content extends StatelessWidget {
+  const _Content({required this.propertyId, required this.tenant});
+  final String propertyId;
+  final TenantModel tenant;
 
   @override
   Widget build(BuildContext context) {
+    final lease = tenant.recentLease;
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(
+        RLTokens.gutter,
+        0,
+        RLTokens.gutter,
+        32,
+      ),
+      children: [
+        _Hero(tenant: tenant),
+        const SizedBox(height: 14),
+        _OwesCard(propertyId: propertyId, tenant: tenant),
+        if (lease != null) ...[
+          RLLabel('Lease'),
+          _LeaseCard(propertyId: propertyId, lease: lease),
+        ],
+        RLLabel('Contact'),
+        _ContactCard(tenant: tenant),
+      ],
+    );
+  }
+}
+
+class _Hero extends StatelessWidget {
+  const _Hero({required this.tenant});
+  final TenantModel tenant;
+
+  @override
+  Widget build(BuildContext context) {
+    final name = _displayName(tenant);
+    final unit = tenantUnitLabel(tenant.recentLease);
     return Padding(
       padding: const EdgeInsets.fromLTRB(0, 18, 0, 6),
       child: Column(
         children: [
-          Center(child: RLAvatar(t.name, size: 76, crimsonTone: true)),
+          Center(child: RLAvatar(name, size: 76, crimsonTone: true)),
           const SizedBox(height: 12),
           Center(
             child: Text(
-              t.name,
+              name,
+              textAlign: TextAlign.center,
               style: const TextStyle(
                 fontFamily: RLTokens.fontSerif,
+                fontWeight: RLTokens.headingWeight,
                 fontSize: 24,
                 color: RLTokens.ink,
               ),
             ),
           ),
-          const SizedBox(height: 3),
-          Center(
-            child: Text(
-              t.unit,
-              style: const TextStyle(
-                fontFamily: RLTokens.fontSans,
-                fontSize: 13,
-                color: RLTokens.muted,
+          if (unit != null) ...[
+            const SizedBox(height: 3),
+            Center(
+              child: Text(
+                unit,
+                style: const TextStyle(
+                  fontFamily: RLTokens.fontSans,
+                  fontSize: 13,
+                  color: RLTokens.muted,
+                ),
               ),
             ),
-          ),
+          ],
           const SizedBox(height: 14),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              RLBtn(
-                label: 'Call',
-                kind: RLBtnKind.light,
-                icon: Icons.phone_outlined,
-                large: false,
-                onPressed: () async => Haptics.vibrate(HapticsType.selection),
-              ),
-              const SizedBox(width: 8),
-              RLBtn(
-                label: 'Message',
-                kind: RLBtnKind.light,
-                icon: Icons.chat_bubble_outline_rounded,
-                large: false,
-                onPressed: () async => Haptics.vibrate(HapticsType.selection),
-              ),
-            ],
-          ),
+          RLContactButtons(phone: tenant.phone),
         ],
       ),
     );
   }
 }
 
-// ── Stat card ─────────────────────────────────────────────────────────────────
+class _OwesCard extends ConsumerWidget {
+  const _OwesCard({required this.propertyId, required this.tenant});
+  final String propertyId;
+  final TenantModel tenant;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final leaseId = tenant.recentLease?.id;
+    if (leaseId == null) return const _StatCard.notSetUp();
+
+    final leaseAsync = ref.watch(leaseDetailProvider(propertyId, leaseId));
+    final lease = leaseAsync.valueOrNull;
+    if (lease == null && leaseAsync.isLoading) return const _StatCardSkeleton();
+    if (lease == null) {
+      return RLCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Couldn't load what they owe.",
+              style: TextStyle(
+                fontFamily: RLTokens.fontSans,
+                fontSize: 13.5,
+                color: RLTokens.muted,
+              ),
+            ),
+            const SizedBox(height: 10),
+            RLBtn(
+              label: 'Try again',
+              kind: RLBtnKind.light,
+              large: false,
+              onPressed: () =>
+                  ref.invalidate(leaseDetailProvider(propertyId, leaseId)),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final fin = lease.financialAccount;
+    if (fin == null) return const _StatCard.notSetUp();
+
+    final first = tenant.firstName;
+    final owed = fin.outstandingAmount;
+    String money(int v) => formatPesewas(v, code: fin.currency);
+    if (owed > 0) {
+      return _StatCard(
+        label: '$first owes you',
+        value: money(owed),
+        valueColor: RLTokens.crimson,
+      );
+    }
+    if (owed == 0) {
+      return _StatCard(
+        label: 'All paid up',
+        value: money(0),
+        valueColor: RLTokens.success,
+      );
+    }
+    return _StatCard(
+      label: 'You owe $first',
+      value: money(owed.abs()),
+      valueColor: RLTokens.ink,
+    );
+  }
+}
 
 class _StatCard extends StatelessWidget {
   const _StatCard({
@@ -286,6 +263,10 @@ class _StatCard extends StatelessWidget {
     required this.value,
     required this.valueColor,
   });
+  const _StatCard.notSetUp()
+    : label = 'Rent not set up yet',
+      value = '—',
+      valueColor = RLTokens.muted;
   final String label;
   final String value;
   final Color valueColor;
@@ -293,6 +274,7 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: RLTokens.surface,
@@ -306,6 +288,7 @@ class _StatCard extends StatelessWidget {
             value,
             style: TextStyle(
               fontFamily: RLTokens.fontSerif,
+              fontWeight: RLTokens.headingWeight,
               fontSize: 24,
               color: valueColor,
               letterSpacing: -0.4,
@@ -327,11 +310,96 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-// ── Details card ──────────────────────────────────────────────────────────────
+class _LeaseCard extends StatelessWidget {
+  const _LeaseCard({required this.propertyId, required this.lease});
+  final String propertyId;
+  final TenantLeaseRef lease;
 
-class _DetailsCard extends StatelessWidget {
-  const _DetailsCard({required this.t});
-  final _TenantData t;
+  @override
+  Widget build(BuildContext context) {
+    final (statusText, statusColor) = switch (lease.status) {
+      'Lease.Status.Active' => ('Active', RLTokens.success),
+      'Lease.Status.Pending' => ('Not started', RLTokens.muted),
+      'Lease.Status.Cancelled' => ('Cancelled', RLTokens.muted),
+      _ => ('Ended', RLTokens.muted),
+    };
+    final frequency = lease.paymentFrequency;
+    final rent = formatPesewas(lease.rentFee, code: lease.rentFeeCurrency);
+    final leaseId = lease.id;
+    final pending = lease.status == 'Lease.Status.Pending';
+
+    return _Card(
+      children: [
+        _FieldRow(k: 'Status', v: statusText, vColor: statusColor),
+        _FieldRow(
+          k: pending ? 'Moves in' : 'Moved in',
+          v: _formatDate(lease.moveInDate),
+        ),
+        _FieldRow(k: 'Lease ends', v: _formatDate(lease.moveOutDate)),
+        _FieldRow(
+          k: 'Rent',
+          v: frequency == null
+              ? rent
+              : '$rent / ${paymentFrequencyLabel(frequency).toLowerCase()}',
+          last: leaseId == null,
+        ),
+        if (leaseId != null)
+          RLRow(
+            title: 'See lease',
+            last: true,
+            onTap: () async {
+              await Haptics.vibrate(HapticsType.selection);
+              if (context.mounted) {
+                context.push('/more/leases/$leaseId?property_id=$propertyId');
+              }
+            },
+          ),
+      ],
+    );
+  }
+}
+
+class _ContactCard extends StatelessWidget {
+  const _ContactCard({required this.tenant});
+  final TenantModel tenant;
+
+  @override
+  Widget build(BuildContext context) {
+    String? present(String? v) => v == null || v.trim().isEmpty ? null : v;
+    final phone = present(tenant.phone);
+    final email = present(tenant.email);
+    final emergency = [
+      present(tenant.emergencyContactName),
+      present(tenant.emergencyContactPhone),
+    ].whereType<String>();
+    final hasEmergency = emergency.isNotEmpty;
+    return _Card(
+      children: [
+        _FieldRow(
+          k: 'Phone',
+          v: phone ?? 'Not added',
+          vColor: phone == null ? RLTokens.muted : null,
+        ),
+        _FieldRow(
+          k: 'Email',
+          v: email ?? 'Not added',
+          vColor: email == null ? RLTokens.muted : null,
+          last: !hasEmergency,
+        ),
+        if (hasEmergency)
+          _FieldRow(
+            k: 'Emergency contact',
+            v: emergency.join(' · '),
+            last: true,
+          ),
+      ],
+    );
+  }
+}
+
+class _Card extends StatelessWidget {
+  const _Card({required this.children});
+  final List<Widget> children;
 
   @override
   Widget build(BuildContext context) {
@@ -342,17 +410,7 @@ class _DetailsCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(RLTokens.rLg),
         border: Border.all(color: RLTokens.hairline),
       ),
-      child: Column(
-        children: [
-          _FieldRow(
-            k: 'Status',
-            v: t.status,
-            vColor: t.status == 'Active' ? RLTokens.success : RLTokens.muted,
-          ),
-          _FieldRow(k: 'Phone', v: t.phone),
-          _FieldRow(k: 'Tenant since', v: t.since, last: true),
-        ],
-      ),
+      child: Column(children: children),
     );
   }
 }
@@ -389,13 +447,17 @@ class _FieldRow extends StatelessWidget {
               color: RLTokens.muted,
             ),
           ),
-          Text(
-            v,
-            style: TextStyle(
-              fontFamily: RLTokens.fontSans,
-              fontSize: 13.5,
-              fontWeight: RLTokens.semibold,
-              color: vColor ?? RLTokens.ink,
+          const SizedBox(width: 12),
+          Flexible(
+            child: Text(
+              v,
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontFamily: RLTokens.fontSans,
+                fontSize: 13.5,
+                fontWeight: RLTokens.semibold,
+                color: vColor ?? RLTokens.ink,
+              ),
             ),
           ),
         ],
@@ -404,90 +466,54 @@ class _FieldRow extends StatelessWidget {
   }
 }
 
-// ── Record card ───────────────────────────────────────────────────────────────
+Widget _block(double h, {double? w, double radius = RLTokens.rLg}) => Container(
+  height: h,
+  width: w,
+  decoration: BoxDecoration(
+    color: Colors.white,
+    borderRadius: BorderRadius.circular(radius),
+  ),
+);
 
-class _RecordCard extends StatelessWidget {
-  const _RecordCard({required this.rows});
-  final List<_RecordRow> rows;
+class _StatCardSkeleton extends StatelessWidget {
+  const _StatCardSkeleton();
+
+  @override
+  Widget build(BuildContext context) => Shimmer.fromColors(
+    baseColor: RLTokens.fill,
+    highlightColor: RLTokens.paper,
+    child: _block(76),
+  );
+}
+
+class _Skeleton extends StatelessWidget {
+  const _Skeleton();
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6),
-      decoration: BoxDecoration(
-        color: RLTokens.surface,
-        borderRadius: BorderRadius.circular(RLTokens.rLg),
-        border: Border.all(color: RLTokens.hairline),
-      ),
-      child: Column(
-        children: List.generate(rows.length, (i) {
-          final r = rows[i];
-          final isLast = i == rows.length - 1;
-          return GestureDetector(
-            onTap: () async => Haptics.vibrate(HapticsType.selection),
-            behavior: HitTestBehavior.opaque,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 13),
-              decoration: BoxDecoration(
-                border: isLast
-                    ? null
-                    : const Border(
-                        bottom: BorderSide(color: RLTokens.hairlineSoft),
-                      ),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: r.iconBg,
-                      borderRadius: BorderRadius.circular(11),
-                    ),
-                    child: Icon(r.icon, size: 18, color: r.iconFg),
-                  ),
-                  const SizedBox(width: 13),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          r.label,
-                          style: const TextStyle(
-                            fontFamily: RLTokens.fontSans,
-                            fontSize: 14.5,
-                            fontWeight: RLTokens.semibold,
-                            color: RLTokens.ink,
-                          ),
-                        ),
-                        const SizedBox(height: 1),
-                        Text(
-                          r.sub,
-                          style: const TextStyle(
-                            fontFamily: RLTokens.fontSans,
-                            fontSize: 12,
-                            color: RLTokens.muted,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Icon(
-                    Icons.chevron_right_rounded,
-                    size: 17,
-                    color: RLTokens.micro,
-                  ),
-                ],
-              ),
-            ),
-          );
-        }),
+    return Shimmer.fromColors(
+      baseColor: RLTokens.fill,
+      highlightColor: RLTokens.paper,
+      child: ListView(
+        physics: const NeverScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(
+          RLTokens.gutter,
+          18,
+          RLTokens.gutter,
+          0,
+        ),
+        children: [
+          Center(child: _block(76, w: 76, radius: 38)),
+          const SizedBox(height: 12),
+          Center(child: _block(24, w: 160, radius: 6)),
+          const SizedBox(height: 14),
+          _block(76),
+          const SizedBox(height: 24),
+          _block(150),
+          const SizedBox(height: 24),
+          _block(110),
+        ],
       ),
     );
   }
 }
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-String _fmt(int n) =>
-    n.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => ',');

@@ -43,4 +43,11 @@ void main() {
     expect(isApplicationPending('TenantApplication.Status.Cancelled'), isFalse);
     expect(isApplicationPending(null), isFalse);
   });
+
+  test('Ghana Card is the only name for the national ID document', () {
+    expect(kApplicationIdTypeLabels, isNot(contains('National ID')));
+    expect(applicationIdTypeLabel('NATIONAL_ID'), 'Ghana Card');
+    expect(applicationIdTypeLabel('GHANA_CARD'), 'Ghana Card');
+    expect(applicationIdTypeApiValue('Ghana Card'), 'GHANA_CARD');
+  });
 }

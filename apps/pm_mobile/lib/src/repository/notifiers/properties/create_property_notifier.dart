@@ -8,6 +8,7 @@ import 'package:rentloop_manager/src/architecture/current_workspace/current_work
 import 'package:rentloop_manager/src/lib/api_error_messages.dart';
 import 'package:rentloop_manager/src/lib/money.dart';
 import 'package:rentloop_manager/src/repository/api_state.dart';
+import 'package:rentloop_manager/src/repository/providers/properties/my_property_roles_provider.dart';
 
 part 'create_property_notifier.g.dart';
 
@@ -77,6 +78,7 @@ class CreatePropertyNotifier extends _$CreatePropertyNotifier {
             longitude: longitude,
             gpsAddress: gpsAddress,
           );
+      ref.invalidate(myPropertyRolesProvider);
 
       final block = await ref
           .read(propertyBlockApiProvider)

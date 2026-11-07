@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:rentloop_manager/src/constants.dart';
@@ -44,6 +45,7 @@ class R2UploadService {
     List<int> bytes, {
     required String objectKeyPrefix,
     String ext = 'png',
+    String? contentType,
   }) async {
     final uniqueName =
         '${DateTime.now().millisecondsSinceEpoch}-${_generateKey()}.$ext';
@@ -53,7 +55,14 @@ class R2UploadService {
     final request = http.MultipartRequest('POST', uri)
       ..fields['objectKey'] = objectKey
       ..files.add(
-        http.MultipartFile.fromBytes('file', bytes, filename: uniqueName),
+        http.MultipartFile.fromBytes(
+          'file',
+          bytes,
+          filename: uniqueName,
+          contentType: contentType == null
+              ? null
+              : MediaType.parse(contentType),
+        ),
       );
 
     final streamed = await request.send();

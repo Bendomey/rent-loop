@@ -20,11 +20,145 @@ class TenantApplicationsPage {
 class TenantApplicationApi extends AbstractApi {
   TenantApplicationApi({required super.tokenManager});
 
-  /// Everything the checklist reads. Preloading all four keeps each card's
+  /// Everything the checklist reads. Preloading all three keeps each card's
   /// progress bar computable from the list response alone — no per-row fetch.
   static const _populate =
-      'DesiredUnit,ApplicationPaymentInvoice,LeaseAgreementDocument,'
-      'LeaseAgreementDocumentSignatures';
+      'DesiredUnit,LeaseAgreementDocument,LeaseAgreementDocumentSignatures';
+
+  static const _detailPopulate =
+      'DesiredUnit,CreatedBy,CreatedBy.User,CompletedBy,CancelledBy,'
+      'LeaseAgreementDocument,LeaseAgreementDocumentSignatures';
+
+  static String _base(String clientId, String propertyId) =>
+      '/api/v1/admin/clients/$clientId/properties/$propertyId'
+      '/tenant-applications';
+
+  TenantApplicationModel _parseApplication(String body) =>
+      TenantApplicationModel.fromJson(
+        (jsonDecode(body) as Map<String, dynamic>)['data']
+            as Map<String, dynamic>,
+      );
+
+  Future<TenantApplicationModel> getApplication({
+    required String clientId,
+    required String propertyId,
+    required String id,
+  }) async {
+    final response = await execute(
+      method: 'GET',
+      path:
+          '${_base(clientId, propertyId)}/$id'
+          '?${Uri(queryParameters: {'populate': _detailPopulate}).query}',
+    );
+    return _parseApplication(response.body);
+  }
+
+  Future<TenantApplicationModel> createApplication({
+    required String clientId,
+    required String propertyId,
+    required CreateTenantApplicationInput input,
+  }) async {
+    final response = await execute(
+      method: 'POST',
+      path: _base(clientId, propertyId),
+      body: input.toJson(),
+    );
+    return _parseApplication(response.body);
+  }
+
+  /// [patch] goes out verbatim: an explicit `null` is how the backend's
+  /// optional fields are cleared, so nothing here may strip them.
+  Future<TenantApplicationModel> updateApplication({
+    required String clientId,
+    required String propertyId,
+    required String id,
+    required Map<String, dynamic> patch,
+  }) async {
+    final response = await execute(
+      method: 'PATCH',
+      path: '${_base(clientId, propertyId)}/$id',
+      body: patch,
+    );
+    return _parseApplication(response.body);
+  }
+
+  Future<void> cancelApplication({
+    required String clientId,
+    required String propertyId,
+    required String id,
+    required String reason,
+  }) async {
+    await execute(
+      method: 'PATCH',
+      path: '${_base(clientId, propertyId)}/$id/cancel',
+      body: {'reason': reason},
+    );
+  }
+
+  Future<String> prepareCharges({
+    required String clientId,
+    required String propertyId,
+    required String id,
+  }) async {
+    final response = await execute(
+      method: 'POST',
+      path: '${_base(clientId, propertyId)}/$id/charges:prepare',
+    );
+    return ((jsonDecode(response.body) as Map<String, dynamic>)['data']
+            as Map<String, dynamic>)['id']
+        as String;
+  }
+
+  Future<ApprovedLeaseModel> approveApplication({
+    required String clientId,
+    required String propertyId,
+    required String id,
+  }) async {
+    final response = await execute(
+      method: 'PATCH',
+      path: '${_base(clientId, propertyId)}/$id/approve',
+    );
+    return ApprovedLeaseModel.fromJson(
+      (jsonDecode(response.body) as Map<String, dynamic>)['data']
+          as Map<String, dynamic>,
+    );
+  }
+
+  Future<void> inviteTenant({
+    required String clientId,
+    required String propertyId,
+    required String unitId,
+    String? email,
+    String? phone,
+  }) async {
+    await execute(
+      method: 'POST',
+      path: '${_base(clientId, propertyId)}/invite',
+      body: {
+        'unit_id': unitId,
+        if (email != null) 'email': email,
+        if (phone != null) 'phone': phone,
+      },
+    );
+  }
+
+  /// Unauthenticated endpoint; a 404 just means no tenant has that number.
+  Future<TenantLookupModel?> lookupTenantByPhone(String e164) async {
+    try {
+      final response = await execute(
+        method: 'GET',
+        path: '/api/v1/tenants/phone/${Uri.encodeComponent(e164)}',
+        authRequired: false,
+      );
+      return TenantLookupModel.fromJson(
+        (jsonDecode(response.body) as Map<String, dynamic>)['data']
+            as Map<String, dynamic>,
+      );
+    } on ApiException catch (e) {
+      if (e.statusCode == 404) return null;
+      rethrow;
+    }
+  }
 
   /// `GET .../tenant-applications` — the cross-property "mobile" route
   /// (`ListTenantApplicationsAcrossProperties`), for the Activity tab, which is
@@ -45,13 +179,14 @@ class TenantApplicationApi extends AbstractApi {
     List<String> propertyIds = const [],
     List<String> desiredUnitIds = const [],
     String? search,
+    String orderBy = 'created_at',
   }) async {
     final query = <String, String>{
       'page': '$page',
       'page_size': '$pageSize',
       'populate': _populate,
       'order': 'desc',
-      'order_by': 'created_at',
+      'order_by': orderBy,
     };
     if (statusLabel != null) {
       query['status'] = applicationStatusApiValue(statusLabel);

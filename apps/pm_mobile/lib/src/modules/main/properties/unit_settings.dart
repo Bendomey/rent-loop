@@ -32,6 +32,7 @@ class UnitSettingsHubScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.listen(deleteUnitNotifierProvider, (_, _) {});
     final unitAsync = ref.watch(unitDetailProvider(propertyId, unitId));
     final isMulti =
         ref.watch(propertyDetailProvider(propertyId)).valueOrNull?.type ==
@@ -85,6 +86,7 @@ class UnitSettingsHubScreen extends ConsumerWidget {
                               unit?.name ?? 'Unit',
                               style: const TextStyle(
                                 fontFamily: RLTokens.fontSerif,
+                                fontWeight: RLTokens.headingWeight,
                                 fontSize: 18,
                                 color: RLTokens.ink,
                                 height: 1.1,
@@ -176,6 +178,7 @@ class UnitSettingsHubScreen extends ConsumerWidget {
           'Delete unit?',
           style: TextStyle(
             fontFamily: RLTokens.fontSerif,
+            fontWeight: RLTokens.headingWeight,
             fontSize: 21,
             color: RLTokens.ink,
           ),

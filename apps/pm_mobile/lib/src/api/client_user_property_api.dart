@@ -59,7 +59,7 @@ class ClientUserPropertyApi extends AbstractApi {
   /// so this is the single source of truth for "properties I can see"
   /// across every role, not just STAFF: both the Properties tab
   /// (PropertiesNotifier) and the maintenance board's Property filter
-  /// (activityFilterProperties) go through this one endpoint, by design
+  /// (PropertyOptionsNotifier) go through this one endpoint, by design
   /// — access is always explicit, never role-inferred. Supports the same
   /// pagination/search/status params as `PropertyApi.getProperties`, minus
   /// `archived` (this endpoint's join always excludes soft-deleted
@@ -111,6 +111,37 @@ class ClientUserPropertyApi extends AbstractApi {
       rows: properties,
       meta: PaginationMetaModel.fromJson(data['meta'] as Map<String, dynamic>),
     );
+  }
+
+  /// `GET .../properties/me`, paged to the end, reduced to
+  /// `property_id -> role` (MANAGER or STAFF). Property mutations are gated on
+  /// this role alone, so callers need it for every property, not one page.
+  Future<Map<String, String>> getMyPropertyRoles({
+    required String clientId,
+  }) async {
+    final roles = <String, String>{};
+    var page = 1;
+    while (true) {
+      final queryString = Uri(
+        queryParameters: {'page': '$page', 'page_size': '200'},
+      ).query;
+      final response = await execute(
+        method: 'GET',
+        path: '/api/v1/admin/clients/$clientId/properties/me?$queryString',
+      );
+      final data =
+          (jsonDecode(response.body) as Map<String, dynamic>)['data']
+              as Map<String, dynamic>;
+      for (final row in data['rows'] as List<dynamic>) {
+        final map = row as Map<String, dynamic>;
+        final propertyId = map['property_id'] as String?;
+        final role = map['role'] as String?;
+        if (propertyId != null && role != null) roles[propertyId] = role;
+      }
+      final meta = data['meta'] as Map<String, dynamic>;
+      if (meta['has_next_page'] != true) return roles;
+      page++;
+    }
   }
 }
 

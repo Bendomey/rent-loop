@@ -23,6 +23,7 @@ ActivityCounts computeActivityCounts({
   required List<Map<String, dynamic>> maintenanceRows,
   required List<Map<String, dynamic>> applicationRows,
   required List<Map<String, dynamic>> bookingRows,
+  String? clientId,
 }) {
   final maintenanceRow = maintenanceRows.isNotEmpty
       ? maintenanceRows.first
@@ -43,5 +44,6 @@ ActivityCounts computeActivityCounts({
     bookings:
         parseCubeNum(bookingRow['Bookings.confirmedCount']) +
         parseCubeNum(bookingRow['Bookings.checkedInCount']),
+    clientId: clientId,
   );
 }

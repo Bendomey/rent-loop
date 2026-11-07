@@ -1,7 +1,13 @@
 // ── API ───────────────────────────────────────────────────────────────────────
-const String kApiBaseUrl = 'https://api.rentloopapp.com';
+const String kApiBaseUrl = String.fromEnvironment(
+  'API_BASE_URL',
+  defaultValue: 'https://api.rentloopapp.com',
+);
 
-const String kCubeApiUrl = 'https://rentloop-cube.fly.dev';
+const String kCubeApiUrl = String.fromEnvironment(
+  'CUBE_API_URL',
+  defaultValue: 'https://rentloop-cube.fly.dev',
+);
 
 // R2 image upload proxy — hosted by the property-manager web app (not
 // services/main), same endpoint apps/go's tenant app already uploads
@@ -88,4 +94,13 @@ Uri leaseDocumentSigningUrl(
     'utm_content': content,
     'leaseId': leaseId,
   },
+);
+
+const String kWebsiteHost = 'rentloopapp.com';
+
+Uri tenantApplyUrl({required String unitId, required String referredBy}) => Uri(
+  scheme: 'https',
+  host: kWebsiteHost,
+  path: '/tenants/apply',
+  query: 'unit=$unitId&referred_by=$referredBy',
 );

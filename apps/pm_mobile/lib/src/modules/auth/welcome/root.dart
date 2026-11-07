@@ -215,6 +215,7 @@ class _BottomSection extends StatelessWidget {
             slide.title,
             style: const TextStyle(
               fontFamily: RLTokens.fontSerif,
+              fontWeight: RLTokens.headingWeight,
               fontSize: 34,
               height: 1.08,
               letterSpacing: -0.8,
@@ -479,6 +480,7 @@ class _StageDashboard extends StatelessWidget {
                         'GH₵ 1,845',
                         style: TextStyle(
                           fontFamily: RLTokens.fontSerif,
+                          fontWeight: RLTokens.headingWeight,
                           fontSize: 31,
                           height: 1,
                           color: Colors.white,
@@ -525,6 +527,7 @@ class _StageDashboard extends StatelessWidget {
                               '56',
                               style: TextStyle(
                                 fontFamily: RLTokens.fontSerif,
+                                fontWeight: RLTokens.headingWeight,
                                 fontSize: 17,
                                 color: RLTokens.ink,
                               ),
@@ -576,6 +579,7 @@ class _StageDashboard extends StatelessWidget {
                             '88%',
                             style: TextStyle(
                               fontFamily: RLTokens.fontSerif,
+                              fontWeight: RLTokens.headingWeight,
                               fontSize: 20,
                               color: RLTokens.ink,
                             ),
@@ -813,6 +817,7 @@ class _StageMoney extends StatelessWidget {
             'GH₵ 1,697.40',
             style: TextStyle(
               fontFamily: RLTokens.fontSerif,
+              fontWeight: RLTokens.headingWeight,
               fontSize: 44,
               height: 1,
               letterSpacing: -0.8,
@@ -1093,6 +1098,7 @@ class _Donut extends StatelessWidget {
             label,
             style: const TextStyle(
               fontFamily: RLTokens.fontSerif,
+              fontWeight: RLTokens.headingWeight,
               fontSize: 16,
               color: RLTokens.ink,
             ),

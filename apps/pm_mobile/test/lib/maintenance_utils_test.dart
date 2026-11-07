@@ -18,7 +18,7 @@ void main() {
 
   group('visibility mapping', () {
     test('both visibilities round-trip through their API values', () {
-      for (final label in ['Tenant Visible', 'Internal Only']) {
+      for (final label in ['Tenant can see this', 'Only staff can see this']) {
         expect(mrVisibilityLabelFromApi(mrVisibilityApiValue(label)), label);
       }
     });
@@ -30,7 +30,7 @@ void main() {
 
   group('priority mapping', () {
     test('every priority round-trips through its API value', () {
-      for (final label in ['Low', 'Medium', 'High', 'Emergency']) {
+      for (final label in ['Low', 'Medium', 'High', 'Urgent']) {
         final apiValue = mrPriorityApiValue(label);
         expect(mrPriorityLabelFromApi(apiValue), label);
       }
@@ -46,9 +46,9 @@ void main() {
       }
     });
 
-    test('Safety & Fire maps to SAFETY_FIRE', () {
-      expect(mrCategoryApiValue('Safety & Fire'), 'SAFETY_FIRE');
-      expect(mrCategoryLabelFromApi('SAFETY_FIRE'), 'Safety & Fire');
+    test('Safety & fire maps to SAFETY_FIRE', () {
+      expect(mrCategoryApiValue('Safety & fire'), 'SAFETY_FIRE');
+      expect(mrCategoryLabelFromApi('SAFETY_FIRE'), 'Safety & fire');
     });
   });
 }

@@ -71,6 +71,7 @@ class LeaseHeroCard extends ConsumerWidget {
                     statusLabel,
                     tone: statusTone(statusLabel),
                     large: true,
+                    onImage: true,
                   ),
                 ),
               ],
@@ -116,7 +117,9 @@ class LeaseHeroCard extends ConsumerWidget {
                       ? () async {
                           await Haptics.vibrate(HapticsType.selection);
                           if (context.mounted) {
-                            context.push('/more/tenants/${tenant.id}');
+                            context.push(
+                              '/more/tenants/${tenant.id}?property_id=$propertyId',
+                            );
                           }
                         }
                       : null,
@@ -192,8 +195,12 @@ class LeaseHeroCard extends ConsumerWidget {
                     onTap: () async {
                       await Haptics.vibrate(HapticsType.selection);
                       if (context.mounted) {
+                        final propertyId =
+                            lease.tenantApplication?.propertyId ??
+                            unit?.propertyId;
                         context.push(
-                          '/activity/applications/${lease.tenantApplicationId}',
+                          '/activity/applications/${lease.tenantApplicationId}'
+                          '${propertyId == null ? '' : '?property_id=$propertyId'}',
                         );
                       }
                     },
@@ -207,8 +214,7 @@ class LeaseHeroCard extends ConsumerWidget {
                         ),
                         const SizedBox(width: 5),
                         Text(
-                          'View Application'
-                          '${lease.tenantApplication != null ? ' (${lease.tenantApplication!.code})' : ''}',
+                          'View tenant setup',
                           style: const TextStyle(
                             fontFamily: RLTokens.fontSans,
                             fontSize: 12,

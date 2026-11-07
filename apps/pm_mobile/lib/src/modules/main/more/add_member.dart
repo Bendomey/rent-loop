@@ -72,6 +72,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                     'Create new member',
                     style: TextStyle(
                       fontFamily: RLTokens.fontSerif,
+                      fontWeight: RLTokens.headingWeight,
                       fontSize: 25,
                       color: RLTokens.ink,
                       letterSpacing: -0.4,
@@ -163,6 +164,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                               'Assign properties',
                               style: TextStyle(
                                 fontFamily: RLTokens.fontSerif,
+                                fontWeight: RLTokens.headingWeight,
                                 fontSize: 18,
                                 color: RLTokens.ink,
                                 letterSpacing: -0.2,

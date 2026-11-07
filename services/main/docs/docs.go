@@ -13252,7 +13252,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Mark a PENDING offline payment as SUCCESSFUL or FAILED. Updates the invoice status accordingly.",
+                "description": "Mark a PENDING offline payment as SUCCESSFUL or FAILED. Updates the invoice status accordingly. is_successful must be sent explicitly; false declines the payment (FAILED) and leaves the invoice unchanged.",
                 "consumes": [
                     "application/json"
                 ],
@@ -27328,6 +27328,9 @@ const docTemplate = `{
                 "period_start": {
                     "type": "string"
                 },
+                "reverses_charge_instance_id": {
+                    "type": "string"
+                },
                 "settled_amount": {
                     "type": "integer",
                     "example": 0
@@ -27969,6 +27972,14 @@ const docTemplate = `{
                     "type": "string",
                     "example": "2024-07-01T00:00:00Z"
                 },
+                "financial_account": {
+                    "description": "Only when populated with FinancialAccount.TenantApplication; lets clients\nname the payer of a bill that has no lease yet.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/transformations.OutputInvoiceFinancialAccount"
+                        }
+                    ]
+                },
                 "financial_account_id": {
                     "description": "Present on account-backed invoices — the tenant ledger this bills against.",
                     "type": "string",
@@ -28083,6 +28094,35 @@ const docTemplate = `{
                 "voided_reason": {
                     "type": "string",
                     "example": "Associated expense was deleted"
+                }
+            }
+        },
+        "transformations.OutputInvoiceApplicantReference": {
+            "type": "object",
+            "properties": {
+                "first_name": {
+                    "type": "string",
+                    "example": "Ama"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "last_name": {
+                    "type": "string",
+                    "example": "Boateng"
+                }
+            }
+        },
+        "transformations.OutputInvoiceFinancialAccount": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "tenant_application": {
+                    "$ref": "#/definitions/transformations.OutputInvoiceApplicantReference"
                 }
             }
         },

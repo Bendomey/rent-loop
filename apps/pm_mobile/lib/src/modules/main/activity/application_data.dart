@@ -28,11 +28,18 @@ const kMaritalStatusOptions = {
 };
 
 const kIdTypeOptions = {
-  'NATIONAL_ID': 'National ID',
   'PASSPORT': 'Passport',
   'DRIVER_LICENSE': "Driver's License",
   'GHANA_CARD': 'Ghana Card',
 };
+
+String? idTypeDisplay(String? apiValue) =>
+    kIdTypeOptions[apiValue == 'NATIONAL_ID' ? 'GHANA_CARD' : apiValue];
+
+/// The backend stamps SELF on every non-bulk application, including ones a
+/// manager enters, so only a file upload can be named.
+String? submittedByLabel(String? source) =>
+    source == 'CSV_BULK' ? 'from a file upload' : null;
 
 const kEmployerTypeOptions = {'STUDENT': 'Student', 'WORKER': 'Worker'};
 
@@ -41,20 +48,6 @@ const kStayFrequencyOptions = {
   'DAILY': 'Daily',
   'WEEKLY': 'Weekly',
   'MONTHLY': 'Monthly',
-};
-
-const kPaymentFrequencyOptions = {
-  'DAILY': 'Daily',
-  'WEEKLY': 'Weekly',
-  'MONTHLY': 'Monthly',
-  'QUARTERLY': 'Quarterly',
-  'BIANNUALLY': 'Biannually',
-  'ANNUALLY': 'Annually',
-};
-
-const kPaymentModeOptions = {
-  'ONE_TIME_PAYMENT': 'Full stay payment',
-  'CUSTOM': 'Custom periods',
 };
 
 /// Singular/plural period noun for a stay frequency — mirrors the web's
@@ -275,66 +268,29 @@ class ApplicationFinancial {
   const ApplicationFinancial({
     this.rentFee,
     this.paymentFrequency,
-    this.securityDepositEnabled = false,
     this.securityDepositFee,
-    this.paymentMode = 'ONE_TIME_PAYMENT',
-    this.customPeriods = 1,
-    this.invoiceGenerated = false,
-    this.invoicePaid = false,
-    this.unitDefaultRentFee,
+    this.hasFinancialAccount = false,
   });
 
   /// Pesewas.
   final int? rentFee;
   final String? paymentFrequency;
-  final bool securityDepositEnabled;
 
   /// Pesewas.
   final int? securityDepositFee;
-  final String paymentMode;
-  final int customPeriods;
-  final bool invoiceGenerated;
-  final bool invoicePaid;
-
-  /// Pesewas — the unit's own rent, shown as "Unit default" on the web form.
-  final int? unitDefaultRentFee;
-
-  /// Number of rent periods the initial payment covers.
-  int periodsFor(int? stayDuration) =>
-      paymentMode == 'CUSTOM' ? customPeriods : (stayDuration ?? 1);
-
-  /// Initial payment total in pesewas: rent × periods (+ deposit when on).
-  int? initialTotalFor(int? stayDuration) {
-    if (rentFee == null) return null;
-    final base = rentFee! * periodsFor(stayDuration);
-    return base + (securityDepositEnabled ? (securityDepositFee ?? 0) : 0);
-  }
+  final bool hasFinancialAccount;
 
   ApplicationFinancial copyWith({
     int? Function()? rentFee,
     String? Function()? paymentFrequency,
-    bool? securityDepositEnabled,
-    int? Function()? securityDepositFee,
-    String? paymentMode,
-    int? customPeriods,
-    bool? invoiceGenerated,
-    bool? invoicePaid,
   }) {
     return ApplicationFinancial(
       rentFee: rentFee != null ? rentFee() : this.rentFee,
       paymentFrequency: paymentFrequency != null
           ? paymentFrequency()
           : this.paymentFrequency,
-      securityDepositEnabled:
-          securityDepositEnabled ?? this.securityDepositEnabled,
-      securityDepositFee: securityDepositFee != null
-          ? securityDepositFee()
-          : this.securityDepositFee,
-      paymentMode: paymentMode ?? this.paymentMode,
-      customPeriods: customPeriods ?? this.customPeriods,
-      invoiceGenerated: invoiceGenerated ?? this.invoiceGenerated,
-      invoicePaid: invoicePaid ?? this.invoicePaid,
-      unitDefaultRentFee: unitDefaultRentFee,
+      securityDepositFee: securityDepositFee,
+      hasFinancialAccount: hasFinancialAccount,
     );
   }
 }
@@ -353,8 +309,7 @@ class ApplicationSigner {
   final String label;
   final bool signed;
 
-  /// True for the slot the signed-in manager fills themselves — that row
-  /// gets "Sign document" instead of "Prompt to sign".
+  /// True for the slot the signed-in manager fills themselves.
   final bool isSelf;
 
   ApplicationSigner copyWith({bool? signed}) => ApplicationSigner(
@@ -396,8 +351,20 @@ class ApplicationUnit {
     required this.status,
     this.rentFee,
     this.paymentFrequency,
+    this.rentFeeCurrency,
     this.imageUrl,
   });
+
+  factory ApplicationUnit.fromModel(UnitModel u) => ApplicationUnit(
+    id: u.id,
+    name: u.name,
+    type: u.type,
+    status: u.status,
+    rentFee: u.rentFee,
+    paymentFrequency: u.paymentFrequency,
+    rentFeeCurrency: u.rentFeeCurrency,
+    imageUrl: u.images?.firstOrNull,
+  );
 
   final String id;
   final String name;
@@ -413,9 +380,13 @@ class ApplicationUnit {
   /// Market rent in pesewas.
   final int? rentFee;
   final String? paymentFrequency;
+  final String? rentFeeCurrency;
   final String? imageUrl;
 
   bool get isAvailable => status == 'Unit.Status.Available';
+  bool get isOccupied => status == 'Unit.Status.Occupied';
+  bool get isBookable =>
+      isAvailable || status == 'Unit.Status.PartiallyOccupied';
 }
 
 // ── Root ─────────────────────────────────────────────────────────────────────
@@ -427,7 +398,7 @@ class ApplicationDetailData {
     required this.code,
     required this.status,
     required this.submittedOn,
-    required this.submittedBy,
+    this.submittedBy,
     required this.applicant,
     required this.identity,
     required this.background,
@@ -443,7 +414,7 @@ class ApplicationDetailData {
   final String code;
   final String status;
   final String submittedOn;
-  final String submittedBy;
+  final String? submittedBy;
   final ApplicationApplicant applicant;
   final ApplicationIdentity identity;
   final ApplicationBackground background;
@@ -506,14 +477,9 @@ class ApplicationDetailData {
   /// only offers them while the application is still in progress.
   bool get canChangeUnit => !isSingleUnitProperty && !approved;
 
-  bool get isUnitChangeLocked =>
-      financial.invoicePaid || doc.signers.any((s) => s.signed);
+  bool get isUnitChangeLocked => doc.signers.any((s) => s.signed);
 
   String? get unitChangeLockReason {
-    if (financial.invoicePaid) {
-      return 'The initial payment has been paid, so the unit can no longer be '
-          'changed.';
-    }
     if (doc.signers.any((s) => s.signed)) {
       return 'The lease document has been signed, so the unit can no longer '
           'be changed.';
@@ -598,12 +564,8 @@ class ApplicationDetailData {
       rentFee: financial.rentFee,
       paymentFrequency: financial.paymentFrequency,
       securityDepositFee: financial.securityDepositFee,
-      applicationPaymentInvoice: financial.invoiceGenerated
-          ? InvoiceRef(
-              id: 'seed-invoice',
-              code: 'SEED',
-              status: financial.invoicePaid ? 'PAID' : 'ISSUED',
-            )
+      financialAccount: financial.hasFinancialAccount
+          ? FinancialAccountSummaryModel(id: 'seed-account')
           : null,
       leaseAgreementDocumentMode: doc.mode,
       leaseAgreementDocumentId: doc.attached ? docId : null,
@@ -623,29 +585,15 @@ class ApplicationDetailData {
     );
   }
 
-  // Per-section accessors, kept so the type's API is unchanged. Each is a
-  // one-line delegate to the shared lib.
-  ApplicationChecklistSection get unitSection =>
-      getUnitSection(toApplicationModel());
+  ApplicationChecklist get checklist =>
+      computeApplicationChecklist(toApplicationModel());
 
-  ApplicationChecklistSection get tenantSection =>
-      getTenantDetailsSection(toApplicationModel());
+  ChecklistStep stepFor(ChecklistSection section) => checklist.step(section);
 
-  ApplicationChecklistSection get moveInSection =>
-      getMoveInSection(toApplicationModel());
+  /// Percentage (0-100) of steps done or locked.
+  double get progress => checklist.progress * 100;
 
-  ApplicationChecklistSection get financialSection =>
-      getFinancialSection(toApplicationModel());
-
-  ApplicationChecklistSection get docsSection =>
-      getDocsSection(toApplicationModel());
-
-  List<ApplicationChecklistSection> get checklist =>
-      buildApplicationChecklist(toApplicationModel());
-
-  double get progress => applicationProgress(toApplicationModel());
-
-  bool get canApprove => canApproveApplication(toApplicationModel());
+  bool get canApprove => checklist.canApprove;
 
   /// Builds the screen's view model from a real API row — the inverse of
   /// [toApplicationModel]. Used when the applications list pushes the row it
@@ -696,8 +644,6 @@ class ApplicationDetailData {
           ),
     ];
 
-    final invoice = a.applicationPaymentInvoice;
-
     return ApplicationDetailData(
       id: a.id,
       code: a.code,
@@ -705,7 +651,7 @@ class ApplicationDetailData {
       submittedOn: a.createdAt == null
           ? '—'
           : formatApplicationDate(a.createdAt!),
-      submittedBy: a.source ?? '—',
+      submittedBy: submittedByLabel(a.source),
       applicant: ApplicationApplicant(
         firstName: a.firstName ?? '',
         lastName: a.lastName ?? '',
@@ -722,6 +668,8 @@ class ApplicationDetailData {
         idType: a.idType,
         idNumber: a.idNumber,
         currentAddress: a.currentAddress,
+        idFrontUrl: a.idFrontUrl,
+        idBackUrl: a.idBackUrl,
       ),
       background: ApplicationBackground(
         emergencyContactName: a.emergencyContactName,
@@ -731,6 +679,7 @@ class ApplicationDetailData {
         occupation: a.occupation,
         employer: a.employer,
         occupationAddress: a.occupationAddress,
+        proofOfIncomeUrl: a.proofOfIncomeUrl,
       ),
       moveIn: ApplicationMoveIn(
         desiredMoveInDate: a.desiredMoveInDate,
@@ -741,9 +690,7 @@ class ApplicationDetailData {
         rentFee: a.rentFee,
         paymentFrequency: a.paymentFrequency,
         securityDepositFee: a.securityDepositFee,
-        securityDepositEnabled: a.securityDepositFee != null,
-        invoiceGenerated: invoice != null,
-        invoicePaid: invoice?.isPaid ?? false,
+        hasFinancialAccount: a.financialAccount != null,
       ),
       doc: ApplicationDoc(
         mode: a.leaseAgreementDocumentMode,
@@ -758,15 +705,12 @@ class ApplicationDetailData {
               status: a.desiredUnit!.status,
               rentFee: a.desiredUnit!.rentFee,
               paymentFrequency: a.desiredUnit!.paymentFrequency,
+              rentFeeCurrency: a.desiredUnit!.rentFeeCurrency,
+              imageUrl: a.desiredUnit!.images?.firstOrNull,
             ),
       approved: a.status == 'TenantApplication.Status.Completed',
     );
   }
-
-  // ── Seed lookup ───────────────────────────────────────────────────────────
-
-  static ApplicationDetailData forId(String id) =>
-      _seed.firstWhere((a) => a.id == id, orElse: () => _seed.first);
 }
 
 // ── Seeded units available to pick from ──────────────────────────────────────
@@ -813,167 +757,5 @@ const kApplicationSeedUnits = <ApplicationUnit>[
     status: 'Unit.Status.Maintenance',
     rentFee: 600000,
     paymentFrequency: 'MONTHLY',
-  ),
-];
-
-// ── Seeded applications (ids mirror the activity board) ──────────────────────
-
-ApplicationDoc _leaseDoc(String code) => ApplicationDoc(
-  name: '$code - Lease Agreement',
-  source: 'Selected from library',
-  status: 'Ready for Signing',
-  mode: 'ONLINE',
-  signers: const [
-    ApplicationSigner(
-      role: 'PROPERTY_MANAGER',
-      label: 'Property Manager',
-      signed: false,
-      isSelf: true,
-    ),
-    ApplicationSigner(
-      role: 'TENANT',
-      label: 'Tenant',
-      signed: false,
-      isSelf: false,
-    ),
-    ApplicationSigner(
-      role: 'PM_WITNESS',
-      label: 'Property Manager Witness',
-      signed: false,
-      isSelf: false,
-    ),
-    ApplicationSigner(
-      role: 'TENANT_WITNESS',
-      label: 'Tenant Witness',
-      signed: false,
-      isSelf: false,
-    ),
-  ],
-);
-
-final List<ApplicationDetailData> _seed = [
-  ApplicationDetailData(
-    id: 'a1',
-    code: '2607QUOWF0',
-    status: 'In Progress',
-    submittedOn: 'Fri, 10 Jul 2026 · 11:34',
-    submittedBy: 'Benjamin Domey',
-    applicant: ApplicationApplicant(
-      firstName: 'Ebenezer',
-      lastName: 'Adu',
-      gender: 'MALE',
-      maritalStatus: 'SINGLE',
-      email: 'gideonbempong533@gmail.com',
-      phone: '+233 27 709 9220',
-      dateOfBirth: DateTime(1998, 3, 4),
-    ),
-    identity: const ApplicationIdentity(
-      nationality: 'Ghanaian',
-      idType: 'NATIONAL_ID',
-      idNumber: 'GHA-14564-464',
-    ),
-    background: const ApplicationBackground(
-      employerType: 'WORKER',
-      occupation: 'Accountant',
-    ),
-    moveIn: const ApplicationMoveIn(
-      stayDurationFrequency: 'MONTHLY',
-      stayDuration: 12,
-    ),
-    financial: const ApplicationFinancial(
-      rentFee: 50000,
-      paymentFrequency: 'MONTHLY',
-      unitDefaultRentFee: 50000,
-    ),
-    doc: _leaseDoc('2607QUOWF0'),
-    desiredUnit: kApplicationSeedUnits[0],
-  ),
-  ApplicationDetailData(
-    id: 'a2',
-    code: '2607DNLOF2',
-    status: 'In Progress',
-    submittedOn: 'Wed, 8 Jul 2026 · 09:12',
-    submittedBy: 'Benjamin Domey',
-    applicant: ApplicationApplicant(
-      firstName: 'Daniel',
-      lastName: 'Ofori',
-      gender: 'MALE',
-      maritalStatus: 'MARRIED',
-      email: 'daniel.ofori@example.com',
-      phone: '+233 24 330 7781',
-      dateOfBirth: DateTime(1991, 11, 19),
-    ),
-    identity: const ApplicationIdentity(
-      nationality: 'Ghanaian',
-      idType: 'GHANA_CARD',
-      idNumber: 'GHA-72210-118',
-      currentAddress: '14 Spintex Road, Accra',
-    ),
-    background: const ApplicationBackground(
-      emergencyContactName: 'Akosua Ofori',
-      relationshipToEmergencyContact: 'Spouse',
-      emergencyContactPhone: '+233 24 118 9930',
-      employerType: 'WORKER',
-      occupation: 'Logistics Manager',
-      employer: 'Bollore Transport',
-      occupationAddress: 'Tema Industrial Area, Tema',
-    ),
-    moveIn: ApplicationMoveIn(
-      desiredMoveInDate: DateTime(2026, 8, 1),
-      stayDurationFrequency: 'MONTHLY',
-      stayDuration: 12,
-    ),
-    financial: const ApplicationFinancial(
-      rentFee: 350000,
-      paymentFrequency: 'MONTHLY',
-      securityDepositEnabled: true,
-      securityDepositFee: 350000,
-      unitDefaultRentFee: 350000,
-      invoiceGenerated: true,
-    ),
-    doc: _leaseDoc('2607DNLOF2'),
-    desiredUnit: kApplicationSeedUnits[2],
-  ),
-  ApplicationDetailData(
-    id: 'a3',
-    code: '2607NAADJ3',
-    status: 'In Progress',
-    submittedOn: 'Tue, 7 Jul 2026 · 16:48',
-    submittedBy: 'Benjamin Domey',
-    applicant: ApplicationApplicant(
-      firstName: 'Naa',
-      lastName: 'Adjeley',
-      gender: 'FEMALE',
-      email: 'naa.adjeley@example.com',
-      phone: '+233 20 555 9921',
-    ),
-    identity: const ApplicationIdentity(nationality: 'Ghanaian'),
-    background: const ApplicationBackground(),
-    moveIn: const ApplicationMoveIn(stayDurationFrequency: 'MONTHLY'),
-    financial: const ApplicationFinancial(
-      rentFee: 600000,
-      paymentFrequency: 'MONTHLY',
-      unitDefaultRentFee: 600000,
-    ),
-    doc: const ApplicationDoc(),
-    desiredUnit: kApplicationSeedUnits[4],
-  ),
-  ApplicationDetailData(
-    id: 'a4',
-    code: '2607SLRKD4',
-    status: 'New',
-    submittedOn: 'Mon, 6 Jul 2026 · 08:05',
-    submittedBy: 'Benjamin Domey',
-    applicant: ApplicationApplicant(
-      firstName: 'Selorm',
-      lastName: 'Kudjo',
-      email: 'selorm.kudjo@example.com',
-      phone: '+233 55 712 0034',
-    ),
-    identity: const ApplicationIdentity(),
-    background: const ApplicationBackground(),
-    moveIn: const ApplicationMoveIn(),
-    financial: const ApplicationFinancial(unitDefaultRentFee: 350000),
-    doc: const ApplicationDoc(),
   ),
 ];

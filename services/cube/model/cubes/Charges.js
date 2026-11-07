@@ -15,8 +15,7 @@ cube(`Charges`, {
   sql: `
     SELECT ci.*,
            fa.property_id AS account_property_id,
-           fa.client_id   AS account_client_id,
-           fa.lease_id    AS account_lease_id
+           fa.client_id   AS account_client_id
     FROM charge_instances ci
     JOIN financial_accounts fa
       ON fa.id = ci.financial_account_id AND fa.deleted_at IS NULL
@@ -55,7 +54,7 @@ cube(`Charges`, {
       type: `sum`,
       title: `Arrears Amount (pesewas)`,
       filters: [
-        { sql: `${CUBE}.due_date < NOW()` },
+        { sql: `${CUBE}.due_date < CURRENT_DATE` },
         { sql: `${CUBE}.amount > ${CUBE}.settled_amount` },
       ],
     },
@@ -98,12 +97,6 @@ cube(`Charges`, {
       sql: `account_property_id`,
       type: `string`,
       title: `Property ID`,
-    },
-
-    leaseId: {
-      sql: `account_lease_id`,
-      type: `string`,
-      title: `Lease ID`,
     },
 
     category: {

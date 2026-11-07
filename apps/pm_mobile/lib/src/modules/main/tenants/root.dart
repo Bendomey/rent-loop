@@ -7,8 +7,11 @@ import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:shimmer/shimmer.dart';
 
 import 'package:rentloop_manager/src/lib/property_status.dart';
+import 'package:rentloop_manager/src/lib/tenant_label.dart';
 import 'package:rentloop_manager/src/repository/models/tenant_model.dart';
+import 'package:rentloop_manager/src/modules/main/tenants/pending_tenants_section.dart';
 import 'package:rentloop_manager/src/repository/notifiers/tenants/tenants_notifier.dart';
+import 'package:rentloop_manager/src/repository/providers/tenants/pending_tenants_provider.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
@@ -27,8 +30,6 @@ class TenantsScreen extends ConsumerStatefulWidget {
 
   /// Pre-applied property filter — set when arriving from a property's
   /// detail page (Manage-grid "Tenants" tile), via GoRouter query params.
-  /// This is the same global tenants list either way; the filter is just
-  /// pre-seeded rather than the screen being a different one.
   final String? propertyId;
   final String? propertyName;
 
@@ -50,7 +51,9 @@ class _TenantsScreenState extends ConsumerState<TenantsScreen> {
     _searchController = TextEditingController();
     _scrollController = ScrollController()..addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(tenantsNotifierProvider.notifier).loadFirstPage(_query);
+      ref
+          .read(tenantsNotifierProvider(widget.propertyId).notifier)
+          .loadFirstPage(_query);
     });
   }
 
@@ -65,7 +68,9 @@ class _TenantsScreenState extends ConsumerState<TenantsScreen> {
   void _onScroll() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
-      ref.read(tenantsNotifierProvider.notifier).loadNextPage();
+      ref
+          .read(tenantsNotifierProvider(widget.propertyId).notifier)
+          .loadNextPage();
     }
   }
 
@@ -75,7 +80,9 @@ class _TenantsScreenState extends ConsumerState<TenantsScreen> {
       setState(() {
         _query = _query.copyWith(search: value, clearSearch: value.isEmpty);
       });
-      ref.read(tenantsNotifierProvider.notifier).loadFirstPage(_query);
+      ref
+          .read(tenantsNotifierProvider(widget.propertyId).notifier)
+          .loadFirstPage(_query);
     });
   }
 
@@ -86,18 +93,46 @@ class _TenantsScreenState extends ConsumerState<TenantsScreen> {
       _statusFilter = label;
       _query = _query.copyWith(status: apiValue, clearStatus: apiValue == null);
     });
-    ref.read(tenantsNotifierProvider.notifier).loadFirstPage(_query);
+    ref
+        .read(tenantsNotifierProvider(widget.propertyId).notifier)
+        .loadFirstPage(_query);
   }
 
   Future<void> _clearPropertyFilter() async {
     await Haptics.vibrate(HapticsType.selection);
     setState(() => _query = _query.copyWith(clearPropertyId: true));
-    ref.read(tenantsNotifierProvider.notifier).loadFirstPage(_query);
+    ref
+        .read(tenantsNotifierProvider(widget.propertyId).notifier)
+        .loadFirstPage(_query);
+  }
+
+  Future<void> _refresh() async {
+    ref.invalidate(pendingTenantsProvider(widget.propertyId));
+    await Future.wait([
+      ref
+          .read(tenantsNotifierProvider(widget.propertyId).notifier)
+          .loadFirstPage(_query),
+      ref
+          .read(pendingTenantsProvider(widget.propertyId).future)
+          .then((_) {}, onError: (_) {}),
+    ]);
+  }
+
+  Future<void> _addTenant() async {
+    await Haptics.vibrate(HapticsType.selection);
+    if (!mounted) return;
+    final propertyId = widget.propertyId;
+    await context.push(
+      propertyId == null
+          ? '/activity/applications/add'
+          : '/activity/applications/add?property_id=$propertyId',
+    );
+    ref.invalidate(pendingTenantsProvider);
   }
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(tenantsNotifierProvider);
+    final state = ref.watch(tenantsNotifierProvider(widget.propertyId));
     final showSkeleton = state.isLoading && state.items.isEmpty;
     final showError = state.error != null && state.items.isEmpty;
     final showEmpty =
@@ -105,10 +140,18 @@ class _TenantsScreenState extends ConsumerState<TenantsScreen> {
 
     return Scaffold(
       backgroundColor: RLTokens.surface,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _addTenant,
+        backgroundColor: RLTokens.crimson,
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.person_add_alt_1_outlined),
+        label: const Text('Add tenant'),
+      ),
       body: Column(
         children: [
           RLBackHeader(
             title: 'Tenants',
+            showBack: widget.propertyId != null || context.canPop(),
             onBack: () async {
               await Haptics.vibrate(HapticsType.selection);
               if (context.mounted) Navigator.of(context).pop();
@@ -117,9 +160,7 @@ class _TenantsScreenState extends ConsumerState<TenantsScreen> {
           Expanded(
             child: RefreshIndicator(
               color: RLTokens.crimson,
-              onRefresh: () => ref
-                  .read(tenantsNotifierProvider.notifier)
-                  .loadFirstPage(_query),
+              onRefresh: _refresh,
               child: CustomScrollView(
                 controller: _scrollController,
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -200,6 +241,20 @@ class _TenantsScreenState extends ConsumerState<TenantsScreen> {
                       ),
                     ),
                   ),
+                  SliverToBoxAdapter(
+                    child: PendingTenantsSection(propertyId: widget.propertyId),
+                  ),
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        RLTokens.gutter,
+                        16,
+                        RLTokens.gutter,
+                        0,
+                      ),
+                      child: SectionLabel('Active tenants'),
+                    ),
+                  ),
                   if (showSkeleton)
                     const SliverToBoxAdapter(child: _TenantsListSkeleton())
                   else if (showError)
@@ -209,15 +264,22 @@ class _TenantsScreenState extends ConsumerState<TenantsScreen> {
                         padding: const EdgeInsets.all(RLTokens.gutter),
                         child: RLSectionError(
                           onRetry: () => ref
-                              .read(tenantsNotifierProvider.notifier)
+                              .read(
+                                tenantsNotifierProvider(
+                                  widget.propertyId,
+                                ).notifier,
+                              )
                               .loadFirstPage(_query),
                         ),
                       ),
                     )
                   else if (showEmpty)
-                    const SliverFillRemaining(
+                    SliverFillRemaining(
                       hasScrollBody: false,
-                      child: _EmptyTenantsList(),
+                      child: TenantsEmptyState(
+                        filtered:
+                            _query.search != null || _query.status != null,
+                      ),
                     )
                   else ...[
                     SliverToBoxAdapter(
@@ -259,9 +321,14 @@ class _TenantsScreenState extends ConsumerState<TenantsScreen> {
                                 last: last,
                                 onTap: () async {
                                   await Haptics.vibrate(HapticsType.selection);
-                                  if (context.mounted) {
-                                    context.push('/more/tenants/${e.value.id}');
-                                  }
+                                  if (!context.mounted) return;
+                                  final propertyId =
+                                      e.value.recentLease?.unit?.propertyId;
+                                  context.push(
+                                    propertyId == null
+                                        ? '/more/tenants/${e.value.id}'
+                                        : '/more/tenants/${e.value.id}?property_id=$propertyId',
+                                  );
                                 },
                               );
                             }).toList(),
@@ -286,7 +353,7 @@ class _TenantsScreenState extends ConsumerState<TenantsScreen> {
                         ),
                       ),
                   ],
-                  const SliverToBoxAdapter(child: SizedBox(height: 32)),
+                  const SliverToBoxAdapter(child: SizedBox(height: 96)),
                 ],
               ),
             ),
@@ -312,13 +379,7 @@ class _TenantRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final lease = tenant.recentLease;
-    final unit = lease?.unit;
-    final subtitle = unit != null
-        ? [
-            unit.name,
-            unit.property?.name,
-          ].whereType<String>().where((v) => v.isNotEmpty).join(' · ')
-        : tenant.phone;
+    final subtitle = tenantUnitLabel(lease) ?? tenant.phone;
     final statusLabel = lease != null
         ? propertyStatusLabel(lease.status)
         : 'Inactive';
@@ -393,8 +454,10 @@ class _TenantsListSkeleton extends StatelessWidget {
 
 // ── Empty state ───────────────────────────────────────────────────────────────
 
-class _EmptyTenantsList extends StatelessWidget {
-  const _EmptyTenantsList();
+class TenantsEmptyState extends StatelessWidget {
+  const TenantsEmptyState({super.key, required this.filtered});
+
+  final bool filtered;
 
   @override
   Widget build(BuildContext context) {
@@ -419,7 +482,7 @@ class _EmptyTenantsList extends StatelessWidget {
             ),
             const SizedBox(height: 11),
             Text(
-              'No tenants found',
+              filtered ? 'No tenants found' : 'No tenants yet',
               style: TextStyle(
                 fontFamily: RLTokens.fontSans,
                 fontSize: 15,
@@ -430,7 +493,9 @@ class _EmptyTenantsList extends StatelessWidget {
             ),
             const SizedBox(height: 3),
             Text(
-              'Try a different search or filter.',
+              filtered
+                  ? 'Try a different search or filter.'
+                  : 'Add your first tenant.',
               style: TextStyle(
                 fontFamily: RLTokens.fontSans,
                 fontSize: 12.5,

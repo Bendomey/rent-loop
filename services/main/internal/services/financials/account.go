@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"gorm.io/gorm"
+
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
@@ -357,8 +359,9 @@ func New(
 	accountRepo repository.FinancialAccountRepository,
 	chargeRepo repository.ChargeRepository,
 	allocationRepo repository.PaymentAllocationRepository,
+	db *gorm.DB,
 ) *Financials {
-	charges := NewChargeService(chargeRepo, accountRepo)
+	charges := NewChargeService(chargeRepo, accountRepo, NewTxRunner(db))
 	allocation := NewAllocationService(chargeRepo, allocationRepo, accountRepo)
 	accounts := NewFinancialAccountService(accountRepo, charges, allocation)
 

@@ -4,6 +4,9 @@ import (
 	"context"
 	"time"
 
+	"gorm.io/gorm"
+
+	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
@@ -129,16 +132,35 @@ type ChargeService interface {
 	) ([]models.ChargeInstance, error)
 }
 
+// TxRunner runs fn inside a database transaction, joining one already on ctx.
+type TxRunner func(ctx context.Context, fn func(ctx context.Context) error) error
+
+// NewTxRunner commits when fn returns nil and rolls back otherwise. An outer
+// transaction on ctx is joined, and left for its owner to finish.
+func NewTxRunner(db *gorm.DB) TxRunner {
+	return func(ctx context.Context, fn func(ctx context.Context) error) error {
+		if outer, ok := lib.TransactionFromContext(ctx); ok && outer != nil {
+			return fn(ctx)
+		}
+
+		return db.Transaction(func(tx *gorm.DB) error {
+			return fn(lib.WithTransaction(ctx, tx))
+		})
+	}
+}
+
 type chargeService struct {
 	repo     repository.ChargeRepository
 	accounts repository.FinancialAccountRepository
+	inTx     TxRunner
 }
 
 func NewChargeService(
 	repo repository.ChargeRepository,
 	accounts repository.FinancialAccountRepository,
+	inTx TxRunner,
 ) ChargeService {
-	return &chargeService{repo: repo, accounts: accounts}
+	return &chargeService{repo: repo, accounts: accounts, inTx: inTx}
 }
 
 // assertOpen refuses a write against a closed account.
@@ -352,7 +374,8 @@ func (s *chargeService) MaterialiseForAccount(
 // charge, a utility bill, or a refund (negative amount).
 //
 // A refund that names the charge it reverses is capped at that charge's
-// SettledAmount: you cannot refund money that was never received.
+// SettledAmount less refunds already recorded against it: you cannot refund
+// money that was never received, or refund the same money twice.
 func (s *chargeService) CreateAdHoc(
 	ctx context.Context,
 	input CreateAdHocChargeInput,
@@ -366,21 +389,68 @@ func (s *chargeService) CreateAdHoc(
 	}
 
 	if input.ReversesChargeInstanceID != nil {
-		original, err := s.repo.GetInstance(ctx, *input.ReversesChargeInstanceID)
+		var created *models.ChargeInstance
+		err := s.inTx(ctx, func(txCtx context.Context) error {
+			var err error
+			created, err = s.createReversal(txCtx, input)
+
+			return err
+		})
 		if err != nil {
-			return nil, pkg.NotFoundError("ReversedChargeNotFound", &pkg.RentLoopErrorParams{Err: err})
+			return nil, err
 		}
-		if input.Amount >= 0 {
-			return nil, pkg.BadRequestError("ReversalMustBeNegative", nil)
-		}
-		if -input.Amount > original.SettledAmount {
-			return nil, pkg.BadRequestError("ReversalExceedsSettledAmount", nil)
-		}
-		// Inherit the category so journal routing reverses the original's
-		// accounts rather than falling back to Tenant Concessions.
-		input.Category = original.Category
+
+		return created, nil
 	}
 
+	return s.insertAdHoc(ctx, input)
+}
+
+// createReversal runs inside a transaction. The original is locked before the
+// prior refunds are summed so two concurrent refunds of one charge serialise
+// rather than both reading the same remainder.
+func (s *chargeService) createReversal(
+	ctx context.Context,
+	input CreateAdHocChargeInput,
+) (*models.ChargeInstance, error) {
+	locked, err := s.repo.LockInstances(ctx, []string{*input.ReversesChargeInstanceID})
+	if err != nil || len(locked) == 0 {
+		return nil, pkg.NotFoundError("ReversedChargeNotFound", &pkg.RentLoopErrorParams{Err: err})
+	}
+	original := locked[0]
+
+	if original.FinancialAccountID != input.FinancialAccountID || original.VoidedAt != nil {
+		return nil, pkg.NotFoundError("ReversedChargeNotFound", nil)
+	}
+	if input.Amount >= 0 {
+		return nil, pkg.BadRequestError("ReversalMustBeNegative", nil)
+	}
+
+	siblings, err := s.repo.ListInstances(ctx, repository.ListChargeInstancesFilter{
+		FinancialAccountID: &input.FinancialAccountID,
+	})
+	if err != nil {
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err:      err,
+			Metadata: map[string]string{"function": "CreateAdHoc", "action": "listing prior reversals"},
+		})
+	}
+	reversed := alreadyReversed(*siblings, original.ID.String())
+	if -input.Amount > original.SettledAmount-reversed {
+		return nil, pkg.BadRequestError("ReversalExceedsSettledAmount", nil)
+	}
+
+	// Inherit the category so journal routing reverses the original's
+	// accounts rather than falling back to Tenant Concessions.
+	input.Category = original.Category
+
+	return s.insertAdHoc(ctx, input)
+}
+
+func (s *chargeService) insertAdHoc(
+	ctx context.Context,
+	input CreateAdHocChargeInput,
+) (*models.ChargeInstance, error) {
 	instance := &models.ChargeInstance{
 		FinancialAccountID:       input.FinancialAccountID,
 		LeaseID:                  input.LeaseID,
@@ -404,6 +474,19 @@ func (s *chargeService) CreateAdHoc(
 	}
 
 	return &created[0], nil
+}
+
+// alreadyReversed sums the refunds already recorded against a charge. Voided
+// refunds are excluded by the repository default.
+func alreadyReversed(instances []models.ChargeInstance, originalID string) int64 {
+	var total int64
+	for _, i := range instances {
+		if i.VoidedAt == nil && i.ReversesChargeInstanceID != nil && *i.ReversesChargeInstanceID == originalID {
+			total += -i.Amount
+		}
+	}
+
+	return total
 }
 
 // VoidInstance removes a charge from the ledger. A charge that has been billed

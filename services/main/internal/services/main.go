@@ -68,6 +68,7 @@ func NewServices(params INewServicesParams) Services {
 		params.Repository.FinancialAccountRepository,
 		params.Repository.ChargeRepository,
 		params.Repository.PaymentAllocationRepository,
+		params.AppCtx.DB,
 	)
 
 	invoiceService := NewInvoiceService(

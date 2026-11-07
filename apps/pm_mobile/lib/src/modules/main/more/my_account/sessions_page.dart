@@ -27,6 +27,7 @@ class AccountSessionsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.listen(revokeSessionNotifierProvider, (_, _) {});
     final sessionsAsync = ref.watch(sessionsProvider);
 
     // hasValue/isLoading rather than .when(): the skeleton belongs to the

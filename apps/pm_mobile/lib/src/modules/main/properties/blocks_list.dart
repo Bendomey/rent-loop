@@ -132,6 +132,7 @@ class _BlocksListScreenState extends ConsumerState<BlocksListScreen> {
           'Delete ${block.name}?',
           style: TextStyle(
             fontFamily: RLTokens.fontSerif,
+            fontWeight: RLTokens.headingWeight,
             fontSize: 21,
             color: RLTokens.ink,
           ),
@@ -217,6 +218,7 @@ class _BlocksListScreenState extends ConsumerState<BlocksListScreen> {
           'What are blocks?',
           style: TextStyle(
             fontFamily: RLTokens.fontSerif,
+            fontWeight: RLTokens.headingWeight,
             fontSize: 21,
             color: RLTokens.ink,
           ),
@@ -252,6 +254,7 @@ class _BlocksListScreenState extends ConsumerState<BlocksListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(deleteBlockNotifierProvider, (_, _) {});
     final state = ref.watch(blocksNotifierProvider);
     final showSkeleton = state.isLoading && state.items.isEmpty;
     final showError = state.error != null && state.items.isEmpty;
@@ -477,6 +480,7 @@ class _BlockCard extends StatelessWidget {
                           block.name,
                           style: TextStyle(
                             fontFamily: RLTokens.fontSerif,
+                            fontWeight: RLTokens.headingWeight,
                             fontSize: 17,
                             color: RLTokens.ink,
                             letterSpacing: -0.3,

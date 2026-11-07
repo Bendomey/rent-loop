@@ -9,16 +9,16 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:shimmer/shimmer.dart';
 
-import 'package:rentloop_manager/src/lib/application_checklist.dart';
 import 'package:rentloop_manager/src/lib/application_utils.dart';
 import 'package:rentloop_manager/src/modules/main/activity/activity_filters.dart';
-import 'package:rentloop_manager/src/repository/models/tenant_application_model.dart';
+import 'package:rentloop_manager/src/modules/main/tenants/pending_tenants_section.dart';
 import 'package:rentloop_manager/src/repository/notifiers/activity/tenant_applications_notifier.dart';
-import 'package:rentloop_manager/src/repository/providers/activity/activity_filter_options_provider.dart';
+import 'package:rentloop_manager/src/repository/notifiers/options/options_state.dart';
+import 'package:rentloop_manager/src/repository/notifiers/options/property_options_notifier.dart';
+import 'package:rentloop_manager/src/repository/notifiers/options/unit_options_notifier.dart';
+import 'package:rentloop_manager/src/shared/paged_picker_sheet.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
@@ -34,8 +34,8 @@ class _ApplicationsListState extends ConsumerState<ApplicationsList> {
   String? _statusFilter;
   String? _genderFilter;
   String? _maritalFilter;
-  List<String> _propertyFilterIds = const [];
-  List<String> _unitFilterIds = const [];
+  List<FilterOption> _propertyFilters = const [];
+  List<FilterOption> _unitFilters = const [];
 
   late final ScrollController _scrollController;
   late final TextEditingController _searchController;
@@ -92,8 +92,8 @@ class _ApplicationsListState extends ConsumerState<ApplicationsList> {
       _statusFilter != null ||
       _genderFilter != null ||
       _maritalFilter != null ||
-      _propertyFilterIds.isNotEmpty ||
-      _unitFilterIds.isNotEmpty ||
+      _propertyFilters.isNotEmpty ||
+      _unitFilters.isNotEmpty ||
       (_query.search?.isNotEmpty ?? false);
 
   Future<void> _pickSingle({
@@ -105,6 +105,7 @@ class _ApplicationsListState extends ConsumerState<ApplicationsList> {
     final result = await showModalBottomSheet<RLFilterPickResult>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (_) =>
           RLFilterSheet(title: title, options: options, selected: selected),
@@ -115,36 +116,32 @@ class _ApplicationsListState extends ConsumerState<ApplicationsList> {
 
   Future<void> _pickMulti({
     required String title,
-    required List<({String id, String name})> options,
-    required List<String> selectedIds,
-    required void Function(List<String> ids) onChanged,
+    required ProviderListenable<OptionsState<FilterOption>> state,
+    required void Function(String) onSearch,
+    required VoidCallback onLoadMore,
+    required VoidCallback onRetry,
+    required List<FilterOption> selected,
+    required void Function(List<FilterOption> picked) onChanged,
   }) async {
-    final labels = options.map((o) => o.name).toList();
-    final idsByLabel = {for (final o in options) o.name: o.id};
-    final selectedLabels = options
-        .where((o) => selectedIds.contains(o.id))
-        .map((o) => o.name)
-        .toList();
-    final result = await showModalBottomSheet<RLFilterPickResult>(
+    final result = await showPagedPickerSheet<FilterOption>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => RLFilterSheet(
-        title: title,
-        options: labels,
-        selectedMulti: selectedLabels,
-        idsByLabel: idsByLabel,
-        multiSelect: true,
-      ),
+      title: title,
+      state: state,
+      onSearch: onSearch,
+      onLoadMore: onLoadMore,
+      onRetry: onRetry,
+      label: (o) => o.name,
+      id: (o) => o.id,
+      multi: true,
+      initial: selected,
     );
     if (result == null) return;
-    onChanged(result.isClear ? const [] : (result.ids ?? const []));
+    onChanged(result);
   }
 
-  Widget _buildChipsRow(
-    List<({String id, String name})> propertyOptions,
-    List<({String id, String name})> unitOptions,
-  ) {
+  Widget _buildChipsRow() {
+    final propertyOptions = propertyOptionsNotifierProvider();
+    final unitOptions = unitOptionsNotifierProvider(const UnitOptionsQuery());
     return Container(
       decoration: const BoxDecoration(
         color: RLTokens.surface,
@@ -160,38 +157,60 @@ class _ApplicationsListState extends ConsumerState<ApplicationsList> {
           children: [
             RLFilterTriggerChip(
               label: 'Property',
-              value: rlMultiSelectChipLabel(
-                selectedIds: _propertyFilterIds,
-                options: propertyOptions,
+              value: filterChipLabel(
+                selected: _propertyFilters,
                 singularNoun: 'Property',
                 pluralNoun: 'Properties',
               ),
               onTap: () => _pickMulti(
                 title: 'Property',
-                options: propertyOptions,
-                selectedIds: _propertyFilterIds,
-                onChanged: (ids) {
-                  _propertyFilterIds = ids;
-                  _applyQuery(_query.copyWith(propertyIds: ids));
+                state: asFilterOptions(
+                  propertyOptions,
+                  id: (p) => p.id,
+                  name: (p) => p.name,
+                ),
+                onSearch: (v) =>
+                    ref.read(propertyOptions.notifier).setSearch(v),
+                onLoadMore: () =>
+                    ref.read(propertyOptions.notifier).loadNextPage(),
+                onRetry: () => ref.read(propertyOptions.notifier).refresh(),
+                selected: _propertyFilters,
+                onChanged: (picked) {
+                  _propertyFilters = picked;
+                  _applyQuery(
+                    _query.copyWith(
+                      propertyIds: [for (final o in picked) o.id],
+                    ),
+                  );
                 },
               ),
             ),
             const SizedBox(width: 8),
             RLFilterTriggerChip(
               label: 'Unit',
-              value: rlMultiSelectChipLabel(
-                selectedIds: _unitFilterIds,
-                options: unitOptions,
+              value: filterChipLabel(
+                selected: _unitFilters,
                 singularNoun: 'Unit',
                 pluralNoun: 'Units',
               ),
               onTap: () => _pickMulti(
                 title: 'Unit',
-                options: unitOptions,
-                selectedIds: _unitFilterIds,
-                onChanged: (ids) {
-                  _unitFilterIds = ids;
-                  _applyQuery(_query.copyWith(desiredUnitIds: ids));
+                state: asFilterOptions(
+                  unitOptions,
+                  id: (u) => u.id,
+                  name: (u) => u.name,
+                ),
+                onSearch: (v) => ref.read(unitOptions.notifier).setSearch(v),
+                onLoadMore: () => ref.read(unitOptions.notifier).loadNextPage(),
+                onRetry: () => ref.read(unitOptions.notifier).refresh(),
+                selected: _unitFilters,
+                onChanged: (picked) {
+                  _unitFilters = picked;
+                  _applyQuery(
+                    _query.copyWith(
+                      desiredUnitIds: [for (final o in picked) o.id],
+                    ),
+                  );
                 },
               ),
             ),
@@ -258,21 +277,16 @@ class _ApplicationsListState extends ConsumerState<ApplicationsList> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(tenantApplicationsNotifierProvider);
-    final propertyOptions =
-        (ref.watch(activityFilterPropertiesProvider).valueOrNull ?? [])
-            .map((p) => (id: p.id, name: p.name))
-            .toList();
-    final unitOptions =
-        (ref.watch(activityFilterUnitsProvider).valueOrNull ?? [])
-            .map((u) => (id: u.id, name: u.name))
-            .toList();
-
     final Widget body;
     if (state.isLoadingFirstPage) {
-      body = const _ApplicationsSkeleton();
+      body = const SingleChildScrollView(
+        physics: NeverScrollableScrollPhysics(),
+        padding: EdgeInsets.fromLTRB(RLTokens.gutter, 6, RLTokens.gutter, 120),
+        child: PendingTenantsSkeleton(),
+      );
     } else if (state.error != null && state.items.isEmpty) {
       body = _MessageState(
-        title: 'Could not load applications',
+        title: 'Could not load pending tenants',
         message: state.error!,
         onRetry: () => ref
             .read(tenantApplicationsNotifierProvider.notifier)
@@ -281,11 +295,11 @@ class _ApplicationsListState extends ConsumerState<ApplicationsList> {
     } else if (state.items.isEmpty) {
       body = _MessageState(
         title: _hasActiveFilters
-            ? 'No applications match these filters'
-            : 'No applications yet',
+            ? 'No pending tenants match these filters'
+            : 'No pending tenants',
         message: _hasActiveFilters
             ? 'Try clearing a filter or two.'
-            : 'New rental applications will show up here.',
+            : 'Tenants you are adding will show up here.',
       );
     } else {
       body = ListView.builder(
@@ -301,7 +315,7 @@ class _ApplicationsListState extends ConsumerState<ApplicationsList> {
           if (i >= state.items.length) return const _LoadMoreRow();
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
-            child: _ApplicationCard(application: state.items[i]),
+            child: PendingTenantCard(application: state.items[i]),
           );
         },
       );
@@ -313,7 +327,7 @@ class _ApplicationsListState extends ConsumerState<ApplicationsList> {
           controller: _searchController,
           onChanged: _onSearchChanged,
         ),
-        _buildChipsRow(propertyOptions, unitOptions),
+        _buildChipsRow(),
         Expanded(
           child: RefreshIndicator(
             onRefresh: () =>
@@ -396,168 +410,6 @@ class _SearchField extends StatelessWidget {
   }
 }
 
-// ── Card ──────────────────────────────────────────────────────────────────────
-
-class _ApplicationCard extends StatelessWidget {
-  const _ApplicationCard({required this.application});
-
-  final TenantApplicationModel application;
-
-  @override
-  Widget build(BuildContext context) {
-    final a = application;
-    final statusLabel = applicationStatusLabel(a.status);
-    final pending = isApplicationPending(a.status);
-    // statusTone() deliberately leaves 'Completed' on the neutral default —
-    // the leases list relies on that — so a finished application is mapped to
-    // success here rather than globally, the same way application_detail.dart
-    // handles an approved one.
-    final tone = statusLabel == 'Completed'
-        ? RLTone.success
-        : statusTone(statusLabel);
-    final completeCount = pending
-        ? buildApplicationChecklist(a).where((s) => s.complete).length
-        : 0;
-
-    return GestureDetector(
-      onTap: () async {
-        await Haptics.vibrate(HapticsType.selection);
-        if (!context.mounted) return;
-        context.push('/activity/applications/${a.id}', extra: a);
-      },
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: RLTokens.surface,
-          borderRadius: BorderRadius.circular(RLTokens.rLg),
-          border: Border.all(color: RLTokens.hairline),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                _Avatar(application: a),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        a.fullName.isEmpty ? a.code : a.fullName,
-                        style: const TextStyle(
-                          fontFamily: RLTokens.fontSans,
-                          fontSize: 15.5,
-                          fontWeight: RLTokens.semibold,
-                          color: RLTokens.ink,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        a.desiredUnit?.name ?? 'No unit selected',
-                        style: const TextStyle(
-                          fontFamily: RLTokens.fontSans,
-                          fontSize: 12.5,
-                          color: RLTokens.muted,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 10),
-                RLPill(statusLabel, tone: tone),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  pending ? 'STEP $completeCount/5' : a.code,
-                  style: const TextStyle(
-                    fontFamily: RLTokens.fontMono,
-                    fontSize: 10,
-                    color: RLTokens.mutedSoft,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                Text(
-                  formatApplicationAge(a.createdAt),
-                  style: const TextStyle(
-                    fontFamily: RLTokens.fontSans,
-                    fontSize: 12,
-                    color: RLTokens.muted,
-                  ),
-                ),
-              ],
-            ),
-            // The completeness bar is only meaningful while an application is
-            // still in progress — a completed one is complete by definition and
-            // a cancelled one is moot.
-            if (pending) ...[
-              const SizedBox(height: 6),
-              RLBar(percent: applicationProgress(a), height: 6),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _Avatar extends StatelessWidget {
-  const _Avatar({required this.application});
-
-  final TenantApplicationModel application;
-
-  @override
-  Widget build(BuildContext context) {
-    final url = application.profilePhotoUrl;
-    final fallback = RLAvatar(
-      application.fullName.isEmpty ? application.code : application.fullName,
-      size: 42,
-    );
-    if (url == null || url.isEmpty) return fallback;
-
-    return ClipOval(
-      child: Image.network(
-        url,
-        width: 42,
-        height: 42,
-        fit: BoxFit.cover,
-        errorBuilder: (_, _, _) => fallback,
-      ),
-    );
-  }
-}
-
-/// Relative age of an application, for the card's trailing metadata.
-String formatApplicationAge(DateTime? created) {
-  if (created == null) return '—';
-  final days = DateTime.now().difference(created).inDays;
-  if (days <= 0) return 'Today';
-  if (days == 1) return 'Yesterday';
-  if (days < 7) return '${days}d ago';
-  return '${created.day} ${_months[created.month - 1]}';
-}
-
-const _months = [
-  'Jan',
-  'Feb',
-  'Mar',
-  'Apr',
-  'May',
-  'Jun',
-  'Jul',
-  'Aug',
-  'Sep',
-  'Oct',
-  'Nov',
-  'Dec',
-];
-
 // ── States ────────────────────────────────────────────────────────────────────
 
 /// Scrollable so pull-to-refresh still works when there is nothing to show.
@@ -588,6 +440,7 @@ class _MessageState extends StatelessWidget {
           textAlign: TextAlign.center,
           style: const TextStyle(
             fontFamily: RLTokens.fontSerif,
+            fontWeight: RLTokens.headingWeight,
             fontSize: 18,
             color: RLTokens.ink,
           ),
@@ -634,87 +487,6 @@ class _LoadMoreRow extends StatelessWidget {
             borderRadius: BorderRadius.circular(RLTokens.rPill),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _ApplicationsSkeleton extends StatelessWidget {
-  const _ApplicationsSkeleton();
-
-  @override
-  Widget build(BuildContext context) {
-    Widget bar(double width, double height) => Container(
-      width: width,
-      height: height,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(4),
-      ),
-    );
-
-    return Shimmer.fromColors(
-      baseColor: Colors.grey.shade200,
-      highlightColor: Colors.grey.shade50,
-      child: ListView(
-        physics: const NeverScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(
-          RLTokens.gutter,
-          6,
-          RLTokens.gutter,
-          120,
-        ),
-        children: [
-          for (var i = 0; i < 5; i++)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: RLTokens.surface,
-                  borderRadius: BorderRadius.circular(RLTokens.rLg),
-                  border: Border.all(color: RLTokens.hairline),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 42,
-                          height: 42,
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              bar(140, 13),
-                              const SizedBox(height: 6),
-                              bar(100, 11),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        bar(62, 20),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [bar(54, 10), bar(70, 10)],
-                    ),
-                    const SizedBox(height: 8),
-                    bar(double.infinity, 6),
-                  ],
-                ),
-              ),
-            ),
-        ],
       ),
     );
   }

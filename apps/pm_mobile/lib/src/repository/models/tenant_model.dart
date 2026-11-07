@@ -10,6 +10,7 @@ part 'tenant_model.g.dart';
 /// reused directly rather than duplicated.
 @JsonSerializable()
 class TenantLeaseRef {
+  final String? id;
   final String status; // dotted Lease.Status.* value
   final UnitModel? unit;
   @JsonKey(name: 'rent_fee')
@@ -24,6 +25,7 @@ class TenantLeaseRef {
   final String? moveOutDate;
 
   TenantLeaseRef({
+    this.id,
     required this.status,
     this.unit,
     required this.rentFee,

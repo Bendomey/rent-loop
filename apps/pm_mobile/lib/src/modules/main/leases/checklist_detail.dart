@@ -443,7 +443,11 @@ class _ItemRow extends ConsumerWidget {
         ),
         title: Text(
           'Remove item?',
-          style: TextStyle(fontFamily: RLTokens.fontSerif, fontSize: 20),
+          style: TextStyle(
+            fontFamily: RLTokens.fontSerif,
+            fontWeight: RLTokens.headingWeight,
+            fontSize: 20,
+          ),
         ),
         content: Text(
           'This item will be permanently removed from the report.',
@@ -498,6 +502,7 @@ class _ItemRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.listen(deleteChecklistItemNotifierProvider, (_, _) {});
     final (_, label) = _splitDescription(item.description);
     final statusLabel = checklistItemStatusLabel(item.status);
 
@@ -691,7 +696,11 @@ class _SubmitButton extends ConsumerWidget {
         ),
         title: Text(
           'Submit for tenant review?',
-          style: TextStyle(fontFamily: RLTokens.fontSerif, fontSize: 20),
+          style: TextStyle(
+            fontFamily: RLTokens.fontSerif,
+            fontWeight: RLTokens.headingWeight,
+            fontSize: 20,
+          ),
         ),
         content: Text(
           'The tenant will be notified and asked to acknowledge or dispute '

@@ -4,6 +4,42 @@
 
 ---
 
+## Home "still to collect" = Charges.outstandingAmount, collected = successful payments by successful month (2026-11-06)
+**Why:** "Still to collect" uses `Charges.outstandingAmount`, the same formula as the per-account balance, so Home and tenant detail agree on what is owed. "Collected this month" sums SUCCESSFUL `Payments.totalAmount` by `successfulAt` month, so part payments count; `Invoices.paidAmount` only sees fully paid bills. Arrears (`Charges.arrearsAmount`) is a sub-line, "{amount} of it is late".
+Still to collect sums only positive per-account balances (one Charges row per `financialAccountId`), so one tenant's credit never offsets another's debt, and late is capped at each account's balance.
+**Tradeoffs:** Charges are prepared for the whole term, so "still to collect" includes rent not yet due; the late line stops that being read as all overdue. Three separate Cube loads because the cubes have no join path.
+**Alternatives considered:** Summing the invoice list (disagrees with tenant balances), or a percent-collected bar (needs a defensible denominator).
+
+---
+
+## Rent tab sums bills; tenant "owes" stays account-balance based (2026-11-06)
+**Why:** The Rent tab totals what is left on issued bills (`total_amount` minus SUCCESSFUL payments), because a bill is the thing a payment is recorded against. A tenant's "owes" figure elsewhere comes from the financial account balance (charges less payments), which also covers charges not yet billed. The two answer different questions, so each keeps its own source rather than being forced to agree.
+**Tradeoffs:** The Rent tab total can differ from the sum of tenants' "owes" until charges are billed. The API has no balance field, so the remainder is computed on the client.
+**Alternatives considered:** Deriving the Rent tab from account balances (loses per-bill payment and confirmation), or showing both numbers in one place (confusing).
+
+---
+
+## Mobile attaches MANUAL lease documents only; ONLINE documents stay web-owned (2026-11-06)
+**Why:** A MANUAL document is just an uploaded file and one PATCH, which mobile can do safely. An ONLINE document is written in the web editor and signed there, and removing or replacing it also deletes the document record on the web. Mobile shows it read-only with an "Open on the web" link, and hides all writes once any document is SIGNED/SIGNING.
+**Tradeoffs:** A landlord who started an online document on the web must finish or change it there. No e-signing on mobile.
+**Alternatives considered:** Clearing the ONLINE fields from mobile (leaves an orphaned document record), or a mobile editor (large, duplicates the web Lexical editor).
+
+---
+
+## Money logic ported 1:1 from the web; refunds capped server-side net of prior reversals (2026-11-06)
+**Why:** Billing schedules, fee allocation and refundable amounts are ported from the web `lib/*.ts` into `lib/src/lib/financial/` so both clients show the same amounts for the same account. The client caps a refund using `refundableAmount` (settled minus prior reversals) for display only. The backend enforces the cap: `CreateAdHoc` reversals run in one transaction, lock the original charge, cap at settled minus prior reversals, and reject cross-account or voided originals (`financials.New` takes a `*gorm.DB`). `OutputChargeInstance` now exposes `reverses_charge_instance_id` so the client can net reversals.
+**Tradeoffs:** Allocation and schedule rules must be changed in both clients. Two concurrent refunds serialise on the row lock. A refund beyond what's still refundable is rejected with `ReversalExceedsSettledAmount`.
+**Alternatives considered:** Trusting the client cap alone, or checking the cap outside a transaction. Both let double-submits refund more than was paid.
+
+---
+
+## Tenant checklist ported 1:1 from the web; Ghana-default phone normalisation (2026-11-06)
+**Why:** `computeApplicationChecklist` mirrors the web portal's tenant-setup checklist step for step, so a landlord sees the same blockers on both clients and the backend stays the single source of truth for what "ready" means. Phones are normalised to E.164 on the client because the lookup, create and invite endpoints all key on E.164, and landlords type local numbers (`024 123 4567`); a bare national number is assumed Ghanaian (+233) rather than rejected.
+**Tradeoffs:** A landlord typing a non-Ghana number must include the `+` country code. Checklist changes on the web must be repeated here.
+**Alternatives considered:** Asking the backend to normalise — rejected, the lookup endpoint is called before any record exists and needs the canonical form up front.
+
+---
+
 ## Cedi glyph: bundle a subset fallback font, don't change the strings (2026-07-27)
 **Why:** `DMSans`/`DMSerifDisplay`/`JetBrainsMono` have no glyph for U+20B5 (`₵`), and Android's system fallback doesn't reliably supply one, so every money surface showed a tofu box. Three options were on the table: (a) replace `GH₵` with `GHS` everywhere, (b) hand-wire `fontFamilyFallback` onto the ~800 widget-level `TextStyle`s, (c) bundle a fallback family and declare it once in the theme. (c) won: `TextStyle.merge`/`copyWith` preserve a parent's `fontFamilyFallback` when the child only sets `fontFamily`, so declaring it on `ThemeData` + the `textTheme` propagates to every `Text` through `DefaultTextStyle` — one small diff instead of 800, and the design keeps its currency symbol.
 **Tradeoffs:** +24 KB of assets, and the cedi is drawn in Inter while the digits around it are DM Sans. The subset keeps Inter's `wght` axis and the two families' cap heights are within ~4% (0.728 vs 0.700 em), so the mismatch is not noticeable at UI sizes. A bare `RichText` doesn't inherit `DefaultTextStyle`, so a span rendering currency must set the fallback itself — none do today, and `test/shared/font_coverage_test.dart` guards the font side of this.
@@ -104,3 +140,31 @@ The boundary is a semi-join (`accessiblePropertyIDsSubQuery` in `repository/comm
 *Say "coming soon" instead of pretending to save.* The old screen's Save buttons closed the sheet and did nothing — indistinguishable from a successful save. There is no client API class in this app (no mobile counterpart to the web's `PATCH /v1/admin/clients`), so the new sheets close and fire a "coming soon" toast, the same treatment My Account already gives two-factor, email updates and account deletion.
 **Tradeoffs:** `my_account/sheets.dart` was **not** migrated onto the kit in this pass, so two copies of the chrome exist for now — deliberate: My Account is a working screen the request didn't cover, and a mechanical rewrite of 820 lines carries regression risk out of proportion to the duplication it removes. It should migrate when next touched. On the toast: a user who could previously type into a field and watch it close now gets told nothing was saved, which is a visible downgrade in perceived capability but an upgrade in honesty — the data never persisted either way. Wiring the edits for real is a separate piece of work (a `ClientApi` class, an update notifier, and provider invalidation on `currentUserNotifierProvider`).
 **Alternatives considered:** *Fork the chrome a third time* (rejected — the convention is real enough to name); *migrate My Account onto the kit in the same pass* (rejected for scope/risk, noted as a follow-up); *build the client API in this pass* (rejected — a data-integration pass with its own model, notifier and error-handling surface, and the request was for the UI); *keep the silent no-op* (rejected — a Save that looks like it worked is worse than one that admits it hasn't shipped); *hide Branding and Preferences until they have a backend* (rejected — the design asks for them and the placeholder header documents exactly what to wire).
+
+---
+
+## v1 hides out-of-scope screens by deleting routes and entry points (2026-11-06)
+**Date:** 2026-11-06
+**Why:** v1 targets non-technical Ghanaian landlords; setup, billing and admin screens are done on the web.
+**Decision:** Remove the GoRouter routes and every Home/More/My-account entry point. Keep the screen files on disk.
+**Tradeoffs:** Dead code stays in the tree; restoring a screen is re-adding a route and a row.
+**Alternatives considered:** Feature flags (rejected, extra surface for a hide that is meant to be temporary); deleting the files (rejected, v2 will bring them back).
+
+---
+
+## Pickers page 20 with server search; analytics + roles cached app-wide (2026-11-06)
+**Date:** 2026-11-06
+**Why:** Pickers and filters asked for 200 properties, blocks or units at once, and every screen visit refetched analytics and the user's property roles. On a large portfolio that is slow and wasteful on mobile data.
+**Decision:** Pickers load 20 per page, search on the server (debounced) and load more on scroll, through shared option notifiers and one picker sheet. Selected items are kept with id and name, so ticks and filter chips survive search and paging. Analytics (Home, Activity counts, property stats) are cached until pull-to-refresh or reopening the app, stamped with the workspace `clientId`; roles are fetched once after login or workspace switch and never refreshed by screens. Add tenant filters to bookable units on the phone because the backend filters a single status only; the notifier keeps paging (up to 5 pages) until 8 rows show.
+**Tradeoffs:** A property list filtered on the phone (managers only) can need several requests before it fills. Changing roles on the server shows up only after the next login or workspace switch. Change unit keeps an inline list rather than the sheet, so it has its own search and "Load more".
+**Alternatives considered:** Raising the page size (rejected, same cost); client-side search over a cached full list (rejected, defeats paging); a backend multi-status filter (rejected, no backend changes in this pass).
+
+---
+
+## Home v2: per-cube slices keyed by property (2026-11-07)
+**Date:** 2026-11-07
+**Why:** Home should match the web Insights overview (attention items, occupancy, trend, property ranking) and filter to one property, without one failing query blanking the screen or a property switch refetching the portfolio view.
+**Decision:** One keepAlive family provider per Cube cube (Payments, Charges, Leases, MaintenanceRequests, Units, TenantApplications), keyed by property id with null meaning All, each batching that cube's measures into one query — six Cube calls per scope. Payments is one monthly-by-property query that feeds the money card, the chart and the property list. Sections combine slices and each shows its own skeleton/error; every slice is stamped with the workspace `clientId`. Late rent keeps the per-account Charges rule; late properties come from `Charges.propertyId` on those rows. "Ending soon" uses `Leases.expiringCount` and a new leases-list filter on the backend's matching `expiring` + `exclude_renewed` params, so the count and the list agree. Urgent repairs are `priority = EMERGENCY` via the `MaintenanceRequests.priority` dimension. The Rent tab is opened on Owing through a small keepAlive request provider rather than a route argument, because it lives in the shell's indexed stack.
+**Tradeoffs:** Six families add six generated `deprecated_member_use` infos (riverpod_generator 2.x family mixins). Sections that share a cube fail together (a Payments failure takes out the money card, chart and property list). Property names for the ranking need a REST call (`properties/me`, up to 10 × 100). Pull-to-refresh invalidates every property key, not just the one on screen.
+**Alternatives considered:** One provider per section (rejected, Charges and Leases would be queried twice); a single provider for all of Home (rejected, one failure blanks everything and no per-section retry); route query params for the Rent tab (rejected, an already-built tab never sees them); Invoices cube for late rent like the web (rejected, misses unbilled arrears).
+

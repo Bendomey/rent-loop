@@ -28,6 +28,7 @@ Future<bool> showSignOutDialog(BuildContext context) async {
             'Sign out?',
             style: TextStyle(
               fontFamily: RLTokens.fontSerif,
+              fontWeight: RLTokens.headingWeight,
               fontSize: 22,
               letterSpacing: -0.3,
               color: RLTokens.ink,

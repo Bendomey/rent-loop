@@ -5,6 +5,8 @@ import 'package:rentloop_manager/src/api/root.dart';
 import 'package:rentloop_manager/src/architecture/current_workspace/current_workspace_notifier.dart';
 import 'package:rentloop_manager/src/lib/api_error_messages.dart';
 import 'package:rentloop_manager/src/repository/api_state.dart';
+import 'package:rentloop_manager/src/repository/providers/home/home_stats_provider.dart';
+import 'package:rentloop_manager/src/repository/providers/properties/property_stats_provider.dart';
 
 part 'start_lease_notifier.g.dart';
 
@@ -49,6 +51,10 @@ class StartLeaseNotifier extends _$StartLeaseNotifier {
             utilityTransfersDate: utilityTransfersDate,
           );
       state = StartLeaseState(status: ApiStatus.success);
+      ref.invalidate(propertyStatsProvider);
+      for (final p in homeStatsProviders) {
+        ref.invalidate(p);
+      }
     } on ApiException catch (e) {
       state = StartLeaseState(
         status: ApiStatus.failed,
@@ -94,6 +100,10 @@ class StartLeaseNotifier extends _$StartLeaseNotifier {
         leaseId: leaseId,
       );
       state = StartLeaseState(status: ApiStatus.success);
+      ref.invalidate(propertyStatsProvider);
+      for (final p in homeStatsProviders) {
+        ref.invalidate(p);
+      }
     } on ApiException catch (e) {
       state = StartLeaseState(
         status: ApiStatus.failed,

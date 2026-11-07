@@ -1,12 +1,20 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.CAMERA"/>
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <!-- Pickers use the system picker; these only matter on old Android. -->
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32"/>
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28"/>
     <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
     <application
-        android:label="rentloop_manager"
+        android:label="Rentloop Manager"
         android:name="${applicationName}"
+        android:allowBackup="false"
+        android:fullBackupContent="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
@@ -56,6 +64,27 @@
             <action android:name="android.intent.action.VIEW"/>
             <category android:name="android.intent.category.BROWSABLE"/>
             <data android:scheme="http"/>
+        </intent>
+        <!-- Call and email buttons -->
+        <intent>
+            <action android:name="android.intent.action.DIAL"/>
+            <data android:scheme="tel"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="tel"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.SENDTO"/>
+            <data android:scheme="mailto"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.SENDTO"/>
+            <data android:scheme="sms"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="sms"/>
         </intent>
         <!-- WhatsApp deep-link (Help & support) -->
         <package android:name="com.whatsapp"/>

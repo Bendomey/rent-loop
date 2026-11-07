@@ -6,14 +6,25 @@
 // Move In, Financial and Docs each get their own.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:rentloop_manager/src/constants.dart';
+import 'package:rentloop_manager/src/lib/application_utils.dart';
 import 'package:rentloop_manager/src/lib/money.dart';
 import 'package:rentloop_manager/src/lib/property_status.dart';
 import 'package:rentloop_manager/src/lib/unit_status.dart';
 import 'package:rentloop_manager/src/modules/main/activity/application_data.dart';
 import 'package:rentloop_manager/src/modules/main/activity/application_edit_sheets.dart';
+import 'package:rentloop_manager/src/modules/main/activity/document_picker.dart';
+import 'package:rentloop_manager/src/repository/models/tenant_application_model.dart';
+import 'package:rentloop_manager/src/repository/providers/activity/application_detail_provider.dart';
+import 'package:rentloop_manager/src/repository/providers/properties/my_property_roles_provider.dart';
+import 'package:rentloop_manager/src/repository/providers/properties/property_detail_provider.dart';
+import 'package:rentloop_manager/src/shared/toast.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
+import 'package:shimmer/shimmer.dart';
 
 /// Every section page shares this shell: back header, scrolling body, and an
 /// optional lead-in description.
@@ -22,13 +33,11 @@ class _SectionScaffold extends StatelessWidget {
     required this.title,
     this.description,
     required this.children,
-    this.onAddDocument,
   });
 
   final String title;
   final String? description;
   final List<Widget> children;
-  final VoidCallback? onAddDocument;
 
   @override
   Widget build(BuildContext context) {
@@ -42,22 +51,6 @@ class _SectionScaffold extends StatelessWidget {
               await Haptics.vibrate(HapticsType.selection);
               if (context.mounted) Navigator.of(context).pop();
             },
-            trailing: onAddDocument == null
-                ? null
-                : GestureDetector(
-                    onTap: () async {
-                      await Haptics.vibrate(HapticsType.selection);
-                      if (context.mounted) onAddDocument!();
-                    },
-                    child: const Padding(
-                      padding: EdgeInsets.all(10),
-                      child: Icon(
-                        Icons.more_horiz,
-                        size: 22,
-                        color: RLTokens.ink,
-                      ),
-                    ),
-                  ),
           ),
           Expanded(
             child: SingleChildScrollView(
@@ -97,7 +90,10 @@ class _SectionScaffold extends StatelessWidget {
 
 // ── Shared section building blocks ───────────────────────────────────────────
 
-/// Card with a serif heading and an optional Edit affordance.
+bool _canEdit(WidgetRef ref, TenantApplicationModel? model) =>
+    model != null &&
+    canEditApplication(model, ref.watch(myPropertyRolesProvider).valueOrNull);
+
 class AppSectionCard extends StatelessWidget {
   const AppSectionCard({
     super.key,
@@ -127,6 +123,7 @@ class AppSectionCard extends StatelessWidget {
                     title,
                     style: const TextStyle(
                       fontFamily: RLTokens.fontSerif,
+                      fontWeight: RLTokens.headingWeight,
                       fontSize: 17,
                       color: RLTokens.ink,
                       letterSpacing: -0.2,
@@ -324,9 +321,19 @@ class MonoLabel extends StatelessWidget {
   }
 }
 
-class _IdImagePlaceholder extends StatelessWidget {
-  const _IdImagePlaceholder({required this.label});
+class _IdImage extends StatelessWidget {
+  const _IdImage({required this.label, required this.url});
   final String label;
+  final String? url;
+
+  Widget _placeholder() => const Text(
+    'No image',
+    style: TextStyle(
+      fontFamily: RLTokens.fontSans,
+      fontSize: 11.5,
+      color: RLTokens.micro,
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -344,20 +351,22 @@ class _IdImagePlaceholder extends StatelessWidget {
         const SizedBox(height: 6),
         Container(
           height: 92,
+          clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
             color: RLTokens.fill,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: RLTokens.hairline),
           ),
           alignment: Alignment.center,
-          child: const Text(
-            'No image',
-            style: TextStyle(
-              fontFamily: RLTokens.fontSans,
-              fontSize: 11.5,
-              color: RLTokens.micro,
-            ),
-          ),
+          child: url == null
+              ? _placeholder()
+              : Image.network(
+                  url!,
+                  width: double.infinity,
+                  height: 92,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => _placeholder(),
+                ),
         ),
       ],
     );
@@ -366,87 +375,97 @@ class _IdImagePlaceholder extends StatelessWidget {
 
 // ── Unit Setup ───────────────────────────────────────────────────────────────
 
-class ApplicationUnitPage extends StatefulWidget {
+class ApplicationUnitPage extends ConsumerWidget {
   const ApplicationUnitPage({
     super.key,
     required this.data,
-    required this.onChanged,
+    required this.propertyId,
+    this.readOnly = false,
   });
 
   final ApplicationDetailData data;
-  final ValueChanged<ApplicationDetailData> onChanged;
+  final String propertyId;
+  final bool readOnly;
 
-  @override
-  State<ApplicationUnitPage> createState() => _ApplicationUnitPageState();
-}
+  Future<void> _pickUnit(BuildContext context, ApplicationDetailData d) =>
+      showChangeUnitSheet(
+        context,
+        propertyId: propertyId,
+        id: d.id,
+        currentUnitId: d.desiredUnit?.id,
+        applicationRentFee: d.financial.rentFee,
+      );
 
-class _ApplicationUnitPageState extends State<ApplicationUnitPage> {
-  late ApplicationDetailData _d = widget.data;
-
-  Future<void> _pickUnit() async {
-    final picked = await showChangeUnitSheet(
-      context,
-      units: kApplicationSeedUnits,
-      currentUnitId: _d.desiredUnit?.id,
-    );
-    if (picked == null) return;
-
-    // Picking a unit rewrites the rent and frequency the rest of the
-    // application is built on, so say so rather than silently changing them.
-    final next = _d.withUnit(picked);
-    setState(() => _d = next);
-    widget.onChanged(next);
-
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Unit set to ${picked.name}. Rent and payment frequency now follow '
-          'the unit.',
-        ),
-      ),
-    );
-  }
-
-  Future<void> _viewUnit() async {
+  Future<void> _viewUnit(BuildContext context, String unitId) async {
     await Haptics.vibrate(HapticsType.selection);
-    if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Unit details coming soon')));
+    if (!context.mounted) return;
+    await context.push('/properties/$propertyId/units/$unitId');
   }
 
   @override
-  Widget build(BuildContext context) {
-    final unit = _d.desiredUnit;
-    final locked = _d.isUnitChangeLocked;
-    final canChange = _d.canChangeUnit;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final detail = ref.watch(applicationDetailProvider(propertyId, data.id));
+    final model = detail.valueOrNull;
+    final d = model == null
+        ? data
+        : ApplicationDetailData.fromApplicationModel(model);
+    final single =
+        ref.watch(propertyDetailProvider(propertyId)).valueOrNull?.type ==
+        'SINGLE';
+    final unit = d.desiredUnit;
+
+    final String? lockReason;
+    if (model?.financialAccount?.rentTermsLocked == true) {
+      lockReason =
+          "Rent has already been billed, so the unit can't be changed.";
+    } else if (const {
+      'SIGNED',
+      'SIGNING',
+    }.contains(model?.leaseAgreementDocumentStatus)) {
+      lockReason =
+          'The lease document has been signed, so the unit can no longer be '
+          'changed.';
+    } else {
+      lockReason = null;
+    }
+    final locked = readOnly || !_canEdit(ref, model);
+    final canChange = !locked && !single && lockReason == null;
 
     return _SectionScaffold(
       title: 'Unit Setup',
-      description: 'The unit this application is for.',
+      description: 'The unit this tenant is moving into.',
       children: [
         if (unit == null)
-          _NoUnitSelected(canAssign: canChange && !locked, onAssign: _pickUnit)
+          _NoUnitSelected(
+            canAssign: canChange,
+            onAssign: () => _pickUnit(context, d),
+          )
         else ...[
           _SelectedUnitCard(
             unit: unit,
-            onView: _viewUnit,
-            onChange: canChange && !locked ? _pickUnit : null,
+            onView: () => _viewUnit(context, unit.id),
+            onChange: canChange ? () => _pickUnit(context, d) : null,
             showChange: canChange,
           ),
-          if (canChange && locked && _d.unitChangeLockReason != null)
+          if (canChange && unit.isOccupied)
+            const Padding(
+              padding: EdgeInsets.only(top: 12),
+              child: _LockNotice(
+                reason: 'This unit is now occupied — choose another unit',
+              ),
+            ),
+          if (!locked && lockReason != null)
             Padding(
               padding: const EdgeInsets.only(top: 12),
-              child: _LockNotice(reason: _d.unitChangeLockReason!),
+              child: _LockNotice(reason: lockReason),
             ),
-          if (_d.isSingleUnitProperty)
+          if (single)
             const Padding(
               padding: EdgeInsets.only(top: 12),
               child: _LockNotice(
                 reason:
                     'This is a single-unit property, so there is no other '
-                    'unit to move the application to.',
+                    'unit to choose.',
               ),
             ),
         ],
@@ -519,6 +538,7 @@ class _SelectedUnitCard extends StatelessWidget {
                         unit.name,
                         style: const TextStyle(
                           fontFamily: RLTokens.fontSerif,
+                          fontWeight: RLTokens.headingWeight,
                           fontSize: 20,
                           color: RLTokens.ink,
                           letterSpacing: -0.2,
@@ -668,6 +688,7 @@ class _NoUnitSelected extends StatelessWidget {
             'No unit assigned yet',
             style: TextStyle(
               fontFamily: RLTokens.fontSerif,
+              fontWeight: RLTokens.headingWeight,
               fontSize: 18,
               color: RLTokens.ink,
             ),
@@ -675,7 +696,7 @@ class _NoUnitSelected extends StatelessWidget {
           const SizedBox(height: 6),
           const Text(
             'Assign a unit to set the rent and payment frequency for this '
-            'application.',
+            'tenant.',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: RLTokens.fontSans,
@@ -740,44 +761,51 @@ class _LockNotice extends StatelessWidget {
 
 // ── Tenant Details ───────────────────────────────────────────────────────────
 
-class ApplicationTenantPage extends StatefulWidget {
+class ApplicationTenantPage extends ConsumerWidget {
   const ApplicationTenantPage({
     super.key,
     required this.data,
-    required this.onChanged,
+    required this.propertyId,
+    this.readOnly = false,
   });
 
   final ApplicationDetailData data;
-  final ValueChanged<ApplicationDetailData> onChanged;
+  final String propertyId;
+  final bool readOnly;
 
   @override
-  State<ApplicationTenantPage> createState() => _ApplicationTenantPageState();
-}
-
-class _ApplicationTenantPageState extends State<ApplicationTenantPage> {
-  late ApplicationDetailData _d = widget.data;
-
-  void _apply(ApplicationDetailData next) {
-    setState(() => _d = next);
-    widget.onChanged(next);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final a = _d.applicant;
-    final id = _d.identity;
-    final b = _d.background;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final model = ref
+        .watch(applicationDetailProvider(propertyId, data.id))
+        .valueOrNull;
+    final d = model == null
+        ? data
+        : ApplicationDetailData.fromApplicationModel(model);
+    final a = d.applicant;
+    final id = d.identity;
+    final b = d.background;
+    final locked =
+        readOnly ||
+        !_canEdit(ref, model) ||
+        const {
+          'SIGNED',
+          'SIGNING',
+        }.contains(model?.leaseAgreementDocumentStatus);
 
     return _SectionScaffold(
       title: 'Tenant Details',
-      description: "Applicant's personal, identity and background details.",
+      description: "Tenant's personal, identity and background details.",
       children: [
         AppSectionCard(
           title: 'Basic Information',
-          onEdit: () async {
-            final updated = await showBasicInfoSheet(context, a);
-            if (updated != null) _apply(_d.copyWith(applicant: updated));
-          },
+          onEdit: locked
+              ? null
+              : () => showBasicInfoSheet(
+                  context,
+                  applicant: a,
+                  propertyId: propertyId,
+                  id: d.id,
+                ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -786,19 +814,29 @@ class _ApplicationTenantPageState extends State<ApplicationTenantPage> {
                   Container(
                     width: 56,
                     height: 56,
+                    clipBehavior: Clip.antiAlias,
                     decoration: const BoxDecoration(
                       color: RLTokens.fill,
                       shape: BoxShape.circle,
                     ),
                     alignment: Alignment.center,
-                    child: const Text(
-                      'No photo',
-                      style: TextStyle(
-                        fontFamily: RLTokens.fontSans,
-                        fontSize: 10.5,
-                        color: RLTokens.micro,
-                      ),
-                    ),
+                    child: a.profilePhotoUrl == null
+                        ? const Text(
+                            'No photo',
+                            style: TextStyle(
+                              fontFamily: RLTokens.fontSans,
+                              fontSize: 10.5,
+                              color: RLTokens.micro,
+                            ),
+                          )
+                        : Image.network(
+                            a.profilePhotoUrl!,
+                            width: 56,
+                            height: 56,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) =>
+                                const SizedBox.shrink(),
+                          ),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -809,13 +847,14 @@ class _ApplicationTenantPageState extends State<ApplicationTenantPage> {
                           a.fullName,
                           style: const TextStyle(
                             fontFamily: RLTokens.fontSerif,
+                            fontWeight: RLTokens.headingWeight,
                             fontSize: 20,
                             color: RLTokens.ink,
                           ),
                         ),
                         const SizedBox(height: 2),
                         const Text(
-                          'Applicant',
+                          'Tenant',
                           style: TextStyle(
                             fontFamily: RLTokens.fontSans,
                             fontSize: 12.5,
@@ -851,27 +890,35 @@ class _ApplicationTenantPageState extends State<ApplicationTenantPage> {
         ),
         AppSectionCard(
           title: 'Identity Verification',
-          onEdit: () async {
-            final updated = await showIdentitySheet(context, id);
-            if (updated != null) _apply(_d.copyWith(identity: updated));
-          },
+          onEdit: locked
+              ? null
+              : () => showIdentitySheet(
+                  context,
+                  identity: id,
+                  propertyId: propertyId,
+                  id: d.id,
+                ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               KVGrid([
                 KVEntry('Nationality', id.nationality),
-                KVEntry('ID type', kIdTypeOptions[id.idType]),
+                KVEntry('ID type', idTypeDisplay(id.idType)),
                 KVEntry('ID number', id.idNumber),
                 KVEntry('Current address', id.currentAddress),
               ]),
               const CardSubheading('ID document images', divided: false),
-              const Padding(
-                padding: EdgeInsets.only(top: 6),
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
                 child: Row(
                   children: [
-                    Expanded(child: _IdImagePlaceholder(label: 'Front')),
-                    SizedBox(width: 12),
-                    Expanded(child: _IdImagePlaceholder(label: 'Back')),
+                    Expanded(
+                      child: _IdImage(label: 'Front', url: id.idFrontUrl),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _IdImage(label: 'Back', url: id.idBackUrl),
+                    ),
                   ],
                 ),
               ),
@@ -880,10 +927,14 @@ class _ApplicationTenantPageState extends State<ApplicationTenantPage> {
         ),
         AppSectionCard(
           title: 'Emergency Contact & Background',
-          onEdit: () async {
-            final updated = await showBackgroundSheet(context, b);
-            if (updated != null) _apply(_d.copyWith(background: updated));
-          },
+          onEdit: locked
+              ? null
+              : () => showBackgroundSheet(
+                  context,
+                  background: b,
+                  propertyId: propertyId,
+                  id: d.id,
+                ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -902,7 +953,7 @@ class _ApplicationTenantPageState extends State<ApplicationTenantPage> {
                   'Employment type',
                   kEmployerTypeOptions[b.employerType],
                 ),
-                KVEntry('Occupation', b.occupation),
+                if (!b.isStudent) KVEntry('Occupation', b.occupation),
                 KVEntry(
                   b.isStudent ? 'Institution/School' : 'Employer',
                   b.employer,
@@ -919,27 +970,33 @@ class _ApplicationTenantPageState extends State<ApplicationTenantPage> {
 
 // ── Move In Setup ────────────────────────────────────────────────────────────
 
-class ApplicationMoveInPage extends StatefulWidget {
+class ApplicationMoveInPage extends ConsumerWidget {
   const ApplicationMoveInPage({
     super.key,
     required this.data,
-    required this.onChanged,
+    required this.propertyId,
+    this.readOnly = false,
   });
 
   final ApplicationDetailData data;
-  final ValueChanged<ApplicationDetailData> onChanged;
+  final String propertyId;
+  final bool readOnly;
 
   @override
-  State<ApplicationMoveInPage> createState() => _ApplicationMoveInPageState();
-}
-
-class _ApplicationMoveInPageState extends State<ApplicationMoveInPage> {
-  late ApplicationDetailData _d = widget.data;
-
-  @override
-  Widget build(BuildContext context) {
-    final m = _d.moveIn;
-    final frequencyLabel = kStayFrequencyOptions[m.stayDurationFrequency];
+  Widget build(BuildContext context, WidgetRef ref) {
+    final model = ref
+        .watch(applicationDetailProvider(propertyId, data.id))
+        .valueOrNull;
+    final d = model == null
+        ? data
+        : ApplicationDetailData.fromApplicationModel(model);
+    final account = model?.financialAccount;
+    final locked =
+        readOnly || !_canEdit(ref, model) || account?.rentTermsLocked == true;
+    final m = d.moveIn;
+    final frequency =
+        m.stayDurationFrequency ?? d.desiredUnit?.paymentFrequency;
+    final frequencyLabel = kStayFrequencyOptions[frequency];
 
     return _SectionScaffold(
       title: 'Move In Setup',
@@ -947,14 +1004,16 @@ class _ApplicationMoveInPageState extends State<ApplicationMoveInPage> {
       children: [
         AppSectionCard(
           title: 'Move In Setup',
-          onEdit: () async {
-            final updated = await showMoveInSheet(context, m);
-            if (updated != null) {
-              final next = _d.copyWith(moveIn: updated);
-              setState(() => _d = next);
-              widget.onChanged(next);
-            }
-          },
+          onEdit: locked
+              ? null
+              : () => showMoveInSheet(
+                  context,
+                  moveIn: m,
+                  fallbackFrequency: d.desiredUnit?.paymentFrequency,
+                  chargeCount: account?.chargeCount ?? 0,
+                  propertyId: propertyId,
+                  id: d.id,
+                ),
           child: KVGrid([
             KVEntry(
               'Desired move-in date',
@@ -969,7 +1028,7 @@ class _ApplicationMoveInPageState extends State<ApplicationMoveInPage> {
               m.stayDuration == null
                   ? null
                   : '${m.stayDuration} '
-                        '${periodLabel(m.stayDurationFrequency, m.stayDuration!)}',
+                        '${periodLabel(frequency, m.stayDuration!)}',
               full: true,
             ),
           ]),
@@ -979,567 +1038,214 @@ class _ApplicationMoveInPageState extends State<ApplicationMoveInPage> {
   }
 }
 
-// ── Financial Setup ──────────────────────────────────────────────────────────
+// ── Lease document ───────────────────────────────────────────────────────────
 
-class ApplicationFinancialPage extends StatefulWidget {
-  const ApplicationFinancialPage({
+class ApplicationDocsPage extends ConsumerWidget {
+  const ApplicationDocsPage({
     super.key,
     required this.data,
-    required this.onChanged,
+    required this.propertyId,
   });
 
   final ApplicationDetailData data;
-  final ValueChanged<ApplicationDetailData> onChanged;
+  final String propertyId;
 
-  @override
-  State<ApplicationFinancialPage> createState() =>
-      _ApplicationFinancialPageState();
-}
-
-class _ApplicationFinancialPageState extends State<ApplicationFinancialPage> {
-  late ApplicationDetailData _d = widget.data;
-
-  Future<void> _edit() async {
-    final updated = await showFinancialSheet(
-      context,
-      _d.financial,
-      stayDuration: _d.moveIn.stayDuration,
-      stayDurationFrequency: _d.moveIn.stayDurationFrequency,
-    );
-    if (updated == null) return;
-    final next = _d.copyWith(financial: updated);
-    setState(() => _d = next);
-    widget.onChanged(next);
-  }
-
-  Future<void> _generateInvoice() async {
-    await Haptics.vibrate(HapticsType.medium);
-    final next = _d.copyWith(
-      financial: _d.financial.copyWith(invoiceGenerated: true),
-    );
-    setState(() => _d = next);
-    widget.onChanged(next);
-    if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Invoice generated')));
+  Future<void> _open(BuildContext context, WidgetRef ref, Uri url) async {
+    await Haptics.vibrate(HapticsType.selection);
+    var opened = false;
+    try {
+      opened = await ref.read(urlOpenerProvider)(url);
+    } catch (_) {}
+    if (!opened && context.mounted) {
+      showRLToast(
+        ref,
+        tone: RLToastTone.error,
+        title: "Couldn't open the document.",
+      );
+    }
   }
 
   @override
-  Widget build(BuildContext context) {
-    final f = _d.financial;
-    final stay = _d.moveIn.stayDuration;
-    final periods = f.periodsFor(stay);
-    final unitLabel = periodLabel(_d.moveIn.stayDurationFrequency, periods);
-    final frequencyLabel = kPaymentFrequencyOptions[f.paymentFrequency] ?? '—';
-    final subtotal = f.rentFee == null ? null : f.rentFee! * periods;
-    final total = f.initialTotalFor(stay);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final detail = ref.watch(applicationDetailProvider(propertyId, data.id));
+    final model = detail.valueOrNull;
 
     return _SectionScaffold(
-      title: 'Financial Setup',
+      title: 'Lease document',
+      description: 'The lease agreement for this tenant.',
       children: [
         AppSectionCard(
-          title: 'Financial Setup',
-          onEdit: _edit,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: _FinancialField(
-                  label: 'Agreed Rent Fee',
-                  value: f.rentFee == null
-                      ? '—'
-                      : '${formatPesewas(f.rentFee)} / $frequencyLabel',
-                  muted: f.rentFee == null,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _FinancialField(
-                  label: 'Security Deposit',
-                  value: f.securityDepositEnabled
-                      ? formatPesewas(f.securityDepositFee)
-                      : '—',
-                  muted: !f.securityDepositEnabled,
-                ),
-              ),
-            ],
-          ),
-        ),
-        RLCard(
-          padding: const EdgeInsets.all(18),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Initial Payment Setup',
-                style: TextStyle(
-                  fontFamily: RLTokens.fontSerif,
-                  fontSize: 17,
-                  color: RLTokens.ink,
-                  letterSpacing: -0.2,
-                ),
-              ),
-              const SizedBox(height: 4),
-              const Text(
-                'Configure the initial payment the tenant needs to make.',
-                style: TextStyle(
-                  fontFamily: RLTokens.fontSans,
-                  fontSize: 12.5,
-                  color: RLTokens.muted,
-                ),
-              ),
-              const SizedBox(height: 14),
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(13),
-                  border: Border.all(color: RLTokens.hairline),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Initial Payment',
-                      style: TextStyle(
-                        fontFamily: RLTokens.fontSans,
-                        fontSize: 14.5,
-                        fontWeight: RLTokens.bold,
-                        color: RLTokens.ink,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'How much should the tenant pay upfront before move-in? '
-                      'A full payment for the entire stay, or a custom number '
-                      'of periods.',
-                      style: TextStyle(
-                        fontFamily: RLTokens.fontSans,
-                        fontSize: 12.5,
-                        color: RLTokens.muted,
-                        height: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: _ReadonlyPicker(
-                            label: 'Mode',
-                            value:
-                                kPaymentModeOptions[f.paymentMode] ??
-                                'Full stay payment',
-                            onTap: _edit,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: _ReadonlyBox(
-                            label: 'Periods',
-                            value: '$periods $unitLabel',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(13),
-                  border: Border.all(color: RLTokens.hairline),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Row(
-                      children: [
-                        Icon(
-                          Icons.receipt_long_rounded,
-                          size: 17,
-                          color: RLTokens.ink,
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          'Invoice Summary',
-                          style: TextStyle(
-                            fontFamily: RLTokens.fontSans,
-                            fontSize: 14.5,
-                            fontWeight: RLTokens.bold,
-                            color: RLTokens.ink,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-                    _SummaryRow(
-                      label: 'Rent ($frequencyLabel) × $periods $unitLabel',
-                      value: formatPesewas(subtotal),
-                    ),
-                    if (f.securityDepositEnabled) ...[
-                      const SizedBox(height: 10),
-                      _SummaryRow(
-                        label: 'Security deposit',
-                        value: formatPesewas(f.securityDepositFee ?? 0),
-                      ),
-                    ],
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 12),
-                      child: Divider(color: RLTokens.hairlineSoft, height: 1),
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Total',
-                          style: TextStyle(
-                            fontFamily: RLTokens.fontSans,
-                            fontSize: 14.5,
-                            fontWeight: RLTokens.bold,
-                            color: RLTokens.ink,
-                          ),
-                        ),
-                        Expanded(
-                          child: Text(
-                            formatPesewas(total),
-                            textAlign: TextAlign.right,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontFamily: RLTokens.fontSerif,
-                              fontSize: 19,
-                              color: RLTokens.ink,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 14),
-              if (f.invoiceGenerated)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 13,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: RLTokens.successBg,
-                    borderRadius: BorderRadius.circular(11),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.check_circle_outline_rounded,
-                        size: 17,
-                        color: RLTokens.success,
-                      ),
-                      const SizedBox(width: 9),
-                      Expanded(
-                        child: Text(
-                          f.invoicePaid
-                              ? 'Initial payment invoice is paid.'
-                              : 'Invoice generated — awaiting payment.',
-                          style: const TextStyle(
-                            fontFamily: RLTokens.fontSans,
-                            fontSize: 12.5,
-                            color: RLTokens.success,
-                            height: 1.45,
-                          ),
-                        ),
-                      ),
-                    ],
+          title: 'Lease document',
+          child: model != null
+              ? _body(context, ref, model)
+              : detail.hasError
+              ? RLSectionError(
+                  title: "Couldn't load the lease document",
+                  compact: true,
+                  onRetry: () => ref.invalidate(
+                    applicationDetailProvider(propertyId, data.id),
                   ),
                 )
-              else
-                RLBtn(
-                  label: 'Generate Invoice',
-                  kind: RLBtnKind.primary,
-                  icon: Icons.receipt_long_rounded,
-                  full: true,
-                  onPressed: _generateInvoice,
+              : const _DocsSkeleton(),
+        ),
+      ],
+    );
+  }
+
+  Widget _body(
+    BuildContext context,
+    WidgetRef ref,
+    TenantApplicationModel model,
+  ) {
+    final mode = model.leaseAgreementDocumentMode;
+    final url = model.leaseAgreementDocumentUrl;
+    final docStatus = model.leaseAgreementDocumentStatus;
+    final signed = docStatus == 'SIGNED' || docStatus == 'SIGNING';
+    final movedIn = (model.status?.endsWith('Completed') ?? false);
+    final canWrite = _canEdit(ref, model) && !signed && mode != 'ONLINE';
+    final hasUpload = mode == 'MANUAL' && url != null && url.isNotEmpty;
+
+    if (mode == 'ONLINE') {
+      final webUrl = pmUrl(
+        '/properties/$propertyId/occupancy/applications/${data.id}/docs',
+        campaign: 'tenant_setup',
+        content: 'lease_document',
+      );
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _DocumentRow(
+            title: model.leaseAgreementDocument?.title ?? 'Lease agreement',
+          ),
+          const SizedBox(height: 12),
+          _DocNote(
+            signed || movedIn
+                ? 'The agreement is signed, so it cannot change now.'
+                : 'This document was written on the web. Finish it there.',
+          ),
+          const SizedBox(height: 12),
+          RLBtn(
+            label: 'Open on the web',
+            kind: RLBtnKind.light,
+            icon: Icons.open_in_new_rounded,
+            large: false,
+            onPressed: () => _open(context, ref, webUrl),
+          ),
+        ],
+      );
+    }
+
+    if (!hasUpload) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _DocNote('No lease document yet. Adding one is optional.'),
+          if (canWrite) ...[
+            const SizedBox(height: 14),
+            RLBtn(
+              label: 'Add the lease document',
+              kind: RLBtnKind.light,
+              icon: Icons.add_rounded,
+              full: true,
+              onPressed: () =>
+                  showAddDocumentSheet(context, propertyId, data.id),
+            ),
+          ],
+        ],
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _DocumentRow(
+          title: 'Lease document',
+          subtitle: 'Uploaded document',
+        ),
+        if (signed || movedIn) ...[
+          const SizedBox(height: 12),
+          const _DocNote('The agreement is signed, so it cannot change now.'),
+        ],
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            RLBtn(
+              label: 'Open',
+              kind: RLBtnKind.light,
+              icon: Icons.open_in_new_rounded,
+              large: false,
+              onPressed: () => _open(context, ref, Uri.parse(url)),
+            ),
+            if (canWrite) ...[
+              RLBtn(
+                label: 'Replace',
+                kind: RLBtnKind.light,
+                large: false,
+                onPressed: () => showAddDocumentSheet(
+                  context,
+                  propertyId,
+                  data.id,
+                  replacing: true,
                 ),
+              ),
+              RLBtn(
+                label: 'Remove',
+                kind: RLBtnKind.light,
+                large: false,
+                onPressed: () =>
+                    showRemoveDocumentSheet(context, propertyId, data.id),
+              ),
             ],
-          ),
+          ],
         ),
       ],
     );
   }
 }
 
-class _FinancialField extends StatelessWidget {
-  const _FinancialField({
-    required this.label,
-    required this.value,
-    required this.muted,
-  });
-
-  final String label;
-  final String value;
-  final bool muted;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontFamily: RLTokens.fontSans,
-            fontSize: 13.5,
-            color: RLTokens.muted,
-          ),
-        ),
-        const SizedBox(height: 5),
-        Text(
-          value,
-          style: TextStyle(
-            fontFamily: RLTokens.fontSans,
-            fontSize: 15,
-            fontWeight: RLTokens.bold,
-            color: muted ? RLTokens.micro : RLTokens.ink,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ReadonlyPicker extends StatelessWidget {
-  const _ReadonlyPicker({
-    required this.label,
-    required this.value,
-    required this.onTap,
-  });
-
-  final String label;
-  final String value;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _MicroLabel(label),
-        GestureDetector(
-          onTap: onTap,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: RLTokens.surface,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: RLTokens.hairline),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    value,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontFamily: RLTokens.fontSans,
-                      fontSize: 13,
-                      fontWeight: RLTokens.semibold,
-                      color: RLTokens.ink,
-                    ),
-                  ),
-                ),
-                const Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  size: 16,
-                  color: RLTokens.micro,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ReadonlyBox extends StatelessWidget {
-  const _ReadonlyBox({required this.label, required this.value});
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _MicroLabel(label),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-          decoration: BoxDecoration(
-            color: RLTokens.fill,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: RLTokens.hairline),
-          ),
-          child: Text(
-            value,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontFamily: RLTokens.fontSans,
-              fontSize: 13,
-              fontWeight: RLTokens.semibold,
-              color: RLTokens.muted,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _MicroLabel extends StatelessWidget {
-  const _MicroLabel(this.text);
+class _DocNote extends StatelessWidget {
+  const _DocNote(this.text);
   final String text;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Text(
-        text.toUpperCase(),
-        style: const TextStyle(
-          fontFamily: RLTokens.fontMono,
-          fontSize: 10,
-          letterSpacing: 0.5,
-          color: RLTokens.mutedSoft,
-        ),
+    return Text(
+      text,
+      style: const TextStyle(
+        fontFamily: RLTokens.fontSans,
+        fontSize: 13,
+        color: RLTokens.muted,
+        height: 1.5,
       ),
     );
   }
 }
 
-class _SummaryRow extends StatelessWidget {
-  const _SummaryRow({required this.label, required this.value});
-  final String label;
-  final String value;
+class _DocsSkeleton extends StatelessWidget {
+  const _DocsSkeleton();
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Expanded(
-          child: Text(
-            label,
-            style: const TextStyle(
-              fontFamily: RLTokens.fontSans,
-              fontSize: 13.5,
-              color: RLTokens.muted,
-            ),
-          ),
+    return Shimmer.fromColors(
+      baseColor: RLTokens.fill,
+      highlightColor: RLTokens.surface,
+      child: Container(
+        height: 64,
+        decoration: BoxDecoration(
+          color: RLTokens.fill,
+          borderRadius: BorderRadius.circular(13),
         ),
-        const SizedBox(width: 12),
-        Text(
-          value,
-          style: const TextStyle(
-            fontFamily: RLTokens.fontSans,
-            fontSize: 14,
-            fontWeight: RLTokens.semibold,
-            color: RLTokens.ink,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ── Docs Setup ───────────────────────────────────────────────────────────────
-
-class ApplicationDocsPage extends StatefulWidget {
-  const ApplicationDocsPage({
-    super.key,
-    required this.data,
-    required this.onChanged,
-  });
-
-  final ApplicationDetailData data;
-  final ValueChanged<ApplicationDetailData> onChanged;
-
-  @override
-  State<ApplicationDocsPage> createState() => _ApplicationDocsPageState();
-}
-
-class _ApplicationDocsPageState extends State<ApplicationDocsPage> {
-  late ApplicationDetailData _d = widget.data;
-
-  void _sign(ApplicationSigner signer) async {
-    await Haptics.vibrate(HapticsType.medium);
-    final signers = [
-      for (final s in _d.doc.signers)
-        s.role == signer.role ? s.copyWith(signed: true) : s,
-    ];
-    final next = _d.copyWith(
-      doc: ApplicationDoc(
-        name: _d.doc.name,
-        source: _d.doc.source,
-        status: _d.doc.status,
-        mode: _d.doc.mode,
-        signers: signers,
       ),
-    );
-    setState(() => _d = next);
-    widget.onChanged(next);
-  }
-
-  Future<void> _prompt(ApplicationSigner signer) async {
-    await Haptics.vibrate(HapticsType.selection);
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Signing prompt sent to ${signer.label}')),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final doc = _d.doc;
-
-    return _SectionScaffold(
-      title: 'Docs Setup',
-      description: 'Documentation for the lease agreement.',
-      onAddDocument: () => showAddDocumentSheet(context),
-      children: [
-        AppSectionCard(
-          title: 'Docs Setup',
-          onEdit: () => showAddDocumentSheet(context),
-          child: doc.attached
-              ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _DocumentRow(doc: doc),
-                    const SizedBox(height: 10),
-                    const _EditorHint(),
-                    const MonoLabel('Signing status'),
-                    for (var i = 0; i < doc.signers.length; i++)
-                      _SignerRow(
-                        signer: doc.signers[i],
-                        first: i == 0,
-                        onSign: () => _sign(doc.signers[i]),
-                        onPrompt: () => _prompt(doc.signers[i]),
-                      ),
-                  ],
-                )
-              : _NoDocument(onAdd: () => showAddDocumentSheet(context)),
-        ),
-      ],
     );
   }
 }
 
 class _DocumentRow extends StatelessWidget {
-  const _DocumentRow({required this.doc});
-  final ApplicationDoc doc;
+  const _DocumentRow({required this.title, this.subtitle});
+  final String title;
+  final String? subtitle;
 
   @override
   Widget build(BuildContext context) {
@@ -1558,7 +1264,7 @@ class _DocumentRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  doc.name ?? 'Lease Agreement',
+                  title,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontFamily: RLTokens.fontSans,
@@ -1567,10 +1273,10 @@ class _DocumentRow extends StatelessWidget {
                     color: RLTokens.ink,
                   ),
                 ),
-                if (doc.source != null) ...[
+                if (subtitle != null) ...[
                   const SizedBox(height: 2),
                   Text(
-                    doc.source!,
+                    subtitle!,
                     style: const TextStyle(
                       fontFamily: RLTokens.fontSans,
                       fontSize: 12,
@@ -1581,180 +1287,8 @@ class _DocumentRow extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 10),
-          if (doc.status != null) RLPill(doc.status!, tone: RLTone.info),
         ],
       ),
-    );
-  }
-}
-
-class _EditorHint extends StatelessWidget {
-  const _EditorHint();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
-      decoration: BoxDecoration(
-        color: RLTokens.warningBg,
-        borderRadius: BorderRadius.circular(11),
-      ),
-      child: RichText(
-        text: const TextSpan(
-          style: TextStyle(
-            fontFamily: RLTokens.fontSans,
-            fontSize: 12.5,
-            color: RLTokens.inkSoft,
-            height: 1.5,
-          ),
-          children: [
-            TextSpan(text: 'Need changes? '),
-            TextSpan(
-              text: 'Open the editor',
-              style: TextStyle(
-                fontWeight: RLTokens.bold,
-                color: RLTokens.warning,
-              ),
-            ),
-            TextSpan(text: ' and revert the document to draft.'),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SignerRow extends StatelessWidget {
-  const _SignerRow({
-    required this.signer,
-    required this.first,
-    required this.onSign,
-    required this.onPrompt,
-  });
-
-  final ApplicationSigner signer;
-  final bool first;
-  final VoidCallback onSign;
-  final VoidCallback onPrompt;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 13),
-      decoration: BoxDecoration(
-        border: first
-            ? null
-            : const Border(top: BorderSide(color: RLTokens.hairlineSoft)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: signer.signed ? RLTokens.successBg : RLTokens.fill,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  signer.signed ? Icons.check_rounded : Icons.schedule_rounded,
-                  size: 17,
-                  color: signer.signed ? RLTokens.success : RLTokens.muted,
-                ),
-              ),
-              const SizedBox(width: 11),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      signer.label,
-                      style: const TextStyle(
-                        fontFamily: RLTokens.fontSans,
-                        fontSize: 14,
-                        fontWeight: RLTokens.semibold,
-                        color: RLTokens.ink,
-                      ),
-                    ),
-                    const SizedBox(height: 1),
-                    Text(
-                      signer.signed ? 'Signed' : 'Awaiting signature',
-                      style: const TextStyle(
-                        fontFamily: RLTokens.fontSans,
-                        fontSize: 12,
-                        color: RLTokens.muted,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 10),
-              RLPill(
-                signer.signed ? 'Signed' : 'Pending',
-                tone: signer.signed ? RLTone.success : RLTone.neutral,
-              ),
-            ],
-          ),
-          if (!signer.signed)
-            Padding(
-              padding: const EdgeInsets.only(top: 10, left: 45),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: signer.isSelf
-                    ? RLBtn(
-                        label: 'Sign document',
-                        kind: RLBtnKind.primary,
-                        icon: Icons.edit_outlined,
-                        large: false,
-                        onPressed: onSign,
-                      )
-                    : RLBtn(
-                        label: 'Prompt to sign',
-                        kind: RLBtnKind.light,
-                        icon: Icons.send_rounded,
-                        large: false,
-                        onPressed: onPrompt,
-                      ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _NoDocument extends StatelessWidget {
-  const _NoDocument({required this.onAdd});
-  final VoidCallback onAdd;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const Padding(
-          padding: EdgeInsets.only(bottom: 14),
-          child: Text(
-            'No lease document attached yet. Add one to start collecting '
-            'signatures.',
-            style: TextStyle(
-              fontFamily: RLTokens.fontSans,
-              fontSize: 13,
-              color: RLTokens.muted,
-              height: 1.5,
-            ),
-          ),
-        ),
-        RLBtn(
-          label: 'Add document',
-          kind: RLBtnKind.light,
-          icon: Icons.add_rounded,
-          full: true,
-          onPressed: onAdd,
-        ),
-      ],
     );
   }
 }

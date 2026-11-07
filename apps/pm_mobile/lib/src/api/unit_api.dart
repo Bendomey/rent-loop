@@ -59,22 +59,42 @@ class UnitApi extends AbstractApi {
 
   /// `GET .../units` — cross-property "mobile" route, scoped to whichever
   /// properties the caller can access (see backend's
-  /// InjectPropertyAccessScopeMiddleware/ResolvePropertyScopeFilter). No
-  /// property_id sent — relies entirely on the backend's own access-scope
-  /// resolution, matching how the Assigned Worker/Manager picker already
-  /// relies on backend scoping rather than re-deriving it client-side.
-  Future<List<UnitModel>> getUnitsAcrossProperties({
+  /// InjectPropertyAccessScopeMiddleware/ResolvePropertyScopeFilter), or to
+  /// [propertyIds] when given.
+  Future<UnitsPage> getUnitsPageAcrossProperties({
     required String clientId,
+    List<String>? propertyIds,
+    String? blockId,
+    int page = 1,
+    int pageSize = 20,
+    String? search,
   }) async {
+    final queryString = Uri(
+      queryParameters: {
+        'page': '$page',
+        'page_size': '$pageSize',
+        'populate': 'Property',
+        if (propertyIds != null && propertyIds.isNotEmpty)
+          'property_id': propertyIds,
+        if (blockId != null) 'block_ids': [blockId],
+        if (search != null && search.isNotEmpty) ...{
+          'query': search,
+          'search_fields': 'name',
+        },
+      },
+    ).query;
     final response = await execute(
       method: 'GET',
-      path: '/api/v1/admin/clients/$clientId/units?page_size=200',
+      path: '/api/v1/admin/clients/$clientId/units?$queryString',
     );
     final json = jsonDecode(response.body) as Map<String, dynamic>;
     final data = json['data'] as Map<String, dynamic>;
-    return (data['rows'] as List<dynamic>)
-        .map((e) => UnitModel.fromJson(e as Map<String, dynamic>))
-        .toList();
+    return UnitsPage(
+      rows: (data['rows'] as List<dynamic>)
+          .map((e) => UnitModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      meta: PaginationMetaModel.fromJson(data['meta'] as Map<String, dynamic>),
+    );
   }
 
   Future<UnitModel> getUnit({

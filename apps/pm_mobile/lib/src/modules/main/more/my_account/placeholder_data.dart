@@ -1,5 +1,5 @@
 /// Placeholder data for the parts of My Account that have no API yet: the
-/// email-verified badge and the password last-changed date. Sessions are live
+/// password last-changed date. Sessions are live
 /// — see api/session_api.dart and providers/sessions_provider.dart.
 /// Replace each of these with real data when the corresponding endpoints
 /// land — nothing here is wired to the backend.
@@ -10,5 +10,4 @@
 /// portal (apps/property-manager Settings › My Account).
 library;
 
-const bool kPlaceholderEmailVerified = true;
 const String kPlaceholderPasswordChanged = '4 Mar 2026';

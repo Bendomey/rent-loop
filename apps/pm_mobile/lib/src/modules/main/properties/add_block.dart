@@ -147,6 +147,7 @@ class _AddBlockScreenState extends ConsumerState<AddBlockScreen> {
                     'Add New Block',
                     style: TextStyle(
                       fontFamily: RLTokens.fontSerif,
+                      fontWeight: RLTokens.headingWeight,
                       fontSize: 24,
                       color: RLTokens.ink,
                       letterSpacing: -0.4,

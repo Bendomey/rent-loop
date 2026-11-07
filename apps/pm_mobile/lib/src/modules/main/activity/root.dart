@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:rentloop_manager/src/architecture/current_workspace/current_workspace_notifier.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 import 'package:rentloop_manager/src/modules/main/activity/applications_list.dart';
 import 'package:rentloop_manager/src/modules/main/activity/maintenance_board.dart';
 import 'package:rentloop_manager/src/repository/providers/activity/activity_counts_provider.dart';
+import 'package:rentloop_manager/src/repository/providers/properties/my_property_roles_provider.dart';
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
@@ -22,41 +24,51 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final managesAny =
+        ref
+            .watch(myPropertyRolesProvider)
+            .valueOrNull
+            ?.values
+            .any((r) => r == 'MANAGER') ??
+        false;
+    final showAdd = _tab != 'maint' || managesAny;
     return Scaffold(
       backgroundColor: RLTokens.surface,
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: 'fab-activity',
-        onPressed: () async {
-          await Haptics.vibrate(HapticsType.medium);
-          if (!context.mounted) return;
-          final path = switch (_tab) {
-            'apps' => '/activity/applications/add',
-            'bookings' => '/activity/bookings/add',
-            _ => '/activity/maintenances/add',
-          };
-          // Anything created in the add flow lands in an open status, so it
-          // moves a badge — drop the cached counts once the flow pops.
-          await context.push(path);
-          ref.invalidate(activityCountsProvider);
-        },
-        backgroundColor: RLTokens.crimson,
-        foregroundColor: Colors.white,
-        elevation: 6,
-        shape: const StadiumBorder(),
-        icon: const Icon(Icons.add, size: 20),
-        label: Text(
-          _tab == 'apps'
-              ? 'Application'
-              : _tab == 'bookings'
-              ? 'Booking'
-              : 'Request',
-          style: const TextStyle(
-            fontFamily: RLTokens.fontSans,
-            fontWeight: RLTokens.semibold,
-            fontSize: RLTokens.textAction,
-          ),
-        ),
-      ),
+      floatingActionButton: !showAdd
+          ? null
+          : FloatingActionButton.extended(
+              heroTag: 'fab-activity',
+              onPressed: () async {
+                await Haptics.vibrate(HapticsType.medium);
+                if (!context.mounted) return;
+                final path = switch (_tab) {
+                  'apps' => '/activity/applications/add',
+                  'bookings' => '/activity/bookings/add',
+                  _ => '/activity/maintenances/add',
+                };
+                // Anything created in the add flow lands in an open status, so it
+                // moves a badge — drop the cached counts once the flow pops.
+                await context.push(path);
+                ref.invalidate(activityCountsProvider);
+              },
+              backgroundColor: RLTokens.crimson,
+              foregroundColor: Colors.white,
+              elevation: 6,
+              shape: const StadiumBorder(),
+              icon: const Icon(Icons.add, size: 20),
+              label: Text(
+                _tab == 'apps'
+                    ? 'Application'
+                    : _tab == 'bookings'
+                    ? 'Booking'
+                    : 'Repair',
+                style: const TextStyle(
+                  fontFamily: RLTokens.fontSans,
+                  fontWeight: RLTokens.semibold,
+                  fontSize: RLTokens.textAction,
+                ),
+              ),
+            ),
       body: Column(
         children: [
           _Header(
@@ -94,7 +106,9 @@ class _Header extends ConsumerWidget {
     // Null while the first Cube round-trip is in flight, or if it failed —
     // RLSegmentItem then hides the badge rather than flashing a placeholder
     // zero that reads as "nothing to do here".
-    final counts = ref.watch(activityCountsProvider).valueOrNull;
+    final clientId = ref.watch(currentWorkspaceNotifierProvider)?.clientId;
+    final value = ref.watch(activityCountsProvider).valueOrNull;
+    final counts = value?.clientId == clientId ? value : null;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -115,6 +129,7 @@ class _Header extends ConsumerWidget {
                   'Activity',
                   style: const TextStyle(
                     fontFamily: RLTokens.fontSerif,
+                    fontWeight: RLTokens.headingWeight,
                     fontSize: RLTokens.textTitle,
                     color: RLTokens.ink,
                     letterSpacing: -0.4,
@@ -297,6 +312,7 @@ class _WeekStrip extends StatelessWidget {
                 'June 2026',
                 style: TextStyle(
                   fontFamily: RLTokens.fontSerif,
+                  fontWeight: RLTokens.headingWeight,
                   fontSize: 17,
                   color: RLTokens.ink,
                 ),

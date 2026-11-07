@@ -27,6 +27,7 @@ Future<bool?> showChecklistItemSheet({
     backgroundColor: Colors.transparent,
     barrierColor: const Color.fromRGBO(17, 17, 16, 0.35),
     isScrollControlled: true,
+    useSafeArea: true,
     builder: (_) => _ChecklistItemSheet(
       propertyId: propertyId,
       leaseId: leaseId,
@@ -176,6 +177,7 @@ class _ChecklistItemSheetState extends ConsumerState<_ChecklistItemSheet> {
                 _isEdit ? 'Edit Item' : 'Add Item',
                 style: TextStyle(
                   fontFamily: RLTokens.fontSerif,
+                  fontWeight: RLTokens.headingWeight,
                   fontSize: 20,
                   color: RLTokens.ink,
                 ),

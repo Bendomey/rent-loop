@@ -85,6 +85,7 @@ class GeneralSettingsScreen extends ConsumerWidget {
                               client?.name ?? 'Your account',
                               style: const TextStyle(
                                 fontFamily: RLTokens.fontSerif,
+                                fontWeight: RLTokens.headingWeight,
                                 fontSize: 19,
                                 color: RLTokens.ink,
                                 letterSpacing: -0.2,

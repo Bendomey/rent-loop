@@ -10,8 +10,11 @@ import 'package:rentloop_manager/src/repository/models/maintenance_request_model
 import 'package:rentloop_manager/src/repository/notifiers/activity/maintenance_assignees_notifier.dart';
 import 'package:rentloop_manager/src/repository/notifiers/activity/maintenance_request_status_notifier.dart';
 import 'package:rentloop_manager/src/repository/notifiers/activity/maintenance_requests_notifier.dart';
-import 'package:rentloop_manager/src/repository/providers/activity/activity_filter_options_provider.dart';
 import 'package:rentloop_manager/src/modules/main/activity/activity_filters.dart';
+import 'package:rentloop_manager/src/repository/notifiers/options/options_state.dart';
+import 'package:rentloop_manager/src/repository/notifiers/options/property_options_notifier.dart';
+import 'package:rentloop_manager/src/repository/notifiers/options/unit_options_notifier.dart';
+import 'package:rentloop_manager/src/shared/paged_picker_sheet.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
@@ -20,13 +23,13 @@ import 'package:rentloop_manager/src/shared/widgets.dart';
 // one for filter options but priority's 4 values are small enough to keep
 // inline here, matching the original mock's convention) ──────────────────
 
-const _kPriorities = ['Low', 'Medium', 'High', 'Emergency'];
+final _kPriorities = kMaintenancePriorityLabels;
 
 /// Priority-only tone override — `statusTone()`'s neutral fallback for
 /// unmapped strings is deliberate (see docs/implementation.md), so
 /// "Emergency" is resolved here instead of editing the shared switch.
 RLTone _priorityTone(String priority) =>
-    priority == 'Emergency' ? RLTone.danger : statusTone(priority);
+    priority == kUrgentPriorityLabel ? RLTone.danger : statusTone(priority);
 
 String _ageLabel(String? createdAt) {
   if (createdAt == null) return '';
@@ -81,10 +84,7 @@ class _MaintCard extends StatelessWidget {
         onTap: () async {
           await Haptics.vibrate(HapticsType.selection);
           if (context.mounted) {
-            context.push(
-              '/activity/maintenances/${m.id}',
-              extra: m.propertyId,
-            );
+            context.push('/activity/maintenances/${m.id}', extra: m.propertyId);
           }
         },
         child: card,
@@ -152,6 +152,7 @@ class _CardBody extends StatelessWidget {
             m.title,
             style: const TextStyle(
               fontFamily: RLTokens.fontSerif,
+              fontWeight: RLTokens.headingWeight,
               fontSize: 17,
               color: RLTokens.ink,
               height: 1.15,
@@ -492,7 +493,7 @@ class _StatusColumnPageState extends ConsumerState<_StatusColumnPage> {
                               padding: const EdgeInsets.only(top: 60),
                               child: Center(
                                 child: Text(
-                                  'No requests here',
+                                  'No repairs here',
                                   style: TextStyle(
                                     fontFamily: RLTokens.fontSans,
                                     fontSize: 13,
@@ -614,10 +615,86 @@ class _PageDots extends StatelessWidget {
   }
 }
 
+class _PersonFilterSheet extends ConsumerWidget {
+  const _PersonFilterSheet({
+    required this.title,
+    required this.selectedLabel,
+    required this.loading,
+  });
+
+  final String title;
+  final String? selectedLabel;
+  final Future<void> loading;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final people = ref.watch(maintenanceAssigneesNotifierProvider);
+    return FutureBuilder<void>(
+      future: loading,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const _PeopleSheetSkeleton();
+        }
+        return RLFilterSheet(
+          title: title,
+          options: people.map((p) => p.name ?? p.id).toList(),
+          selected: selectedLabel,
+          idsByLabel: {for (final p in people) (p.name ?? p.id): p.id},
+        );
+      },
+    );
+  }
+}
+
+class _PeopleSheetSkeleton extends StatelessWidget {
+  const _PeopleSheetSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Container(
+        padding: const EdgeInsets.all(RLTokens.space4),
+        decoration: const BoxDecoration(
+          color: RLTokens.surface,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(RLTokens.rXl),
+            topRight: Radius.circular(RLTokens.rXl),
+          ),
+        ),
+        child: Shimmer.fromColors(
+          baseColor: RLTokens.fill,
+          highlightColor: RLTokens.paper,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: List.generate(
+              5,
+              (_) => Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                height: 20,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(RLTokens.rSm),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 // ── Board ─────────────────────────────────────────────────────────────────────
 
 class MaintenanceBoard extends ConsumerStatefulWidget {
-  const MaintenanceBoard({super.key});
+  const MaintenanceBoard({
+    super.key,
+    this.initialPropertyIds = const [],
+    this.initialPropertyName,
+  });
+
+  final List<String> initialPropertyIds;
+  final String? initialPropertyName;
 
   @override
   ConsumerState<MaintenanceBoard> createState() => _MaintenanceBoardState();
@@ -633,12 +710,17 @@ class _MaintenanceBoardState extends ConsumerState<MaintenanceBoard> {
   String? _categoryFilter;
   String? _workerFilter;
   String? _managerFilter;
-  List<String> _propertyFilterIds = const [];
-  List<String> _unitFilterIds = const [];
+  List<FilterOption> _propertyFilters = const [];
+  List<FilterOption> _unitFilters = const [];
 
   @override
   void initState() {
     super.initState();
+    _propertyFilters = [
+      for (final id in widget.initialPropertyIds)
+        (id: id, name: widget.initialPropertyName ?? ''),
+    ];
+    _query = MaintenanceRequestsQuery(propertyIds: widget.initialPropertyIds);
     _pageController = PageController(viewportFraction: 0.92);
     _pageController.addListener(() {
       final page = _pageController.page;
@@ -656,25 +738,17 @@ class _MaintenanceBoardState extends ConsumerState<MaintenanceBoard> {
     super.dispose();
   }
 
-  /// Recomputes the distinct set of property ids currently represented
-  /// across all 5 columns and asks [MaintenanceAssigneesNotifier] to fetch
-  /// people for any not-yet-seen property. Called from [build] via
-  /// `ref.listen` on each column, so it fires whenever any column's data
-  /// changes — cheap to call repeatedly since the notifier itself skips
-  /// already-fetched properties.
-  void _refreshAssigneeSources() {
+  Future<void> _loadAssignees() {
     final propertyIds = <String>{};
     for (final status in kMaintenanceStatusOrder) {
-      final state = ref.read(maintenanceRequestsNotifierProvider(status));
-      for (final item in state.items) {
+      for (final item
+          in ref.read(maintenanceRequestsNotifierProvider(status)).items) {
         propertyIds.add(item.propertyId);
       }
     }
-    if (propertyIds.isNotEmpty) {
-      ref
-          .read(maintenanceAssigneesNotifierProvider.notifier)
-          .ensurePropertiesLoaded(propertyIds);
-    }
+    return ref
+        .read(maintenanceAssigneesNotifierProvider.notifier)
+        .ensurePropertiesLoaded(propertyIds);
   }
 
   Future<void> _pickFilter({
@@ -686,6 +760,7 @@ class _MaintenanceBoardState extends ConsumerState<MaintenanceBoard> {
     final result = await showModalBottomSheet<RLFilterPickResult>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (_) =>
           RLFilterSheet(title: title, options: options, selected: selected),
@@ -696,21 +771,19 @@ class _MaintenanceBoardState extends ConsumerState<MaintenanceBoard> {
 
   Future<void> _pickPersonFilter({
     required String title,
-    required List<MaintenanceAssigneeModel> people,
     required String? selectedLabel,
     required void Function(String? label, String? id) onChanged,
   }) async {
-    final labels = people.map((p) => p.name ?? p.id).toList();
-    final idsByLabel = {for (final p in people) (p.name ?? p.id): p.id};
+    final loading = _loadAssignees();
     final result = await showModalBottomSheet<RLFilterPickResult>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => RLFilterSheet(
+      builder: (_) => _PersonFilterSheet(
         title: title,
-        options: labels,
-        selected: selectedLabel,
-        idsByLabel: idsByLabel,
+        selectedLabel: selectedLabel,
+        loading: loading,
       ),
     );
     if (result == null) return;
@@ -725,36 +798,27 @@ class _MaintenanceBoardState extends ConsumerState<MaintenanceBoard> {
 
   Future<void> _pickMultiFilter({
     required String title,
-    required List<({String id, String name})> options,
-    required List<String> selectedIds,
-    required void Function(List<String> ids) onChanged,
+    required ProviderListenable<OptionsState<FilterOption>> state,
+    required void Function(String) onSearch,
+    required VoidCallback onLoadMore,
+    required VoidCallback onRetry,
+    required List<FilterOption> selected,
+    required void Function(List<FilterOption> picked) onChanged,
   }) async {
-    final labels = options.map((o) => o.name).toList();
-    final idsByLabel = {for (final o in options) o.name: o.id};
-    final selectedLabels = options
-        .where((o) => selectedIds.contains(o.id))
-        .map((o) => o.name)
-        .toList();
-    final result = await showModalBottomSheet<RLFilterPickResult>(
+    final result = await showPagedPickerSheet<FilterOption>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => RLFilterSheet(
-        title: title,
-        options: labels,
-        selectedMulti: selectedLabels,
-        idsByLabel: idsByLabel,
-        multiSelect: true,
-      ),
+      title: title,
+      state: state,
+      onSearch: onSearch,
+      onLoadMore: onLoadMore,
+      onRetry: onRetry,
+      label: (o) => o.name,
+      id: (o) => o.id,
+      multi: true,
+      initial: selected,
     );
     if (result == null) return;
-    setState(() {
-      if (result.isClear) {
-        onChanged(const []);
-      } else {
-        onChanged(result.ids ?? const []);
-      }
-    });
+    setState(() => onChanged(result));
   }
 
   void _handleCardDragUpdate(Offset globalPosition) {
@@ -876,20 +940,11 @@ class _MaintenanceBoardState extends ConsumerState<MaintenanceBoard> {
 
   @override
   Widget build(BuildContext context) {
-    for (final status in kMaintenanceStatusOrder) {
-      ref.listen(maintenanceRequestsNotifierProvider(status), (prev, next) {
-        _refreshAssigneeSources();
-      });
-    }
-    final people = ref.watch(maintenanceAssigneesNotifierProvider);
-    final propertyOptions =
-        (ref.watch(activityFilterPropertiesProvider).valueOrNull ?? [])
-            .map((p) => (id: p.id, name: p.name))
-            .toList();
-    final unitOptions =
-        (ref.watch(activityFilterUnitsProvider).valueOrNull ?? [])
-            .map((u) => (id: u.id, name: u.name))
-            .toList();
+    // Keeps the auto-dispose notifier alive while the sheet is opening.
+    ref.watch(maintenanceAssigneesNotifierProvider);
+    ref.listen(maintenanceRequestStatusNotifierProvider, (_, _) {});
+    final propertyOptions = propertyOptionsNotifierProvider();
+    final unitOptions = unitOptionsNotifierProvider(const UnitOptionsQuery());
 
     return Column(
       children: [
@@ -898,15 +953,13 @@ class _MaintenanceBoardState extends ConsumerState<MaintenanceBoard> {
           category: _categoryFilter,
           worker: _workerFilter,
           manager: _managerFilter,
-          property: rlMultiSelectChipLabel(
-            selectedIds: _propertyFilterIds,
-            options: propertyOptions,
+          property: filterChipLabel(
+            selected: _propertyFilters,
             singularNoun: 'Property',
             pluralNoun: 'Properties',
           ),
-          unit: rlMultiSelectChipLabel(
-            selectedIds: _unitFilterIds,
-            options: unitOptions,
+          unit: filterChipLabel(
+            selected: _unitFilters,
             singularNoun: 'Unit',
             pluralNoun: 'Units',
           ),
@@ -936,7 +989,6 @@ class _MaintenanceBoardState extends ConsumerState<MaintenanceBoard> {
           ),
           onTapWorker: () => _pickPersonFilter(
             title: 'Assigned Worker',
-            people: people,
             selectedLabel: _workerFilter,
             onChanged: (label, id) {
               _workerFilter = label;
@@ -948,7 +1000,6 @@ class _MaintenanceBoardState extends ConsumerState<MaintenanceBoard> {
           ),
           onTapManager: () => _pickPersonFilter(
             title: 'Assigned Manager',
-            people: people,
             selectedLabel: _managerFilter,
             onChanged: (label, id) {
               _managerFilter = label;
@@ -960,20 +1011,36 @@ class _MaintenanceBoardState extends ConsumerState<MaintenanceBoard> {
           ),
           onTapProperty: () => _pickMultiFilter(
             title: 'Property',
-            options: propertyOptions,
-            selectedIds: _propertyFilterIds,
-            onChanged: (ids) {
-              _propertyFilterIds = ids;
-              _query = _query.copyWith(propertyIds: ids);
+            state: asFilterOptions(
+              propertyOptions,
+              id: (p) => p.id,
+              name: (p) => p.name,
+            ),
+            onSearch: (v) => ref.read(propertyOptions.notifier).setSearch(v),
+            onLoadMore: () => ref.read(propertyOptions.notifier).loadNextPage(),
+            onRetry: () => ref.read(propertyOptions.notifier).refresh(),
+            selected: _propertyFilters,
+            onChanged: (picked) {
+              _propertyFilters = picked;
+              _query = _query.copyWith(
+                propertyIds: [for (final o in picked) o.id],
+              );
             },
           ),
           onTapUnit: () => _pickMultiFilter(
             title: 'Unit',
-            options: unitOptions,
-            selectedIds: _unitFilterIds,
-            onChanged: (ids) {
-              _unitFilterIds = ids;
-              _query = _query.copyWith(unitIds: ids);
+            state: asFilterOptions(
+              unitOptions,
+              id: (u) => u.id,
+              name: (u) => u.name,
+            ),
+            onSearch: (v) => ref.read(unitOptions.notifier).setSearch(v),
+            onLoadMore: () => ref.read(unitOptions.notifier).loadNextPage(),
+            onRetry: () => ref.read(unitOptions.notifier).refresh(),
+            selected: _unitFilters,
+            onChanged: (picked) {
+              _unitFilters = picked;
+              _query = _query.copyWith(unitIds: [for (final o in picked) o.id]);
             },
           ),
         ),

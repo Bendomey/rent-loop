@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:shimmer/shimmer.dart';
 
+import 'package:rentloop_manager/src/lib/property_location.dart';
 import 'package:rentloop_manager/src/lib/property_status.dart';
 import 'package:rentloop_manager/src/repository/models/property_model.dart';
 import 'package:rentloop_manager/src/repository/notifiers/properties/properties_notifier.dart';
@@ -164,9 +165,13 @@ class _PropertiesScreenState extends ConsumerState<PropertiesScreen> {
                 ),
               )
             else if (showEmpty)
-              const SliverFillRemaining(
+              SliverFillRemaining(
                 hasScrollBody: false,
-                child: _EmptyProperties(),
+                child: PropertiesEmptyState(
+                  filtered: _query.search != null || _query.status != null,
+                  canAdd: hasPermission(ref, roles: const ['OWNER', 'ADMIN']),
+                  onAdd: () => context.push('/properties/add'),
+                ),
               )
             else ...[
               SliverToBoxAdapter(
@@ -238,6 +243,7 @@ class _Header extends StatelessWidget {
             'Properties',
             style: TextStyle(
               fontFamily: RLTokens.fontSerif,
+              fontWeight: RLTokens.headingWeight,
               fontSize: RLTokens.textTitle,
               color: RLTokens.ink,
               letterSpacing: -0.4,
@@ -263,8 +269,17 @@ class _Header extends StatelessWidget {
 
 // ── Empty state ───────────────────────────────────────────────────────────────
 
-class _EmptyProperties extends StatelessWidget {
-  const _EmptyProperties();
+class PropertiesEmptyState extends StatelessWidget {
+  const PropertiesEmptyState({
+    super.key,
+    required this.filtered,
+    required this.canAdd,
+    required this.onAdd,
+  });
+
+  final bool filtered;
+  final bool canAdd;
+  final VoidCallback onAdd;
 
   @override
   Widget build(BuildContext context) {
@@ -289,7 +304,7 @@ class _EmptyProperties extends StatelessWidget {
             ),
             const SizedBox(height: 11),
             Text(
-              'No properties found',
+              filtered ? 'No properties found' : 'No properties yet',
               style: TextStyle(
                 fontFamily: RLTokens.fontSans,
                 fontSize: 15,
@@ -300,7 +315,9 @@ class _EmptyProperties extends StatelessWidget {
             ),
             const SizedBox(height: 3),
             Text(
-              'Try a different search or filter.',
+              filtered
+                  ? 'Try a different search or filter.'
+                  : 'Add your first property to get started.',
               style: TextStyle(
                 fontFamily: RLTokens.fontSans,
                 fontSize: 12.5,
@@ -309,6 +326,10 @@ class _EmptyProperties extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
+            if (!filtered && canAdd) ...[
+              const SizedBox(height: 16),
+              RLBtn(label: 'Add property', onPressed: onAdd),
+            ],
           ],
         ),
       ),
@@ -361,9 +382,13 @@ class _PropCard extends StatelessWidget {
     final modes = prop.modes ?? const [];
     final isLease = modes.contains('LEASE');
     final isBooking = modes.contains('BOOKING');
-    final location = [
-      prop.address,
-    ].where((v) => v != null && v.isNotEmpty).join(', ');
+    final location = propertyLocation(prop.address, prop.city);
+    final units = prop.unitsCount;
+    final blocks = prop.blocksCount;
+    final counts = [
+      '$units ${units == 1 ? 'unit' : 'units'}',
+      if (prop.type == 'MULTI') '$blocks ${blocks == 1 ? 'block' : 'blocks'}',
+    ].join(' · ');
 
     return GestureDetector(
       onTap: () async {
@@ -375,115 +400,152 @@ class _PropCard extends StatelessWidget {
           RLTokens.gutter,
           0,
           RLTokens.gutter,
-          12,
+          14,
         ),
         decoration: BoxDecoration(
           color: RLTokens.surface,
           borderRadius: BorderRadius.circular(RLTokens.rLg),
+          border: Border.all(color: RLTokens.hairline),
           boxShadow: RLTokens.elev1,
         ),
         clipBehavior: Clip.antiAlias,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             SizedBox(
-              width: 104,
-              height: 116,
-              child: _PropThumb(
-                type: prop.type,
-                imageUrl: (prop.images != null && prop.images!.isNotEmpty)
-                    ? prop.images!.first
-                    : null,
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(13),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Name + status
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            prop.name,
-                            style: TextStyle(
-                              fontFamily: RLTokens.fontSerif,
-                              fontSize: 17,
-                              color: RLTokens.ink,
-                              letterSpacing: -0.3,
-                              height: 1.15,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        RLPill(statusLabel, tone: statusTone(statusLabel)),
-                      ],
-                    ),
-                    const SizedBox(height: 5),
-                    // Location
-                    if (location.isNotEmpty)
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.location_on_outlined,
-                            size: 13,
-                            color: RLTokens.mutedSoft,
-                          ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              location,
-                              style: TextStyle(
-                                fontFamily: RLTokens.fontSans,
-                                fontSize: 12,
-                                color: RLTokens.muted,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
+              height: 132,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  _PropThumb(
+                    type: prop.type,
+                    imageUrl: (prop.images != null && prop.images!.isNotEmpty)
+                        ? prop.images!.first
+                        : null,
+                  ),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        stops: const [0.4, 1],
+                        colors: [
+                          Colors.black.withAlpha(0),
+                          Colors.black.withAlpha(140),
                         ],
                       ),
-                    const SizedBox(height: 10),
-                    // Occupancy placeholder — no backing field on this
-                    // endpoint yet; kept visually so a later pass can wire
-                    // real occupancy data into this exact slot.
-                    Row(
+                    ),
+                  ),
+                  Positioned(
+                    top: 12,
+                    right: 12,
+                    child: RLPill(
+                      statusLabel,
+                      tone: statusTone(statusLabel),
+                      onImage: true,
+                    ),
+                  ),
+                  Positioned(
+                    left: 14,
+                    right: 14,
+                    bottom: 12,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: RLBar(
-                            percent: 0,
-                            height: 6,
-                            color: RLTokens.crimson,
-                            trackColor: RLTokens.fill,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
                         Text(
-                          '—/—',
+                          typeLabel.toUpperCase(),
                           style: TextStyle(
                             fontFamily: RLTokens.fontMono,
-                            fontSize: 11,
-                            color: RLTokens.mutedSoft,
+                            fontSize: 10,
+                            letterSpacing: 1.1,
+                            color: Colors.white.withAlpha(170),
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          prop.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontFamily: RLTokens.fontSerif,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 20,
+                            color: Colors.white,
+                            letterSpacing: -0.3,
+                            height: 1.1,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 9),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        RLPill(typeLabel, tone: RLTone.neutral),
-                        if (isLease) RLPill('Long stay', tone: RLTone.neutral),
-                        if (isBooking)
-                          RLPill('Short stay', tone: RLTone.neutral),
+                        if (location.isNotEmpty) ...[
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.location_on_outlined,
+                                size: 14,
+                                color: RLTokens.mutedSoft,
+                              ),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  location,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontFamily: RLTokens.fontSans,
+                                    fontSize: 12.5,
+                                    color: RLTokens.muted,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(right: 4),
+                              child: Text(
+                                counts,
+                                style: const TextStyle(
+                                  fontFamily: RLTokens.fontSans,
+                                  fontSize: 13,
+                                  fontWeight: RLTokens.semibold,
+                                  color: RLTokens.ink,
+                                ),
+                              ),
+                            ),
+                            if (isLease)
+                              const RLPill('Long stay', tone: RLTone.neutral),
+                            if (isBooking)
+                              const RLPill('Short stay', tone: RLTone.neutral),
+                          ],
+                        ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    size: 20,
+                    color: RLTokens.micro,
+                  ),
+                ],
               ),
             ),
           ],
@@ -543,21 +605,8 @@ class _PlaceholderTile extends StatelessWidget {
           Center(
             child: Icon(
               _PropThumb._icon(type),
-              size: 34,
-              color: Colors.white.withAlpha(40),
-            ),
-          ),
-          Positioned(
-            bottom: 9,
-            left: 9,
-            child: Text(
-              propertyTypeLabel(type).toUpperCase(),
-              style: TextStyle(
-                fontFamily: RLTokens.fontMono,
-                fontSize: 8.5,
-                letterSpacing: 0.6,
-                color: Colors.white.withAlpha(170),
-              ),
+              size: 46,
+              color: Colors.white.withAlpha(36),
             ),
           ),
         ],

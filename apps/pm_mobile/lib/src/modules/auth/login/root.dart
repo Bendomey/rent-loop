@@ -125,6 +125,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       'Sign in',
                       style: TextStyle(
                         fontFamily: RLTokens.fontSerif,
+                        fontWeight: RLTokens.headingWeight,
                         fontSize: 32,
                         letterSpacing: -0.6,
                         color: RLTokens.ink,

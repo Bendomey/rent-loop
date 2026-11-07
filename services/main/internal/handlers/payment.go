@@ -79,14 +79,14 @@ func (h *PaymentHandler) CreateOfflinePayment(w http.ResponseWriter, r *http.Req
 }
 
 type VerifyPaymentRequest struct {
-	IsSuccessful bool            `json:"is_successful"      validate:"required" example:"true" description:"Whether the payment was successful"`
+	IsSuccessful *bool           `json:"is_successful"      validate:"required" example:"true" description:"Whether the payment was successful"`
 	Metadata     *map[string]any `json:"metadata,omitempty"                                    description:"Additional verification metadata"`
 }
 
 // VerifyPayment godoc
 //
 //	@Summary		Verify an offline payment (Admin)
-//	@Description	Mark a PENDING offline payment as SUCCESSFUL or FAILED. Updates the invoice status accordingly.
+//	@Description	Mark a PENDING offline payment as SUCCESSFUL or FAILED. Updates the invoice status accordingly. is_successful must be sent explicitly; false declines the payment (FAILED) and leaves the invoice unchanged.
 //	@Tags			Payments
 //	@Accept			json
 //	@Security		BearerAuth
@@ -124,7 +124,7 @@ func (h *PaymentHandler) VerifyPayment(w http.ResponseWriter, r *http.Request) {
 	payment, err := h.service.VerifyOfflinePayment(r.Context(), services.VerifyOfflinePaymentInput{
 		PaymentID:    paymentID,
 		VerifiedByID: clientUser.ID,
-		IsSuccessful: body.IsSuccessful,
+		IsSuccessful: *body.IsSuccessful,
 		Metadata:     body.Metadata,
 	})
 	if err != nil {

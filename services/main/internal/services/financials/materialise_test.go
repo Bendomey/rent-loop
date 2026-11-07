@@ -126,3 +126,33 @@ func TestMaterialiseRentOneTimeProducesNothing(t *testing.T) {
 		t.Fatalf("got %d instances, want 0", len(got))
 	}
 }
+
+// Existing tenants are entered with the move-in they actually had, so a term
+// that started months ago must still materialise every period, already due.
+func TestMaterialiseRentPastMoveInKeepsElapsedPeriods(t *testing.T) {
+	now := time.Now().UTC()
+	moveIn := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC).AddDate(0, -3, 0)
+
+	got, err := MaterialiseRentInstances(MaterialiseRentInput{
+		RentFee:               100_000,
+		Currency:              "GHS",
+		PaymentFrequency:      "MONTHLY",
+		MoveInDate:            moveIn,
+		StayDuration:          12,
+		StayDurationFrequency: "MONTHLY",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(got) != 12 {
+		t.Fatalf("got %d periods, want 12", len(got))
+	}
+	if !got[0].PeriodStart.Equal(moveIn) {
+		t.Errorf("first period starts %v, want move-in %v", got[0].PeriodStart, moveIn)
+	}
+	for i := 0; i < 3; i++ {
+		if !got[i].DueDate.Before(now) {
+			t.Errorf("period %d due %v, want it already past", i, got[i].DueDate)
+		}
+	}
+}
