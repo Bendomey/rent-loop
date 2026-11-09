@@ -36,6 +36,7 @@
 - Providers: `pendingTenantsProvider` (Tenants tab, `tenants/pending_tenants_section.dart`), `applicationDetailProvider`, `unitOptionsNotifierProvider(UnitOptionsQuery(propertyIds: managed, bookableOnly: true))` (bookable units in properties the caller manages).
 - Mutation notifiers on `ApiState`: `CreateApplicationNotifier`, `UpdateApplicationNotifier`, `CancelApplicationNotifier`, `InviteTenantNotifier`.
 - UI: `activity/add_application.dart` (steps + review), `application_detail*.dart`, `application_edit_sheets.dart`, `cancel_application_sheet.dart`, `application_form_widgets.dart` (`ApplicationUploadTile`).
+- `activity/application_sections.dart`: `applicationSectionPage` maps a `ChecklistSection` to its page; `ApplicationSectionFlow` wraps the page the hub opens with a sticky "Next: {next step}" bar ("Back to overview" on Lease docs). Next replaces the current route, so back always returns to the hub.
 
 ### Rent tab: bills (2026-11-06)
 - `InvoiceApi` (`api/invoice_api.dart`): `listInvoices` (cross-property `GET /invoices`, repeated `status`/`property_id`, `payee_type=PROPERTY_OWNER`, `search`), `getInvoice` (detail with line items), `payInvoice` (`POST .../pay`), `verifyPayment` (`PATCH .../payments/{id}/verify`). Models in `repository/models/invoice_model.dart`.

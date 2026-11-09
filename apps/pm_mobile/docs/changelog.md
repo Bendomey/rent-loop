@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-09 — Next button between tenant setup steps
+- Each tenant setup step opened from the hub has a sticky "Next: {next step}" button (Unit → Tenant details → Move-in → Financial → Lease docs), so you no longer go back to the hub between steps. Lease docs shows "Back to overview".
+- Next replaces the current page, so back always lands on the hub with fresh progress. A step that isn't ready yet shows its own gate (e.g. Financial's "Set the move-in date first").
+- New `activity/application_sections.dart`; the hub's checklist now passes a `ChecklistSection` instead of a string key. Modules affected: `modules/main/activity/`.
+
 ## 2026-11-07 — Print a bill
 - The bill detail screen has a Print button in its header. It makes an A4 PDF that matches the web portal's printed bill (stamp, billed to, what it is for, dates, items, totals, Still owed, how they may pay, the after-the-due-date terms) and opens the system print sheet, which on iOS can also save or share it. Anyone who can see the bill can print it.
 - New: `lib/financial/bill_sheet.dart` (the web's bill state and copy, ported), `lib/financial/bill_pdf.dart`, `billPrinterProvider`. `InvoiceModel` now reads sub-total, taxes, payer type, allowed payment rails, voided reason, the lease code and the tenant's other names.
