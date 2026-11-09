@@ -13,11 +13,10 @@ import 'package:rentloop_manager/src/lib/application_utils.dart';
 import 'package:rentloop_manager/src/lib/money.dart';
 import 'package:rentloop_manager/src/lib/unit_status.dart';
 import 'package:rentloop_manager/src/modules/main/activity/application_data.dart';
-import 'package:rentloop_manager/src/modules/main/activity/application_detail_pages.dart';
 import 'package:rentloop_manager/src/modules/main/activity/application_edit_sheets.dart';
+import 'package:rentloop_manager/src/modules/main/activity/application_sections.dart';
 import 'package:rentloop_manager/src/modules/main/activity/approve_sheet.dart';
 import 'package:rentloop_manager/src/modules/main/activity/cancel_application_sheet.dart';
-import 'package:rentloop_manager/src/modules/main/activity/financial/financial_page.dart';
 import 'package:rentloop_manager/src/repository/models/tenant_application_model.dart';
 import 'package:rentloop_manager/src/repository/providers/activity/application_detail_provider.dart';
 import 'package:rentloop_manager/src/repository/providers/properties/my_property_roles_provider.dart';
@@ -60,23 +59,24 @@ class _ApplicationDetailScreenState
     }
   }
 
-  Future<void> _openSection(ApplicationDetailData d, String key) async {
+  Future<void> _openSection(
+    ApplicationDetailData d,
+    ChecklistSection section,
+  ) async {
     final propertyId = _propertyId;
     if (propertyId == null) return;
     await Haptics.vibrate(HapticsType.selection);
     if (!mounted) return;
 
-    Widget page(ApplicationDetailData d) => switch (key) {
-      'unit' => ApplicationUnitPage(data: d, propertyId: propertyId),
-      'movein' => ApplicationMoveInPage(data: d, propertyId: propertyId),
-      'financial' => ApplicationFinancialPage(data: d, propertyId: propertyId),
-      'docs' => ApplicationDocsPage(data: d, propertyId: propertyId),
-      _ => ApplicationTenantPage(data: d, propertyId: propertyId),
-    };
-
-    await Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => page(d)));
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ApplicationSectionFlow(
+          section: section,
+          data: d,
+          propertyId: propertyId,
+        ),
+      ),
+    );
   }
 
   Future<void> _cancel(String propertyId) async {
@@ -190,7 +190,7 @@ class _ApplicationDetailScreenState
                           const SizedBox(height: 8),
                           _ChecklistCard(
                             data: d,
-                            onOpen: (key) => _openSection(d, key),
+                            onOpen: (section) => _openSection(d, section),
                           ),
                           const SizedBox(height: 8),
                         ],
@@ -435,7 +435,7 @@ class _UnitCard extends StatelessWidget {
 class _ChecklistCard extends StatelessWidget {
   const _ChecklistCard({required this.data, required this.onOpen});
   final ApplicationDetailData data;
-  final ValueChanged<String> onOpen;
+  final ValueChanged<ChecklistSection> onOpen;
 
   @override
   Widget build(BuildContext context) {
@@ -487,7 +487,7 @@ class _ChecklistCard extends StatelessWidget {
             _ChecklistRow(
               step: sections[i],
               first: i == 0,
-              onTap: () => onOpen(sections[i].section.key),
+              onTap: () => onOpen(sections[i].section),
             ),
         ],
       ),

@@ -217,6 +217,35 @@ void main() {
     expect(find.text('Add the lease document'), findsOneWidget);
   });
 
+  testWidgets('Next walks on to the following step and back lands on the hub', (
+    tester,
+  ) async {
+    await _pump(tester, fetch: () async => _app());
+
+    await tester.tap(find.text('Move-in setup'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Next: Financial setup'));
+    await tester.pumpAndSettle();
+    expect(find.byType(ApplicationFinancialPage), findsOneWidget);
+    expect(find.text('Next: Lease docs setup'), findsOneWidget);
+
+    Navigator.of(tester.element(find.byType(ApplicationFinancialPage))).pop();
+    await tester.pumpAndSettle();
+    expect(find.text('Tenant setup #APP-1'), findsOneWidget);
+  });
+
+  testWidgets('the last step offers Back to overview', (tester) async {
+    await _pump(tester, fetch: () async => _app());
+
+    await tester.tap(find.text('Lease docs setup'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Next:'), findsNothing);
+    await tester.tap(find.text('Back to overview'));
+    await tester.pumpAndSettle();
+    expect(find.text('Tenant setup #APP-1'), findsOneWidget);
+    expect(find.text('Add the lease document'), findsNothing);
+  });
+
   testWidgets("STAFF sees no 'Add the lease document'", (tester) async {
     await _pump(
       tester,
